@@ -12,10 +12,13 @@ var t_Str = 'String';
 var t_Fn = 'Function';
 var t_Numb = 'Number';
 var t_Object = 'Object';
+var t_Boolean = 'Boolean';
 var toString = Object.prototype.toString;
 let infoLogger = null;
+let warnLogger = null;
 try {
   infoLogger = console.info.bind(window.console);
+  warnLogger = console.warn.bind(window.console);
 } catch (e) {
 }
 
@@ -29,7 +32,7 @@ try {
  *   console.log(replaceTokenInString(str, map, '%%')); => "text it was subbed this text with something else"
  */
 exports.replaceTokenInString = function (str, map, token) {
-  this._each(map, function (value, key) {
+  exports._each(map, function (value, key) {
     value = (value === undefined) ? '' : value;
 
     var keyString = token + key.toUpperCase() + token;
@@ -242,11 +245,10 @@ exports.getWindowLocation = function () {
 exports.getTopWindowUrl = function () {
   let href;
   try {
-    href = this.getTopWindowLocation().href;
+    href = exports.getTopWindowLocation().href;
   } catch (e) {
     href = '';
   }
-
   return href;
 };
 
@@ -268,9 +270,15 @@ exports.getTopWindowReferrer = function() {
   }
 };
 
-exports.logWarn = function (msg) {
+exports.logWarn = function (msg, args) {
   if (debugTurnedOn() && console.warn) {
-    console.warn('WARNING: ' + msg);
+    if (warnLogger) {
+      if (!args || args.length === 0) {
+        args = '';
+      }
+
+      warnLogger('WARNING: ' + msg + ((args === '') ? '' : ' : params : '), args);
+    }
   }
 };
 
@@ -376,10 +384,10 @@ exports.hasValidBidRequest = function (paramObj, requiredParamsArr, adapter) {
   for (var i = 0; i < requiredParamsArr.length; i++) {
     found = false;
 
-    this._each(paramObj, findParam);
+    exports._each(paramObj, findParam);
 
     if (!found) {
-      this.logError('Params are missing for bid request. One of these required paramaters are missing: ' + requiredParamsArr, adapter);
+      exports.logError('Params are missing for bid request. One of these required paramaters are missing: ' + requiredParamsArr, adapter);
       return false;
     }
   }
@@ -407,23 +415,27 @@ exports.isA = function (object, _t) {
 };
 
 exports.isFn = function (object) {
-  return this.isA(object, t_Fn);
+  return exports.isA(object, t_Fn);
 };
 
 exports.isStr = function (object) {
-  return this.isA(object, t_Str);
+  return exports.isA(object, t_Str);
 };
 
 exports.isArray = function (object) {
-  return this.isA(object, t_Arr);
+  return exports.isA(object, t_Arr);
 };
 
 exports.isNumber = function(object) {
-  return this.isA(object, t_Numb);
+  return exports.isA(object, t_Numb);
 };
 
 exports.isPlainObject = function(object) {
-  return this.isA(object, t_Object);
+  return exports.isA(object, t_Object);
+}
+
+exports.isBoolean = function(object) {
+  return this.isA(object, t_Boolean);
 }
 
 /**
@@ -451,7 +463,7 @@ exports.isEmpty = function (object) {
  * @returns {boolean} if string is empty
  */
 exports.isEmptyStr = function(str) {
-  return this.isStr(str) && (!str || str.length === 0);
+  return exports.isStr(str) && (!str || str.length === 0);
 };
 
 /**
@@ -461,8 +473,8 @@ exports.isEmptyStr = function(str) {
  * @param {Function(value, key, object)} fn
  */
 exports._each = function (object, fn) {
-  if (this.isEmpty(object)) return;
-  if (this.isFn(object.forEach)) return object.forEach(fn, this);
+  if (exports.isEmpty(object)) return;
+  if (exports.isFn(object.forEach)) return object.forEach(fn, this);
 
   var k = 0;
   var l = object.length;
@@ -477,11 +489,11 @@ exports._each = function (object, fn) {
 };
 
 exports.contains = function (a, obj) {
-  if (this.isEmpty(a)) {
+  if (exports.isEmpty(a)) {
     return false;
   }
 
-  if (this.isFn(a.indexOf)) {
+  if (exports.isFn(a.indexOf)) {
     return a.indexOf(obj) !== -1;
   }
 
@@ -512,10 +524,10 @@ exports.indexOf = (function () {
  * @return {Array}
  */
 exports._map = function (object, callback) {
-  if (this.isEmpty(object)) return [];
-  if (this.isFn(object.map)) return object.map(callback);
+  if (exports.isEmpty(object)) return [];
+  if (exports.isFn(object.map)) return object.map(callback);
   var output = [];
-  this._each(object, function (value, key) {
+  exports._each(object, function (value, key) {
     output.push(callback(value, key, object));
   });
 
@@ -596,7 +608,7 @@ exports.insertHtmlIntoIframe = function(htmlCode) {
  * @param  {string} encodeUri boolean if URL should be encoded before inserted. Defaults to true
  */
 exports.insertUserSyncIframe = function(url) {
-  let iframeHtml = this.createTrackPixelIframeHtml(url, false, 'allow-scripts allow-same-origin');
+  let iframeHtml = exports.createTrackPixelIframeHtml(url, false, 'allow-scripts allow-same-origin');
   let div = document.createElement('div');
   div.innerHTML = iframeHtml;
   let iframe = div.firstChild;
@@ -668,7 +680,7 @@ exports.getIframeDocument = function (iframe) {
       doc = iframe.contentDocument;
     }
   } catch (e) {
-    this.logError('Cannot get iframe document', e);
+    exports.logError('Cannot get iframe document', e);
   }
 
   return doc;
@@ -678,13 +690,13 @@ exports.getValueString = function(param, val, defaultValue) {
   if (val === undefined || val === null) {
     return defaultValue;
   }
-  if (this.isStr(val)) {
+  if (exports.isStr(val)) {
     return val;
   }
-  if (this.isNumber(val)) {
+  if (exports.isNumber(val)) {
     return val.toString();
   }
-  this.logWarn('Unsuported type for param: ' + param + ' required type: String');
+  exports.logWarn('Unsuported type for param: ' + param + ' required type: String');
 };
 
 export function uniques(value, index, arry) {
@@ -1055,4 +1067,37 @@ export function isInteger(value) {
  */
 export function convertCamelToUnderscore(value) {
   return value.replace(/(?:^|\.?)([A-Z])/g, function (x, y) { return '_' + y.toLowerCase() }).replace(/^_/, '');
+}
+
+/**
+ * Converts an object of arrays (either strings or numbers) into an array of objects containing key and value properties
+ * normally read from bidder params
+ * eg { foo: ['bar', 'baz'], fizz: ['buzz'] }
+ * becomes [{ key: 'foo', value: ['bar', 'baz']}, {key: 'fizz', value: ['buzz']}]
+ * @param {Object{Arrays}} keywords object of arrays representing keyvalue pairs
+ * @param {string} paramName name of parent object (eg 'keywords') containing keyword data, used in error handling
+ */
+export function transformBidderParamKeywords(keywords, paramName = 'keywords') {
+  let arrs = [];
+
+  exports._each(keywords, (v, k) => {
+    if (exports.isArray(v)) {
+      let values = [];
+      exports._each(v, (val) => {
+        val = exports.getValueString(paramName + '.' + k, val);
+        if (val) { values.push(val); }
+      });
+      v = values;
+    } else {
+      v = exports.getValueString(paramName + '.' + k, v);
+      if (exports.isStr(v)) {
+        v = [v];
+      } else {
+        return;
+      } // unsuported types - don't send a key
+    }
+    arrs.push({key: k, value: v});
+  });
+
+  return arrs;
 }
