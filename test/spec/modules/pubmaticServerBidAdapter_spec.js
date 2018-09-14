@@ -6,6 +6,7 @@ const constants = require('src/constants.json');
 describe('PubMaticServer adapter', () => {
   let bidRequests;
   let bidResponses;
+  let errorCodeBidResponses;
 
   beforeEach(() => {
     bidRequests = [
@@ -63,6 +64,31 @@ describe('PubMaticServer adapter', () => {
             'pubmatic': 47
           }
         }
+      }
+    };
+
+    errorCodeBidResponses = {
+      'body': {
+        'id': '93D3BAD6-E2E2-49FB-9D89-920B1761C865',
+        'seatbid': [{
+          'bid': [{
+            'id': '36d41be239a8e',
+            'impid': '36d41be239a8e',
+            'price': 0,
+            'h': 0,
+            'w': 0,
+            'ext': {
+              'summary': [{
+                'bidder': 'indexExchange',
+                'bid': 0,
+                'errorCode': 5,
+                'errorMessage': 'Timeout error',
+                'width': 0,
+                'height': 0
+              }]
+            }
+          }]
+        }]
       }
     };
   });
@@ -300,6 +326,15 @@ describe('PubMaticServer adapter', () => {
         expect(response[0].ad).to.equal(bidResponses.body.seatbid[0].bid[0].adm);
         expect(response[0].originalBidder).to.equal(bidResponses.body.seatbid[0].bid[0].ext.summary[0].bidder);
         expect(response[0].bidderCode).to.equal(spec.code);
+      });
+    });
+
+    describe('Response checking', () => {
+      it('should set serverSideResponseTime to 0 when error code retured by endpoint is 5', () => {
+        let request = spec.buildRequests(bidRequests);
+        let response = spec.interpretResponse(errorCodeBidResponses, request);
+        expect(response).to.be.an('array').with.length.above(0);
+        expect(response[0].serverSideResponseTime).to.equal(0);
       });
     });
   });

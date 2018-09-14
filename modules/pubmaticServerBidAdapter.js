@@ -325,12 +325,21 @@ export const spec = {
                     ttl: 300,
                     referrer: referrer,
                     ad: firstSummary ? bid.adm : '',
-                    serverSideResponseTime: partnerResponseTimeObj[summary.bidder] || 0
-                    /* setting serverSideResponseTime as 0, in cases where partnerResponseTimeObj[summary.bidder] is not available.
-                       probable causes for this happening will be, pubmaticServerErrorCode is one of the following:
-                       1 = GADS_UNMAPPED_SLOT_ERROR
-                       2 = GADS_MISSING_CONF_ERROR
-                       6 = INVALID_CONFIGURATION_ERROR
+                    serverSideResponseTime: (summary.errorCode === 5 || summary.errorCode === 1) ? 0 : (partnerResponseTimeObj[summary.bidder] || 0)
+                    /* errorCodes meaning:
+                        1 = GADS_UNMAPPED_SLOT_ERROR
+                        2 = GADS_MISSING_CONF_ERROR
+                        3 = TIMEOUT_ERROR
+                        4 = NO_BID_PREBID_ERROR
+                        5 = PARTNER_TIMEDOUT_ERROR
+                        6 = INVALID_CONFIGURATION_ERROR
+                        7 = NO_GDPR_CONSENT_ERROR
+                        500 = API_RESPONSE_ERROR
+
+                        - setting serverSideResponseTime as 0, in cases where partnerResponseTimeObj[summary.bidder] is not available.
+                          probable causes for this happening will be, pubmaticServerErrorCode is one of the following: 1,2 or 6
+
+                        - explicitly setting serverSideResponseTime = 0, where errorCode is 5, i.e. PARTNER_TIMEDOUT_ERROR
                     */
                   };
                   bidResponses.push(newBid);
