@@ -1,0 +1,15 @@
+[
+	"appnexusBidAdapter",
+	"consentManagement",
+	"sekindoUMBidAdapter",
+	"pulsepointBidAdapter",
+	"audienceNetworkBidAdapter",
+	"openxBidAdapter",
+	"rubiconBidAdapter",
+	"sovrnBidAdapter",
+	"pubmaticBidAdapter",
+	"adgenerationBidAdapter",
+	"pubmaticServerBidAdapter",
+	"ixBidAdapter",
+	"criteoBidAdapter"
+]
