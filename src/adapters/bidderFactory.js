@@ -194,12 +194,6 @@ export function newBidder(spec) {
         events.emit(CONSTANTS.EVENTS.BIDDER_DONE, bidderRequest);
 
         registerSyncs(responses, bidderRequest.gdprConsent);
-        if (window['owpbjs'] &&
-          window['owpbjs'].getConfig('userSync') &&
-          window['owpbjs'].getConfig('userSync').hasOwnProperty('enableOverride') &&
-          window['owpbjs'].getConfig('userSync')['enableOverride']) {
-          owpbjs.triggerUserSyncs();
-        }
       }
 
       const validBidRequests = bidderRequest.bids.filter(filterAndWarn);
