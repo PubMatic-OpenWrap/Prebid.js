@@ -700,7 +700,9 @@ export function addBidResponseHook(fn, adUnitCode, bid) {
   adjustedCpm = getBiddersCpmAdjustment(bid.bidderCode, adjustedCpm, bid);
 
   // The below condition is added to avoid floor on s2s calls
-  if (bid.bidderCode == 'pubmaticServer') {
+  // Added bid.source == "s2s" condition as when we use prebidServerBidAdapter for server side partners we get source value as "s2s"
+  // and we do not have support on s2s side.
+  if (bid.bidderCode == 'pubmaticServer' || bid.source == 's2s') {
     return fn.call(this, adUnitCode, bid);
   }
 

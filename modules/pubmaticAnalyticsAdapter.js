@@ -271,7 +271,7 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid) {
       'ss': (s2sBidders.indexOf(bid.bidder) > -1) ? 1 : 0,
       't': (bid.status == ERROR && bid.error.code == TIMEOUT_ERROR) ? 1 : 0,
       'wb': (highestBid && highestBid.adId === bid.bidId ? 1 : 0),
-      'mi': bid.bidResponse ? (bid.bidResponse.mi || undefined) : undefined,
+      'mi': bid.bidResponse ? bid.bidResponse.mi : (window.matchedimpressions && window.matchedimpressions[bid.bidder]),
       'af': bid.bidResponse ? (bid.bidResponse.mediaType || undefined) : undefined,
       'ocpm': bid.bidResponse ? (bid.bidResponse.originalCpm || 0) : 0,
       'ocry': bid.bidResponse ? (bid.bidResponse.originalCurrency || CURRENCY_USD) : CURRENCY_USD,
@@ -301,6 +301,19 @@ function getAdUnitAdFormats(adUnit) {
 function getAdUnit(adUnits, adUnitId) {
   return adUnits.filter(adUnit => (adUnit.divID && adUnit.divID == adUnitId) || (adUnit.code == adUnitId))[0];
 }
+
+function getPSL(auctionId) {
+  let latency = window.pbsLatency;
+  let latencyValues = latency && latency[auctionId]
+  // If we do not have latencyValues, means we are not using prebidServerBidAdapter i.e. auction end point
+  // so for 2.5 endpoint we need to make sure that we are not passing this key as earlier.
+  let pslTime = latencyValues ? 0 : undefined;
+  if (latencyValues && latencyValues['startTime'] && latencyValues['endTime']) {
+    pslTime = latencyValues['endTime'] - latencyValues['startTime']
+  }
+  return pslTime;
+}
+
 function executeBidsLoggerCall(e, highestCpmBids) {
   let auctionId = e.auctionId;
   let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId].referer || '';
@@ -328,6 +341,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['tst'] = Math.round((new window.Date()).getTime() / 1000);
   outputObj['pid'] = '' + profileId;
   outputObj['pdvid'] = '' + profileVersionId;
+  outputObj['psl'] = getPSL(auctionId);
   outputObj['dvc'] = {'plt': getDevicePlatform()};
   outputObj['tgid'] = (function() {
     var testGroupId = parseInt(config.getConfig('testGroupId') || 0);
