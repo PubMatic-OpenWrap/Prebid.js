@@ -456,7 +456,8 @@ describe('adapterManager tests', function () {
     });
 
     it('should call spec\'s onBidderError callback when callBidderError is called', function () {
-      const bidderRequest = getBidRequests().find(bidRequest => bidRequest.bidderCode === bidder);
+      const bidRequests = getBidRequests();
+      const bidderRequest = find(bidRequests, bidRequest => bidRequest.bidderCode === bidder);
       const xhrErrorMock = {
         status: 500,
         statusText: 'Internal Server Error'
@@ -1696,14 +1697,17 @@ describe('adapterManager tests', function () {
     });
 
     describe('sizeMapping', function () {
+      let sandbox;
       beforeEach(function () {
+        sandbox = sinon.sandbox.create();
         allS2SBidders.length = 0;
         clientTestAdapters.length = 0;
-        sinon.stub(window, 'matchMedia').callsFake(() => ({matches: true}));
+        // always have matchMedia return true for us
+        sandbox.stub(utils.getWindowTop(), 'matchMedia').callsFake(() => ({matches: true}));
       });
 
       afterEach(function () {
-        matchMedia.restore();
+        sandbox.restore();
         config.resetConfig();
         setSizeConfig([]);
       });

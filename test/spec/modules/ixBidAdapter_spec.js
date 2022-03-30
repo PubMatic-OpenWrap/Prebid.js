@@ -1130,7 +1130,6 @@ describe('IndexexchangeAdapter', function () {
       expect(payload.user.eids).to.deep.include(validUserIdPayload[2]);
       expect(payload.user.eids).to.deep.include(validUserIdPayload[3]);
       expect(payload.user.eids).to.deep.include(validUserIdPayload[4]);
-      expect(payload.user.eids).to.deep.include(validUserIdPayload[5]);
     });
 
     it('IXL and Prebid are mutually exclusive', function () {
@@ -1378,16 +1377,16 @@ describe('IndexexchangeAdapter', function () {
         }
       };
       const requests = spec.buildRequests(validBids, DEFAULT_OPTION);
-      const { dfp_ad_unit_code } = JSON.parse(requests[0].data.r).imp[0].banner.format[0].ext;
+      const { ext: { dfp_ad_unit_code } } = JSON.parse(requests[0].data.r).imp[0];
       expect(dfp_ad_unit_code).to.equal(AD_UNIT_CODE);
     });
 
     it('should not send dfp_adunit_code in request if ortb2Imp.ext.data.adserver.adslot does not exists', function () {
       const validBids = utils.deepClone(DEFAULT_BANNER_VALID_BID);
       const requests = spec.buildRequests(validBids, DEFAULT_OPTION);
-      const { dfp_ad_unit_code } = JSON.parse(requests[0].data.r).imp[0].banner.format[0].ext;
+      const { ext } = JSON.parse(requests[0].data.r).imp[0];
 
-      expect(dfp_ad_unit_code).to.not.exist;
+      expect(ext).to.not.exist;
     });
 
     it('payload should have correct format and value', function () {
@@ -1400,18 +1399,6 @@ describe('IndexexchangeAdapter', function () {
       expect(payload.source.ext.schain).to.deep.equal(SAMPLE_SCHAIN);
       expect(payload.imp).to.be.an('array');
       expect(payload.imp).to.have.lengthOf(1);
-    });
-
-    it('payload should have correct format and value for r.id when bidderRequestId is a number ', function () {
-      const bidWithIntId = utils.deepClone(DEFAULT_BANNER_VALID_BID);
-      bidWithIntId[0].bidderRequestId = 123456;
-
-      request = spec.buildRequests(bidWithIntId, DEFAULT_OPTION)[0];
-
-      const payload = JSON.parse(request.data.r);
-      expect(bidWithIntId[0].bidderRequestId).to.be.a('number');
-      expect(payload.id).to.equal(bidWithIntId[0].bidderRequestId.toString());
-      expect(payload.id).to.be.a('string');
     });
 
     it('payload should have correct format and value for r.id when bidderRequestId is a number ', function () {

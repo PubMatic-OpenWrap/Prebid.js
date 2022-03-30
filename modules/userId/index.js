@@ -141,7 +141,7 @@ import { createEidsArray, buildEidPermissions } from './eids.js';
 import { getCoreStorageManager } from '../../src/storageManager.js';
 import {
   getPrebidInternal, isPlainObject, logError, isArray, cyrb53Hash, deepAccess, timestamp, delayExecution, logInfo, isFn,
-  logWarn, isEmptyStr, isNumber
+  logWarn, isEmptyStr, isNumber, isEmpty
 } from '../../src/utils.js';
 import includes from 'core-js-pure/features/array/includes.js';
 import MD5 from 'crypto-js/md5.js';
@@ -191,7 +191,7 @@ export let syncDelay;
 export let auctionDelay;
 
 /** @type {(Object|undefined)} */
-let userIdentity;
+let userIdentity = {};
 /** @param {Submodule[]} submodules */
 export function setSubmoduleRegistry(submodules) {
   submoduleRegistry = submodules;
@@ -657,11 +657,96 @@ function refreshUserIds(options, callback, moduleUpdated) {
 }
 
 function setUserIdentities(userIdentityData) {
-  userIdentity = userIdentityData;
+  if (isEmpty(userIdentityData)) {
+    userIdentity = {};
+    return;
+  }
+  var pubProvidedEmailHash = {};
+  if (userIdentityData.pubProvidedEmail) {
+    generateEmailHash(userIdentityData.pubProvidedEmail, pubProvidedEmailHash);
+    userIdentityData.pubProvidedEmailHash = pubProvidedEmailHash;
+    delete userIdentityData.pubProvidedEmail;
+  }
+  Object.assign(userIdentity, userIdentityData);
+  if (window.PWT && window.PWT.loginEvent) {
+    reTriggerPartnerCallsWithEmailHashes();
+    window.PWT.loginEvent = false;
+  }
 };
+
+function updateModuleParams(moduleToUpdate) {
+  //this is specific to id5id partner. needs to be revisited when we integrate additional partners for email hashes.
+  moduleToUpdate.params[CONSTANTS.MODULE_PARAM_TO_UPDATE_FOR_SSO[moduleToUpdate.name].param] = '1=' + getUserIdentities().emailHash['SHA256'];
+}
+
+export function reTriggerPartnerCallsWithEmailHashes() {
+  var modulesToRefresh = [];
+  var scriptBasedModulesToRefresh = [];
+  var primaryModulesList = CONSTANTS.REFRESH_IDMODULES_LIST.PRIMARY_MODULES;
+  var scriptBasedModulesList = CONSTANTS.REFRESH_IDMODULES_LIST.SCRIPT_BASED_MODULES;
+  var moduleName;
+  var index;
+  for (index in configRegistry) {
+    moduleName = configRegistry[index].name;
+    if (primaryModulesList.indexOf(moduleName) >= 0) {
+      modulesToRefresh.push(moduleName);
+      updateModuleParams(configRegistry[index]);
+    } else if (scriptBasedModulesList.indexOf(moduleName) >= 0) {
+      scriptBasedModulesToRefresh.push(moduleName);
+    }
+  }
+  getGlobal().refreshUserIds({'submoduleNames': modulesToRefresh});
+  reTriggerScriptBasedAPICalls(scriptBasedModulesToRefresh);
+}
+
+export function reTriggerScriptBasedAPICalls(modulesToRefresh) {
+  var i = 0;
+  var userIdentity = getUserIdentities() || {};
+  for (i in modulesToRefresh) {
+    switch (modulesToRefresh[i]) {
+      case 'zeotapIdPlus':
+        if (window.zeotap && isFn(window.zeotap.callMethod)) {
+          var userIdentityObject = {
+            email: userIdentity.emailHash['MD5']
+          };
+          window.zeotap.callMethod('setUserIdentities', userIdentityObject, true);
+        }
+        break;
+      case 'identityLink':
+        if (window.ats && isFn(window.ats.start)) {
+          var atsObject = window.ats.outputCurrentConfiguration();
+          atsObject.emailHashes = userIdentity.emailHash ? [userIdentity.emailHash['MD5'], userIdentity.emailHash['SHA1'], userIdentity.emailHash['SHA256']] : undefined;
+          window.ats.start(atsObject);
+        }
+        break;
+    }
+  }
+}
 
 function getUserIdentities() {
   return userIdentity;
+}
+
+function processFBLoginData(refThis, response) {
+  var emailHash = {};
+  if (response.status === 'connected') {
+    window.PWT = window.PWT || {};
+    window.PWT.fbAt = response.authResponse.accessToken;
+    window.FB && window.FB.api('/me?fields=email&access_token=' + window.PWT.fbAt, function (response) {
+      logInfo('SSO - Data received from FB API');
+      if (response.error) {
+        logInfo('SSO - User information could not be retrieved by facebook api [', response.error.message, ']');
+        return;
+      }
+      logInfo('SSO - Information successfully retrieved by Facebook API.');
+      generateEmailHash(response.email || undefined, emailHash);
+      refThis.setUserIdentities({
+        emailHash: emailHash
+      });
+    });
+  } else {
+    logInfo('SSO - Error fetching login information from facebook');
+  }
 }
 
 /**
@@ -669,42 +754,24 @@ function getUserIdentities() {
  * @param {String} provider SSO provider for which the api call is to be made
  * @param {Object} userObject Google's user object, passed from google's callback function
  */
-function onSSOLogin(data) {
+ function onSSOLogin(data) {
   var refThis = this;
   var email;
   var emailHash = {};
-
   if (!window.PWT || !window.PWT.ssoEnabled) return;
 
   switch (data.provider) {
     case undefined:
     case 'facebook':
-      var timeout = data.provider === 'facebook' ? 0 : 2000;
-      setTimeout(function() {
+      if (data.provider === 'facebook') {
         window.FB && window.FB.getLoginStatus(function (response) {
-          if (response.status === 'connected') {
-            window.PWT = window.PWT || {};
-            window.PWT.fbAt = response.authResponse.accessToken;
-            window.FB && window.FB.api('/me?fields=email&access_token=' + window.PWT.fbAt, function (response) {
-              logInfo('SSO - Data received from FB API');
-
-              if (response.error) {
-                logInfo('SSO - User information could not be retrieved by facebook api [', response.error.message, ']');
-                return;
-              }
-
-              email = response.email || undefined;
-              logInfo('SSO - Information successfully retrieved by Facebook API.');
-              generateEmailHash(email, emailHash);
-              refThis.setUserIdentities({
-                emailHash: emailHash
-              });
-            });
-          } else {
-            logInfo('SSO - Error fetching login information from facebook');
-          }
+          processFBLoginData(refThis, response);
         }, true);
-      }, timeout);
+      } else {
+        window.FB && window.FB.Event.subscribe('auth.statusChange', function (response) {
+          processFBLoginData(refThis, response);
+        });
+      }
       break;
     case 'google':
       var profile = data.googleUserObject.getBasicProfile();

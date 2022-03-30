@@ -86,5 +86,14 @@
     "BID_TARGETING_SET": "targetingSet",
     "RENDERED": "rendered",
     "BID_REJECTED": "bidRejected"
+  },
+  "REFRESH_IDMODULES_LIST": {
+    "PRIMARY_MODULES": ["id5Id"],
+    "SCRIPT_BASED_MODULES": ["zeotapIdPlus", "identityLink"]
+  },
+  "MODULE_PARAM_TO_UPDATE_FOR_SSO": {
+    "id5Id": {
+      "param": "pd"
+    }
   }
 }

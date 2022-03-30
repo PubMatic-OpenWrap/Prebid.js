@@ -203,6 +203,8 @@ function buildRequestObject(bid) {
   const reqObj = {};
   let placementId = getValue(bid.params, 'placementId');
   let pageId = getValue(bid.params, 'pageId');
+  const impressionData = deepAccess(bid, 'ortb2Imp.ext.data');
+  const gpid = deepAccess(impressionData, 'pbadslot') || deepAccess(impressionData, 'adserver.adslot');
 
   reqObj.sizes = getSizes(bid);
   reqObj.bidId = getBidIdParameter('bidId', bid);
@@ -213,6 +215,7 @@ function buildRequestObject(bid) {
   reqObj.adUnitCode = getBidIdParameter('adUnitCode', bid);
   reqObj.auctionId = getBidIdParameter('auctionId', bid);
   reqObj.transactionId = getBidIdParameter('transactionId', bid);
+  if (gpid) { reqObj.gpid = gpid; }
   return reqObj;
 }
 

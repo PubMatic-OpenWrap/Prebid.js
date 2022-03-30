@@ -10,6 +10,7 @@ import {
   syncDelay,
   PBJS_USER_ID_OPTOUT_NAME,
   findRootDomain,
+  reTriggerScriptBasedAPICalls
 } from 'modules/userId/index.js';
 import {createEidsArray} from 'modules/userId/eids.js';
 import {config} from 'src/config.js';
@@ -2556,38 +2557,76 @@ describe('User ID', function () {
   });
 
   describe('Handle SSO Login', function() {
+    var dummyGoogleUserObject = { 'getBasicProfile': getBasicProfile };
+    let sandbox;
+    let auctionSpy;
+    let adUnits;
+
+    function getEmail() {
+      return 'abc@def.com';
+    }
+    function getBasicProfile() {
+      return { 'getEmail': getEmail }
+    }
     beforeEach(function () {
       (getGlobal()).setUserIdentities({});
-    });
-
-    xit('Email hashes are stored in userIdentities Object on SSO login if ssoEnabled is true', function () {
-      function getEmail() {
-        return 'abc@def.com';
-      }
-      function getBasicProfile() {
-        return { 'getEmail': getEmail }
-      }
-      var dummyGoogleUserObject = { 'getBasicProfile': getBasicProfile }
       window.PWT = window.PWT || {};
+      // sinon.stub($$PREBID_GLOBAL$$, 'refreshUserIds');
       window.PWT.ssoEnabled = true;
-      expect(typeof (getGlobal()).onSSOLogin).to.equal('function');
-      getGlobal().onSSOLogin({'provider': 'google', 'googleUserObject': dummyGoogleUserObject});
-      expect((getGlobal()).getUserIdentities().emailHash).to.exist;
+      sandbox = sinon.createSandbox();
+      adUnits = [getAdUnitMock()];
+      auctionSpy = sandbox.spy();
     });
 
-    xit('Email hashes are not stored in userIdentities Object on SSO login if ssoEnabled is false', function () {
-      function getEmail() {
-        return 'abc@def.com';
-      }
-      function getBasicProfile() {
-        return { 'getEmail': getEmail }
-      }
-      var dummyGoogleUserObject = { 'getBasicProfile': getBasicProfile }
+    afterEach(function() {
+      // $$PREBID_GLOBAL$$.refreshUserIds.restore();
+      // $$PREBID_GLOBAL$$.requestBids.removeAll();
+      config.resetConfig();
+    });
+
+    it('Email hashes are not stored in userIdentities Object on SSO login if ssoEnabled is false', function () {
       window.PWT.ssoEnabled = false;
 
       expect(typeof (getGlobal()).onSSOLogin).to.equal('function');
       getGlobal().onSSOLogin({'provider': 'google', 'googleUserObject': dummyGoogleUserObject});
       expect((getGlobal()).getUserIdentities().emailHash).to.not.exist;
     });
+
+    it('Email hashes are stored in userIdentities Object on SSO login if ssoEnabled is true', function () {
+      expect(typeof (getGlobal()).onSSOLogin).to.equal('function');
+      getGlobal().onSSOLogin({'provider': 'google', 'googleUserObject': dummyGoogleUserObject});
+      expect((getGlobal()).getUserIdentities().emailHash).to.exist;
+    });
+
+    it('Publisher provided emails are stored in userIdentities.pubProvidedEmailHash if available', function() {
+      getGlobal().setUserIdentities({'pubProvidedEmail': 'abc@xyz.com'});
+      expect(getGlobal().getUserIdentities().pubProvidedEmailHash).to.exist;
+    });
+
+    it('should call zeotap api if zeotap module is configured', function() {
+      var scriptBasedModulesToRefresh = ['zeotapIdPlus'];
+      console.log('calling reTriggerScriptBasedAPICalls');
+      window.zeotap = {};
+      window.zeotap.callMethod = function() { console.log('in call method') };
+      getGlobal().onSSOLogin({'provider': 'google', 'googleUserObject': dummyGoogleUserObject});
+
+      setSubmoduleRegistry([zeotapIdPlusSubmodule]);
+      init(config);
+      config.setConfig({
+        userSync: {
+          userIds: [{
+            name: 'zeotapIdPlus',
+            'storage.type': 'cookie',
+            'storage.expires': '30',
+            'storage.name': 'IDP',
+            'partnerId': 'b13e43f5-9846-4349-ae87-23ea3c3c25de',
+            'params.loadIDP': 'true'
+          }]
+        }
+      });
+      requestBidsHook(auctionSpy, {adUnits});
+
+      getGlobal().refreshUserIds.calledOnce.should.equal(true);
+    })
   });
 });
