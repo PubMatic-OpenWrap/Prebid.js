@@ -262,6 +262,15 @@ const USER_IDS_CONFIG = {
   'connectId': {
     source: 'yahoo.com',
     atype: 3
+  },
+
+  // 33across ID
+  '33acrossId': {
+    source: '33across.com',
+    atype: 1,
+    getValue: function(data) {
+      return data.envelope;
+    }
   }
 };
 

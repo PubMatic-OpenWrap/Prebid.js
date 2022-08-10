@@ -5,6 +5,18 @@ Example showing `cookie` storage for user id data for each of the submodules
 pbjs.setConfig({
     userSync: {
         userIds: [{
+            name: "33acrossId",
+            storage: {
+                type: "cookie",
+                name: "33acrossId",
+                expires: 90,
+                refreshInSeconds: 8*3600
+            },
+            params: {
+                pid: "0010b00002GYU4eBAH" // Example ID
+            }
+        },
+        {
             name: "pubCommonId",
             storage: {
                 type: "cookie",
@@ -151,6 +163,18 @@ Example showing `localStorage` for user id data for some submodules
 pbjs.setConfig({
     userSync: {
         userIds: [{
+            name: "33acrossId",
+            storage: {
+                type: "html5",
+                name: "33acrossId",
+                expires: 90,
+                refreshInSeconds: 8*3600
+            },
+            params: {
+                pid: "0010b00002GYU4eBAH" // Example ID
+            }
+        }, 
+        {
             name: "unifiedId",
             params: {
                 partner: "prebid",
