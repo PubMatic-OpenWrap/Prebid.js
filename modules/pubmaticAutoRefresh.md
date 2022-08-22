@@ -227,6 +227,6 @@ pbjs.setConfig({
 });
 ```
 
-# Drwaback
+# Drawbacks
 - only onle slot is handled at a time
 -  if GAM slot is not filled by any creative (including GAM in-house cratives) then GPT does not trigger the required event hence our module will not be able to refresh such slot
