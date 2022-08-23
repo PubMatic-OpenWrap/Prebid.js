@@ -1163,7 +1163,7 @@ export const spec = {
       payload.device = Object.assign(payload.device, config.getConfig('device'));
     }
 
-		// update device.language to ISO-639-1-alpha-2 (2 character language)
+    // update device.language to ISO-639-1-alpha-2 (2 character language)
     payload.device.language = payload.device.language && payload.device.language.split('-')[0];
 
     // passing transactionId in source.tid
@@ -1212,6 +1212,15 @@ export const spec = {
     if (commonFpd.user) {
       mergeDeep(payload, {user: commonFpd.user});
     }
+
+    if (commonFpd.tmax) {
+      payload.tmax = commonFpd.tmax;
+    } else {
+      payload.tmax = window?.PWT?.versionDetails?.timeout;
+    }
+
+	// Sending epoch timestamp in request.ext object
+    payload.ext.epoch = new Date().getTime();
 
     // Note: Do not move this block up
     // if site object is set in Prebid config then we need to copy required fields from site into app and unset the site object
