@@ -1114,7 +1114,24 @@ describe('PubMatic adapter', function () {
         expect(data.imp[0].ext.key_val).to.exist.and.to.equal(bidRequests[0].params.dctr);
         expect(data.imp[0].bidfloorcur).to.equal(bidRequests[0].params.currency);
         expect(data.source.ext.schain).to.deep.equal(bidRequests[0].schain);
+        expect(data.ext.epoch).to.exist;
   		});
+
+		  it('ortb2.tmax should be passed in the request', function() {
+        let sandbox = sinon.sandbox.create();
+        sandbox.stub(config, 'getConfig').callsFake(key => {
+			  const config = {
+            'ortb2': {
+				  tmax: 1000
+            }
+			  };
+			  return config[key];
+        });
+        const request = spec.buildRequests(bidRequests, {});
+        let data = JSON.parse(request.data);
+        expect(data.tmax).to.equal(1000);
+        sandbox.restore();
+		  });
 
       it('Set content from config, set site.content', function() {
         let sandbox = sinon.sandbox.create();
