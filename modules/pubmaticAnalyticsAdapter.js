@@ -92,6 +92,8 @@ function setMediaTypes(types, bid) {
 function copyRequiredBidDetails(bid) {
   return pick(bid, [
     'bidder',
+    'bidderCode',
+    'adapterCode',
     'bidId',
     'status', () => NO_BID, // default a bid to NO_BID until response is recieved or bid is timed out
     'finalSource as source',
@@ -100,7 +102,7 @@ function copyRequiredBidDetails(bid) {
     'adUnit', () => pick(bid, [
       'adUnitCode',
       'transactionId',
-      'sizes as dimensions', sizes => sizes.map(sizeToDimensions),
+      'sizes as dimensions', sizes => sizes && sizes.map(sizeToDimensions),
       'mediaTypes', (types) => setMediaTypes(types, bid)
     ])
   ]);
@@ -197,12 +199,12 @@ function getDevicePlatform() {
 }
 
 function getValueForKgpv(bid, adUnitId) {
-  if (bid.params.regexPattern) {
+  if (bid.params && bid.params.regexPattern) {
     return bid.params.regexPattern;
   } else if (bid.bidResponse && bid.bidResponse.regexPattern) {
     return bid.bidResponse.regexPattern;
-  } else if (bid.params.kgpv) {
-    return getUpdatedKGPVForVideo(bid.params.kgpv, bid.bidResponse);
+  } else if (bid.params && bid.params.kgpv) {
+    return bid.params.kgpv;
   } else {
     return adUnitId;
   }
@@ -405,7 +407,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   pixelURL += '&slot=' + enc(adUnitId);
   pixelURL += '&au=' + enc(origAdUnit);
   pixelURL += '&pn=' + enc(adapterName);
-  pixelURL += '&bc=' + enc(winningBid.bidder);
+  pixelURL += '&bc=' + enc(winningBid.bidderCode || winningBid.bidder);
   pixelURL += '&en=' + enc(winningBid.bidResponse.bidPriceUSD);
   pixelURL += '&eg=' + enc(winningBid.bidResponse.bidGrossCpmUSD);
   pixelURL += '&kgpv=' + enc(getValueForKgpv(winningBid, adUnitId));
@@ -456,7 +458,7 @@ function bidRequestedHandler(args) {
 }
 
 function bidResponseHandler(args) {
-  let bid = cache.auctions[args.auctionId].adUnitCodes[args.adUnitCode].bids[args.requestId];
+  let bid = cache.auctions[args.auctionId].adUnitCodes[args.adUnitCode].bids[args.requestId][0];
   if (!bid) {
     logError(LOG_PRE_FIX + 'Could not find associated bid request for bid response with requestId: ', args.requestId);
     return;
@@ -492,6 +494,7 @@ function bidderDoneHandler(args) {
 function bidWonHandler(args) {
   let auctionCache = cache.auctions[args.auctionId];
   auctionCache.adUnitCodes[args.adUnitCode].bidWon = args.requestId;
+  auctionCache.adUnitCodes[args.adUnitCode].bidWonAdId = args.adId;
   executeBidWonLoggerCall(args.auctionId, args.adUnitCode);
 }
 
