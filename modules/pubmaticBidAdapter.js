@@ -1200,11 +1200,14 @@ export const spec = {
       mergeDeep(payload, {user: commonFpd.user});
     }
 
-    if (commonFpd.tmax) {
-      payload.tmax = commonFpd.tmax;
-    } else {
-      payload.tmax = window?.PWT?.versionDetails?.timeout;
-    }
+	// Check if bidderRequest has timeout property if present send timeout as tmax value to translator request
+    // bidderRequest has timeout property if publisher sets during calling requestBids function from page
+    // if not bidderRequest contains global value set by Prebid
+	if (bidderRequest?.timeout) {
+		payload.tmax = bidderRequest.timeout || config.getConfig('bidderTimeout');
+	  } else {
+		payload.tmax = window?.PWT?.versionDetails?.timeout;
+	  }
 
 	// Sending epoch timestamp in request.ext object
     payload.ext.epoch = new Date().getTime();

@@ -1117,20 +1117,20 @@ describe('PubMatic adapter', function () {
         expect(data.ext.epoch).to.exist;
   		});
 
-		  it('ortb2.tmax should be passed in the request', function() {
-        let sandbox = sinon.sandbox.create();
-        sandbox.stub(config, 'getConfig').callsFake(key => {
-			  const config = {
-            'ortb2': {
-				  tmax: 1000
-            }
-			  };
-			  return config[key];
-        });
-        const request = spec.buildRequests(bidRequests, {});
-        let data = JSON.parse(request.data);
-        expect(data.tmax).to.equal(1000);
-        sandbox.restore();
+		  it('Set tmax from global config if not set by requestBids method', function() {
+			let sandbox = sinon.sandbox.create();
+			sandbox.stub(config, 'getConfig').callsFake((key) => {
+				  var config = {
+				bidderTimeout: 3000
+				  };
+				  return config[key];
+			});
+			let request = spec.buildRequests(bidRequests, {
+				  auctionId: 'new-auction-id', timeout: 3000
+			});
+			let data = JSON.parse(request.data);
+			expect(data.tmax).to.deep.equal(3000);
+			sandbox.restore();
 		  });
 
       it('Set content from config, set site.content', function() {
