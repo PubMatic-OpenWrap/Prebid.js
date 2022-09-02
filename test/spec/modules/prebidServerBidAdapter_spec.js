@@ -1164,7 +1164,8 @@ describe('S2S Adapter', function () {
         requestCount = 0;
       });
 
-      it('should NOT pass bidfloor and bidfloorcur when getFloor not present or returns invalid response', function () {
+      describe('should NOT pass bidfloor and bidfloorcur when getFloor not present or returns invalid response', function () {
+        /* eslint-disable no-console */
         const _config = {
           s2sConfig: CONFIG,
         };
@@ -1195,7 +1196,7 @@ describe('S2S Adapter', function () {
         runTest(undefined, undefined);
       });
 
-      xit('should correctly pass bidfloor and bidfloorcur', function () {
+      describe('should correctly pass bidfloor and bidfloorcur', function () {
         const _config = {
           s2sConfig: CONFIG,
         };
