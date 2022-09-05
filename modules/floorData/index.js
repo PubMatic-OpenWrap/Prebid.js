@@ -28,24 +28,26 @@ export let init = () => {
 	clearStorage();
 	events.on(CONSTANTS.EVENTS.AUCTION_INIT, function () {
 		let slotCount = window.owpbjs.adUnits.length;
-		window.owpbjs.adUnits.forEach((adUnit) => {
-			frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId] = {
-				slotCnt: 1,
-				bidServed: 0,
-				impressionServed: 0,
-			};
-			codeAdUnitMap[adUnit.code] = adUnit.adUnitId;
-		})
 		storedObject = localStorage.getItem(PREFIX + HOSTNAME);
 		
 		if (storedObject !== null) {
 		  frequencyDepth = JSON.parse(storedObject);
 		  frequencyDepth.pageView = frequencyDepth.pageView + 1;
 		  frequencyDepth.slotCnt = frequencyDepth.slotCnt + slotCount;
-		  frequencyDepth.slotLevelFrquencyDepth[codeAdUnitMap[bid.adUnitCode]].slotCnt = frequencyDepth.slotLevelFrquencyDepth[codeAdUnitMap[bid.adUnitCode]].slotCnt + 1;
+		  // frequencyDepth.slotLevelFrquencyDepth[codeAdUnitMap[bid.adUnitCode]].slotCnt = frequencyDepth.slotLevelFrquencyDepth[codeAdUnitMap[bid.adUnitCode]].slotCnt + 1;
 		} else {
 		  frequencyDepth.slotCnt = slotCount;
 		}
+
+		window.owpbjs.adUnits.forEach((adUnit) => {
+			frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId] = {
+				slotCnt: 1 + (frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId]?.slotCnt || 0),
+				bidServed: 0 + (frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId]?.bidServed || 0),
+				impressionServed: 0 + (frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId]?.impressionServed || 0),
+			};
+			codeAdUnitMap[adUnit.code] = adUnit.adUnitId;
+		})
+		frequencyDepth.codeAdUnitMap = codeAdUnitMap;
 	  });
 	  events.on(CONSTANTS.EVENTS.AUCTION_END, function () {
 		localStorage.setItem(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
