@@ -320,7 +320,7 @@ function getPSL(auctionId) {
 
 function executeBidsLoggerCall(e, highestCpmBids) {
   const HOSTNAME = window.location.host;
-  const storedObject = localStorage.getItem(PREFIX + HOSTNAME);
+  const storedObject = window.localStorage.getItem(PREFIX + HOSTNAME);
   const frequencyDepth = storedObject !== null ? JSON.parse(storedObject) : {};
   const { pageView, slotCnt, bidServed, impressionServed, slotLevelFrquencyDepth } = frequencyDepth;
   let auctionId = e.auctionId;
@@ -379,7 +379,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
       'sz': getSizesForAdUnit(adUnit, adUnitId),
       'fskp': floorData ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined,
       'ps': gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestCpmBids.filter(bid => bid.adUnitCode === adUnitId)),
-      'bc': slotLevelFrquencyDepth && slotLevelFrquencyDepth[origAdUnit.adUnitId].bidServed,
+      'bs': slotLevelFrquencyDepth && slotLevelFrquencyDepth[origAdUnit.adUnitId].bidServed,
       'is': slotLevelFrquencyDepth && slotLevelFrquencyDepth[origAdUnit.adUnitId].impressionServed,
       'rc': slotLevelFrquencyDepth && slotLevelFrquencyDepth[origAdUnit.adUnitId].slotCnt,
     };
