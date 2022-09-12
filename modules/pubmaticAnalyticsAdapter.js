@@ -322,7 +322,6 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   const HOSTNAME = window.location.host;
   const storedObject = window.localStorage.getItem(PREFIX + HOSTNAME);
   const frequencyDepth = storedObject !== null ? JSON.parse(storedObject) : {};
-  const { pageView, slotCnt, bidServed, impressionServed, slotLevelFrquencyDepth } = frequencyDepth;
   let auctionId = e.auctionId;
   let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId].referer || '';
   let auctionCache = cache.auctions[auctionId];
@@ -359,10 +358,10 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     return 0;
   })();
 
-  outputObj['tpv'] = pageView;
-  outputObj['trc'] = slotCnt;
-  outputObj['tbs'] = bidServed;
-  outputObj['tis'] = impressionServed;
+  outputObj['tpv'] = frequencyDepth?.pageView;
+  outputObj['trc'] = frequencyDepth?.slotCnt;
+  outputObj['tbs'] = frequencyDepth?.bidServed;
+  outputObj['tis'] = frequencyDepth?.impressionServed;
 
   if (floorData) {
     outputObj['fmv'] = floorData.floorRequestData ? floorData.floorRequestData.modelVersion || undefined : undefined;
@@ -379,9 +378,9 @@ function executeBidsLoggerCall(e, highestCpmBids) {
       'sz': getSizesForAdUnit(adUnit, adUnitId),
       'fskp': floorData ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined,
       'ps': gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestCpmBids.filter(bid => bid.adUnitCode === adUnitId)),
-      'bs': slotLevelFrquencyDepth && slotLevelFrquencyDepth[origAdUnit.adUnitId].bidServed,
-      'is': slotLevelFrquencyDepth && slotLevelFrquencyDepth[origAdUnit.adUnitId].impressionServed,
-      'rc': slotLevelFrquencyDepth && slotLevelFrquencyDepth[origAdUnit.adUnitId].slotCnt,
+      'bs': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.bidServed,
+      'is': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.impressionServed,
+      'rc': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.slotCnt,
     };
     slotsArray.push(slotObject);
     return slotsArray;
