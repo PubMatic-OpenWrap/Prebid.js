@@ -1163,7 +1163,7 @@ export const spec = {
       payload.device = Object.assign(payload.device, config.getConfig('device'));
     }
 
-		// update device.language to ISO-639-1-alpha-2 (2 character language)
+    // update device.language to ISO-639-1-alpha-2 (2 character language)
     payload.device.language = payload.device.language && payload.device.language.split('-')[0];
 
     // passing transactionId in source.tid
@@ -1213,16 +1213,16 @@ export const spec = {
       mergeDeep(payload, {user: commonFpd.user});
     }
 
-	// Check if bidderRequest has timeout property if present send timeout as tmax value to translator request
+    // Check if bidderRequest has timeout property if present send timeout as tmax value to translator request
     // bidderRequest has timeout property if publisher sets during calling requestBids function from page
     // if not bidderRequest contains global value set by Prebid
-	if (bidderRequest?.timeout) {
-		payload.tmax = bidderRequest.timeout || config.getConfig('bidderTimeout');
-	  } else {
-		payload.tmax = window?.PWT?.versionDetails?.timeout;
-	  }
+    if (bidderRequest?.timeout) {
+      payload.tmax = bidderRequest.timeout || config.getConfig('bidderTimeout');
+    } else {
+      payload.tmax = window?.PWT?.versionDetails?.timeout;
+    }
 
-	// Sending epoch timestamp in request.ext object
+    // Sending epoch timestamp in request.ext object
     payload.ext.epoch = new Date().getTime();
 
     // Note: Do not move this block up
