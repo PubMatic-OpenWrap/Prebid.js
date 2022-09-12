@@ -27,7 +27,7 @@ let clearStorage = (storedDate) => {
   return false;
 }
 
-export function auctionBidWonCode(bid) {
+export function auctionBidWonHandler(bid) {
   if (frequencyDepth) {
     frequencyDepth = JSON.parse(localStorage.getItem(PREFIX + HOSTNAME));
     frequencyDepth.impressionServed = frequencyDepth.impressionServed + 1;
@@ -37,7 +37,7 @@ export function auctionBidWonCode(bid) {
   return frequencyDepth;
 }
 
-export function auctionBidResponseCode(bid) {
+export function auctionBidResponseHandler(bid) {
   if (frequencyDepth) {
     if (bid.cpm > 0) {
       frequencyDepth.slotLevelFrquencyDepth[codeAdUnitMap[bid.adUnitCode]].bidServed = frequencyDepth.slotLevelFrquencyDepth[codeAdUnitMap[bid.adUnitCode]].bidServed + 1;
@@ -47,14 +47,14 @@ export function auctionBidResponseCode(bid) {
   return frequencyDepth;
 }
 
-export function auctionEndCode () {
+export function auctionEndHandler () {
   if (frequencyDepth) {
     localStorage.setItem(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
   }
   return frequencyDepth;
 }
 
-export function auctionInitCode () {
+export function auctionInitHandler () {
   if (frequencyDepth) {
     let slotCount = window.owpbjs.adUnits.length;
     storedObject = localStorage.getItem(PREFIX + HOSTNAME);
@@ -84,19 +84,19 @@ export function auctionInitCode () {
 
 export let init = () => {
   events.on(CONSTANTS.EVENTS.AUCTION_INIT, () => {
-    frequencyDepth = auctionInitCode();
+    frequencyDepth = auctionInitHandler();
   });
 
   events.on(CONSTANTS.EVENTS.AUCTION_END, () => {
-    frequencyDepth = auctionEndCode();
+    frequencyDepth = auctionEndHandler();
   });
 
   events.on(CONSTANTS.EVENTS.BID_RESPONSE, (bid) => {
-    frequencyDepth = auctionBidResponseCode(bid);
+    frequencyDepth = auctionBidResponseHandler(bid);
   });
 
   events.on(CONSTANTS.EVENTS.BID_WON, (bid) => {
-    frequencyDepth = auctionBidWonCode(bid);
+    frequencyDepth = auctionBidWonHandler(bid);
   });
 }
 init()

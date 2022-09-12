@@ -4,13 +4,26 @@ import {expect, spy} from 'chai';
 
 describe('floor additional data points', function () {
   let sandbox;
+  let frequencyDepth = {
+    pageView: 1,
+    slotCnt: 2,
+    bidServed: 4,
+    impressionServed: 1,
+    slotLevelFrquencyDepth: {
+
+    },
+    timestamp: {
+      date: new Date().getDate(),
+      hours: new Date().getHours()
+    }
+  }
 
   beforeEach(function(done) {
     sandbox = sinon.sandbox.create();
-    sandbox.stub(floorData, 'auctionInitCode').returns(1);
-    sandbox.stub(floorData, 'auctionEndCode').returns(1);
-    sandbox.stub(floorData, 'auctionBidResponseCode').returns(1);
-    sandbox.stub(floorData, 'auctionBidWonCode').returns(1);
+    sandbox.stub(floorData, 'auctionInitHandler').returns(frequencyDepth);
+    sandbox.stub(floorData, 'auctionEndHandler').returns(frequencyDepth);
+    sandbox.stub(floorData, 'auctionBidResponseHandler').returns(frequencyDepth);
+    sandbox.stub(floorData, 'auctionBidWonHandler').returns(frequencyDepth);
     done();
   });
 
@@ -19,20 +32,33 @@ describe('floor additional data points', function () {
     done();
   });
 
-  it('First test case', function() {
-    expect(floorData.auctionInitCode()).to.equal(1);
-    expect(floorData.auctionInitCode()).to.equal(1);
+  it('should call auctionInit handler and return storage object', function() {
+    const response = floorData.auctionInitHandler();
+    expect(response).to.equal(frequencyDepth);
+    expect(response.pageView).to.equal(1);
+    expect(response.slotCnt).to.equal(2);
+    expect(response.bidServed).to.equal(4);
+    expect(response.impressionServed).to.equal(1);
   })
 
-  it('second test case', function() {
-    expect(floorData.auctionEndCode()).to.equal(1);
+  it('should call auctionEnd handler and return storage object', function() {
+    const response = floorData.auctionEndHandler();
+    expect(response).to.equal(frequencyDepth);
   })
 
-  it('thrid test case', function() {
-  	expect(floorData.auctionBidResponseCode()).to.equal(1);
+  it('should call auctionBid handler and return storage object', function() {
+    const response = floorData.auctionBidResponseHandler();
+    frequencyDepth.slotLevelFrquencyDepth = {'/43743431/DMDemo': {
+      bidServed: 1
+    }}
+  	expect(response).to.equal(frequencyDepth);
+    expect(response.bidServed).to.equal(4);
+    expect(response.slotLevelFrquencyDepth['/43743431/DMDemo'].bidServed).to.equal(1);
   })
 
-  it('fourth test case', function() {
-  	expect(floorData.auctionBidWonCode()).to.equal(1);
+  it('should call auctionBidWon handler and return storage object', function() {
+    const response = floorData.auctionBidWonHandler();
+  	expect(response).to.equal(frequencyDepth);
+    expect(response.impressionServed).to.equal(1);
   })
 })
