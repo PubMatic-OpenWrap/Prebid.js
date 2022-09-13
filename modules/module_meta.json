@@ -480,8 +480,8 @@
   },
   {
     "name": "Server-to-Server Testing",
-    "path": "/modules/ssTesting.js",
-    "module": "ssTesting"
+    "path": "/modules/s2sTesting.js",
+    "module": "s2sTesting"
   },
   {
     "name": "publisherCommonId",
@@ -492,11 +492,6 @@
     "name": "supplyChainObject",
     "path": "/modules/schain.js",
     "module": "schain"
-  },
-  {
-    "name": "userId",
-    "path": "/modules/userId/index.js",
-    "module": "userId"
   },
   {
     "name": "viewability",
