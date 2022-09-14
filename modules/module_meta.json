@@ -429,12 +429,12 @@
     "module": "bidViewability"
   },
   {
-    "name": "iABCategoryTranslation",
+    "name": "categoryTranslation",
     "path": "/modules/categoryTranslation.js",
     "module": "categoryTranslation"
   },
   {
-    "name": "Currency",
+    "name": "currency",
     "path": "/modules/currency.js",
     "module": "currency"
   },
@@ -479,7 +479,7 @@
     "module": "multibid"
   },
   {
-    "name": "Server-to-Server Testing",
+    "name": "s2sTesting",
     "path": "/modules/s2sTesting.js",
     "module": "s2sTesting"
   },
@@ -489,7 +489,7 @@
     "module": "pubCommonId"
   },
   {
-    "name": "supplyChainObject",
+    "name": "schain",
     "path": "/modules/schain.js",
     "module": "schain"
   },
@@ -499,12 +499,12 @@
     "module": "viewability"
   },
   {
-    "name": "gAMExpress",
+    "name": "express",
     "path": "/modules/express.js",
     "module": "express"
   },
   {
-    "name": "konduitAccelerate",
+    "name": "konduitWrapper",
     "path": "/modules/konduitWrapper.js",
     "module": "konduitWrapper"
   },
