@@ -1019,7 +1019,7 @@ function isNonEmptyArray(test) {
  * @param {*} br : bidResponse
  * @param {*} bid : bids
  */
-function prepareMetaObject(br, bid) {
+export function prepareMetaObject(br, bid) {
   br.meta = {};
   if (bid.ext) {
     if (bid.ext.dspid) br.meta.networkId = bid.ext.dspid;
