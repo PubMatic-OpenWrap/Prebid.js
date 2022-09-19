@@ -7,8 +7,9 @@ describe('PubMaticServer adapter', () => {
   let bidRequests, videoBidRequests;
   let bidResponses;
   let errorCodeBidResponses;
-
+  let logWarnSpy;
   beforeEach(() => {
+    logWarnSpy = sinon.spy(utils, 'logWarn');
     window.PWT = {};
     window.PWT.bidMap = {
       '/19968336/header-bid-tag-1': {
@@ -176,6 +177,7 @@ describe('PubMaticServer adapter', () => {
   });
 
   afterEach(() => {
+    utils.logWarn.restore();
     delete window.PWT;
   });
 
@@ -306,7 +308,16 @@ describe('PubMaticServer adapter', () => {
     });
 
   	describe('Request formation', () => {
-  		it('Endpoint checking', () => {
+      it('Log warn for non string params', () => {
+		  let requestCopy = utils.deepClone(bidRequests);
+		  requestCopy[0].params.yob = 1990;
+  		  let request = spec.buildRequests(requestCopy, {
+          auctionId: 'new-auction-id'
+        });
+        expect(logWarnSpy.calledOnce).to.equal(true);
+  		});
+
+      it('Endpoint checking', () => {
   		  let request = spec.buildRequests(bidRequests, {
           auctionId: 'new-auction-id'
         });
@@ -538,5 +549,12 @@ describe('PubMaticServer adapter', () => {
         expect(response[0].serverSideResponseTime).to.equal(-1);
       });
     });
+
+	describe('getUserSync', () => {
+		it('should return url', () => {
+			let response = spec.getUserSyncs('', '', {gdprApplies: true, consentString: ''}, '');
+			expect(response).to.be.an('array');
+		  });
+	});
   });
 });
