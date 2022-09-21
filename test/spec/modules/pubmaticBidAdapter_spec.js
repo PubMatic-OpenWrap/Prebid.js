@@ -2710,6 +2710,48 @@ describe('PubMatic adapter', function () {
       expect(data.video.h).to.equal(bannerAndVideoBidRequests[0].mediaTypes.video.playerSize[1]);
     });
 
+    it('Request params - should handle banner and video format in single input', function () {
+      const newBannerAndVideoBidRequests = JSON.parse(JSON.stringify(bannerAndVideoBidRequests));
+
+      // CASE: playerSize is undefined and w and h available
+      newBannerAndVideoBidRequests[0].mediaTypes.video.playerSize = undefined;
+      newBannerAndVideoBidRequests[0].params.video.w = 350;
+      newBannerAndVideoBidRequests[0].params.video.h = 250;
+
+      let request = spec.buildRequests(newBannerAndVideoBidRequests, {
+        auctionId: 'new-auction-id'
+      });
+      let data = JSON.parse(request.data);
+      data = data.imp[0];
+      expect(data.video).to.exist;
+      expect(data.video.w).to.equal(newBannerAndVideoBidRequests[0].params.video.w);
+      expect(data.video.h).to.equal(newBannerAndVideoBidRequests[0].params.video.h);
+
+      // CASE: playerSize is undefined and w and h undefined
+      newBannerAndVideoBidRequests[0].params.video.w = undefined;
+      newBannerAndVideoBidRequests[0].params.video.h = undefined;
+
+      request = spec.buildRequests(newBannerAndVideoBidRequests, {
+        auctionId: 'new-auction-id'
+      });
+      data = JSON.parse(request.data);
+      data = data.imp[0];
+      // expect(data.video).to.exist;
+      expect(data.video).to.equal(undefined);
+      // expect(data.video.h).to.equal(undefined);
+
+      // CASE: video object is undefined
+      newBannerAndVideoBidRequests[0].mediaTypes.video = undefined;
+      newBannerAndVideoBidRequests[0].params.video = undefined;
+
+      request = spec.buildRequests(newBannerAndVideoBidRequests, {
+        auctionId: 'new-auction-id'
+      });
+      data = JSON.parse(request.data);
+      data = data.imp[0];
+      expect(data.video).to.equal(undefined);
+    });
+
     it('Request params - banner and video req in single adslot - should ignore banner imp if banner size is set to fluid and send video imp object', function () {
     /* Adslot configured for banner and video.
            banner size is set to [['fluid'], [300, 250]]
@@ -3717,18 +3759,75 @@ describe('PubMatic adapter', function () {
     })
   });
 
-  describe('getUserSyncs', function() {
+  describe('getUserSyncs function', function () {
+    let sandbox;
+    beforeEach(function () {
+      sandbox = sinon.sandbox.create();
+      sandbox.stub(config, 'getConfig').callsFake(key => {
+        const config = {
+          'coppa': true
+        };
+        return config[key];
+      });
+    });
+    afterEach(function () {
+      sandbox.restore();
+    });
+
+    let gdprConsent = {
+      consentString: 'kjfdniwjnifwenrif3',
+      gdprApplies: true
+    };
+    let uspConsent = '1NYN';
+    let syncOptions = {
+      iframeEnabled: true
+    };
+
+    it('Should have type iframe and all params present', function () {
+      const result = spec.getUserSyncs(syncOptions, null, gdprConsent, uspConsent);
+      // https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p='5670'&gdpr=1&gdpr_consent='kjfdniwjnifwenrif3'&us_privacy='1NYN'&coppa=1
+      expect(result[0].type).to.equal('iframe');
+      expect(result[0].url).to.equal("https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=5670&gdpr=1&gdpr_consent=kjfdniwjnifwenrif3&us_privacy=1NYN&coppa=1");
+    });
+
+    it('Should have type image and all params present', function () {
+      syncOptions = {
+        iframeEnabled: false
+      };
+      const result = spec.getUserSyncs(syncOptions, null, gdprConsent, uspConsent);
+      // https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p='5670'&gdpr=1&gdpr_consent='kjfdniwjnifwenrif3'&us_privacy='1NYN'&coppa=1
+      expect(result[0].type).to.equal('image');
+      expect(result[0].url).to.equal("https://image8.pubmatic.com/AdServer/ImgSync?p=5670&gdpr=1&gdpr_consent=kjfdniwjnifwenrif3&us_privacy=1NYN&coppa=1");
+    });
+
+    it('Should have type image and with no values pass', function () {
+      syncOptions = {
+        iframeEnabled: false
+      };
+      uspConsent = undefined;
+      gdprConsent = {
+        consentString: undefined,
+        gdprApplies: undefined
+      };
+      const result = spec.getUserSyncs(syncOptions, null, gdprConsent, uspConsent);
+      // https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p='5670'&gdpr=1&gdpr_consent='kjfdniwjnifwenrif3'&us_privacy='1NYN'&coppa=1
+      expect(result[0].type).to.equal('image');
+      expect(result[0].url).to.equal("https://image8.pubmatic.com/AdServer/ImgSync?p=5670&gdpr=0&gdpr_consent=&coppa=1");
+    });
+  });
+
+  describe('getUserSyncs', function () {
     const syncurl_iframe = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=5670';
     const syncurl_image = 'https://image8.pubmatic.com/AdServer/ImgSync?p=5670';
     let sandbox;
     beforeEach(function () {
       sandbox = sinon.sandbox.create();
     });
-    afterEach(function() {
+    afterEach(function () {
       sandbox.restore();
     });
 
-    it('should have a valid native bid response', function() {
+    it('should have a valid native bid response', function () {
       let request = spec.buildRequests(nativeBidRequests, {
         auctionId: 'new-auction-id'
       });
