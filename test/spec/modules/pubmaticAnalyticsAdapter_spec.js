@@ -282,6 +282,7 @@ const MOCK = {
   ],
   BIDDER_DONE: {
     'bidderCode': 'pubmatic',
+    'auctionId': '25c6d7f5-699a-4bfc-87c9-996f915341fa',
     'bids': [
       BID,
       Object.assign({}, BID2, {
@@ -393,7 +394,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.to).to.equal('3000');
       expect(data.purl).to.equal('http://www.test.com/page.html');
       expect(data.orig).to.equal('www.test.com');
-      expect(data.tst).to.equal(1519767016);
+      expect(data.tst).to.equal(1519767014);
       expect(data.tgid).to.equal(15);
       expect(data.fmv).to.equal('floorModelTest');
       expect(data.ft).to.equal(1);
@@ -1350,7 +1351,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.to).to.equal('3000');
       expect(data.purl).to.equal('http://www.test.com/page.html');
       expect(data.orig).to.equal('www.test.com');
-      expect(data.tst).to.equal(1519767016);
+      expect(data.tst).to.equal(1519767014);
       expect(data.tgid).to.equal(15);
       expect(data.fmv).to.equal('floorModelTest');
       expect(data.ft).to.equal(1);
@@ -1484,7 +1485,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.to).to.equal('3000');
       expect(data.purl).to.equal('http://www.test.com/page.html');
       expect(data.orig).to.equal('www.test.com');
-      expect(data.tst).to.equal(1519767016);
+      expect(data.tst).to.equal(1519767014);
       expect(data.tgid).to.equal(15);
       expect(data.fmv).to.equal('floorModelTest');
       expect(data.ft).to.equal(1);
