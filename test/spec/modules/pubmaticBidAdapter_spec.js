@@ -3787,7 +3787,7 @@ describe('PubMatic adapter', function () {
       const result = spec.getUserSyncs(syncOptions, null, gdprConsent, uspConsent);
       // https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p='5670'&gdpr=1&gdpr_consent='kjfdniwjnifwenrif3'&us_privacy='1NYN'&coppa=1
       expect(result[0].type).to.equal('iframe');
-      expect(result[0].url).to.equal("https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=5670&gdpr=1&gdpr_consent=kjfdniwjnifwenrif3&us_privacy=1NYN&coppa=1");
+      expect(result[0].url).to.equal('https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=5670&gdpr=1&gdpr_consent=kjfdniwjnifwenrif3&us_privacy=1NYN&coppa=1');
     });
 
     it('Should have type image and all params present', function () {
@@ -3797,7 +3797,7 @@ describe('PubMatic adapter', function () {
       const result = spec.getUserSyncs(syncOptions, null, gdprConsent, uspConsent);
       // https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p='5670'&gdpr=1&gdpr_consent='kjfdniwjnifwenrif3'&us_privacy='1NYN'&coppa=1
       expect(result[0].type).to.equal('image');
-      expect(result[0].url).to.equal("https://image8.pubmatic.com/AdServer/ImgSync?p=5670&gdpr=1&gdpr_consent=kjfdniwjnifwenrif3&us_privacy=1NYN&coppa=1");
+      expect(result[0].url).to.equal('https://image8.pubmatic.com/AdServer/ImgSync?p=5670&gdpr=1&gdpr_consent=kjfdniwjnifwenrif3&us_privacy=1NYN&coppa=1');
     });
 
     it('Should have type image and with no values pass', function () {
@@ -3812,7 +3812,7 @@ describe('PubMatic adapter', function () {
       const result = spec.getUserSyncs(syncOptions, null, gdprConsent, uspConsent);
       // https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p='5670'&gdpr=1&gdpr_consent='kjfdniwjnifwenrif3'&us_privacy='1NYN'&coppa=1
       expect(result[0].type).to.equal('image');
-      expect(result[0].url).to.equal("https://image8.pubmatic.com/AdServer/ImgSync?p=5670&gdpr=0&gdpr_consent=&coppa=1");
+      expect(result[0].url).to.equal('https://image8.pubmatic.com/AdServer/ImgSync?p=5670&gdpr=0&gdpr_consent=&coppa=1');
     });
   });
 

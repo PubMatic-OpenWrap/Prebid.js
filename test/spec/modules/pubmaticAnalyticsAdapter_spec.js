@@ -106,6 +106,9 @@ const BID2 = Object.assign({}, BID, {
   },
   meta: {
     advertiserDomains: ['example.com']
+  },
+  getStatusCode() {
+    return 2;
   }
 });
 
