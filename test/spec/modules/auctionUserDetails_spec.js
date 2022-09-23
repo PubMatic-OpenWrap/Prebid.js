@@ -1,4 +1,4 @@
-import * as floorData from 'modules/floorData/index.js';
+import * as auctionUserDetails from 'modules/auctionUserDetails/index.js';
 import * as sinon from 'sinon';
 import {expect, spy} from 'chai';
 
@@ -20,10 +20,10 @@ describe('floor additional data points', function () {
 
   beforeEach(function(done) {
     sandbox = sinon.sandbox.create();
-    sandbox.stub(floorData, 'auctionInitHandler').returns(frequencyDepth);
-    sandbox.stub(floorData, 'auctionEndHandler').returns(frequencyDepth);
-    sandbox.stub(floorData, 'auctionBidResponseHandler').returns(frequencyDepth);
-    sandbox.stub(floorData, 'auctionBidWonHandler').returns(frequencyDepth);
+    sandbox.stub(auctionUserDetails, 'auctionInitHandler').returns(frequencyDepth);
+    sandbox.stub(auctionUserDetails, 'auctionEndHandler').returns(frequencyDepth);
+    sandbox.stub(auctionUserDetails, 'auctionBidResponseHandler').returns(frequencyDepth);
+    sandbox.stub(auctionUserDetails, 'auctionBidWonHandler').returns(frequencyDepth);
     done();
   });
 
@@ -33,7 +33,7 @@ describe('floor additional data points', function () {
   });
 
   it('should call auctionInit handler and return storage object', function() {
-    const response = floorData.auctionInitHandler();
+    const response = auctionUserDetails.auctionInitHandler();
     expect(response).to.equal(frequencyDepth);
     expect(response.pageView).to.equal(1);
     expect(response.slotCnt).to.equal(2);
@@ -42,12 +42,12 @@ describe('floor additional data points', function () {
   })
 
   it('should call auctionEnd handler and return storage object', function() {
-    const response = floorData.auctionEndHandler();
+    const response = auctionUserDetails.auctionEndHandler();
     expect(response).to.equal(frequencyDepth);
   })
 
   it('should call auctionBid handler and return storage object', function() {
-    const response = floorData.auctionBidResponseHandler();
+    const response = auctionUserDetails.auctionBidResponseHandler();
     frequencyDepth.slotLevelFrquencyDepth = {'/43743431/DMDemo': {
       bidServed: 1
     }}
@@ -57,7 +57,7 @@ describe('floor additional data points', function () {
   })
 
   it('should call auctionBidWon handler and return storage object', function() {
-    const response = floorData.auctionBidWonHandler();
+    const response = auctionUserDetails.auctionBidWonHandler();
   	expect(response).to.equal(frequencyDepth);
     expect(response.impressionServed).to.equal(1);
   })
