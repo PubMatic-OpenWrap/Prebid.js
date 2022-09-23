@@ -35,7 +35,7 @@ const MEDIATYPE = {
   VIDEO: 1,
   NATIVE: 2
 }
-const PREFIX = 'FLOOR_';
+const PREFIX = 'PROFILE_AUCTION_INFO_';
 
 /// /////////// VARIABLES //////////////
 let publisherId = DEFAULT_PUBLISHER_ID; // int: mandatory
@@ -363,6 +363,8 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['trc'] = frequencyDepth?.slotCnt;
   outputObj['tbs'] = frequencyDepth?.bidServed;
   outputObj['tis'] = frequencyDepth?.impressionServed;
+  outputObj['lip'] = frequencyDepth?.lip;
+  outputObj['ua'] = frequencyDepth?.userAgentDetails;
 
   if (floorData) {
     outputObj['fmv'] = floorData.floorRequestData ? floorData.floorRequestData.modelVersion || undefined : undefined;
