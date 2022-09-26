@@ -364,7 +364,8 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['tbs'] = frequencyDepth?.bidServed;
   outputObj['tis'] = frequencyDepth?.impressionServed;
   outputObj['lip'] = frequencyDepth?.lip;
-  outputObj['ua'] = frequencyDepth?.userAgentDetails;
+  // Commenting user agent as analytics team is already receiving these information.
+  // outputObj['ua'] = frequencyDepth?.userAgentDetails;
 
   if (floorData) {
     outputObj['fmv'] = floorData.floorRequestData ? floorData.floorRequestData.modelVersion || undefined : undefined;
