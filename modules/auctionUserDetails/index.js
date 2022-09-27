@@ -78,6 +78,7 @@ export function auctionBidResponseHandler(bid) {
 
 export function auctionEndHandler () {
   if (frequencyDepth) {
+	frequencyDepth.lip = window.owpbjs.adUnits[0]?.bids[0]?.userId && Object.keys(window.owpbjs.adUnits[0].bids[0].userId);
     localStorage.setItem(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
   }
   return frequencyDepth;
@@ -86,7 +87,7 @@ export function auctionEndHandler () {
 export function auctionInitHandler () {
   if (frequencyDepth) {
     let slotCount = window.owpbjs.adUnits.length;
-    frequencyDepth.lip = window.owpbjs.adUnits[0]?.bids[0]?.userId && Object.keys(window.owpbjs.adUnits[0].bids[0].userId);
+    
     storedObject = localStorage.getItem(PREFIX + HOSTNAME);
     if (storedObject !== null) {
       storedDate = JSON.parse(storedObject).timestamp.date;
