@@ -27,7 +27,7 @@ module.exports = {
   entry: (() => {
     const entry = {
       'prebid-core': {
-        import: './src/prebid.js'
+        import: argv.profile === 'IH' ?'./src/prebidIdhub.js' : './src/prebid.js'
       }
     };
     const selectedModules = new Set(helpers.getArgModules());
