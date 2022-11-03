@@ -5,6 +5,7 @@ import {
   logInfo,
   logError
 } from './utils.js';
+import { userSync } from './userSync.js';
 import { config } from './config.js';
 import { hook } from './hook.js';
 import { sessionLoader } from './debugging.js';
@@ -13,6 +14,7 @@ import CONSTANTS from './constants.json';
 import * as events from './events.js'
 
 const $$PREBID_GLOBAL$$ = getGlobal();
+const { triggerUserSyncs } = userSync;
 
 /* private variables */
 const {REQUEST_BIDS } = CONSTANTS.EVENTS;
@@ -20,6 +22,7 @@ const {REQUEST_BIDS } = CONSTANTS.EVENTS;
 sessionLoader();
 
 /* Public vars */
+$$PREBID_GLOBAL$$.bidderSettings = $$PREBID_GLOBAL$$.bidderSettings || {};
 // let the world know we are loaded
 $$PREBID_GLOBAL$$.libLoaded = true;
 
@@ -27,9 +30,12 @@ $$PREBID_GLOBAL$$.libLoaded = true;
 $$PREBID_GLOBAL$$.version = 'v$prebid.version$';
 logInfo('Prebid.js v$prebid.version$ loaded');
 
+$$PREBID_GLOBAL$$.installedModules = $$PREBID_GLOBAL$$.installedModules || [];
 // create adUnit array
 $$PREBID_GLOBAL$$.adUnits = $$PREBID_GLOBAL$$.adUnits || [];
 
+// Allow publishers who enable user sync override to trigger their sync
+$$PREBID_GLOBAL$$.triggerUserSyncs = triggerUserSyncs;
 /// ///////////////////////////////
 //                              //
 //    Start Public APIs         //

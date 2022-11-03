@@ -38,7 +38,7 @@ module.exports = {
       if (selectedModules.size === 0 || selectedModules.has(mod)) {
         entry[mod] = {
           import: fn,
-          dependOn: 'prebid-core'
+          dependOn: 'prebid-core-idhub'
         }
       }
     });
