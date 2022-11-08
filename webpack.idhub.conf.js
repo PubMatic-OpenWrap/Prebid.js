@@ -15,9 +15,9 @@ if (argv.analyze) {
     )
 }
 
+//Get Webpack config and ovverride entry point for IDHUB related profiles.
 var webpackConfig = require('./webpack.conf');
 
-//Override entry point for IDHUB related profiles.
 webpackConfig['entry'] = (() => {
     const entry = {
         'prebid-core-idhub': {
@@ -36,4 +36,4 @@ webpackConfig['entry'] = (() => {
     return entry;
 })();
 
-module.exports = webpackConfig; // 
+module.exports = webpackConfig;
