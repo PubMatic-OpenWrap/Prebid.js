@@ -276,7 +276,7 @@ function makeDevpackPkgForIh() {
   var connect = require('gulp-connect');
   var webpack = require('webpack');
   var webpackStream = require('webpack-stream');
-  var webpackConfig = require('./webpack.conf');
+  var webpackConfig = require('./webpack.idhub.conf');
   var helpers = require('./gulpHelpers');
   
   var cloned = _.cloneDeep(webpackConfig);
@@ -297,7 +297,7 @@ function makeWebpackPkgForIh() {
   var webpack = require('webpack');
   var webpackStream = require('webpack-stream');
   var terser = require('gulp-terser');
-  var webpackConfig = require('./webpack.conf');
+  var webpackConfig = require('./webpack.idhub.conf');
   var helpers = require('./gulpHelpers');
   var header = require('gulp-header');
   var gulpif = require('gulp-if');

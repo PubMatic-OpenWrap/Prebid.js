@@ -22,7 +22,7 @@ import {
   timestamp,
 } from './utils.js';
 import {processAdUnitsForLabels} from './sizeMapping.js';
-import { decorateAdUnitsWithNativeParams, nativeAdapters } from './\';
+import { decorateAdUnitsWithNativeParams, nativeAdapters } from './native.js';
 import { newBidder } from './adapters/bidderFactory.js';
 import { ajaxBuilder } from './ajax.js';
 import { config, RANDOM } from './config.js';
