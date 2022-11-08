@@ -6,71 +6,34 @@ var { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 var argv = require('yargs').argv;
 
 var plugins = [
-  new webpack.EnvironmentPlugin({'LiveConnectMode': null})
+    new webpack.EnvironmentPlugin({ 'LiveConnectMode': null })
 ];
 
 if (argv.analyze) {
-  plugins.push(
-    new BundleAnalyzerPlugin()
-  )
+    plugins.push(
+        new BundleAnalyzerPlugin()
+    )
 }
 
-module.exports = {
-  mode: 'production',
-  devtool: 'source-map',
-  resolve: {
-    modules: [
-      path.resolve('.'),
-      'node_modules'
-    ],
-  },
-  entry: (() => {
+var webpackConfig = require('./webpack.conf');
+
+//Override entry point for IDHUB related profiles.
+webpackConfig['entry'] = (() => {
     const entry = {
-      'prebid-core-idhub': {
-        import: './src/prebidIdhub.js' 
-      }
+        'prebid-core-idhub': {
+            import: './src/prebidIdhub.js'
+        }
     };
     const selectedModules = new Set(helpers.getArgModules());
     Object.entries(helpers.getModules()).forEach(([fn, mod]) => {
-      if (selectedModules.size === 0 || selectedModules.has(mod)) {
-        entry[mod] = {
-          import: fn,
-          dependOn: 'prebid-core-idhub'
+        if (selectedModules.size === 0 || selectedModules.has(mod)) {
+            entry[mod] = {
+                import: fn,
+                dependOn: 'prebid-core-idhub'
+            }
         }
-      }
     });
     return entry;
-  })(),
-  output: {
-    chunkLoadingGlobal: (argv.profile === 'IH' ? prebid.ihGlobalVarName : prebid.globalVarName ) + 'Chunk',
-    chunkLoading: 'jsonp',
-  },
-  module: {
-    rules: [
-      {
-        test: /\.js$/,
-        exclude: path.resolve('./node_modules'), // required to prevent loader from choking non-Prebid.js node_modules
-        use: [
-          {
-            loader: 'babel-loader',
-            options: helpers.getAnalyticsOptions(),
-          }
-        ]
-      },
-      { // This makes sure babel-loader is ran on our intended Prebid.js modules that happen to be in node_modules
-        test: /\.js$/,
-        include: helpers.getArgModules().map(module => new RegExp('node_modules/' + module + '/')),
-        use: [
-          {
-            loader: 'babel-loader',
-          }
-        ],
-      }
-    ]
-  },
-  optimization: {
-    usedExports: true,
-    sideEffects: true,
-  },
-  plugins
-};
+})();
+
+module.exports = webpackConfig; // 
