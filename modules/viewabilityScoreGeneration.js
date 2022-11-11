@@ -3,7 +3,7 @@ import adapterManager from '../src/adapterManager.js';
 import { targeting } from '../src/targeting.js';
 import * as events from '../src/events.js';
 import CONSTANTS from '../src/constants.json';
-import { isAdUnitCodeMatchingSlot } from '../src/utils.js';
+import { isAdUnitCodeMatchingSlot, getPerformanceNow, safeJSONParse } from '../src/utils.js';
 
 const MODULE_NAME = 'viewabilityScoreGeneration';
 const ENABLED = 'enabled';
@@ -12,7 +12,7 @@ const GPT_SLOT_RENDER_ENDED_EVENT = 'slotRenderEnded';
 const GPT_IMPRESSION_VIEWABLE_EVENT = 'impressionViewable';
 const GPT_SLOT_VISIBILITY_CHANGED_EVENT = 'slotVisibilityChanged';
 
-export const getAndParseFromLocalStorage = key => JSON.parse(window.localStorage.getItem(key));
+export const getAndParseFromLocalStorage = key => safeJSONParse(window.localStorage.getItem(key));
 export const setAndStringifyToLocalStorage = (key, object) => { window.localStorage.setItem(key, JSON.stringify(object)); };
 
 let vsgObj = getAndParseFromLocalStorage('viewability-data');
@@ -84,7 +84,7 @@ export const gptImpressionViewableHandler = (adSlotElementId, setToLocalStorageC
 export const gptSlotVisibilityChangedHandler = (adSlotElementId, inViewPercentage, setToLocalStorageCb) => {
   if (inViewPercentage > 50) {
     const lastStarted = vsgObj[adSlotElementId].lastViewed;
-    const currentTime = performance.now();
+    const currentTime = getPerformanceNow();
 
     if (lastStarted) {
       const diff = currentTime - lastStarted;
