@@ -29,10 +29,10 @@ var replace = require('gulp-replace');
 // var jsEscape = require('gulp-js-escape');
 const path = require('path');
 const execa = require('execa');
+const {minify} = require('terser');
+const Vinyl = require('vinyl');
 
 var prebid = require('./package.json');
-var dateString = 'Updated : ' + (new Date()).toISOString().substring(0, 10);
-var banner = '/* <%= prebid.name %> v<%= prebid.version %>\n' + dateString + '*/\n';
 var port = 9999;
 console.timeEnd('Loading Plugins in Prebid');
 const FAKE_SERVER_HOST = argv.host ? argv.host : 'localhost';
@@ -200,7 +200,11 @@ function makeWebpackPkg() {
 }
 
 function getModulesListToAddInBanner(modules) {
-  return (modules.length > 0) ? modules.join(', ') : 'All available modules in current version.';
+  if (!modules || modules.length === helpers.getModuleNames().length) {
+    return 'All available modules for this version.'
+  } else {
+    return modules.join(', ')
+  }
 }
 
 function gulpBundle(dev) {
@@ -219,6 +223,47 @@ function nodeBundle(modules) {
         done();
       }));
   });
+}
+
+function wrapWithHeaderAndFooter(dev, modules) {
+  // NOTE: gulp-header, gulp-footer & gulp-wrap do not play nice with source maps.
+  // gulp-concat does; for that reason we are prepending and appending the source stream with "fake" header & footer files.
+  function memoryVinyl(name, contents) {
+    return new Vinyl({
+      cwd: '',
+      base: 'generated',
+      path: name,
+      contents: Buffer.from(contents, 'utf-8')
+    });
+  }
+  return function wrap(stream) {
+    const wrapped = through.obj();
+    const placeholder = '$$PREBID_SOURCE$$';
+    const tpl = _.template(fs.readFileSync('./bundle-template.txt'))({
+      prebid,
+      modules: getModulesListToAddInBanner(modules),
+      enable: !argv.manualEnable
+    });
+    (dev ? Promise.resolve(tpl) : minify(tpl, {format: {comments: true}}).then((res) => res.code))
+      .then((tpl) => {
+        // wrap source placeholder in an IIFE to make it an expression (so that it works with minify output)
+        const parts = tpl.replace(placeholder, `(function(){$$${placeholder}$$})()`).split(placeholder);
+        if (parts.length !== 2) {
+          throw new Error(`Cannot parse bundle template; it must contain exactly one instance of '${placeholder}'`);
+        }
+        const [header, footer] = parts;
+        wrapped.push(memoryVinyl('prebid-header.js', header));
+        stream.pipe(wrapped, {end: false});
+        stream.on('end', () => {
+          wrapped.push(memoryVinyl('prebid-footer.js', footer));
+          wrapped.push(null);
+        });
+      })
+      .catch((err) => {
+        wrapped.destroy(err);
+      });
+    return wrapped;
+  }
 }
 
 function bundle(dev, moduleArr) {
@@ -243,8 +288,15 @@ function bundle(dev, moduleArr) {
       });
     }
   }
+  const coreFile = helpers.getBuiltPrebidCoreFile(dev);
+  const moduleFiles = helpers.getBuiltModules(dev, modules);
+  const depGraph = require(helpers.getBuiltPath(dev, 'dependencies.json'));
+  const dependencies = new Set();
+  [coreFile].concat(moduleFiles).map(name => path.basename(name)).forEach((file) => {
+    (depGraph[file] || []).forEach((dep) => dependencies.add(helpers.getBuiltPath(dev, dep)));
+  });
 
-  var entries = [helpers.getBuiltPrebidCoreFile(dev)].concat(helpers.getBuiltModules(dev, modules));
+  const entries = [coreFile].concat(Array.from(dependencies), moduleFiles);
 
   var outputFileName = argv.bundleName ? argv.bundleName : 'prebid.js';
 

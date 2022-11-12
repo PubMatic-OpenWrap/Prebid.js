@@ -8,24 +8,27 @@ import {
 } from '../../src/utils.js';
 import CONSTANTS from '../../src/constants.json';
 import adapterManager from '../../src/adapterManager.js';
-import { config } from '../../src/config.js';
+import {config} from '../../src/config.js';
 import { VIDEO, NATIVE } from '../../src/mediaTypes.js';
-import { isValid } from '../../src/adapters/bidderFactory.js';
+import {isValid} from '../../src/adapters/bidderFactory.js';
 import * as events from '../../src/events.js';
-import {find, includes} from '../../src/polyfill.js';
-import { S2S_VENDORS } from './config.js';
-import { ajax } from '../../src/ajax.js';
+import {includes} from '../../src/polyfill.js';
+import {S2S_VENDORS} from './config.js';
+import {ajax} from '../../src/ajax.js';
 import {hook} from '../../src/hook.js';
 import { processNativeAdUnitParams } from '../../src/native.js';
+import {hasPurpose1Consent} from '../../src/utils/gpdr.js';
+import {buildPBSRequest, interpretPBSResponse} from './ortbConverter.js';
+import {useMetrics} from '../../src/utils/perfMetrics.js';
+
+const DEFAULT_S2S_TTL = 60;
+const DEFAULT_S2S_CURRENCY = 'USD';
+const DEFAULT_S2S_NETREVENUE = true;
 
 const getConfig = config.getConfig;
 
 const TYPE = CONSTANTS.S2S.SRC;
 let _syncCount = 0;
-const DEFAULT_S2S_TTL = 60;
-const DEFAULT_S2S_CURRENCY = 'USD';
-const DEFAULT_S2S_NETREVENUE = true;
-
 let _s2sConfigs;
 
 let eidPermissions;
@@ -88,12 +91,13 @@ let siteProperties = ['page', 'domain', 'ref'];
  * @property {boolean} [cacheMarkup] whether to cache the adm result
  * @property {string} [syncEndpoint] endpoint URL for syncing cookies
  * @property {Object} [extPrebid] properties will be merged into request.ext.prebid
+ * @property {Object} [ortbNative] base value for imp.native.request
  */
 
 /**
  * @type {S2SDefaultConfig}
  */
-const s2sDefaultConfig = {
+export const s2sDefaultConfig = {
   bidders: Object.freeze([]),
   timeout: 1000,
   syncTimeout: 1000,
@@ -101,7 +105,14 @@ const s2sDefaultConfig = {
   adapter: 'prebidServer',
   allowUnknownBidderCodes: false,
   adapterOptions: {},
-  syncUrlModifier: {}
+  syncUrlModifier: {},
+  ortbNative: {
+    context: 1,
+    plcmttype: 1,
+    eventtrackers: [
+      {event: 1, methods: [1]}
+    ],
+  }
 };
 
 config.setDefaults({
@@ -855,8 +866,8 @@ Object.assign(ORTB2.prototype, {
           logError('PBS: getFloor threw an error: ', e);
         }
         if (floorInfo && floorInfo.currency && !isNaN(parseFloat(floorInfo.floor))) {
-           imp.bidfloor = parseFloat(floorInfo.floor);
-           imp.bidfloorcur = floorInfo.currency
+          imp.bidfloor = parseFloat(floorInfo.floor);
+          imp.bidfloorcur = floorInfo.currency
         }
       }
 
@@ -1287,16 +1298,6 @@ function bidWonHandler(bid) {
   }
 }
 
-function hasPurpose1Consent(gdprConsent) {
-  let result = true;
-  if (gdprConsent) {
-    if (gdprConsent.gdprApplies && gdprConsent.apiVersion === 2) {
-      result = !!(deepAccess(gdprConsent, 'vendorData.purpose.consents.1') === true);
-    }
-  }
-  return result;
-}
-
 function getMatchingConsentUrl(urlProp, gdprConsent) {
   return hasPurpose1Consent(gdprConsent) ? urlProp.p1Consent : urlProp.noP1Consent;
 }
@@ -1318,6 +1319,12 @@ export function PrebidServer() {
 
   /* Prebid executes this function when the page asks to send out bid requests */
   baseAdapter.callBids = function(s2sBidRequest, bidRequests, addBidResponse, done, ajax) {
+    const adapterMetrics = s2sBidRequest.metrics = useMetrics(deepAccess(bidRequests, '0.metrics'))
+      .newMetrics()
+      .renameWith((n) => [`adapter.s2s.${n}`, `adapters.s2s.${s2sBidRequest.s2sConfig.defaultVendor}.${n}`])
+    done = adapterMetrics.startTiming('total').stopBefore(done);
+    bidRequests.forEach(req => useMetrics(req.metrics).join(adapterMetrics, {continuePropagation: false}));
+
     let { gdprConsent, uspConsent } = getConsentData(bidRequests);
 
     if (Array.isArray(_s2sConfigs)) {
@@ -1339,8 +1346,20 @@ export function PrebidServer() {
         },
         onError: done,
         onBid: function ({adUnit, bid}) {
-          if (isValid(adUnit, bid)) {
-            addBidResponse(adUnit, bid);
+          const metrics = bid.metrics = s2sBidRequest.metrics.fork().renameWith();
+          metrics.checkpoint('addBidResponse');
+          if ((bid.requestId == null || bid.requestBidder == null) && !s2sBidRequest.s2sConfig.allowUnknownBidderCodes) {
+            logWarn(`PBS adapter received bid from unknown bidder (${bid.bidder}), but 's2sConfig.allowUnknownBidderCodes' is not set. Ignoring bid.`);
+            addBidResponse.reject(adUnit, bid, CONSTANTS.REJECTION_REASON.BIDDER_DISALLOWED);
+          } else {
+            if (metrics.measureTime('addBidResponse.validate', () => isValid(adUnit, bid))) {
+              addBidResponse(adUnit, bid);
+              if (bid.pbsWurl) {
+                addWurl(bid.auctionId, bid.adId, bid.pbsWurl);
+              }
+            } else {
+              addBidResponse.reject(adUnit, bid, CONSTANTS.REJECTION_REASON.INVALID);
+            }
           }
         }
       })
@@ -1377,20 +1396,21 @@ export const processPBSRequest = hook('sync', function (s2sBidRequest, bidReques
     .reduce(flatten, [])
     .filter(uniques);
 
-  const ortb2 = new ORTB2(s2sBidRequest, bidRequests, adUnits, requestedBidders);
-  const request = ortb2.buildRequest();
+  const request = s2sBidRequest.metrics.measureTime('buildRequests', () => buildPBSRequest(s2sBidRequest, bidRequests, adUnits, requestedBidders, eidPermissions));
   const requestJson = request && JSON.stringify(request);
   logInfo('BidRequest: ' + requestJson);
   const endpointUrl = getMatchingConsentUrl(s2sBidRequest.s2sConfig.endpoint, gdprConsent);
   if (request && requestJson && endpointUrl) {
+    const networkDone = s2sBidRequest.metrics.startTiming('net');
     ajax(
       endpointUrl,
       {
         success: function (response) {
+          networkDone();
           let result;
           try {
             result = JSON.parse(response);
-            const bids = ortb2.interpretResponse(result);
+            const bids = s2sBidRequest.metrics.measureTime('interpretResponse', () => interpretPBSResponse(result, request).bids);
             bids.forEach(onBid);
           } catch (error) {
             logError(error);
@@ -1402,7 +1422,10 @@ export const processPBSRequest = hook('sync', function (s2sBidRequest, bidReques
             onResponse(true, requestedBidders);
           }
         },
-        error: onError
+        error: function () {
+          networkDone();
+          onError.apply(this, arguments);
+        }
       },
       requestJson,
       {contentType: 'text/plain', withCredentials: true}

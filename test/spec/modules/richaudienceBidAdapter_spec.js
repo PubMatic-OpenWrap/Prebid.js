@@ -204,7 +204,7 @@ describe('Richaudience adapter tests', function () {
       gdprApplies: true
     },
     refererInfo: {
-      referer: 'http://domain.com',
+      page: 'http://domain.com',
       numIframes: 0
     }
   }
@@ -233,7 +233,7 @@ describe('Richaudience adapter tests', function () {
         gdprApplies: true
       },
       refererInfo: {
-        referer: 'https://domain.com',
+        page: 'https://domain.com',
         numIframes: 0
       }
     });
@@ -274,7 +274,7 @@ describe('Richaudience adapter tests', function () {
         gdprApplies: true
       },
       refererInfo: {
-        referer: 'https://domain.com',
+        page: 'https://domain.com',
         numIframes: 0
       }
     });
@@ -293,7 +293,7 @@ describe('Richaudience adapter tests', function () {
         gdprApplies: true
       },
       refererInfo: {
-        referer: 'https://domain.com',
+        page: 'https://domain.com',
         numIframes: 0
       }
     });
@@ -363,7 +363,7 @@ describe('Richaudience adapter tests', function () {
           gdprApplies: true
         },
         refererInfo: {
-          referer: 'https://domain.com',
+          page: 'https://domain.com',
           numIframes: 0
         }
       });
@@ -378,7 +378,7 @@ describe('Richaudience adapter tests', function () {
           gdprApplies: true
         },
         refererInfo: {
-          referer: 'https://domain.com',
+          page: 'https://domain.com',
           numIframes: 0
         }
       });
@@ -401,7 +401,7 @@ describe('Richaudience adapter tests', function () {
           consentString: 'BOZcQl_ObPFjWAeABAESCD-AAAAjx7_______9______9uz_Ov_v_f__33e8__9v_l_7_-___u_-33d4-_1vf99yfm1-7ftr3tp_87ues2_Xur__59__3z3_NohBgA'
         },
         refererInfo: {
-          referer: 'https://domain.com',
+          page: 'https://domain.com',
           numIframes: 0
         }
       });
@@ -650,7 +650,7 @@ describe('Richaudience adapter tests', function () {
         gdprApplies: true
       },
       refererInfo: {
-        referer: 'https://domain.com',
+        page: 'https://domain.com',
         numIframes: 0
       }
     });
@@ -678,7 +678,7 @@ describe('Richaudience adapter tests', function () {
         gdprApplies: true
       },
       refererInfo: {
-        referer: 'https://domain.com',
+        page: 'https://domain.com',
         numIframes: 0
       }
     });
@@ -707,7 +707,7 @@ describe('Richaudience adapter tests', function () {
         gdprApplies: true
       },
       refererInfo: {
-        referer: 'https://domain.com',
+        page: 'https://domain.com',
         numIframes: 0
       }
     });
@@ -736,7 +736,7 @@ describe('Richaudience adapter tests', function () {
         gdprApplies: true
       },
       refererInfo: {
-        referer: 'https://domain.com',
+        page: 'https://domain.com',
         numIframes: 0
       }
     });
