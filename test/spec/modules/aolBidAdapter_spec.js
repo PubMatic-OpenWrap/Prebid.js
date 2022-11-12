@@ -94,7 +94,7 @@ describe('AolAdapter', function () {
     'hcn.health': '1200',
     'id5-sync.com': '1300',
     'idx.lat': '1400',
-    'intentiq.com': '1500',
+    'intentiq.com': { RESULT: '400' },
     'intimatemerger.com': '1600',
     'liveintent.com': '1700',
     'liveramp.com': '1800',
@@ -522,7 +522,11 @@ describe('AolAdapter', function () {
           bidRequest.bids[0].userId = {};
           bidRequest.bids[0].userIdAsEids = createEidsArray(USER_ID_DATA);
           let [request] = spec.buildRequests(bidRequest.bids);
-          expect(request.url).to.contain(`&eid${source}=${encodeURIComponent(SUPPORTED_USER_ID_SOURCES[source])}`);
+          if (source === 'intentiq.com') {
+            expect(request.url).to.contain(`&eid${source}=${encodeURIComponent(SUPPORTED_USER_ID_SOURCES[source].RESULT)}`);
+          } else {
+            expect(request.url).to.contain(`&eid${source}=${encodeURIComponent(SUPPORTED_USER_ID_SOURCES[source])}`);
+          }
         });
       });
 
