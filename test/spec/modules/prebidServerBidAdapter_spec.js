@@ -1949,7 +1949,7 @@ describe('S2S Adapter', function () {
       expect(requestBid.user.ext.eids.filter(eid => eid.source === 'liveramp.com')[0].uids[0].id).is.equal('0000-1111-2222-3333');
     });
 
-    xit('when config \'currency.adServerCurrency\' value is an array: ORTB has property \'cur\' value set to a single item array', function () {
+    it('when config \'currency.adServerCurrency\' value is an array: ORTB has property \'cur\' value set to a single item array', function () {
       config.setConfig({
         currency: { adServerCurrency: ['USD', 'GB', 'UK', 'AU'] },
       });
@@ -1961,7 +1961,7 @@ describe('S2S Adapter', function () {
       expect(parsedRequestBody.cur).to.deep.equal(['USD']);
     });
 
-    xit('when config \'currency.adServerCurrency\' value is a string: ORTB has property \'cur\' value set to a single item array', function () {
+    it('when config \'currency.adServerCurrency\' value is a string: ORTB has property \'cur\' value set to a single item array', function () {
       config.setConfig({
         currency: { adServerCurrency: 'NZ' },
       });
