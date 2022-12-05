@@ -349,7 +349,7 @@ function bundleForIh(dev, moduleArr) {
     outputFileNameForIH = outputFileNameForIH.replace(/\.js$/, `.${argv.tag}.js`);
   }
   return gulp.src(
-    entries
+    entries, { allowEmpty: true }
   )
     .pipe(replace(/(Modules: )(.*?)(\*\/)/, ('$1' + getModulesListToAddInBanner(helpers.getArgModules()) + ' $3')))
     .pipe(gulpif(dev, sourcemaps.init({ loadMaps: true })))
