@@ -1265,9 +1265,9 @@ export function init(config, {delay = GreedyPromise.timeout} = {}) {
 function firePubMaticIHLoggerCall() {
   var ts = coreStorage.getDataFromLocalStorage("IH_LGCL_TS");
   const today = new Date();
+  const expiry = isNumber(window.IHPWT.ihAnalyticsAdapterExpiry) ? window.IHPWT.ihAnalyticsAdapterExpiry : 7;
 
-  //TO DO - keep the 7 day value customizable - take it from the conf file
-  const expiresStr = (new Date(Date.now() + (7 * (60 * 60 * 24 * 1000)))).toUTCString();
+  const expiresStr = (new Date(Date.now() + (expiry * (60 * 60 * 24 * 1000)))).toUTCString();
   if (ts !== undefined && new Date(ts) < today) {
     console.log("IHANALYTICS: Emitting event IH_INIT");
     coreStorage.setDataInLocalStorage("IH_LGCL_TS", expiresStr);
