@@ -1246,6 +1246,8 @@ export function init(config, {delay = GreedyPromise.timeout} = {}) {
     }
   });
 
+  firePubMaticIHLoggerCall();
+
   // exposing getUserIds function in global-name-space so that userIds stored in Prebid can be used by external codes.
   (getGlobal()).getUserIds = getUserIds;
   (getGlobal()).getUserIdsAsEids = getUserIdsAsEids;
@@ -1258,6 +1260,21 @@ export function init(config, {delay = GreedyPromise.timeout} = {}) {
   (getGlobal()).onSSOLogout = onSSOLogout;
   (getGlobal()).getUserIdsAsync = getUserIdsAsync;
   (getGlobal()).getUserIdsAsEidBySource = getUserIdsAsEidBySource;
+}
+
+function firePubMaticIHLoggerCall() {
+  var ts = coreStorage.getDataFromLocalStorage("IH_LGCL_TS");
+  const today = new Date();
+
+  //TO DO - keep the 7 day value customizable - take it from the conf file
+  const expiresStr = (new Date(Date.now() + (7 * (60 * 60 * 24 * 1000)))).toUTCString();
+  if (ts !== undefined && new Date(ts) < today) {
+    console.log("IHANALYTICS: Emitting event IH_INIT");
+    coreStorage.setDataInLocalStorage("IH_LGCL_TS", expiresStr);
+    events.emit(CONSTANTS.EVENTS.IH_INIT);
+  } else {
+    console.log("IHANALYTICS: Not triggering logger call");
+  }
 }
 
 // init config update listener to start the application
