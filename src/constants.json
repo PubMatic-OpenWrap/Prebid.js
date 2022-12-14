@@ -100,5 +100,6 @@
       "key": "e",
       "hashType": "MD5"
     }]
-  }
+  },
+  "USER_GEO": "USER_GEO"
 }

@@ -359,6 +359,10 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   const HOSTNAME = window.location.host;
   const storedObject = window.localStorage.getItem(PREFIX + HOSTNAME);
   const frequencyDepth = storedObject !== null ? JSON.parse(storedObject) : {};
+  let geoObj = localStorage.getItem(CONSTANTS.USER_GEO)
+  if(geoObj) {
+	geoObj = JSON.parse(geoObj);
+  }
   let auctionId = e.auctionId;
   let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId].referer || '';
   let auctionCache = cache.auctions[auctionId];
@@ -394,7 +398,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     }
     return 0;
   })();
-
+  outputObj["ctry"] = geoObj?.country;
   outputObj['tpv'] = frequencyDepth?.pageView;
   outputObj['trc'] = frequencyDepth?.slotCnt;
   outputObj['tbs'] = frequencyDepth?.bidServed;
