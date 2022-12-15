@@ -255,7 +255,7 @@ function getAdDomain(bidResponse) {
 }
 
 function isObject(object) {
-  return typeof object === "object" && object !== null;
+  return typeof object === 'object' && object !== null;
 };
 
 function isEmptyObject(object) {
@@ -264,7 +264,7 @@ function isEmptyObject(object) {
 
 /**
  * Prepare meta object to pass in logger call
- * @param {*} meta 
+ * @param {*} meta
  */
 function getMetadata(meta) {
   if (!meta || isEmptyObject(meta)) return;
@@ -282,7 +282,7 @@ function getMetadata(meta) {
   if (meta.demandSource) metaObj.ds = meta.demandSource;
   if (meta.secondaryCatIds) metaObj.scids = meta.secondaryCatIds;
 
-  if(isEmptyObject(metaObj)) return;
+  if (isEmptyObject(metaObj)) return;
   return metaObj;
 }
 
@@ -317,7 +317,7 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid) {
         'piid': bid.bidResponse ? (bid.bidResponse.partnerImpId || EMPTY_STRING) : EMPTY_STRING,
         'frv': (s2sBidders.indexOf(bid.bidder) > -1) ? undefined : (bid.bidResponse ? (bid.bidResponse.floorData ? bid.bidResponse.floorData.floorRuleValue : undefined) : undefined),
         'md': bid.bidResponse ? getMetadata(bid.bidResponse.meta) : undefined,
-        });
+      });
     });
     return partnerBids;
   }, [])
@@ -360,8 +360,8 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   const storedObject = window.localStorage.getItem(PREFIX + HOSTNAME);
   const frequencyDepth = storedObject !== null ? JSON.parse(storedObject) : {};
   let geoObj = localStorage.getItem(CONSTANTS.USER_GEO)
-  if(geoObj) {
-	geoObj = JSON.parse(geoObj);
+  if (geoObj) {
+    geoObj = JSON.parse(geoObj);
   }
   let auctionId = e.auctionId;
   let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId].referer || '';
@@ -398,7 +398,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     }
     return 0;
   })();
-  outputObj["ctry"] = geoObj?.country;
+  outputObj['ctry'] = geoObj?.country;
   outputObj['tpv'] = frequencyDepth?.pageView;
   outputObj['trc'] = frequencyDepth?.slotCnt;
   outputObj['tbs'] = frequencyDepth?.bidServed;
@@ -423,7 +423,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
       'bs': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.bidServed,
       'is': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.impressionServed,
       'rc': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.slotCnt,
-	  'vw': frequencyDepth?.viewedSlot?.[origAdUnit.adUnitId],
+      'vw': frequencyDepth?.viewedSlot?.[origAdUnit.adUnitId],
     };
     slotsArray.push(slotObject);
     return slotsArray;

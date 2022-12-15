@@ -563,7 +563,7 @@ function findPartnersWithoutErrorsAndBids(erroredPartners, listofPartnersWithmi,
   })
 }
 /**
- * Checks if window.location.search(i.e. string of query params on the page URL) 
+ * Checks if window.location.search(i.e. string of query params on the page URL)
  * has specified query param with a values.
  * ex. pubmaticTest=true
  * @param {*} paramName regexp for which param lokking for ex. pubmaticTest
@@ -571,9 +571,9 @@ function findPartnersWithoutErrorsAndBids(erroredPartners, listofPartnersWithmi,
  * @returns boolean
  */
 function hasQueryParam(paramName, values) {
-  if(!paramName || !values || !values?.length) return false;
+  if (!paramName || !values || !values?.length) return false;
   let paramValue = getParameterByName(paramName);
-  if(!paramValue) return false;
+  if (!paramValue) return false;
   return values?.some(value => value?.toString()?.toLowerCase() == paramValue?.toString()?.toLowerCase());
 }
 
@@ -869,8 +869,8 @@ Object.assign(ORTB2.prototype, {
           logError('PBS: getFloor threw an error: ', e);
         }
         if (floorInfo && floorInfo.currency && !isNaN(parseFloat(floorInfo.floor))) {
-           imp.bidfloor = parseFloat(floorInfo.floor);
-           imp.bidfloorcur = floorInfo.currency
+          imp.bidfloor = parseFloat(floorInfo.floor);
+          imp.bidfloorcur = floorInfo.currency
         }
       }
 
@@ -914,7 +914,7 @@ Object.assign(ORTB2.prototype, {
 
     //  TEST BID: Check if location URL has a query param pubmaticTest=true then set test=1
     //  else we don't need to send test: 0 to request payload.
-    if(hasQueryParam('pubmaticTest', [true])) request.test = 1;
+    if (hasQueryParam('pubmaticTest', [true])) request.test = 1;
 
     // If the price floors module is active, then we need to signal to PBS! If floorData obj is present is best way to check
     if (typeof deepAccess(firstBidRequest, 'bids.0.floorData') === 'object') {

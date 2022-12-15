@@ -1363,7 +1363,7 @@ export const spec = {
     const bidResponses = [];
     var respCur = DEFAULT_CURRENCY;
     // In case of Translator GET request, will copy the actual json data from payloadStr to data.
-    if(request?.payloadStr) request.data = request.payloadStr;
+    if (request?.payloadStr) request.data = request.payloadStr;
     let parsedRequest = JSON.parse(request.data);
     let parsedReferrer = parsedRequest.site && parsedRequest.site.ref ? parsedRequest.site.ref : '';
     try {

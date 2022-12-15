@@ -4596,7 +4596,7 @@ describe('PubMatic adapter', function () {
         'adomain': [
           'mystartab.com'
         ],
-        cat:["IAB_CATEGORY"],
+        cat: ['IAB_CATEGORY'],
         ext: {
           advid: '12',
           'dspid': 6,
@@ -4621,14 +4621,14 @@ describe('PubMatic adapter', function () {
       expect(br.meta.networkId).to.equal(6); // dspid
       expect(br.meta.buyerId).to.equal('12'); // adid
       expect(br.meta.advertiserId).to.equal('12');
-      //expect(br.meta.networkName).to.equal('nwnm');
+      // expect(br.meta.networkName).to.equal('nwnm');
       expect(br.meta.primaryCatId).to.equal('IAB_CATEGORY');
-      //expect(br.meta.advertiserName).to.equal('adnm');
+      // expect(br.meta.advertiserName).to.equal('adnm');
       expect(br.meta.agencyId).to.equal('12');
-      //expect(br.meta.agencyName).to.equal('agnm');
+      // expect(br.meta.agencyName).to.equal('agnm');
       expect(br.meta.brandId).to.equal('mystartab.com');
-      //expect(br.meta.brandName).to.equal('brnm');
-      //expect(br.meta.dchain).to.equal('dc');
+      // expect(br.meta.brandName).to.equal('brnm');
+      // expect(br.meta.dchain).to.equal('dc');
       expect(br.meta.demandSource).to.equal(6);
       expect(br.meta.secondaryCatIds).to.be.an('array').with.length.above(0);
       expect(br.meta.secondaryCatIds[0]).to.equal('IAB_CATEGORY');
