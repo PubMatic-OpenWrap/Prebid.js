@@ -1343,24 +1343,10 @@ export function init(config, {delay = GreedyPromise.timeout} = {}) {
   (getGlobal()).onSSOLogout = onSSOLogout;
   (getGlobal()).getUserIdsAsync = normalizePromise(getUserIdsAsync);
   (getGlobal()).getUserIdsAsEidBySource = getUserIdsAsEidBySource;
-  (getGlobal()).firePubMaticIHLoggerCall = firePubMaticIHLoggerCall;
 
 }
 
-export function firePubMaticIHLoggerCall() {
-  var ts = coreStorage.getDataFromLocalStorage(CONSTANTS.IH_LOGGER_STORAGE_KEY);
-  const today = new Date();
-  const expiry = isNumber(window.IHPWT.ihAnalyticsAdapterExpiry) ? window.IHPWT.ihAnalyticsAdapterExpiry : 7;
 
-  const expiresStr = (new Date(Date.now() + (expiry * (60 * 60 * 24 * 1000)))).toUTCString();
-  if (ts === undefined || (ts !== undefined && new Date(ts) < today)) {
-    console.log("IHANALYTICS: Emitting event IH_INIT");
-    coreStorage.setDataInLocalStorage(CONSTANTS.IH_LOGGER_STORAGE_KEY, expiresStr);
-    events.emit(CONSTANTS.EVENTS.IH_INIT);
-  } else {
-    console.log("IHANALYTICS: Not triggering logger call");
-  }
-}
 
 // init config update listener to start the application
 init(config);

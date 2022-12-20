@@ -1,8 +1,11 @@
-import { logError, logInfo } from '../src/utils.js';
+import { logError, logInfo, isNumber } from '../src/utils.js';
 import adapter from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import CONSTANTS from '../src/constants.json';
 import { ajax } from '../src/ajax.js';
+import {getGlobal} from '../src/prebidGlobal.js';
+import {getCoreStorageManager} from '../src/storageManager.js';
+import * as events from '../src/events.js';
 
 /// /////////// CONSTANTS //////////////
 const ADAPTER_CODE = 'pubmaticIH';
@@ -24,6 +27,8 @@ let profileVersionId = DEFAULT_PROFILE_VERSION_ID; // int: optional
 let identityOnly = DEFAULT_IDENTITY_ONLY;
 let domain = "";
 
+export const coreStorage = getCoreStorageManager('userid');
+
 /// /////////// HELPER FUNCTIONS //////////////
 
 /**
@@ -33,6 +38,21 @@ let domain = "";
 function getMetadata(meta) {
   return {};
 }
+
+export function firePubMaticIHLoggerCall() {
+  var ts = coreStorage.getDataFromLocalStorage(CONSTANTS.IH_LOGGER_STORAGE_KEY);
+  const today = new Date();
+  const expiry = isNumber(window.IHPWT.ihAnalyticsAdapterExpiry) ? window.IHPWT.ihAnalyticsAdapterExpiry : 7;
+
+  const expiresStr = (new Date(Date.now() + (expiry * (60 * 60 * 24 * 1000)))).toUTCString();
+  if (ts === undefined || (ts !== undefined && new Date(ts) < today)) {
+    logInfo("IHANALYTICS: Emitting event IH_INIT");
+    coreStorage.setDataInLocalStorage(CONSTANTS.IH_LOGGER_STORAGE_KEY, expiresStr);
+    events.emit(CONSTANTS.EVENTS.IH_INIT);
+  } else {
+    logInfo("IHANALYTICS: Not triggering logger call");
+  }
+};
 
 function executeIHLoggerCall() {
   let pixelURL = END_POINT_BID_LOGGER;
@@ -117,5 +137,6 @@ adapterManager.registerAnalyticsAdapter({
   code: ADAPTER_CODE
 });
 
+(getGlobal()).firePubMaticIHLoggerCall = firePubMaticIHLoggerCall;
 // export default pubmaticAdapter;
 export { pubmaticIHAdapter as default, getMetadata };
