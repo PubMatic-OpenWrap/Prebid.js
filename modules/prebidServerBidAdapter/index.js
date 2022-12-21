@@ -815,18 +815,18 @@ Object.assign(ORTB2.prototype, {
           bid.params = adapter.getSpec().transformBidParams(bid.params, true, adUnit, bidRequests);
         }
         // passing bid.bidViewability to pubmatic params, only when present
-        const addBidViewabilityDataS2S= function (bidRequests,bid){
-          for (let i = 0; i < bidRequests.length; i++) {  
-            if( bidRequests[i].bidderCode == bid.bidder && bid.bidder=="pubmatic"){
-                bidRequests[i].bids.forEach(function(iBid){
-                if(iBid.adUnitCode === adUnit.code){
+        const addBidViewabilityDataS2S = function (bidRequests, bid) {
+          bidRequests.forEach(function(ibidReq) {
+            if (ibidReq.bidderCode === bid.bidder && bid.bidder === 'pubmatic') {
+              ibidReq.bids.forEach(function(iBid) {
+                if (iBid.adUnitCode === adUnit.code) {
                   bid.params.bidViewability = iBid.bidViewability;
                 }
               })
             }
-          }
+          })
         }
-        addBidViewabilityDataS2S(bidRequests,bid)
+        addBidViewabilityDataS2S(bidRequests, bid)
         acc[bid.bidder] = (s2sConfig.adapterOptions && s2sConfig.adapterOptions[bid.bidder]) ? Object.assign({}, bid.params, s2sConfig.adapterOptions[bid.bidder]) : bid.params;
         return acc;
       }, {...deepAccess(adUnit, 'ortb2Imp.ext')});
