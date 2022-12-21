@@ -3,8 +3,8 @@ import adapter from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import CONSTANTS from '../src/constants.json';
 import { ajax } from '../src/ajax.js';
-import {getGlobal} from '../src/prebidGlobal.js';
-import {getCoreStorageManager} from '../src/storageManager.js';
+import { getGlobal } from '../src/prebidGlobal.js';
+import { getCoreStorageManager } from '../src/storageManager.js';
 import * as events from '../src/events.js';
 
 /// /////////// CONSTANTS //////////////
@@ -19,6 +19,9 @@ const DEFAULT_PUBLISHER_ID = 0;
 const DEFAULT_PROFILE_ID = 0;
 const DEFAULT_PROFILE_VERSION_ID = 0;
 const DEFAULT_IDENTITY_ONLY = '0';
+const IH_INIT = "initIdentityHub"; 
+const IH_ANALYTICS_EXPIRY = 7;
+const IH_LOGGER_STORAGE_KEY = "IH_LGCL_TS"
 
 /// /////////// VARIABLES //////////////
 let publisherId = DEFAULT_PUBLISHER_ID; // int: mandatory
@@ -31,24 +34,16 @@ export const coreStorage = getCoreStorageManager('userid');
 
 /// /////////// HELPER FUNCTIONS //////////////
 
-/**
- * Prepare meta object to pass in logger call
- * @param {*} meta
- */
-function getMetadata(meta) {
-  return {};
-}
-
 export function firePubMaticIHLoggerCall() {
-  var ts = coreStorage.getDataFromLocalStorage(CONSTANTS.IH_LOGGER_STORAGE_KEY);
+  var ts = coreStorage.getDataFromLocalStorage(IH_LOGGER_STORAGE_KEY);
   const today = new Date();
-  const expiry = isNumber(window.IHPWT.ihAnalyticsAdapterExpiry) ? window.IHPWT.ihAnalyticsAdapterExpiry : 7;
+  const expiry = isNumber(window.IHPWT.ihAnalyticsAdapterExpiry) ? window.IHPWT.ihAnalyticsAdapterExpiry : IH_ANALYTICS_EXPIRY;
 
   const expiresStr = (new Date(Date.now() + (expiry * (60 * 60 * 24 * 1000)))).toUTCString();
   if (ts === undefined || (ts !== undefined && new Date(ts) < today)) {
     logInfo("IHANALYTICS: Emitting event IH_INIT");
-    coreStorage.setDataInLocalStorage(CONSTANTS.IH_LOGGER_STORAGE_KEY, expiresStr);
-    events.emit(CONSTANTS.EVENTS.IH_INIT);
+    coreStorage.setDataInLocalStorage(IH_LOGGER_STORAGE_KEY, expiresStr);
+    events.emit(IH_INIT);
   } else {
     logInfo("IHANALYTICS: Not triggering logger call");
   }
@@ -122,7 +117,7 @@ let pubmaticIHAdapter = Object.assign({}, baseAdapter, {
     eventType
   }) {
     switch (eventType) {
-      case CONSTANTS.EVENTS.IH_INIT:
+      case IH_INIT:
         logInfo('IHANALYTICS Logger fired')
         executeIHLoggerCall();
         break;
@@ -139,4 +134,4 @@ adapterManager.registerAnalyticsAdapter({
 
 (getGlobal()).firePubMaticIHLoggerCall = firePubMaticIHLoggerCall;
 // export default pubmaticAdapter;
-export { pubmaticIHAdapter as default, getMetadata };
+export { pubmaticIHAdapter as default };
