@@ -1,10 +1,24 @@
-import { _each, pick, logWarn, isStr, isArray, logError, isFn } from '../src/utils.js';
+import {
+  _each,
+  pick,
+  logWarn,
+  isStr,
+  isArray,
+  logError,
+  isFn
+} from '../src/utils.js';
 import adapter from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import CONSTANTS from '../src/constants.json';
-import { ajax } from '../src/ajax.js';
-import { config } from '../src/config.js';
-import { getGlobal } from '../src/prebidGlobal.js';
+import {
+  ajax
+} from '../src/ajax.js';
+import {
+  config
+} from '../src/config.js';
+import {
+  getGlobal
+} from '../src/prebidGlobal.js';
 
 /// /////////// CONSTANTS //////////////
 const ADAPTER_CODE = 'pubmatic';
@@ -289,7 +303,7 @@ function getMetadata(meta) {
 function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid) {
   highestBid = (highestBid && highestBid.length > 0) ? highestBid[0] : null;
   return Object.keys(adUnit.bids).reduce(function (partnerBids, bidId) {
-    adUnit.bids[bidId].forEach(function(bid) {
+    adUnit.bids[bidId].forEach(function (bid) {
       const prebidBidId = bid.bidResponse && bid.bidResponse.prebidBidId;
       partnerBids.push({
         'pn': getAdapterNameForAlias(bid.bidder),
@@ -386,8 +400,10 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['pid'] = '' + profileId;
   outputObj['pdvid'] = '' + profileVersionId;
   outputObj['psl'] = getPSL(auctionId);
-  outputObj['dvc'] = {'plt': getDevicePlatform()};
-  outputObj['tgid'] = (function() {
+  outputObj['dvc'] = {
+    'plt': getDevicePlatform()
+  };
+  outputObj['tgid'] = (function () {
     var testGroupId = parseInt(config.getConfig('testGroupId') || 0);
     if (testGroupId <= 15 && testGroupId >= 0) {
       return testGroupId;
@@ -395,18 +411,18 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     return 0;
   })();
 
-  outputObj['tpv'] = frequencyDepth?.pageView;
-  outputObj['trc'] = frequencyDepth?.slotCnt;
-  outputObj['tbs'] = frequencyDepth?.bidServed;
-  outputObj['tis'] = frequencyDepth?.impressionServed;
-  outputObj['lip'] = frequencyDepth?.lip;
+  outputObj['tpv'] = frequencyDepth.pageView;
+  outputObj['trc'] = frequencyDepth.slotCnt;
+  outputObj['tbs'] = frequencyDepth.bidServed;
+  outputObj['tis'] = frequencyDepth.impressionServed;
+  outputObj['lip'] = frequencyDepth.lip;
 
   if (floorData) {
     outputObj['fmv'] = floorData.floorRequestData ? floorData.floorRequestData.modelVersion || undefined : undefined;
     outputObj['ft'] = floorData.floorResponseData ? (floorData.floorResponseData.enforcements.enforceJS == false ? 0 : 1) : undefined;
   }
 
-  outputObj.s = Object.keys(auctionCache.adUnitCodes).reduce(function(slotsArray, adUnitId) {
+  outputObj.s = Object.keys(auctionCache.adUnitCodes).reduce(function (slotsArray, adUnitId) {
     let adUnit = auctionCache.adUnitCodes[adUnitId];
     let origAdUnit = getAdUnit(auctionCache.origAdUnits, adUnitId);
     let slotObject = {
@@ -416,10 +432,10 @@ function executeBidsLoggerCall(e, highestCpmBids) {
       'sz': getSizesForAdUnit(adUnit, adUnitId),
       'fskp': floorData ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined,
       'ps': gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestCpmBids.filter(bid => bid.adUnitCode === adUnitId)),
-      'bs': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.bidServed,
-      'is': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.impressionServed,
-      'rc': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.slotCnt,
-	  'vw': frequencyDepth?.viewedSlot?.[origAdUnit.adUnitId],
+      'bs': frequencyDepth.slotLevelFrquencyDepth ?.[origAdUnit.adUnitId].bidServed,
+      'is': frequencyDepth.slotLevelFrquencyDepth ?.[origAdUnit.adUnitId].impressionServed,
+      'rc': frequencyDepth.slotLevelFrquencyDepth ?.[origAdUnit.adUnitId].slotCnt,
+      'vw': frequencyDepth.viewedSlot ?.[origAdUnit.adUnitId],
     };
     slotsArray.push(slotObject);
     return slotsArray;
@@ -496,7 +512,7 @@ function auctionInitHandler(args) {
 }
 
 function bidRequestedHandler(args) {
-  args.bids.forEach(function(bid) {
+  args.bids.forEach(function (bid) {
     if (!cache.auctions[args.auctionId].adUnitCodes.hasOwnProperty(bid.adUnitCode)) {
       cache.auctions[args.auctionId].adUnitCodes[bid.adUnitCode] = {
         bids: {},
@@ -570,7 +586,7 @@ function bidTimeoutHandler(args) {
   // db = 0 and t = 1 means bidder did  respond with a bid but post timeout
   args.forEach(badBid => {
     let auctionCache = cache.auctions[badBid.auctionId];
-    let bid = auctionCache.adUnitCodes[badBid.adUnitCode].bids[ badBid.bidId || badBid.requestId ][0];
+    let bid = auctionCache.adUnitCodes[badBid.adUnitCode].bids[badBid.bidId || badBid.requestId][0];
     if (bid) {
       bid.status = ERROR;
       bid.error = {
@@ -661,4 +677,7 @@ adapterManager.registerAnalyticsAdapter({
 });
 
 // export default pubmaticAdapter;
-export { pubmaticAdapter as default, getMetadata };
+export {
+  pubmaticAdapter as
+  default, getMetadata
+};
