@@ -1082,15 +1082,75 @@ export function prepareMetaObject(br, bid, seat) {
  * and random value should be less than or equal to testGroupPercentage
  * @returns boolean
  */
-function hasGetRequestEnabled() {
+function _overrideTranslatorRequestEnabled() {
   if (!(config.getConfig('translatorGetRequest.enabled') === true)) return false;
   const randomValue100 = Math.ceil(Math.random() * 100);
   const testGroupPercentage = config.getConfig('translatorGetRequest.testGroupPercentage') || 0;
   return randomValue100 <= testGroupPercentage;
 }
 
-function getUniqueNumber(rangeEnd) {
+function _getUniqueNumber(rangeEnd) {
   return Math.floor(Math.random() * rangeEnd) + 1;
+}
+
+function _buildServerRequest(bidderRequest, payload) {
+  const DEFAULT_METHOD = 'POST';
+  const correlator = _getUniqueNumber(1000);
+  const postReqParams = '?source=ow-client&correlator=' + correlator;
+
+  // For Auction End Handler
+  bidderRequest.nwMonitor = {};
+  bidderRequest.nwMonitor.reqMethod = 'POST';
+  bidderRequest.nwMonitor.correlator = correlator;
+  bidderRequest.nwMonitor.requestUrlPayloadLength = (ENDPOINT + postReqParams).length + JSON.stringify(payload).length;
+  // For Timeout handler
+  if (bidderRequest?.bids?.length && isArray(bidderRequest?.bids)) {
+    bidderRequest.bids.forEach(bid => bid.correlator = correlator);
+  }
+
+  // Default Case
+  let serverRequest = {
+    method: DEFAULT_METHOD,
+    url: ENDPOINT + postReqParams,
+    data: JSON.stringify(payload),
+    bidderRequest: bidderRequest
+  };
+
+  // Allow translator request to override
+  if (_overrideTranslatorRequestEnabled()) {
+    const overrideEndPoint = config.getConfig('translatorGetRequest.endPoint') || ENDPOINT;
+    const overrideMethod = config.getConfig('translatorGetRequest.method')?.toUpperCase() || DEFAULT_METHOD;
+    switch (overrideMethod) {
+      case 'POST':
+        serverRequest.method = overrideMethod;
+        serverRequest.url = overrideEndPoint + postReqParams;
+        break;
+      case 'GET':
+        serverRequest = _getOverrideGetRequest(serverRequest, { overrideMethod, overrideEndPoint, bidderRequest, payload, correlator });
+        break;
+      default:
+    }
+  }
+  return serverRequest;
+}
+
+function _getOverrideGetRequest(serverRequest, getRequestObj) {
+  const maxUrlLength = config.getConfig('translatorGetRequest.maxUrlLength') || 63000;
+  const urlEncodedPayloadStr = parseQueryStringParameters({
+    'source': 'ow-client', 'payload': JSON.stringify(getRequestObj?.payload), 'correlator': getRequestObj?.correlator
+  });
+  if ((getRequestObj?.overrideEndPoint + '?' + urlEncodedPayloadStr)?.length <= maxUrlLength) {
+    getRequestObj.bidderRequest.nwMonitor.reqMethod = 'GET';
+    getRequestObj.bidderRequest.nwMonitor.requestUrlPayloadLength = getRequestObj?.overrideEndPoint.length + '?'.length + urlEncodedPayloadStr.length;
+    serverRequest = {
+      method: getRequestObj?.overrideMethod,
+      url: getRequestObj?.overrideEndPoint,
+      data: urlEncodedPayloadStr,
+      bidderRequest: getRequestObj?.bidderRequest,
+      payloadStr: JSON.stringify(getRequestObj?.payload)
+    };
+  }
+  return serverRequest;
 }
 
 export const spec = {
@@ -1331,44 +1391,8 @@ export const spec = {
       delete payload.site;
     }
 
-    const correlator = getUniqueNumber(1000);
-    let url = ENDPOINT + '?source=ow-client&correlator=' + correlator;
-
-    // For Auction End Handler
-    bidderRequest.nwMonitor = {};
-    bidderRequest.nwMonitor.reqMethod = 'POST';
-    bidderRequest.nwMonitor.correlator = correlator;
-    bidderRequest.nwMonitor.requestUrlPayloadLength = url.length + JSON.stringify(payload).length;
-    // For Timeout handler
-    bidderRequest?.bids?.forEach(bid => bid.correlator = correlator);
-
-    let serverRequest = {
-      method: 'POST',
-      url: url,
-      data: JSON.stringify(payload),
-      bidderRequest: bidderRequest
-    };
-
-    // Allow translator request to execute it as GET Methoid if flag is set.
-    if (hasGetRequestEnabled()) {
-      const maxUrlLength = config.getConfig('translatorGetRequest.maxUrlLength') || 63000;
-      const configuredEndPoint = config.getConfig('translatorGetRequest.endPoint') || ENDPOINT;
-      const urlEncodedPayloadStr = parseQueryStringParameters({
-        'source': 'ow-client', 'payload': JSON.stringify(payload), 'correlator': correlator});
-      if ((configuredEndPoint + '?' + urlEncodedPayloadStr)?.length <= maxUrlLength) {
-        serverRequest = {
-          method: 'GET',
-          url: configuredEndPoint,
-          data: urlEncodedPayloadStr,
-          bidderRequest: bidderRequest,
-          payloadStr: JSON.stringify(payload)
-        };
-        bidderRequest.nwMonitor.reqMethod = 'GET';
-        bidderRequest.nwMonitor.requestUrlPayloadLength = configuredEndPoint.length + '?'.length + urlEncodedPayloadStr.length;
-      }
-    }
-
-    return serverRequest;
+    return _buildServerRequest(bidderRequest, payload);
+    
   },
 
   /**
