@@ -1124,7 +1124,7 @@ function _buildServerRequest(bidderRequest, payload) {
         serverRequest.url = overrideEndPoint + postReqParams;
         _setBidderRequestNWMonitorParams(bidderRequest, overrideEndPoint, 1, overrideMethod, correlator, reqUrlLength);
         break;
-      case 'GET':        
+      case 'GET':
         serverRequest = _getOverrideGetRequest(serverRequest, { overrideMethod, overrideEndPoint, bidderRequest, payload, correlator });
         break;
       default:
@@ -1149,7 +1149,7 @@ function _getOverrideGetRequest(serverRequest, getRequestObj) {
   });
   const reqUrlLength = (getRequestObj?.overrideEndPoint + '?' + urlEncodedPayloadStr)?.length;
   if (reqUrlLength <= maxUrlLength) {
-    _setBidderRequestNWMonitorParams(getRequestObj.bidderRequest, getRequestObj?.overrideEndPoint, 1, "GET", getRequestObj.correlator, reqUrlLength);
+    _setBidderRequestNWMonitorParams(getRequestObj.bidderRequest, getRequestObj?.overrideEndPoint, 1, 'GET', getRequestObj.correlator, reqUrlLength);
     getRequestObj.bidderRequest.nwMonitor.requestUrlPayloadLength = getRequestObj?.overrideEndPoint.length + '?'.length + urlEncodedPayloadStr.length;
     serverRequest = {
       method: getRequestObj?.overrideMethod,
@@ -1401,7 +1401,6 @@ export const spec = {
     }
 
     return _buildServerRequest(bidderRequest, payload);
-    
   },
 
   /**
