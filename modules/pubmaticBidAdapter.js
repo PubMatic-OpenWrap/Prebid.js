@@ -1097,12 +1097,10 @@ function _buildServerRequest(bidderRequest, payload) {
   const DEFAULT_METHOD = 'POST';
   const correlator = _getUniqueNumber(1000);
   const postReqParams = '?source=ow-client&correlator=' + correlator;
+  const reqUrlLength = (ENDPOINT + postReqParams).length + JSON.stringify(payload).length;
 
   // For Auction End Handler
-  bidderRequest.nwMonitor = {};
-  bidderRequest.nwMonitor.reqMethod = 'POST';
-  bidderRequest.nwMonitor.correlator = correlator;
-  bidderRequest.nwMonitor.requestUrlPayloadLength = (ENDPOINT + postReqParams).length + JSON.stringify(payload).length;
+  _setBidderRequestNWMonitorParams(bidderRequest, ENDPOINT, 0, DEFAULT_METHOD, correlator, reqUrlLength);
   // For Timeout handler
   if (bidderRequest?.bids?.length && isArray(bidderRequest?.bids)) {
     bidderRequest.bids.forEach(bid => bid.correlator = correlator);
@@ -1124,8 +1122,9 @@ function _buildServerRequest(bidderRequest, payload) {
       case 'POST':
         serverRequest.method = overrideMethod;
         serverRequest.url = overrideEndPoint + postReqParams;
+        _setBidderRequestNWMonitorParams(bidderRequest, overrideEndPoint, 1, overrideMethod, correlator, reqUrlLength);
         break;
-      case 'GET':
+      case 'GET':        
         serverRequest = _getOverrideGetRequest(serverRequest, { overrideMethod, overrideEndPoint, bidderRequest, payload, correlator });
         break;
       default:
@@ -1134,13 +1133,23 @@ function _buildServerRequest(bidderRequest, payload) {
   return serverRequest;
 }
 
+function _setBidderRequestNWMonitorParams(bidderRequest, overrideEndPoint, reqOverride, overrideMethod, correlator, reqUrlLength) {
+  bidderRequest.nwMonitor = bidderRequest.nwMonitor || {};
+  bidderRequest.nwMonitor.reqEndPoint = overrideEndPoint;
+  bidderRequest.nwMonitor.reqOverride = reqOverride;
+  bidderRequest.nwMonitor.reqMethod = overrideMethod;
+  bidderRequest.nwMonitor.correlator = correlator;
+  bidderRequest.nwMonitor.requestUrlPayloadLength = reqUrlLength;
+}
+
 function _getOverrideGetRequest(serverRequest, getRequestObj) {
   const maxUrlLength = config.getConfig('translatorGetRequest.maxUrlLength') || 63000;
   const urlEncodedPayloadStr = parseQueryStringParameters({
     'source': 'ow-client', 'payload': JSON.stringify(getRequestObj?.payload), 'correlator': getRequestObj?.correlator
   });
-  if ((getRequestObj?.overrideEndPoint + '?' + urlEncodedPayloadStr)?.length <= maxUrlLength) {
-    getRequestObj.bidderRequest.nwMonitor.reqMethod = 'GET';
+  const reqUrlLength = (getRequestObj?.overrideEndPoint + '?' + urlEncodedPayloadStr)?.length;
+  if (reqUrlLength <= maxUrlLength) {
+    _setBidderRequestNWMonitorParams(getRequestObj.bidderRequest, getRequestObj?.overrideEndPoint, 1, "GET", getRequestObj.correlator, reqUrlLength);
     getRequestObj.bidderRequest.nwMonitor.requestUrlPayloadLength = getRequestObj?.overrideEndPoint.length + '?'.length + urlEncodedPayloadStr.length;
     serverRequest = {
       method: getRequestObj?.overrideMethod,
