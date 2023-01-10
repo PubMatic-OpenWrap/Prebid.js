@@ -1424,7 +1424,10 @@ export const spec = {
                   }
                 });
               }
-              if (bid.ext && bid.ext.deal_channel) {
+              if(newBid['dealId']){
+                newBid['dealChannel'] = 'PMP';
+              }
+              if (newBid['dealId'] && bid.ext && bid.ext.deal_channel) {
                 newBid['dealChannel'] = dealChannelValues[bid.ext.deal_channel] || null;
               }
 
