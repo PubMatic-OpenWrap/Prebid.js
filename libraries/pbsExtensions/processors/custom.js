@@ -163,7 +163,7 @@ export function setResponseParams(bidResponse, bid, context) {
     if (firstBidRequest.hasOwnProperty('adUnitsS2SCopy')) {
       impForSlots = firstBidRequest.adUnitsS2SCopy.length;
     }
-    context?.ortbResponse?.seatbid.forEach(seatbid => {
+    context.ortbResponse.seatbid.forEach(seatbid => {
       if (seatbid.hasOwnProperty('bid')) {
         partnerBidsForslots = seatbid.bid.length;
       }

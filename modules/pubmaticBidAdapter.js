@@ -1316,7 +1316,9 @@ export const spec = {
     bidderRequest.nwMonitor.correlator = correlator;
     bidderRequest.nwMonitor.requestUrlPayloadLength = url.length + JSON.stringify(payload).length;
     // For Timeout handler
-    bidderRequest?.bids?.forEach(bid => bid.correlator = correlator);
+    if (bidderRequest?.bids) {
+      bidderRequest.bids.forEach(bid => bid.correlator = correlator);
+    }
 
     let serverRequest = {
       method: 'POST',
@@ -1424,7 +1426,7 @@ export const spec = {
                   }
                 });
               }
-              if(newBid['dealId']){
+              if (newBid['dealId']) {
                 newBid['dealChannel'] = 'PMP';
               }
               if (newBid['dealId'] && bid.ext && bid.ext.deal_channel) {
