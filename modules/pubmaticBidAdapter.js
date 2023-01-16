@@ -1100,7 +1100,7 @@ function _buildServerRequest(bidderRequest, payload) {
   const reqUrlLength = (ENDPOINT + postReqParams).length + JSON.stringify(payload).length;
 
   // For Auction End Handler
-  _setBidderRequestNWMonitorParams(bidderRequest, ENDPOINT, 0, DEFAULT_METHOD, correlator, reqUrlLength);
+  _setBidderRequestNWMonitorParams(bidderRequest, 0, correlator, reqUrlLength);
   // For Timeout handler
   if (bidderRequest?.bids?.length && isArray(bidderRequest?.bids)) {
     bidderRequest.bids.forEach(bid => bid.correlator = correlator);
@@ -1122,7 +1122,7 @@ function _buildServerRequest(bidderRequest, payload) {
       case 'POST':
         serverRequest.method = overrideMethod;
         serverRequest.url = overrideEndPoint + postReqParams;
-        _setBidderRequestNWMonitorParams(bidderRequest, overrideEndPoint, 1, overrideMethod, correlator, reqUrlLength);
+        _setBidderRequestNWMonitorParams(bidderRequest, 1, correlator, reqUrlLength);
         break;
       case 'GET':
         serverRequest = _getOverrideGetRequest(serverRequest, { overrideMethod, overrideEndPoint, bidderRequest, payload, correlator });
@@ -1133,11 +1133,9 @@ function _buildServerRequest(bidderRequest, payload) {
   return serverRequest;
 }
 
-function _setBidderRequestNWMonitorParams(bidderRequest, overrideEndPoint, reqOverride, overrideMethod, correlator, reqUrlLength) {
+function _setBidderRequestNWMonitorParams(bidderRequest, reqOverride, correlator, reqUrlLength) {
   bidderRequest.nwMonitor = bidderRequest?.nwMonitor || {};
-  bidderRequest.nwMonitor.reqEndPoint = overrideEndPoint;
   bidderRequest.nwMonitor.reqOverride = reqOverride;
-  bidderRequest.nwMonitor.reqMethod = overrideMethod;
   bidderRequest.nwMonitor.correlator = correlator;
   bidderRequest.nwMonitor.requestUrlPayloadLength = reqUrlLength;
 }
@@ -1149,7 +1147,7 @@ function _getOverrideGetRequest(serverRequest, getRequestObj) {
   });
   const reqUrlLength = (getRequestObj?.overrideEndPoint + '?' + urlEncodedPayloadStr)?.length;
   if (reqUrlLength <= maxUrlLength) {
-    _setBidderRequestNWMonitorParams(getRequestObj.bidderRequest, getRequestObj?.overrideEndPoint, 1, 'GET', getRequestObj.correlator, reqUrlLength);
+    _setBidderRequestNWMonitorParams(getRequestObj.bidderRequest, 1, getRequestObj.correlator, reqUrlLength);
     getRequestObj.bidderRequest.nwMonitor.requestUrlPayloadLength = getRequestObj?.overrideEndPoint.length + '?'.length + urlEncodedPayloadStr.length;
     serverRequest = {
       method: getRequestObj?.overrideMethod,
