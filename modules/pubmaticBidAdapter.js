@@ -1128,6 +1128,7 @@ function _buildServerRequest(bidderRequest, payload) {
         serverRequest = _getOverrideGetRequest(serverRequest, { overrideMethod, overrideEndPoint, bidderRequest, payload, correlator });
         break;
       default:
+        logInfo(LOG_WARN_PREFIX, 'Invalid override method:', overrideMethod, 'in the translatorGetRequest config. Supports only for (POST, GET)');
     }
   }
   return serverRequest;
@@ -1142,6 +1143,9 @@ function _setBidderRequestNWMonitorParams(bidderRequest, reqOverride, correlator
 
 function _getOverrideGetRequest(serverRequest, getRequestObj) {
   const maxUrlLength = config.getConfig('translatorGetRequest.maxUrlLength') || 63000;
+  if (maxUrlLength > 63000) {
+    logInfo(LOG_WARN_PREFIX, 'maxUrlLength is over the default value 63000 it may cause url length issue on server/LB side, provided length: ', maxUrlLength);
+  }
   const urlEncodedPayloadStr = parseQueryStringParameters({
     'source': 'ow-client', 'payload': JSON.stringify(getRequestObj?.payload), 'correlator': getRequestObj?.correlator
   });
@@ -1411,7 +1415,9 @@ export const spec = {
     const bidResponses = [];
     var respCur = DEFAULT_CURRENCY;
     // In case of Translator GET request, will copy the actual json data from payloadStr to data.
-    if (request?.payloadStr) request.data = request.payloadStr;
+    if (request?.payloadStr) {
+      request.data = request.payloadStr;
+    }
     let parsedRequest = JSON.parse(request.data);
     let parsedReferrer = parsedRequest.site && parsedRequest.site.ref ? parsedRequest.site.ref : '';
     try {
