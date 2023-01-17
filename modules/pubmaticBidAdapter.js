@@ -1135,6 +1135,7 @@ function _buildServerRequest(bidderRequest, payload) {
 }
 
 function _setBidderRequestNWMonitorParams(bidderRequest, reqOverride, correlator, reqUrlLength) {
+  bidderRequest = bidderRequest || {};
   bidderRequest.nwMonitor = bidderRequest?.nwMonitor || {};
   bidderRequest.nwMonitor.reqOverride = reqOverride;
   bidderRequest.nwMonitor.correlator = correlator;

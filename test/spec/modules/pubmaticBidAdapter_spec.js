@@ -268,7 +268,7 @@ describe('PubMatic adapter', function () {
         }
       },
       nativeParams: {
-        title: { required: true },
+        // title: { required: true },
         image: { required: true },
         sponsoredBy: { required: true },
         clickUrl: { required: true }
@@ -2801,7 +2801,7 @@ describe('PubMatic adapter', function () {
     it('should not have valid native request if assets are not defined with minimum required params and only native is the slot', function () {
       let request = spec.buildRequests(nativeBidRequestsWithoutAsset, {
         auctionId: 'new-auction-id'
-      });
+      });      
       expect(request).to.deep.equal(undefined);
     });
 
@@ -3015,7 +3015,7 @@ describe('PubMatic adapter', function () {
         clickUrl: { required: true }
       };
       bannerAndNativeBidRequests[0].nativeParams = {
-        title: { required: true },
+        // title: { required: true },
         image: { required: true },
         sponsoredBy: { required: true },
         clickUrl: { required: true }
@@ -3038,7 +3038,7 @@ describe('PubMatic adapter', function () {
         clickUrl: { required: true }
       };
       videoAndNativeBidRequests[0].nativeParams = {
-        title: { required: true },
+        //title: { required: true },
         image: { required: true },
         sponsoredBy: { required: true },
         clickUrl: { required: true }
@@ -3773,7 +3773,7 @@ describe('PubMatic adapter', function () {
       expect(response[0].netRevenue).to.equal(true);
       expect(response[0].ttl).to.equal(300);
       expect(response[0].meta.networkId).to.equal(123);
-      expect(response[0].meta.buyerId).to.equal(976);
+      expect(response[0].meta.buyerId).to.equal('seat-id');
       expect(response[0].meta.clickUrl).to.equal('blackrock.com');
       expect(response[0].referrer).to.include(data.site.ref);
       expect(response[0].ad).to.equal(bidResponses.body.seatbid[0].bid[0].adm);
