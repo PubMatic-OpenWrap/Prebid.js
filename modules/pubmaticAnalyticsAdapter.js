@@ -43,7 +43,7 @@ let publisherId = DEFAULT_PUBLISHER_ID; // int: mandatory
 let profileId = DEFAULT_PROFILE_ID; // int: optional
 let profileVersionId = DEFAULT_PROFILE_VERSION_ID; // int: optional
 let s2sBidders = [];
-let isIdentityOnly = DEFAULT_ISIDENTITY_ONLY;
+let identityOnly = DEFAULT_ISIDENTITY_ONLY;
 
 /// /////////// HELPER FUNCTIONS //////////////
 
