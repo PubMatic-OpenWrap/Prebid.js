@@ -144,13 +144,14 @@ export function ortbConverter({
         REQ_CTX.set(request, ctx);
       }
 
-      firstBidRequest = ctx.req.actualBidderRequests[0];
+      firstBidRequest = ctx.req?.actualBidderRequests?.[0];
       // check if isPrebidPubMaticAnalyticsEnabled in s2sConfig and if it is then get auctionId from adUnit
-      const { s2sConfig } = ctx.req.s2sBidRequest;
-      let isAnalyticsEnabled = s2sConfig.extPrebid && s2sConfig.extPrebid.isPrebidPubMaticAnalyticsEnabled;
-      iidValue = isAnalyticsEnabled ? firstBidRequest.auctionId : firstBidRequest.bids[0].params.wiid;
-
-      createLatencyMap(iidValue, firstBidRequest.auctionId);
+      const s2sConfig = ctx.req?.s2sBidRequest?.s2sConfig;
+      let isAnalyticsEnabled = s2sConfig?.extPrebid?.isPrebidPubMaticAnalyticsEnabled;
+	  if(firstBidRequest) {
+		const iidValue = isAnalyticsEnabled ? firstBidRequest.auctionId : firstBidRequest.bids[0].params.wiid;
+      	createLatencyMap(iidValue, firstBidRequest.auctionId);
+	  }
       return request;
     },
     fromORTB({request, response}) {
@@ -169,7 +170,7 @@ export function ortbConverter({
       }
       const impsById = Object.fromEntries((request.imp || []).map(imp => [imp.id, imp]));
       let impForSlots, partnerBidsForslots;
-      if (firstBidRequest.hasOwnProperty('adUnitsS2SCopy')) {
+      if (firstBidRequest && firstBidRequest.hasOwnProperty('adUnitsS2SCopy')) {
         impForSlots = firstBidRequest.adUnitsS2SCopy.length;
       }
 
