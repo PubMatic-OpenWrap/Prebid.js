@@ -292,13 +292,13 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid) {
     adUnit.bids[bidId].forEach(function(bid) {
       const prebidBidId = bid.bidResponse && bid.bidResponse.prebidBidId;
       partnerBids.push({
-        'pn': getAdapterNameForAlias(bid.bidder),
+        'pn': getAdapterNameForAlias(bid.adapterCode || bid.bidder),
         'bc': bid.bidderCode || bid.bidder,
         'bidid': prebidBidId || bid.bidId,
         'origbidid': bid.bidId,
         'db': bid.bidResponse ? 0 : 1,
         'kgpv': getValueForKgpv(bid, adUnitId),
-        'kgpsv': bid.params.kgpv ? getUpdatedKGPVForVideo(bid.params.kgpv, bid.bidResponse) : adUnitId,
+        'kgpsv': bid.params && bid.params.kgpv ? getUpdatedKGPVForVideo(bid.params.kgpv, bid.bidResponse) : adUnitId,
         'psz': bid.bidResponse ? (bid.bidResponse.dimensions.width + 'x' + bid.bidResponse.dimensions.height) : '0x0',
         'eg': bid.bidResponse ? bid.bidResponse.bidGrossCpmUSD : 0,
         'en': bid.bidResponse ? bid.bidResponse.bidPriceUSD : 0,
@@ -454,8 +454,8 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   pixelURL += '&purl=' + enc(config.getConfig('pageUrl') || cache.auctions[auctionId].referer || '');
   pixelURL += '&tst=' + Math.round((new window.Date()).getTime() / 1000);
   pixelURL += '&iid=' + enc(auctionId);
-  pixelURL += '&bidid=' + (generatedBidId ? enc(generatedBidId) : enc(winningBid.bidId));
-  pixelURL += '&origbidid=' + enc(winningBid.bidId);
+  pixelURL += '&bidid=' + (generatedBidId ? enc(generatedBidId) : enc(winningBidId));
+  pixelURL += '&origbidid=' + enc(winningBidId);
   pixelURL += '&pid=' + enc(profileId);
   pixelURL += '&pdvid=' + enc(profileVersionId);
   pixelURL += '&slot=' + enc(adUnitId);
@@ -520,7 +520,14 @@ function bidResponseHandler(args) {
   }
 
   if ((bid.bidder && args.bidderCode && bid.bidder !== args.bidderCode) || (bid.bidder === args.bidderCode && bid.status === SUCCESS)) {
+    if(!!bid.params){
+      args.params = bid.params;
+    }
+    if(bid?.bidResponse?.partnerImpId){
+      args.partnerImpId = bid.bidResponse.partnerImpId;
+    }
     bid = copyRequiredBidDetails(args);
+    bid.bidId = args.requestId;
     cache.auctions[args.auctionId].adUnitCodes[args.adUnitCode].bids[args.requestId].push(bid);
   }
 
