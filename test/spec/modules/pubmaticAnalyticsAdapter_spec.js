@@ -1306,17 +1306,6 @@ describe('pubmatic analytics adapter', function () {
     });
   });
 
- /* desccribe('log value of ih field', function() {
-    beforeEach(function () {
-      
-    });
-
-    afterEach(function () {
-      window.PWT = {};
-      pubmaticAnalyticsAdapter.disableAnalytics();
-    });
-  });*/
-
   describe('Get Metadata function', function () {
     it('should get the metadata object', function () {
       const meta = {
