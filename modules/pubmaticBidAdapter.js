@@ -1219,7 +1219,7 @@ export const spec = {
     }
 
     if (bid.bidViewability) {
-	  vsgObj =  getAndParseFromLocalStorage('viewability-data');
+      vsgObj = getAndParseFromLocalStorage('viewability-data');
       removeUnwantedKeys(vsgObj[vsgDomain]);
       payload.ext.bidViewability = {
         adDomain: vsgObj[vsgDomain]

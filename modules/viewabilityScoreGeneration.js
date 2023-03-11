@@ -14,8 +14,26 @@ const GPT_SLOT_VISIBILITY_CHANGED_EVENT = 'slotVisibilityChanged';
 const TOTAL_VIEW_TIME_LIMIT = 1000000000;
 const domain = window.location.hostname;
 
+const fireStatHatLogger = (statKeyName) => {
+  var stathatUserEmail = 'jason.quaccia@pubmatic.com';
+  var url = 'https://api.stathat.com/ez';
+  var data = `time=${(new Date()).getTime()}&stat=${statKeyName}&email=${stathatUserEmail}&count=1`
+
+  var statHatElement = document.createElement('script');
+  statHatElement.src = url + '?' + data;
+  statHatElement.async = true;
+  document.body.appendChild(statHatElement)
+};
+
 export const getAndParseFromLocalStorage = key => JSON.parse(window.localStorage.getItem(key));
-export const setAndStringifyToLocalStorage = (key, object) => { window.localStorage.setItem(key, JSON.stringify(object)); };
+export const setAndStringifyToLocalStorage = (key, object) => {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(object));
+  } catch (e) {
+    // send error to stathat endpoint
+    fireStatHatLogger(`${e} --- ${window.location.href}`);
+  }
+};
 
 let vsgObj = getAndParseFromLocalStorage('viewability-data');
 
@@ -89,14 +107,16 @@ const incrementRenderCount = keyArr => {
       } else {
         vsgObj[key] = {
           rendered: 1,
-          viewed: 0
+          viewed: 0,
+          createdAt: Date.now()
         }
       }
     } else {
       vsgObj = {
         [key]: {
           rendered: 1,
-          viewed: 0
+          viewed: 0,
+          createdAt: Date.now()
         }
       }
     }
@@ -228,6 +248,7 @@ export const updateGptWithViewabilityTargeting = targetingSet => {
 export const setGptEventHandlers = () => {
   events.on(CONSTANTS.EVENTS.AUCTION_INIT, () => {
     // add the GPT event listeners
+    // the event handlers below get triggered in the following order: slotRenderEnded, slotVisibilityChanged and impressionViewable
     window.googletag = window.googletag || {};
     window.googletag.cmd = window.googletag.cmd || [];
     window.googletag.cmd.push(() => {
