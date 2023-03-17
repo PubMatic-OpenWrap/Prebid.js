@@ -1136,6 +1136,62 @@ describe('PubMatic adapter', function () {
         sandbox.restore();
 		  });
 
+      describe('Marketplace parameters', function() {
+        let bidderSettingStub;
+        beforeEach(function() {
+          bidderSettingStub = sinon.stub(bidderSettings, 'get');
+        });
+
+        afterEach(function() {
+          bidderSettingStub.restore();
+        });
+
+        it('should not be present when allowAlternateBidderCodes is undefined', function () {
+          bidderSettingStub.returns(undefined);
+          let request = spec.buildRequests(bidRequests, {
+            auctionId: 'new-auction-id'
+          });
+          let data = JSON.parse(request.data);
+          expect(data.ext.marketplace).to.equal(undefined);
+        });
+
+        it('should be pubmatic and groupm when allowedAlternateBidderCodes is \'groupm\'', function () {
+          bidderSettingStub.withArgs('pubmatic', 'allowAlternateBidderCodes').returns(true);
+          bidderSettingStub.withArgs('pubmatic', 'allowedAlternateBidderCodes').returns(['groupm']);
+          let request = spec.buildRequests(bidRequests, {
+            auctionId: 'new-auction-id',
+            bidderCode: 'pubmatic'
+          });
+          let data = JSON.parse(request.data);
+          expect(data.ext.marketplace.allowedbidders).to.be.an('array');
+          expect(data.ext.marketplace.allowedbidders.length).to.equal(2);
+          expect(data.ext.marketplace.allowedbidders[0]).to.equal('pubmatic');
+          expect(data.ext.marketplace.allowedbidders[1]).to.equal('groupm');
+        });
+
+        it('should be ALL by default', function () {
+          bidderSettingStub.returns(true);
+          let request = spec.buildRequests(bidRequests, {
+            auctionId: 'new-auction-id'
+          });
+          let data = JSON.parse(request.data);
+          expect(data.ext.marketplace.allowedbidders).to.be.an('array');
+          expect(data.ext.marketplace.allowedbidders[0]).to.equal('all');
+        });
+
+        it('should be ALL when allowedAlternateBidderCodes is \'*\'', function () {
+          bidderSettingStub.withArgs('pubmatic', 'allowAlternateBidderCodes').returns(true);
+          bidderSettingStub.withArgs('pubmatic', 'allowedAlternateBidderCodes').returns(['*']);
+          let request = spec.buildRequests(bidRequests, {
+            auctionId: 'new-auction-id',
+            bidderCode: 'pubmatic'
+          });
+          let data = JSON.parse(request.data);
+          expect(data.ext.marketplace.allowedbidders).to.be.an('array');
+          expect(data.ext.marketplace.allowedbidders[0]).to.equal('all');
+        });
+      });
+
       it('Set content from config, set site.content', function() {
         let sandbox = sinon.sandbox.create();
         const content = {
@@ -2636,6 +2692,21 @@ describe('PubMatic adapter', function () {
 
       expect(data.imp[0]['video']['w']).to.equal(videoBidRequests[0].mediaTypes.video.playerSize[0]);
       expect(data.imp[0]['video']['h']).to.equal(videoBidRequests[0].mediaTypes.video.playerSize[1]);
+    });
+
+    it('should pass device.sua if present in bidderRequest fpd ortb2 object', function () {
+      const suaObject = {'source': 2, 'platform': {'brand': 'macOS', 'version': ['12', '4', '0']}, 'browsers': [{'brand': 'Not_A Brand', 'version': ['99', '0', '0', '0']}, {'brand': 'Google Chrome', 'version': ['109', '0', '5414', '119']}, {'brand': 'Chromium', 'version': ['109', '0', '5414', '119']}], 'mobile': 0, 'model': '', 'bitness': '64', 'architecture': 'x86'};
+      let request = spec.buildRequests(multipleMediaRequests, {
+        auctionId: 'new-auction-id',
+        ortb2: {
+          device: {
+            sua: suaObject
+          }
+        }
+      });
+      let data = JSON.parse(request.data);
+      expect(data.device.sua).to.exist.and.to.be.an('object');
+      expect(data.device.sua).to.deep.equal(suaObject);
     });
 
     it('Request params check for 1 banner and 1 video ad', function () {
@@ -4606,8 +4677,7 @@ describe('PubMatic adapter', function () {
       });
       let response = spec.interpretResponse(newBidResponses, request);
       expect(response).to.be.an('array').with.length.above(0);
-      // expect(response[0].bidderCode).to.equal('groupm');
-      // expect(response[0].bidder).to.equal('groupm');
+      expect(response[0].bidderCode).to.equal('groupm');
     });
   });
 
@@ -4631,7 +4701,7 @@ describe('PubMatic adapter', function () {
           // agencyName: 'agnm',
           // brandId: 'brid',
           // brandName: 'brnm',
-          // dchain: 'dc',
+          dchain: 'dc',
           // demandSource: 'ds',
           // secondaryCatIds: ['secondaryCatIds']
         }
@@ -4649,7 +4719,7 @@ describe('PubMatic adapter', function () {
       // expect(br.meta.agencyName).to.equal('agnm');
       expect(br.meta.brandId).to.equal('mystartab.com');
       // expect(br.meta.brandName).to.equal('brnm');
-      // expect(br.meta.dchain).to.equal('dc');
+      expect(br.meta.dchain).to.equal('dc');
       expect(br.meta.demandSource).to.equal(6);
       expect(br.meta.secondaryCatIds).to.be.an('array').with.length.above(0);
       expect(br.meta.secondaryCatIds[0]).to.equal('IAB_CATEGORY');
