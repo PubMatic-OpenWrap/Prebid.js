@@ -901,8 +901,8 @@ export function updateModuleParams(moduleToUpdate) {
 }
 
 function generateModuleLists() {
-  let primaryModulesList = window.IHPWT.OVERRIDES_PRIMARY_MODULES || CONSTANTS.REFRESH_IDMODULES_LIST.PRIMARY_MODULES;
-  let scriptBasedModulesList = window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES || CONSTANTS.REFRESH_IDMODULES_LIST.SCRIPT_BASED_MODULES;
+  let primaryModulesList = (window.IHPWT && window.IHPWT.OVERRIDES_PRIMARY_MODULES) || CONSTANTS.REFRESH_IDMODULES_LIST.PRIMARY_MODULES;
+  let scriptBasedModulesList = (window.IHPWT && window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES) || CONSTANTS.REFRESH_IDMODULES_LIST.SCRIPT_BASED_MODULES;
   for (let index in configRegistry) {
     let moduleName = configRegistry[index].name;
     if (primaryModulesList.indexOf(moduleName) >= 0) {
