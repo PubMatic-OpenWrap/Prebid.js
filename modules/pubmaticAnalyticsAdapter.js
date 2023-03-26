@@ -390,7 +390,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['psl'] = getPSL(auctionId);
   outputObj['dvc'] = {'plt': getDevicePlatform()};
   outputObj["bm"] = window.PWT && window.PWT.browserMapping;
-  outputObj['ih'] = '' + identityOnly;
+  outputObj['ih'] = identityOnly;
   outputObj['tgid'] = (function() {
     var testGroupId = parseInt(config.getConfig('testGroupId') || 0);
     if (testGroupId <= 15 && testGroupId >= 0) {
