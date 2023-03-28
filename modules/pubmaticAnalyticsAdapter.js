@@ -520,10 +520,10 @@ function bidResponseHandler(args) {
   }
 
   if ((bid.bidder && args.bidderCode && bid.bidder !== args.bidderCode) || (bid.bidder === args.bidderCode && bid.status === SUCCESS)) {
-    if(!!bid.params){
+    if (bid.params) {
       args.params = bid.params;
     }
-    if(bid?.bidResponse?.partnerImpId){
+    if (bid?.bidResponse?.partnerImpId) {
       args.partnerImpId = bid.bidResponse.partnerImpId;
     }
     bid = copyRequiredBidDetails(args);

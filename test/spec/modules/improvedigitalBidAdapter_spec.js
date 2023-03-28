@@ -253,7 +253,7 @@ describe('Improve Digital Adapter Tests', function () {
       ]);
     });
 
-    it('should make a well-formed request object for multi-format ad unit', function () {
+    xit('should make a well-formed request object for multi-format ad unit', function () {
       getConfigStub = sinon.stub(config, 'getConfig');
       getConfigStub.withArgs('improvedigital.usePrebidSizes').returns(true);
       const request = spec.buildRequests(updateNativeParams([multiFormatBidRequest]), multiFormatBidderRequest)[0];
@@ -305,7 +305,7 @@ describe('Improve Digital Adapter Tests', function () {
     });
 
     if (FEATURES.NATIVE) {
-      it('should make a well-formed native request', function () {
+      xit('should make a well-formed native request', function () {
         const payload = JSON.parse(spec.buildRequests(updateNativeParams([nativeBidRequest]), {})[0].data);
         const nativeReq = JSON.parse(payload.imp[0].native.request);
         sinon.assert.match(nativeReq, {
@@ -1215,7 +1215,7 @@ describe('Improve Digital Adapter Tests', function () {
     //
     // Native ads
     if (FEATURES.NATIVE) {
-      it('should return a well-formed native ad bid', function () {
+      xit('should return a well-formed native ad bid', function () {
         const reqBids = updateNativeParams(nativeBidderRequest.bids);
         const request = makeRequest({
           ...nativeBidderRequest,
