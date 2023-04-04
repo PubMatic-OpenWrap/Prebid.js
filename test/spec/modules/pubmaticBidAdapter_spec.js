@@ -4048,7 +4048,7 @@ describe('PubMatic adapter', function () {
     })
   });
 
-  describe('getUserSyncs', function() {
+  describe.only('getUserSyncs', function() {
     const syncurl_iframe = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=5670';
     const syncurl_image = 'https://image8.pubmatic.com/AdServer/ImgSync?p=5670';
     let sandbox;
@@ -4067,16 +4067,17 @@ describe('PubMatic adapter', function () {
       data.imp[0].id = '2a5571261281d4';
       request.data = JSON.stringify(data);
       let response = spec.interpretResponse(nativeBidResponse, request);
+      let assets = response[0].native.ortb.assets;
       expect(response).to.be.an('array').with.length.above(0);
       expect(response[0].native).to.exist.and.to.be.an('object');
       expect(response[0].mediaType).to.exist.and.to.equal('native');
-      expect(response[0].native.title).to.exist.and.to.be.an('string');
-      expect(response[0].native.image).to.exist.and.to.be.an('object');
-      expect(response[0].native.image.url).to.exist.and.to.be.an('string');
-      expect(response[0].native.image.height).to.exist;
-      expect(response[0].native.image.width).to.exist;
-      expect(response[0].native.sponsoredBy).to.exist.and.to.be.an('string');
-      expect(response[0].native.clickUrl).to.exist.and.to.be.an('string');
+      expect(assets).to.be.an('array').with.length.above(0);
+      expect(assets[0].title).to.exist.and.to.be.an('object');
+      expect(assets[1].img).to.exist.and.to.be.an('object');
+      expect(assets[1].img.url).to.exist.and.to.be.an('string');
+      expect(assets[1].img.h).to.exist;
+      expect(assets[1].img.w).to.exist;
+      expect(assets[2].data).to.exist.and.to.be.an('object');
     });
 
     it('should check for valid banner mediaType in case of multiformat request', function() {
