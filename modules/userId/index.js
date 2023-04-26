@@ -1068,7 +1068,7 @@ function initSubmodules(dest, submodules, consentData, forceRefresh = false) {
 
     // another consent check, this time each module is checked for consent with its own gvlid
     let { userIdModules, hasValidated } = validateGdprEnforcement(submodules, consentData);
-    if (!hasValidated && !hasPurpose1Consent(consentData)) {
+    if ((!hasValidated && !hasPurpose1Consent(consentData)) || ihowpbjs?.getConfig()?.consentManagement?.gdpr?.defaultGdprScope ) {
       logWarn(`${MODULE_NAME} - gdpr permission not valid for local storage or cookies, exit module`);
       return [];
     }
