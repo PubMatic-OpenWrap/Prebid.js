@@ -361,7 +361,7 @@ function storedConsentDataMatchesConsentData(storedConsentData, consentData) {
 
 /**
  * test if consent module is present, applies, and is valid for local storage or cookies (purpose 1)
- * @param {ConsentData} consentData
+ * @param {gdprConsent} gdprConsent
  * @returns {boolean}
  */
 function hasGDPRConsent(gdprConsent) {
