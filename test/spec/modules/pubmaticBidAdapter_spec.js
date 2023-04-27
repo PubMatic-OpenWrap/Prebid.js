@@ -4429,7 +4429,47 @@ describe('PubMatic adapter', function () {
       });
       let newresponse = spec.interpretResponse(newvideoBidResponses, newrequest);
       expect(newresponse[0].mediaType).to.equal('video')
-    })
+    });
+
+    describe('GPP Parameter', () => {
+      const syncOptions = {
+        iframeEnabled: true
+      };
+
+      it('should return userSync url without Gpp consent if gppConsent is undefined', () => {
+        const result = spec.getUserSyncs(syncOptions, undefined, undefined, undefined, undefined);
+        expect(result[0].type).to.equal('iframe');
+        expect(result[0].url).to.equal(syncurl_iframe);
+      });
+
+      it('should return userSync url without Gpp consent if gppConsent.gppString is undefined', () => {
+        const gppConsent = { applicableSections: ['5'] };
+        const result = spec.getUserSyncs(syncOptions, undefined, undefined, undefined, gppConsent);
+        expect(result[0].type).to.equal('iframe');
+        expect(result[0].url).to.equal(syncurl_iframe);
+      });
+
+      it('should return userSync url without Gpp consent if gppConsent.applicableSections is undefined', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN' };
+        const result = spec.getUserSyncs(syncOptions, undefined, undefined, undefined, gppConsent);
+        expect(result[0].type).to.equal('iframe');
+        expect(result[0].url).to.equal(syncurl_iframe);
+      });
+
+      it('should return userSync url without Gpp consent if gppConsent.applicableSections is an empty array', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN', applicableSections: [] };
+        const result = spec.getUserSyncs(syncOptions, undefined, undefined, undefined, gppConsent);
+        expect(result[0].type).to.equal('iframe');
+        expect(result[0].url).to.equal(syncurl_iframe);
+      });
+
+      it('should concatenate gppString and applicableSections values in the returned userSync url', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN', applicableSections: [5] };
+        const result = spec.getUserSyncs(syncOptions, undefined, undefined, undefined, gppConsent);
+        expect(result[0].type).to.equal('iframe');
+        expect(result[0].url).to.equal(syncurl_iframe + '&gpp=' + encodeURIComponent(gppConsent.gppString) + '&gpp_sid=' + encodeURIComponent(gppConsent.applicableSections));
+      });
+    });
   });
 
   describe('Checking for Video.Placement property', function() {
