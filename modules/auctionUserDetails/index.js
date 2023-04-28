@@ -103,7 +103,7 @@ export function impressionViewableHandler(slot) {
   localStorage.setItem(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
 };
 
-export function auctionInitHandler () {
+export function auctionInitHandler (args) {
   if (frequencyDepth) {
     storedObject = localStorage.getItem(PREFIX + HOSTNAME);
     let slotCount = window.owpbjs.adUnits.length + (storedObject == null ? frequencyDepth.slotCnt : 0);
@@ -121,7 +121,7 @@ export function auctionInitHandler () {
       frequencyDepth.slotCnt = slotCount;
     }
 
-    window.owpbjs.adUnits.forEach((adUnit) => {
+	args.adUnits.forEach((adUnit) => {
       frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId] = {
         slotCnt: (frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId]?.slotCnt || 0) + 1,
         bidServed: (frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId]?.bidServed || 0) + 0,
@@ -142,8 +142,8 @@ export let init = () => {
       impressionViewableHandler(event.slot);
     });
   });
-  events.on(CONSTANTS.EVENTS.AUCTION_INIT, () => {
-    frequencyDepth = auctionInitHandler();
+  events.on(CONSTANTS.EVENTS.AUCTION_INIT, (args) => {
+    frequencyDepth = auctionInitHandler(args);
   });
 
   events.on(CONSTANTS.EVENTS.AUCTION_END, () => {
