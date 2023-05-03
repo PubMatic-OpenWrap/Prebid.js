@@ -27,7 +27,6 @@ let codeAdUnitMap = {};
 export function clearStorage(storedDate) {
   let currentDate = new Date().getDate();
   if (storedDate !== currentDate) {
-    // localStorage.removeItem(PREFIX + HOSTNAME);
     storage.removeDataFromLocalStorage(PREFIX + HOSTNAME);
     return true;
   }
@@ -65,11 +64,9 @@ export function getUserAgentDetails() {
 export function auctionBidWonHandler(bid) {
   if (frequencyDepth) {
     storage.getDataFromLocalStorage(PREFIX + HOSTNAME, val => {
-      // frequencyDepth = JSON.parse(localStorage.getItem(PREFIX + HOSTNAME));
       frequencyDepth = JSON.parse(val);
       frequencyDepth.impressionServed = frequencyDepth.impressionServed + 1;
       frequencyDepth.slotLevelFrquencyDepth[codeAdUnitMap[bid.adUnitCode]].impressionServed = frequencyDepth.slotLevelFrquencyDepth[codeAdUnitMap[bid.adUnitCode]].impressionServed + 1;
-      // localStorage.setItem(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
       storage.setDataInLocalStorage(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
     });
   }
@@ -89,7 +86,6 @@ export function auctionBidResponseHandler(bid) {
 export function auctionEndHandler() {
   if (frequencyDepth) {
     frequencyDepth.lip = window.owpbjs.adUnits[0]?.bids[0]?.userId && Object.keys(window.owpbjs.adUnits[0].bids[0].userId);
-    // localStorage.setItem(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
     storage.setDataInLocalStorage(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
   }
   return frequencyDepth;
@@ -107,11 +103,9 @@ function checkViewabilityExpiry() {
 
 export function impressionViewableHandler(slot) {
   storage.getDataFromLocalStorage(PREFIX + HOSTNAME, val => {
-    // frequencyDepth = JSON.parse(localStorage.getItem(PREFIX + HOSTNAME));
     frequencyDepth = JSON.parse(val);
     frequencyDepth.viewedSlot.timestamp = frequencyDepth.viewedSlot.timestamp ? frequencyDepth.viewedSlot.timestamp : new Date().toJSON().slice(0, 10);
     frequencyDepth.viewedSlot[frequencyDepth.codeAdUnitMap[slot.getSlotId().getDomId()]] = (frequencyDepth.viewedSlot[frequencyDepth.codeAdUnitMap[slot.getSlotId().getDomId()]] || 0) + 1;
-    // localStorage.setItem(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
     storage.setDataInLocalStorage(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
   });
 };
