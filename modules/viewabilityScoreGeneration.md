@@ -28,7 +28,16 @@ Maintainer: jason.quaccia@pubmatic.com
 
 # localStorage
 
-All viewability data is stored and persisted in browser via `localStorage`.
+All viewability data is stored and persisted in browser via `localStorage`. Since Prebid.js 7.x, allowing permission/access to utilize `localStorage` must be explicitly set.
+
+https://docs.prebid.org/dev-docs/publisher-api-reference/bidderSettings.html
+```
+pbjs.bidderSettings = {
+  pubmatic: {
+    storageAllowed: true
+  }
+}
+```
 
 #### Viewability Data Object
 
@@ -144,7 +153,7 @@ Viewability data gets passed to the translator endpoint in the following format:
 ```
 
 # Setup
-
+Note: Setup for this module includes configuration with Prebid's `bidderSettings` field and `setConfig` method (see below):
 ```
 pbjs.setConfig({
 	viewabilityScoreGeneration: {
@@ -159,6 +168,12 @@ pbjs.setConfig({
 		}
 	},
 });
+
+pbjs.bidderSettings = {
+  pubmatic: {
+    storageAllowed: true
+  }
+}
 ```
 
 | Parameter                  | Type     | Description                                                                                                                                                                                                                                                                                              | Default                     |
