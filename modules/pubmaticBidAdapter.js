@@ -182,12 +182,10 @@ let NATIVE_ASSET_ID_TO_KEY_MAP = {};
 let NATIVE_ASSET_KEY_TO_ASSET_MAP = {};
 let biddersList = ['pubmatic'];
 const allBiddersList = ['all'];
-
-const vsgDomain = window.location.hostname;
 let viewData;
 
 storage.getDataFromLocalStorage('viewability-data', val => {
-  viewData = JSON.parse(val);
+  viewData = JSON.parse(val) || {};
 });
 
 const removeViewTimeForZeroValue = obj => {
@@ -1220,9 +1218,9 @@ export const spec = {
     }
 
     if (viewData && bid.bidViewability) {
-      removeViewTimeForZeroValue(viewData[vsgDomain]);
+      removeViewTimeForZeroValue(viewData[_getDomainFromURL(payload.site.page)]);
       payload.ext.bidViewability = {
-        adDomain: viewData[vsgDomain]
+        adDomain: viewData[_getDomainFromURL(payload.site.page)]
       }
     }
 
