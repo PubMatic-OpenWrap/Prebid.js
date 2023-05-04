@@ -5,6 +5,7 @@ import CONSTANTS from '../src/constants.json';
 import { ajax } from '../src/ajax.js';
 import { config } from '../src/config.js';
 import { getGlobal } from '../src/prebidGlobal.js';
+import { getStorageManager } from '../src/storageManager.js';
 
 /// /////////// CONSTANTS //////////////
 const ADAPTER_CODE = 'pubmatic';
@@ -44,6 +45,7 @@ let profileId = DEFAULT_PROFILE_ID; // int: optional
 let profileVersionId = DEFAULT_PROFILE_VERSION_ID; // int: optional
 let s2sBidders = [];
 let identityOnly = DEFAULT_ISIDENTITY_ONLY;
+const storage = getStorageManager({bidderCode: ADAPTER_CODE});
 
 /// /////////// HELPER FUNCTIONS //////////////
 
@@ -359,86 +361,89 @@ function getPSL(auctionId) {
 
 function executeBidsLoggerCall(e, highestCpmBids) {
   const HOSTNAME = window.location.host;
-  const storedObject = window.localStorage.getItem(PREFIX + HOSTNAME);
-  const frequencyDepth = storedObject !== null ? JSON.parse(storedObject) : {};
-  let auctionId = e.auctionId;
-  let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId].referer || '';
-  let auctionCache = cache.auctions[auctionId];
-  let floorData = auctionCache.floorData;
-  let outputObj = { s: [] };
-  let pixelURL = END_POINT_BID_LOGGER;
 
-  if (!auctionCache) {
-    return;
-  }
+  storage.getDataFromLocalStorage(PREFIX + HOSTNAME, val => {
+    const storedObject = val;
+    const frequencyDepth = storedObject !== null ? JSON.parse(storedObject) : {};
+    let auctionId = e.auctionId;
+    let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId].referer || '';
+    let auctionCache = cache.auctions[auctionId];
+    let floorData = auctionCache.floorData;
+    let outputObj = { s: [] };
+    let pixelURL = END_POINT_BID_LOGGER;
 
-  if (auctionCache.sent) {
-    return;
-  }
-
-  pixelURL += 'pubid=' + publisherId;
-  outputObj['pubid'] = '' + publisherId;
-  outputObj['iid'] = '' + auctionId;
-  outputObj['to'] = '' + auctionCache.timeout;
-  outputObj['purl'] = referrer;
-  outputObj['orig'] = getDomainFromUrl(referrer);
-  outputObj['tst'] = Math.round((new window.Date()).getTime() / 1000);
-  outputObj['pid'] = '' + profileId;
-  outputObj['pdvid'] = '' + profileVersionId;
-  outputObj['psl'] = getPSL(auctionId);
-  outputObj['dvc'] = {'plt': getDevicePlatform()};
-  outputObj['bm'] = window.PWT && window.PWT.browserMapping;
-  outputObj['ih'] = identityOnly;
-  outputObj['tgid'] = (function() {
-    var testGroupId = parseInt(config.getConfig('testGroupId') || 0);
-    if (testGroupId <= 15 && testGroupId >= 0) {
-      return testGroupId;
+    if (!auctionCache) {
+      return;
     }
-    return 0;
-  })();
 
-  outputObj['tpv'] = frequencyDepth?.pageView;
-  outputObj['trc'] = frequencyDepth?.slotCnt;
-  outputObj['tbs'] = frequencyDepth?.bidServed;
-  outputObj['tis'] = frequencyDepth?.impressionServed;
-  outputObj['lip'] = frequencyDepth?.lip;
-
-  if (floorData) {
-    outputObj['fmv'] = floorData.floorRequestData ? floorData.floorRequestData.modelVersion || undefined : undefined;
-    outputObj['ft'] = floorData.floorResponseData ? (floorData.floorResponseData.enforcements.enforceJS == false ? 0 : 1) : undefined;
-  }
-
-  outputObj.s = Object.keys(auctionCache.adUnitCodes).reduce(function(slotsArray, adUnitId) {
-    let adUnit = auctionCache.adUnitCodes[adUnitId];
-    let origAdUnit = getAdUnit(auctionCache.origAdUnits, adUnitId) || {};
-    let slotObject = {
-      'sn': adUnitId,
-      'au': origAdUnit.adUnitId || adUnitId,
-      'mt': getAdUnitAdFormats(origAdUnit),
-      'sz': getSizesForAdUnit(adUnit, adUnitId),
-      'fskp': floorData ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined,
-      'ps': gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestCpmBids.filter(bid => bid.adUnitCode === adUnitId)),
-      'bs': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.bidServed,
-      'is': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.impressionServed,
-      'rc': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.slotCnt,
-      'vw': frequencyDepth?.viewedSlot?.[origAdUnit.adUnitId],
-      'rf': origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0
-    };
-    slotsArray.push(slotObject);
-    return slotsArray;
-  }, []);
-
-  auctionCache.sent = true;
-
-  ajax(
-    pixelURL,
-    null,
-    'json=' + enc(JSON.stringify(outputObj)), {
-      contentType: 'application/x-www-form-urlencoded',
-      withCredentials: true,
-      method: 'POST'
+    if (auctionCache.sent) {
+      return;
     }
-  );
+
+    pixelURL += 'pubid=' + publisherId;
+    outputObj['pubid'] = '' + publisherId;
+    outputObj['iid'] = '' + auctionId;
+    outputObj['to'] = '' + auctionCache.timeout;
+    outputObj['purl'] = referrer;
+    outputObj['orig'] = getDomainFromUrl(referrer);
+    outputObj['tst'] = Math.round((new window.Date()).getTime() / 1000);
+    outputObj['pid'] = '' + profileId;
+    outputObj['pdvid'] = '' + profileVersionId;
+    outputObj['psl'] = getPSL(auctionId);
+    outputObj['dvc'] = {'plt': getDevicePlatform()};
+    outputObj['bm'] = window.PWT && window.PWT.browserMapping;
+    outputObj['ih'] = identityOnly;
+    outputObj['tgid'] = (function() {
+      var testGroupId = parseInt(config.getConfig('testGroupId') || 0);
+      if (testGroupId <= 15 && testGroupId >= 0) {
+        return testGroupId;
+      }
+      return 0;
+    })();
+
+    outputObj['tpv'] = frequencyDepth?.pageView;
+    outputObj['trc'] = frequencyDepth?.slotCnt;
+    outputObj['tbs'] = frequencyDepth?.bidServed;
+    outputObj['tis'] = frequencyDepth?.impressionServed;
+    outputObj['lip'] = frequencyDepth?.lip;
+
+    if (floorData) {
+      outputObj['fmv'] = floorData.floorRequestData ? floorData.floorRequestData.modelVersion || undefined : undefined;
+      outputObj['ft'] = floorData.floorResponseData ? (floorData.floorResponseData.enforcements.enforceJS == false ? 0 : 1) : undefined;
+    }
+
+    outputObj.s = Object.keys(auctionCache.adUnitCodes).reduce(function(slotsArray, adUnitId) {
+      let adUnit = auctionCache.adUnitCodes[adUnitId];
+      let origAdUnit = getAdUnit(auctionCache.origAdUnits, adUnitId) || {};
+      let slotObject = {
+        'sn': adUnitId,
+        'au': origAdUnit.adUnitId || adUnitId,
+        'mt': getAdUnitAdFormats(origAdUnit),
+        'sz': getSizesForAdUnit(adUnit, adUnitId),
+        'fskp': floorData ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined,
+        'ps': gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestCpmBids.filter(bid => bid.adUnitCode === adUnitId)),
+        'bs': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.bidServed,
+        'is': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.impressionServed,
+        'rc': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.slotCnt,
+        'vw': frequencyDepth?.viewedSlot?.[origAdUnit.adUnitId],
+        'rf': origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0
+      };
+      slotsArray.push(slotObject);
+      return slotsArray;
+    }, []);
+
+    auctionCache.sent = true;
+
+    ajax(
+      pixelURL,
+      null,
+      'json=' + enc(JSON.stringify(outputObj)), {
+        contentType: 'application/x-www-form-urlencoded',
+        withCredentials: true,
+        method: 'POST'
+      }
+    );
+  });
 }
 
 function executeBidWonLoggerCall(auctionId, adUnitId) {
@@ -483,8 +488,8 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
 }
 /// /////////// ADAPTER EVENT HANDLER FUNCTIONS //////////////
 
-//function auctionInitHandler(args) {
-getGlobal().onEvent(CONSTANTS.EVENTS.AUCTION_INIT, function(args){
+// function auctionInitHandler(args) {
+getGlobal().onEvent(CONSTANTS.EVENTS.AUCTION_INIT, function(args) {
   s2sBidders = (function () {
     let s2sConf = config.getConfig('s2sConfig');
     return (s2sConf && isArray(s2sConf.bidders)) ? s2sConf.bidders : [];
@@ -501,8 +506,8 @@ getGlobal().onEvent(CONSTANTS.EVENTS.AUCTION_INIT, function(args){
   cache.auctions[args.auctionId] = cacheEntry;
 });
 
-//function bidRequestedHandler(args) {
-getGlobal().onEvent(CONSTANTS.EVENTS.BID_REQUESTED, function(args){
+// function bidRequestedHandler(args) {
+getGlobal().onEvent(CONSTANTS.EVENTS.BID_REQUESTED, function(args) {
   args.bids.forEach(function(bid) {
     if (!cache.auctions[args.auctionId].adUnitCodes.hasOwnProperty(bid.adUnitCode)) {
       cache.auctions[args.auctionId].adUnitCodes[bid.adUnitCode] = {
@@ -518,8 +523,8 @@ getGlobal().onEvent(CONSTANTS.EVENTS.BID_REQUESTED, function(args){
   })
 });
 
-//function bidResponseHandler(args) {
-getGlobal().onEvent(CONSTANTS.EVENTS.BID_RESPONSE, function(args){
+// function bidResponseHandler(args) {
+getGlobal().onEvent(CONSTANTS.EVENTS.BID_RESPONSE, function(args) {
   let bid = cache.auctions[args.auctionId].adUnitCodes[args.adUnitCode].bids[args.requestId][0];
   if (!bid) {
     logError(LOG_PRE_FIX + 'Could not find associated bid request for bid response with requestId: ', args.requestId);
@@ -549,8 +554,8 @@ getGlobal().onEvent(CONSTANTS.EVENTS.BID_RESPONSE, function(args){
   bid.bidResponse = parseBidResponse(args);
 });
 
-//function bidderDoneHandler(args) { 
-getGlobal().onEvent(CONSTANTS.EVENTS.BIDDER_DONE, function(args){
+// function bidderDoneHandler(args) {
+getGlobal().onEvent(CONSTANTS.EVENTS.BIDDER_DONE, function(args) {
   cache.auctions[args.auctionId].bidderDonePendingCount--;
   args.bids.forEach(bid => {
     let cachedBid = cache.auctions[bid.auctionId].adUnitCodes[bid.adUnitCode].bids[bid.bidId || bid.requestId];
@@ -566,8 +571,8 @@ getGlobal().onEvent(CONSTANTS.EVENTS.BIDDER_DONE, function(args){
   });
 });
 
-//function bidWonHandler(args) {
-getGlobal().onEvent(CONSTANTS.EVENTS.BID_WON, function(args){
+// function bidWonHandler(args) {
+getGlobal().onEvent(CONSTANTS.EVENTS.BID_WON, function(args) {
   let auctionCache = cache.auctions[args.auctionId];
   auctionCache.adUnitCodes[args.adUnitCode].bidWon = args.requestId;
   auctionCache.adUnitCodes[args.adUnitCode].bidWonAdId = args.adId;
@@ -582,7 +587,7 @@ getGlobal().onEvent(CONSTANTS.EVENTS.AUCTION_END, function(args) {
   }, (cache.auctions[args.auctionId].bidderDonePendingCount === 0 ? 500 : SEND_TIMEOUT));
 });
 
-//function bidTimeoutHandler(args) {
+// function bidTimeoutHandler(args) {
 getGlobal().onEvent(CONSTANTS.EVENTS.BID_TIMEOUT, function(args) {
   // db = 1 and t = 1 means bidder did NOT respond with a bid but we got a timeout notification
   // db = 0 and t = 1 means bidder did  respond with a bid but post timeout
@@ -648,25 +653,25 @@ let pubmaticAdapter = Object.assign({}, baseAdapter, {
   }) {
     switch (eventType) {
       case CONSTANTS.EVENTS.AUCTION_INIT:
-        //auctionInitHandler(args);
+        // auctionInitHandler(args);
         break;
       case CONSTANTS.EVENTS.BID_REQUESTED:
-        //bidRequestedHandler(args);
+        // bidRequestedHandler(args);
         break;
       case CONSTANTS.EVENTS.BID_RESPONSE:
-        //bidResponseHandler(args);
+        // bidResponseHandler(args);
         break;
       case CONSTANTS.EVENTS.BIDDER_DONE:
-        //bidderDoneHandler(args);
+        // bidderDoneHandler(args);
         break;
       case CONSTANTS.EVENTS.BID_WON:
-        //bidWonHandler(args);
+        // bidWonHandler(args);
         break;
       case CONSTANTS.EVENTS.AUCTION_END:
         // auctionEndHandler(args);
         break;
       case CONSTANTS.EVENTS.BID_TIMEOUT:
-        //bidTimeoutHandler(args);
+        // bidTimeoutHandler(args);
         break;
     }
   }
