@@ -2654,144 +2654,75 @@ describe('PubMatic adapter', function () {
         });
       });
 
-      it('Request params check with GPP Consent', function () {
-        let bidRequest = {
-          gppConsent: {
-            'gppString': 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN',
-            'fullGppData': {
-              'sectionId': 3,
-              'gppVersion': 1,
-              'sectionList': [
-                5,
-                7
-              ],
+      describe('GPP', function() {
+        it('Request params check with GPP Consent', function () {
+          let bidRequest = {
+            gppConsent: {
+              'gppString': 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN',
+              'fullGppData': {
+                'sectionId': 3,
+                'gppVersion': 1,
+                'sectionList': [
+                  5,
+                  7
+                ],
+                'applicableSections': [
+                  5
+                ],
+                'gppString': 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN',
+                'pingData': {
+                  'cmpStatus': 'loaded',
+                  'gppVersion': '1.0',
+                  'cmpDisplayStatus': 'visible',
+                  'supportedAPIs': [
+                    'tcfca',
+                    'usnat',
+                    'usca',
+                    'usva',
+                    'usco',
+                    'usut',
+                    'usct'
+                  ],
+                  'cmpId': 31
+                },
+                'eventName': 'sectionChange'
+              },
               'applicableSections': [
                 5
               ],
-              'gppString': 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN',
-              'pingData': {
-                'cmpStatus': 'loaded',
-                'gppVersion': '1.0',
-                'cmpDisplayStatus': 'visible',
-                'supportedAPIs': [
-                  'tcfca',
-                  'usnat',
-                  'usca',
-                  'usva',
-                  'usco',
-                  'usut',
-                  'usct'
-                ],
-                'cmpId': 31
-              },
-              'eventName': 'sectionChange'
-            },
-            'applicableSections': [
-              5
-            ],
-            'apiVersion': 1
-          }
-        };
-  		  let request = spec.buildRequests(bidRequests, bidRequest);
-  		  let data = JSON.parse(request.data);
-        expect(data.regs.gpp).to.equal('DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN');
-        expect(data.regs.gpp_sid[0]).to.equal(5);
-
-  		  expect(data.at).to.equal(1); // auction type
-  		  expect(data.cur[0]).to.equal('USD'); // currency
-  		  expect(data.site.domain).to.be.a('string'); // domain should be set
-  		  expect(data.site.page).to.equal(bidRequests[0].params.kadpageurl); // forced pageURL
-  		  expect(data.site.publisher.id).to.equal(bidRequests[0].params.publisherId); // publisher Id
-  		  expect(data.user.yob).to.equal(parseInt(bidRequests[0].params.yob)); // YOB
-  		  expect(data.user.gender).to.equal(bidRequests[0].params.gender); // Gender
-  		  expect(data.device.geo.lat).to.equal(parseFloat(bidRequests[0].params.lat)); // Latitude
-  		  expect(data.device.geo.lon).to.equal(parseFloat(bidRequests[0].params.lon)); // Lognitude
-  		  expect(data.user.geo.lat).to.equal(parseFloat(bidRequests[0].params.lat)); // Latitude
-  		  expect(data.user.geo.lon).to.equal(parseFloat(bidRequests[0].params.lon)); // Lognitude
-  		  expect(data.ext.wrapper.wv).to.equal($$REPO_AND_VERSION$$); // Wrapper Version
-  		  expect(data.ext.wrapper.transactionId).to.equal(bidRequests[0].transactionId); // Prebid TransactionId
-  		  expect(data.ext.wrapper.wiid).to.equal(bidRequests[0].params.wiid); // OpenWrap: Wrapper Impression ID
-        expect(data.ext.wrapper.profile).to.equal(parseInt(bidRequests[0].params.profId)); // OpenWrap: Wrapper Profile ID
-  		  expect(data.ext.wrapper.version).to.equal(parseInt(bidRequests[0].params.verId)); // OpenWrap: Wrapper Profile Version ID
-
-  		  expect(data.imp[0].id).to.equal(bidRequests[0].bidId); // Prebid bid id is passed as id
-  		  expect(data.imp[0].bidfloor).to.equal(parseFloat(bidRequests[0].params.kadfloor)); // kadfloor
-  		  expect(data.imp[0].tagid).to.equal('/15671365/DMDemo'); // tagid
-  		  expect(data.imp[0].banner.w).to.equal(300); // width
-  		  expect(data.imp[0].banner.h).to.equal(250); // height
-  		  expect(data.imp[0].ext.pmZoneId).to.equal(bidRequests[0].params.pmzoneid.split(',').slice(0, 50).map(id => id.trim()).join()); // pmzoneid
-  		});
-
-      it('Request params check without GPP Consent', function () {
-        let bidRequest = {};
-  		  let request = spec.buildRequests(bidRequests, bidRequest);
-  		  let data = JSON.parse(request.data);
-        expect(data.regs).to.equal(undefined);
-  		  expect(data.at).to.equal(1); // auction type
-  		  expect(data.cur[0]).to.equal('USD'); // currency
-  		  expect(data.site.domain).to.be.a('string'); // domain should be set
-  		  expect(data.site.page).to.equal(bidRequests[0].params.kadpageurl); // forced pageURL
-  		  expect(data.site.publisher.id).to.equal(bidRequests[0].params.publisherId); // publisher Id
-  		  expect(data.user.yob).to.equal(parseInt(bidRequests[0].params.yob)); // YOB
-  		  expect(data.user.gender).to.equal(bidRequests[0].params.gender); // Gender
-  		  expect(data.device.geo.lat).to.equal(parseFloat(bidRequests[0].params.lat)); // Latitude
-  		  expect(data.device.geo.lon).to.equal(parseFloat(bidRequests[0].params.lon)); // Lognitude
-  		  expect(data.user.geo.lat).to.equal(parseFloat(bidRequests[0].params.lat)); // Latitude
-  		  expect(data.user.geo.lon).to.equal(parseFloat(bidRequests[0].params.lon)); // Lognitude
-  		  expect(data.ext.wrapper.wv).to.equal($$REPO_AND_VERSION$$); // Wrapper Version
-  		  expect(data.ext.wrapper.transactionId).to.equal(bidRequests[0].transactionId); // Prebid TransactionId
-  		  expect(data.ext.wrapper.wiid).to.equal(bidRequests[0].params.wiid); // OpenWrap: Wrapper Impression ID
-        expect(data.ext.wrapper.profile).to.equal(parseInt(bidRequests[0].params.profId)); // OpenWrap: Wrapper Profile ID
-  		  expect(data.ext.wrapper.version).to.equal(parseInt(bidRequests[0].params.verId)); // OpenWrap: Wrapper Profile Version ID
-
-  		  expect(data.imp[0].id).to.equal(bidRequests[0].bidId); // Prebid bid id is passed as id
-  		  expect(data.imp[0].bidfloor).to.equal(parseFloat(bidRequests[0].params.kadfloor)); // kadfloor
-  		  expect(data.imp[0].tagid).to.equal('/15671365/DMDemo'); // tagid
-  		  expect(data.imp[0].banner.w).to.equal(300); // width
-  		  expect(data.imp[0].banner.h).to.equal(250); // height
-  		  expect(data.imp[0].ext.pmZoneId).to.equal(bidRequests[0].params.pmzoneid.split(',').slice(0, 50).map(id => id.trim()).join()); // pmzoneid
-  		});
-
-      it('Request params check with GPP Consent read from ortb2', function () {
-        let bidRequest = {
-          ortb2: {
-            regs: {
-              'gpp': 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN',
-              'gpp_sid': [
-                5
-              ]
+              'apiVersion': 1
             }
-          }
-        };
-  		  let request = spec.buildRequests(bidRequests, bidRequest);
-  		  let data = JSON.parse(request.data);
-        expect(data.regs.gpp).to.equal('DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN');
-        expect(data.regs.gpp_sid[0]).to.equal(5);
+          };
+          let request = spec.buildRequests(bidRequests, bidRequest);
+          let data = JSON.parse(request.data);
+          expect(data.regs.gpp).to.equal('DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN');
+          expect(data.regs.gpp_sid[0]).to.equal(5);
+        });
 
-  		  expect(data.at).to.equal(1); // auction type
-  		  expect(data.cur[0]).to.equal('USD'); // currency
-  		  expect(data.site.domain).to.be.a('string'); // domain should be set
-  		  expect(data.site.page).to.equal(bidRequests[0].params.kadpageurl); // forced pageURL
-  		  expect(data.site.publisher.id).to.equal(bidRequests[0].params.publisherId); // publisher Id
-  		  expect(data.user.yob).to.equal(parseInt(bidRequests[0].params.yob)); // YOB
-  		  expect(data.user.gender).to.equal(bidRequests[0].params.gender); // Gender
-  		  expect(data.device.geo.lat).to.equal(parseFloat(bidRequests[0].params.lat)); // Latitude
-  		  expect(data.device.geo.lon).to.equal(parseFloat(bidRequests[0].params.lon)); // Lognitude
-  		  expect(data.user.geo.lat).to.equal(parseFloat(bidRequests[0].params.lat)); // Latitude
-  		  expect(data.user.geo.lon).to.equal(parseFloat(bidRequests[0].params.lon)); // Lognitude
-  		  expect(data.ext.wrapper.wv).to.equal($$REPO_AND_VERSION$$); // Wrapper Version
-  		  expect(data.ext.wrapper.transactionId).to.equal(bidRequests[0].transactionId); // Prebid TransactionId
-  		  expect(data.ext.wrapper.wiid).to.equal(bidRequests[0].params.wiid); // OpenWrap: Wrapper Impression ID
-        expect(data.ext.wrapper.profile).to.equal(parseInt(bidRequests[0].params.profId)); // OpenWrap: Wrapper Profile ID
-  		  expect(data.ext.wrapper.version).to.equal(parseInt(bidRequests[0].params.verId)); // OpenWrap: Wrapper Profile Version ID
+        it('Request params check without GPP Consent', function () {
+          let bidRequest = {};
+          let request = spec.buildRequests(bidRequests, bidRequest);
+          let data = JSON.parse(request.data);
+          expect(data.regs).to.equal(undefined);
+        });
 
-  		  expect(data.imp[0].id).to.equal(bidRequests[0].bidId); // Prebid bid id is passed as id
-  		  expect(data.imp[0].bidfloor).to.equal(parseFloat(bidRequests[0].params.kadfloor)); // kadfloor
-  		  expect(data.imp[0].tagid).to.equal('/15671365/DMDemo'); // tagid
-  		  expect(data.imp[0].banner.w).to.equal(300); // width
-  		  expect(data.imp[0].banner.h).to.equal(250); // height
-  		  expect(data.imp[0].ext.pmZoneId).to.equal(bidRequests[0].params.pmzoneid.split(',').slice(0, 50).map(id => id.trim()).join()); // pmzoneid
-  		});
+        it('Request params check with GPP Consent read from ortb2', function () {
+          let bidRequest = {
+            ortb2: {
+              regs: {
+                'gpp': 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN',
+                'gpp_sid': [
+                  5
+                ]
+              }
+            }
+          };
+          let request = spec.buildRequests(bidRequests, bidRequest);
+          let data = JSON.parse(request.data);
+          expect(data.regs.gpp).to.equal('DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN');
+          expect(data.regs.gpp_sid[0]).to.equal(5);
+        });
+      });
     });
 
     it('Request params check for video ad', function () {
@@ -4429,7 +4360,56 @@ describe('PubMatic adapter', function () {
       });
       let newresponse = spec.interpretResponse(newvideoBidResponses, newrequest);
       expect(newresponse[0].mediaType).to.equal('video')
-    })
+    });
+
+    describe('GPP', function() {
+      it('should return userSync url without Gpp consent if gppConsent is undefined', () => {
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, undefined);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}`
+        }]);
+      });
+
+      it('should return userSync url without Gpp consent if gppConsent.gppString is undefined', () => {
+        const gppConsent = { applicableSections: ['5'] };
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}`
+        }]);
+      });
+
+      it('should return userSync url without Gpp consent if gppConsent.applicableSections is undefined', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN' };
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}`
+        }]);
+      });
+
+      it('should return userSync url without Gpp consent if gppConsent.applicableSections is an empty array', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN', applicableSections: [] };
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}`
+        }]);
+      });
+
+      it('should concatenate gppString and applicableSections values in the returned userSync iframe url', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN', applicableSections: [5] };
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}&gpp=${encodeURIComponent(gppConsent.gppString)}&gpp_sid=${encodeURIComponent(gppConsent.applicableSections)}`
+        }]);
+      });
+
+      it('should concatenate gppString and applicableSections values in the returned userSync image url', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN', applicableSections: [5] };
+        const result = spec.getUserSyncs({iframeEnabled: false}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'image', url: `${syncurl_image}&gpp=${encodeURIComponent(gppConsent.gppString)}&gpp_sid=${encodeURIComponent(gppConsent.applicableSections)}`
+        }]);
+      });
+    });
   });
 
   describe('Checking for Video.Placement property', function() {
