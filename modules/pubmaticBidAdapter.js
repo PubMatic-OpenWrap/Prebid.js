@@ -5,8 +5,10 @@ import { config } from '../src/config.js';
 import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
 import CONSTANTS from '../src/constants.json';
+import { getStorageManager } from '../src/storageManager.js';
 
 const BIDDER_CODE = 'pubmatic';
+const storage = getStorageManager({bidderCode: BIDDER_CODE});
 const LOG_WARN_PREFIX = 'PubMatic: ';
 const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator';
 const USER_SYNC_URL_IFRAME = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=';
@@ -133,10 +135,11 @@ let publisherId = 0;
 let isInvalidNativeRequest = false;
 let biddersList = ['pubmatic'];
 const allBiddersList = ['all'];
+let viewData;
 
-const vsgDomain = window.location.hostname;
-const getAndParseFromLocalStorage = key => JSON.parse(window.localStorage.getItem(key));
-let vsgObj = { [vsgDomain]: '' };
+storage.getDataFromLocalStorage('viewability-data', val => {
+  viewData = JSON.parse(val) || {};
+});
 
 const removeViewTimeForZeroValue = obj => {
   // Deleteing this field as it is only required to calculate totalViewtime and no need to send it to translator.
@@ -1181,11 +1184,10 @@ export const spec = {
       payload.ext.marketplace.allowedbidders = biddersList.filter(uniques);
     }
 
-    if (bid.bidViewability) {
-      vsgObj = getAndParseFromLocalStorage('viewability-data');
-      removeViewTimeForZeroValue(vsgObj[vsgDomain]);
+    if (viewData && bid.bidViewability) {
+      removeViewTimeForZeroValue(viewData[_getDomainFromURL(payload.site.page)]);
       payload.ext.bidViewability = {
-        adDomain: vsgObj[vsgDomain]
+        adDomain: viewData[_getDomainFromURL(payload.site.page)]
       }
     }
 
