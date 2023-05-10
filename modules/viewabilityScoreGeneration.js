@@ -1,12 +1,11 @@
 import { config } from '../src/config.js';
 // import { ajax } from '../src/ajax.js';
 import { getGlobal } from '../src/prebidGlobal.js';
-import { getHighEntropySUA } from '../src/fpd/sua.js';
 import adapterManager from '../src/adapterManager.js';
 import { targeting } from '../src/targeting.js';
 import * as events from '../src/events.js';
 import CONSTANTS from '../src/constants.json';
-import { isAdUnitCodeMatchingSlot, deepClone } from '../src/utils.js';
+import { isAdUnitCodeMatchingSlot, deepClone, isStr } from '../src/utils.js';
 
 const MODULE_NAME = 'viewabilityScoreGeneration';
 const ENABLED = 'enabled';
@@ -22,29 +21,55 @@ const ADUNIT_INDEX = 1;
 const domain = window.location.hostname;
 let enableServerSideTracking = true;
 
-const fireToServer = (keyArr, operID) => {
-  getHighEntropySUA().then(deviceData => {
-    const [domain, adSlotElementId, adSize] = keyArr;
-    const adData = getAdDataByElementId(adSlotElementId)
-    const payload = {
-      operID,
-      dateTime: Date.now(),
-      domain,
-      device: deviceData.mobile ? 'mobile' : 'desktop',
-      platform: deviceData.platform.brand,
-      inventoryType: adData.inventoryType,
-      adSize,
-      adUnit: adSlotElementId,
-      source: getSource(),
-      bidders: adData.bidders
-    };
+function getDevicePlatform() {
+  var deviceType = 3;
+  try {
+    var ua = navigator.userAgent;
+    if (ua && isStr(ua) && ua.trim() != '') {
+      ua = ua.toLowerCase().trim();
+      var isMobileRegExp = new RegExp('(mobi|tablet|ios).*');
+      if (ua.match(isMobileRegExp)) {
+        deviceType = 2;
+      } else {
+        deviceType = 1;
+      }
+    }
+  } catch (ex) {}
+  return deviceType;
+}
 
-    if (adData.publisherId) payload.publisherId = adData.publisherId;
-    if (payload.operID === 'dwelltime') payload.dwellTime = vsgObj[adSlotElementId].totalViewTime;
-    // eslint-disable-next-line no-console
-    console.log({ payload });
-    // ajax(ENDPOINT, null, payload, {method: 'POST'});
+const fireToServer = (keyArr, operID) => {
+  const [domain, adSlotElementId, adSize] = keyArr;
+  const adData = getAdDataByElementId(adSlotElementId)
+  const payload = {
+    operID,
+    dateTime: Date.now(),
+    domain,
+    device: getDevicePlatform(),
+    inventoryType: adData.inventoryType,
+    adSize,
+    adUnit: adSlotElementId,
+    source: getSource(),
+    bidders: adData.bidders
+  };
+
+  if (adData.publisherId) payload.publisherId = adData.publisherId;
+  if (payload.operID === '2') payload.dwellTime = vsgObj[adSlotElementId].totalViewTime;
+
+  const qString = objectToQueryString(payload);
+
+  // eslint-disable-next-line no-console
+  console.log({ payload, qString });
+  // ajax(ENDPOINT);
+};
+
+const objectToQueryString = (obj) => {
+  const payloadKeys = Object.keys(obj);
+  let qString = `?`;
+  payloadKeys.forEach((key, index) => {
+    qString += `${key}=${obj[key]}${index === payloadKeys.length - 1 ? '' : '&'}`;
   });
+  return qString;
 };
 
 // stat hat call to collect data when there is issue while writing to localstorgae.
@@ -81,7 +106,7 @@ const getAdDataByElementId = adSlotElementId => {
   });
 
   adData.inventoryType = inventoryType === 'video' ? getVideoContext() : inventoryType;
-  adData.bidders = bidders;
+  adData.bidders = bidders.join(',');
   adData.publisherId = publisherId;
 
   return adData;
@@ -203,7 +228,7 @@ const incrementRenderCount = keyArr => {
   });
 
   if (enableServerSideTracking) {
-    fireToServer(keyArr, 'rendered');
+    fireToServer(keyArr, '0'); // 0 (rendered), 1 (viewed) & 2 (dwelltime)
   }
 };
 
@@ -216,7 +241,7 @@ const incrementViewCount = keyArr => {
   });
 
   if (enableServerSideTracking) {
-    fireToServer(keyArr, 'viewed');
+    fireToServer(keyArr, '1'); // 0 (rendered), 1 (viewed) & 2 (dwelltime)
   }
 };
 
@@ -232,7 +257,7 @@ const incrementTotalViewTime = (keyArr, inViewPercentage, setToLocalStorageCb) =
           updateTotalViewTime(diff, currentTime, lastViewStarted, key);
           delete vsgObj[key].lastViewStarted;
           if (enableServerSideTracking && key === keyArr[0]) { // only fire once per ad unit that goes out of viewport
-            fireToServer(keyArr, 'dwelltime');
+            fireToServer(keyArr, '2'); // 0 (rendered), 1 (viewed) & 2 (dwelltime)
           }
         }
       } else {
