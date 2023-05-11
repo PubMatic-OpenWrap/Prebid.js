@@ -101,9 +101,11 @@ function checkViewabilityExpiry() {
 
 export function impressionViewableHandler(slot) {
     frequencyDepth = JSON.parse(storage.getDataFromLocalStorage(PREFIX + HOSTNAME));
-    frequencyDepth.viewedSlot.timestamp = frequencyDepth.viewedSlot.timestamp ? frequencyDepth.viewedSlot.timestamp : new Date().toJSON().slice(0, 10);
-    frequencyDepth.viewedSlot[frequencyDepth.codeAdUnitMap[slot.getSlotId().getDomId()]] = (frequencyDepth.viewedSlot[frequencyDepth.codeAdUnitMap[slot.getSlotId().getDomId()]] || 0) + 1;
-    storage.setDataInLocalStorage(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
+	if(frequencyDepth) {
+		frequencyDepth.viewedSlot.timestamp = frequencyDepth.viewedSlot.timestamp ? frequencyDepth.viewedSlot.timestamp : new Date().toJSON().slice(0, 10);
+		frequencyDepth.viewedSlot[frequencyDepth.codeAdUnitMap[slot.getSlotId().getDomId()]] = (frequencyDepth.viewedSlot[frequencyDepth.codeAdUnitMap[slot.getSlotId().getDomId()]] || 0) + 1;
+		storage.setDataInLocalStorage(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
+	}
 };
 
 export function auctionInitHandler () {
