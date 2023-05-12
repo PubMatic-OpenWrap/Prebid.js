@@ -1184,7 +1184,7 @@ export const spec = {
       payload.ext.marketplace.allowedbidders = biddersList.filter(uniques);
     }
 
-    if (viewData && bid.bidViewability) {
+    if (Object.keys(viewData).length && bid.bidViewability) {
       removeViewTimeForZeroValue(viewData[_getDomainFromURL(payload.site.page)]);
       payload.ext.bidViewability = {
         adDomain: viewData[_getDomainFromURL(payload.site.page)]
