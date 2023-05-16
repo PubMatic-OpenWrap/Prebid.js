@@ -137,10 +137,6 @@ let biddersList = ['pubmatic'];
 const allBiddersList = ['all'];
 let viewData;
 
-storage.getDataFromLocalStorage('viewability-data', val => {
-  viewData = JSON.parse(val) || {};
-});
-
 const removeViewTimeForZeroValue = obj => {
   // Deleteing this field as it is only required to calculate totalViewtime and no need to send it to translator.
   delete obj.lastViewStarted;
@@ -1184,6 +1180,7 @@ export const spec = {
       payload.ext.marketplace.allowedbidders = biddersList.filter(uniques);
     }
 
+	viewData = storage.getDataFromLocalStorage('viewability-data') ? JSON.parse(storage.getDataFromLocalStorage('viewability-data')) : {};
     if (Object.keys(viewData).length && bid.bidViewability) {
       removeViewTimeForZeroValue(viewData[_getDomainFromURL(payload.site.page)]);
       payload.ext.bidViewability = {
