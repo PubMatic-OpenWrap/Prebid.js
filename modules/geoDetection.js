@@ -1,8 +1,9 @@
-import { ajax } from '../src/ajax.js';
+import { ajaxBuilder } from '../src/ajax.js';
 import { deepAccess } from '../src/utils.js';
 
 var defaultGDURL = 'https://www.ebay.com/defaultLocation.json'; //TODO update this
 var defaultPath = 'location.region'; //TODO update this
+const TIMEOUT = 500;
 
 /*
     GeoDetection module is to be used to get the region information.
@@ -24,9 +25,9 @@ $$PREBID_GLOBAL$$.detectLocation = function(URL = defaultGDURL, regionPath = def
     }
 
     try {
-        ajax(
+        ajaxBuilder(TIMEOUT)(
             URL,
-            getRegion,
+            { success: getRegion, error: function(e) {callback({error: e})} },
             null,
             { contentType: 'application/x-www-form-urlencoded', method: 'GET' }
         );
