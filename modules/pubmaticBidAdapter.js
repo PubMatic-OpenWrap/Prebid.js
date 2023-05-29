@@ -5,8 +5,10 @@ import { config } from '../src/config.js';
 import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
 import CONSTANTS from '../src/constants.json';
+import { getStorageManager } from '../src/storageManager.js';
 
 const BIDDER_CODE = 'pubmatic';
+const storage = getStorageManager({bidderCode: BIDDER_CODE});
 const LOG_WARN_PREFIX = 'PubMatic: ';
 const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator';
 const USER_SYNC_URL_IFRAME = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=';
@@ -134,10 +136,7 @@ let publisherId = 0;
 let isInvalidNativeRequest = false;
 let biddersList = ['pubmatic'];
 const allBiddersList = ['all'];
-
-const vsgDomain = window.location.hostname;
-const getAndParseFromLocalStorage = key => JSON.parse(window.localStorage.getItem(key));
-let vsgObj = { [vsgDomain]: '' };
+let viewData;
 
 const removeViewTimeForZeroValue = obj => {
   // Deleteing this field as it is only required to calculate totalViewtime and no need to send it to translator.
@@ -1182,11 +1181,11 @@ export const spec = {
       payload.ext.marketplace.allowedbidders = biddersList.filter(uniques);
     }
 
-    if (bid.bidViewability) {
-      vsgObj = getAndParseFromLocalStorage('viewability-data');
-      removeViewTimeForZeroValue(vsgObj[vsgDomain]);
+	viewData = storage.getDataFromLocalStorage('viewability-data') ? JSON.parse(storage.getDataFromLocalStorage('viewability-data')) : {};
+    if (Object.keys(viewData).length && bid.bidViewability) {
+      removeViewTimeForZeroValue(viewData[_getDomainFromURL(payload.site.page)]);
       payload.ext.bidViewability = {
-        adDomain: vsgObj[vsgDomain]
+        adDomain: viewData[_getDomainFromURL(payload.site.page)]
       }
     }
 
@@ -1234,6 +1233,15 @@ export const spec = {
     // CCPA
     if (bidderRequest && bidderRequest.uspConsent) {
       deepSetValue(payload, 'regs.ext.us_privacy', bidderRequest.uspConsent);
+    }
+
+    // Attaching GPP Consent Params
+    if (bidderRequest?.gppConsent?.gppString) {
+      deepSetValue(payload, 'regs.gpp', bidderRequest.gppConsent.gppString);
+      deepSetValue(payload, 'regs.gpp_sid', bidderRequest.gppConsent.applicableSections);
+    } else if (bidderRequest?.ortb2?.regs?.gpp) {
+      deepSetValue(payload, 'regs.gpp', bidderRequest.ortb2.regs.gpp);
+      deepSetValue(payload, 'regs.gpp_sid', bidderRequest.ortb2.regs.gpp_sid);
     }
 
     // coppa compliance
@@ -1476,7 +1484,7 @@ export const spec = {
   /**
    * Register User Sync.
    */
-  getUserSyncs: (syncOptions, responses, gdprConsent, uspConsent) => {
+  getUserSyncs: (syncOptions, responses, gdprConsent, uspConsent, gppConsent) => {
     let syncurl = '' + publisherId;
 
     // Attaching GDPR Consent Params in UserSync url
@@ -1488,6 +1496,12 @@ export const spec = {
     // CCPA
     if (uspConsent) {
       syncurl += '&us_privacy=' + encodeURIComponent(uspConsent);
+    }
+
+    // GPP Consent
+    if (gppConsent?.gppString && gppConsent?.applicableSections?.length) {
+      syncurl += '&gpp=' + encodeURIComponent(gppConsent.gppString);
+      syncurl += '&gpp_sid=' + encodeURIComponent(gppConsent?.applicableSections);
     }
 
     // coppa compliance
