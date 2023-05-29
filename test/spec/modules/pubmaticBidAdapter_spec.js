@@ -614,7 +614,7 @@ describe('PubMatic adapter', function () {
 
     validnativeBidImpression = {
       'native': {
-        'request': '{"assets":[{"id":1,"required":1,"title":{"len":80}},{"id":2,"required":1,"img":{"type":3,"w":300,"h":250}},{"id":4,"required":1,"data":{"type":1}}]}'
+        'request': '{"ver":"1.2","assets":[{"id":0,"required":1,"title":{"len":80}},{"id":1,"required":1,"img":{"type":3,"w":300,"h":250}},{"id":2,"required":1,"data":{"type":1}}]}'
       }
     };
 
@@ -626,13 +626,13 @@ describe('PubMatic adapter', function () {
 
     validnativeBidImpressionWithRequiredParam = {
       'native': {
-        'request': '{"assets":[{"id":1,"required":0,"title":{"len":80}},{"id":2,"required":0,"img":{"type":3,"w":300,"h":250}},{"id":4,"required":1,"data":{"type":1}}]}'
+        'request': '{"ver":"1.2","assets":[{"id":0,"required":0,"title":{"len":80}},{"id":1,"required":0,"img":{"type":3,"w":300,"h":250}},{"id":2,"required":1,"data":{"type":1}}]}'
       }
     };
 
     validnativeBidImpressionWithAllParams = {
       native: {
-        'request': '{"assets":[{"id":1,"required":1,"title":{"len":80,"ext":{"title1":"title2"}}},{"id":3,"required":1,"img":{"type":1,"w":50,"h":50,"ext":{"icon1":"icon2"}}},{"id":2,"required":1,"img":{"type":3,"w":728,"h":90,"mimes":["image/png","image/gif"],"ext":{"image1":"image2"}}},{"id":4,"required":1,"data":{"type":1,"len":10,"ext":{"sponsor1":"sponsor2"}}},{"id":5,"required":1,"data":{"type":2,"len":10,"ext":{"body1":"body2"}}},{"id":13,"required":1,"data":{"type":3,"len":10,"ext":{"rating1":"rating2"}}},{"id":14,"required":1,"data":{"type":4,"len":10,"ext":{"likes1":"likes2"}}},{"id":15,"required":1,"data":{"type":5,"len":10,"ext":{"downloads1":"downloads2"}}},{"id":16,"required":1,"data":{"type":6,"len":10,"ext":{"price1":"price2"}}},{"id":17,"required":1,"data":{"type":7,"len":10,"ext":{"saleprice1":"saleprice2"}}},{"id":18,"required":1,"data":{"type":8,"len":10,"ext":{"phone1":"phone2"}}},{"id":19,"required":1,"data":{"type":9,"len":10,"ext":{"address1":"address2"}}},{"id":20,"required":1,"data":{"type":10,"len":10,"ext":{"desc21":"desc22"}}},{"id":21,"required":1,"data":{"type":11,"len":10,"ext":{"displayurl1":"displayurl2"}}}]}'
+        'request': '{"ver":"1.2","assets":[{"id":0,"required":1,"title":{"len":80,"ext":{"title1":"title2"}}},{"id":1,"required":1,"img":{"type":1,"w":50,"h":50,"ext":{"icon1":"icon2"}}},{"id":2,"required":1,"img":{"type":3,"w":728,"h":90,"ext":{"image1":"image2"},"mimes":["image/png","image/gif"]}},{"id":3,"required":1,"data":{"type":1,"len":10,"ext":{"sponsor1":"sponsor2"}}},{"id":4,"required":1,"data":{"type":2,"len":10,"ext":{"body1":"body2"}}},{"id":5,"required":1,"data":{"type":3,"len":10,"ext":{"rating1":"rating2"}}},{"id":6,"required":1,"data":{"type":4,"len":10,"ext":{"likes1":"likes2"}}},{"id":7,"required":1,"data":{"type":5,"len":10,"ext":{"downloads1":"downloads2"}}},{"id":8,"required":1,"data":{"type":6,"len":10,"ext":{"price1":"price2"}}},{"id":9,"required":1,"data":{"type":7,"len":10,"ext":{"saleprice1":"saleprice2"}}},{"id":10,"required":1,"data":{"type":8,"len":10,"ext":{"phone1":"phone2"}}},{"id":11,"required":1,"data":{"type":9,"len":10,"ext":{"address1":"address2"}}},{"id":12,"required":1,"data":{"type":10,"len":10,"ext":{"desc21":"desc22"}}},{"id":13,"required":1,"data":{"type":11,"len":10,"ext":{"displayurl1":"displayurl2"}}}]}'
       }
     }
 
@@ -2653,6 +2653,76 @@ describe('PubMatic adapter', function () {
           sandbox.restore();
         });
       });
+
+      describe('GPP', function() {
+        it('Request params check with GPP Consent', function () {
+          let bidRequest = {
+            gppConsent: {
+              'gppString': 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN',
+              'fullGppData': {
+                'sectionId': 3,
+                'gppVersion': 1,
+                'sectionList': [
+                  5,
+                  7
+                ],
+                'applicableSections': [
+                  5
+                ],
+                'gppString': 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN',
+                'pingData': {
+                  'cmpStatus': 'loaded',
+                  'gppVersion': '1.0',
+                  'cmpDisplayStatus': 'visible',
+                  'supportedAPIs': [
+                    'tcfca',
+                    'usnat',
+                    'usca',
+                    'usva',
+                    'usco',
+                    'usut',
+                    'usct'
+                  ],
+                  'cmpId': 31
+                },
+                'eventName': 'sectionChange'
+              },
+              'applicableSections': [
+                5
+              ],
+              'apiVersion': 1
+            }
+          };
+          let request = spec.buildRequests(bidRequests, bidRequest);
+          let data = JSON.parse(request.data);
+          expect(data.regs.gpp).to.equal('DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN');
+          expect(data.regs.gpp_sid[0]).to.equal(5);
+        });
+
+        it('Request params check without GPP Consent', function () {
+          let bidRequest = {};
+          let request = spec.buildRequests(bidRequests, bidRequest);
+          let data = JSON.parse(request.data);
+          expect(data.regs).to.equal(undefined);
+        });
+
+        it('Request params check with GPP Consent read from ortb2', function () {
+          let bidRequest = {
+            ortb2: {
+              regs: {
+                'gpp': 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN',
+                'gpp_sid': [
+                  5
+                ]
+              }
+            }
+          };
+          let request = spec.buildRequests(bidRequests, bidRequest);
+          let data = JSON.parse(request.data);
+          expect(data.regs.gpp).to.equal('DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN');
+          expect(data.regs.gpp_sid[0]).to.equal(5);
+        });
+      });
     });
 
     it('Request params check for video ad', function () {
@@ -4067,16 +4137,17 @@ describe('PubMatic adapter', function () {
       data.imp[0].id = '2a5571261281d4';
       request.data = JSON.stringify(data);
       let response = spec.interpretResponse(nativeBidResponse, request);
+      let assets = response[0].native.ortb.assets;
       expect(response).to.be.an('array').with.length.above(0);
       expect(response[0].native).to.exist.and.to.be.an('object');
       expect(response[0].mediaType).to.exist.and.to.equal('native');
-      expect(response[0].native.title).to.exist.and.to.be.an('string');
-      expect(response[0].native.image).to.exist.and.to.be.an('object');
-      expect(response[0].native.image.url).to.exist.and.to.be.an('string');
-      expect(response[0].native.image.height).to.exist;
-      expect(response[0].native.image.width).to.exist;
-      expect(response[0].native.sponsoredBy).to.exist.and.to.be.an('string');
-      expect(response[0].native.clickUrl).to.exist.and.to.be.an('string');
+      expect(assets).to.be.an('array').with.length.above(0);
+      expect(assets[0].title).to.exist.and.to.be.an('object');
+      expect(assets[1].img).to.exist.and.to.be.an('object');
+      expect(assets[1].img.url).to.exist.and.to.be.an('string');
+      expect(assets[1].img.h).to.exist;
+      expect(assets[1].img.w).to.exist;
+      expect(assets[2].data).to.exist.and.to.be.an('object');
     });
 
     it('should check for valid banner mediaType in case of multiformat request', function() {
@@ -4290,7 +4361,56 @@ describe('PubMatic adapter', function () {
       });
       let newresponse = spec.interpretResponse(newvideoBidResponses, newrequest);
       expect(newresponse[0].mediaType).to.equal('video')
-    })
+    });
+
+    describe('GPP', function() {
+      it('should return userSync url without Gpp consent if gppConsent is undefined', () => {
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, undefined);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}`
+        }]);
+      });
+
+      it('should return userSync url without Gpp consent if gppConsent.gppString is undefined', () => {
+        const gppConsent = { applicableSections: ['5'] };
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}`
+        }]);
+      });
+
+      it('should return userSync url without Gpp consent if gppConsent.applicableSections is undefined', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN' };
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}`
+        }]);
+      });
+
+      it('should return userSync url without Gpp consent if gppConsent.applicableSections is an empty array', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN', applicableSections: [] };
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}`
+        }]);
+      });
+
+      it('should concatenate gppString and applicableSections values in the returned userSync iframe url', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN', applicableSections: [5] };
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}&gpp=${encodeURIComponent(gppConsent.gppString)}&gpp_sid=${encodeURIComponent(gppConsent.applicableSections)}`
+        }]);
+      });
+
+      it('should concatenate gppString and applicableSections values in the returned userSync image url', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN', applicableSections: [5] };
+        const result = spec.getUserSyncs({iframeEnabled: false}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'image', url: `${syncurl_image}&gpp=${encodeURIComponent(gppConsent.gppString)}&gpp_sid=${encodeURIComponent(gppConsent.applicableSections)}`
+        }]);
+      });
+    });
   });
 
   describe('Checking for Video.Placement property', function() {
