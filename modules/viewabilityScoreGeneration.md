@@ -28,7 +28,16 @@ Maintainer: jason.quaccia@pubmatic.com
 
 # localStorage
 
-All viewability data is stored and persisted in browser via `localStorage`.
+All viewability data is stored and persisted in browser via `localStorage`. Since Prebid.js 7.x, allowing permission/access to utilize `localStorage` must be explicitly set.
+
+https://docs.prebid.org/dev-docs/publisher-api-reference/bidderSettings.html
+```
+pbjs.bidderSettings = {
+  pubmatic: {
+    storageAllowed: true
+  }
+}
+```
 
 #### Viewability Data Object
 
@@ -144,7 +153,7 @@ Viewability data gets passed to the translator endpoint in the following format:
 ```
 
 # Setup
-
+Note: Setup for this module includes configuration with Prebid's `bidderSettings` field and `setConfig` method (see below):
 ```
 pbjs.setConfig({
 	viewabilityScoreGeneration: {
@@ -159,12 +168,18 @@ pbjs.setConfig({
 		}
 	},
 });
+
+pbjs.bidderSettings = {
+  pubmatic: {
+    storageAllowed: true
+  }
+}
 ```
 
 | Parameter                  | Type     | Description                                                                                                                                                                                                                                                                                              | Default                     |
 | -------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
 | enabled                    | boolean  | Determine whether the entire viewabilityScoreGeneration module is on or off.                                                                                                                                                                                                                             | false                       |
-| targeting.enabled          | boolean  | Turns on/off feature support to add additional targeting key/value pairings to be sent to GAM. When enabled the `bidViewabilityScore` and `bidViewabilityBucket` K/V's will be sent (providing custom key names weren't designated via the `targeting.scoreKey` or `targeting.bucketKey` config options. | false                       |
+| targeting.enabled          | boolean  | Turns on/off feature support to add additional targeting key/value pairings to be sent to GAM. When enabled the `bidViewabilityScore` and `bidViewabilityBucket` K/V's will be sent (providing custom key names weren't designated via the `targeting.scoreKey` or `targeting.bucketKey` config options). | false                       |
 | targeting.score            | boolean  | Ability to optionally pass/not pass the viewability score key/value pairing to GAM.                                                                                                                                                                                                                      | true                        |
 | targeting.scoreKey         | string   | Optional custom key name to be used when sending the viewabiilty score to GAM.                                                                                                                                                                                                                           | `bidViewabilityScore`       |
 | targeting.bucket           | string   | Ability to optionally pass/not pass the viewability bucket key/value pairing to GAM.                                                                                                                                                                                                                     | true                        |
