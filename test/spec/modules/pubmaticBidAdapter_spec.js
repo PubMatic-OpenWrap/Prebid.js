@@ -118,6 +118,7 @@ describe('PubMatic adapter', function () {
           battr: [13, 14],
           linearity: 1,
           placement: 2,
+          plcmt: 1,
           minbitrate: 10,
           maxbitrate: 10
         }
@@ -167,6 +168,7 @@ describe('PubMatic adapter', function () {
           battr: [13, 14],
           linearity: 1,
           placement: 2,
+          plcmt: 1,
           minbitrate: 100,
           maxbitrate: 4096
         }
@@ -355,6 +357,7 @@ describe('PubMatic adapter', function () {
             battr: [13, 14],
             linearity: 1,
             placement: 2,
+            plcmt: 1,
             minbitrate: 100,
             maxbitrate: 4096
           }
@@ -465,6 +468,7 @@ describe('PubMatic adapter', function () {
             battr: [13, 14],
             linearity: 1,
             placement: 2,
+            plcmt: 1,
             minbitrate: 100,
             maxbitrate: 4096
           }
@@ -526,6 +530,7 @@ describe('PubMatic adapter', function () {
             battr: [13, 14],
             linearity: 1,
             placement: 2,
+            plcmt: 1,
             minbitrate: 100,
             maxbitrate: 4096
           }
@@ -2316,6 +2321,7 @@ describe('PubMatic adapter', function () {
 
         expect(data.imp[0]['video']['linearity']).to.equal(videoBidRequests[0].params.video['linearity']);
         expect(data.imp[0]['video']['placement']).to.equal(videoBidRequests[0].params.video['placement']);
+        expect(data.imp[0]['video']['plcmt']).to.equal(videoBidRequests[0].params.video['plcmt']);
         expect(data.imp[0]['video']['minbitrate']).to.equal(videoBidRequests[0].params.video['minbitrate']);
         expect(data.imp[0]['video']['maxbitrate']).to.equal(videoBidRequests[0].params.video['maxbitrate']);
 
@@ -2653,6 +2659,76 @@ describe('PubMatic adapter', function () {
           sandbox.restore();
         });
       });
+
+      describe('GPP', function() {
+        it('Request params check with GPP Consent', function () {
+          let bidRequest = {
+            gppConsent: {
+              'gppString': 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN',
+              'fullGppData': {
+                'sectionId': 3,
+                'gppVersion': 1,
+                'sectionList': [
+                  5,
+                  7
+                ],
+                'applicableSections': [
+                  5
+                ],
+                'gppString': 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN',
+                'pingData': {
+                  'cmpStatus': 'loaded',
+                  'gppVersion': '1.0',
+                  'cmpDisplayStatus': 'visible',
+                  'supportedAPIs': [
+                    'tcfca',
+                    'usnat',
+                    'usca',
+                    'usva',
+                    'usco',
+                    'usut',
+                    'usct'
+                  ],
+                  'cmpId': 31
+                },
+                'eventName': 'sectionChange'
+              },
+              'applicableSections': [
+                5
+              ],
+              'apiVersion': 1
+            }
+          };
+          let request = spec.buildRequests(bidRequests, bidRequest);
+          let data = JSON.parse(request.data);
+          expect(data.regs.gpp).to.equal('DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN');
+          expect(data.regs.gpp_sid[0]).to.equal(5);
+        });
+
+        it('Request params check without GPP Consent', function () {
+          let bidRequest = {};
+          let request = spec.buildRequests(bidRequests, bidRequest);
+          let data = JSON.parse(request.data);
+          expect(data.regs).to.equal(undefined);
+        });
+
+        it('Request params check with GPP Consent read from ortb2', function () {
+          let bidRequest = {
+            ortb2: {
+              regs: {
+                'gpp': 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN',
+                'gpp_sid': [
+                  5
+                ]
+              }
+            }
+          };
+          let request = spec.buildRequests(bidRequests, bidRequest);
+          let data = JSON.parse(request.data);
+          expect(data.regs.gpp).to.equal('DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN');
+          expect(data.regs.gpp_sid[0]).to.equal(5);
+        });
+      });
     });
 
     it('Request params check for video ad', function () {
@@ -2770,6 +2846,7 @@ describe('PubMatic adapter', function () {
 
       expect(data.imp[1]['video']['linearity']).to.equal(multipleMediaRequests[1].params.video['linearity']);
       expect(data.imp[1]['video']['placement']).to.equal(multipleMediaRequests[1].params.video['placement']);
+      expect(data.imp[1]['video']['plcmt']).to.equal(multipleMediaRequests[1].params.video['plcmt']);
       expect(data.imp[1]['video']['minbitrate']).to.equal(multipleMediaRequests[1].params.video['minbitrate']);
       expect(data.imp[1]['video']['maxbitrate']).to.equal(multipleMediaRequests[1].params.video['maxbitrate']);
 
@@ -4291,7 +4368,56 @@ describe('PubMatic adapter', function () {
       });
       let newresponse = spec.interpretResponse(newvideoBidResponses, newrequest);
       expect(newresponse[0].mediaType).to.equal('video')
-    })
+    });
+
+    describe('GPP', function() {
+      it('should return userSync url without Gpp consent if gppConsent is undefined', () => {
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, undefined);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}`
+        }]);
+      });
+
+      it('should return userSync url without Gpp consent if gppConsent.gppString is undefined', () => {
+        const gppConsent = { applicableSections: ['5'] };
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}`
+        }]);
+      });
+
+      it('should return userSync url without Gpp consent if gppConsent.applicableSections is undefined', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN' };
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}`
+        }]);
+      });
+
+      it('should return userSync url without Gpp consent if gppConsent.applicableSections is an empty array', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN', applicableSections: [] };
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}`
+        }]);
+      });
+
+      it('should concatenate gppString and applicableSections values in the returned userSync iframe url', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN', applicableSections: [5] };
+        const result = spec.getUserSyncs({iframeEnabled: true}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'iframe', url: `${syncurl_iframe}&gpp=${encodeURIComponent(gppConsent.gppString)}&gpp_sid=${encodeURIComponent(gppConsent.applicableSections)}`
+        }]);
+      });
+
+      it('should concatenate gppString and applicableSections values in the returned userSync image url', () => {
+        const gppConsent = { gppString: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN', applicableSections: [5] };
+        const result = spec.getUserSyncs({iframeEnabled: false}, undefined, undefined, undefined, gppConsent);
+        expect(result).to.deep.equal([{
+          type: 'image', url: `${syncurl_image}&gpp=${encodeURIComponent(gppConsent.gppString)}&gpp_sid=${encodeURIComponent(gppConsent.applicableSections)}`
+        }]);
+      });
+    });
   });
 
   describe('Checking for Video.Placement property', function() {
