@@ -123,29 +123,3 @@ if (FEATURES.VIDEO) {
     fn: fillVideoResponse
   }
 }
-
-export function onlyOneClientSection(ortbRequest, bidderRequest) {
-  ['dooh', 'app', 'site'].reduce((found, section) => {
-    if (ortbRequest[section] != null && Object.keys(ortbRequest[section]).length > 0) {
-      if (found != null) {
-        logWarn(`ORTB request specifies both '${found}' and '${section}'; dropping the latter.`)
-        delete ortbRequest[section];
-      } else {
-        found = section;
-      }
-    }
-    return found;
-  }, null);
-
-  // PM: We will be overwriting page, domain and ref as mentioned in UOE-8675 for s2s partners
-  // const { page, domain } = bidderRequest.refererInfo;
-  const page = bidderRequest?.refererInfo?.page || '';
-  const domain = bidderRequest?.refererInfo?.domain || '';
-  const ref = window?.document?.referrer;
-  if (bidderRequest?.src === 's2s' && ortbRequest.site) {
-    ortbRequest.site = Object.assign(ortbRequest.site, { page, domain });
-    if (ref.length) {
-      ortbRequest.site.ref = ref;
-    }
-  }
-}

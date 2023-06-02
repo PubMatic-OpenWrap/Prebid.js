@@ -7,9 +7,9 @@ import {deepAccess, logWarn} from '../utils.js';
  * @returns {boolean} true if the gdprConsent is null-y; or GDPR does not apply; or if purpose 1 consent was given.
  */
 export function hasPurpose1Consent(gdprConsent) {
-  logWarn("Privacy - checking purpose1Consent - ", gdprConsent);
-  if(gdprConsent === null) {
-    //logWarn(`Privacy - gdprConsent is null, checking value of defaultGdprScope = ${owpbjs?.getConfig().consentManagement?.gdpr?.defaultGdprScope}`);
+  logWarn('Privacy - checking purpose1Consent - ', gdprConsent);
+  if (gdprConsent === null) {
+    // logWarn(`Privacy - gdprConsent is null, checking value of defaultGdprScope = ${owpbjs?.getConfig().consentManagement?.gdpr?.defaultGdprScope}`);
     return !(window.owpbjs?.getConfig().consentManagement?.gdpr?.defaultGdprScope === true)
   }
   if (gdprConsent?.gdprApplies) {

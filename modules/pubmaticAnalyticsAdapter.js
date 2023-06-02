@@ -1,6 +1,5 @@
 import { _each, pick, logWarn, isStr, isArray, logError, isFn, getGptSlotInfoForAdUnitCode } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
-import adapter from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import CONSTANTS from '../src/constants.json';
 import { ajax } from '../src/ajax.js';

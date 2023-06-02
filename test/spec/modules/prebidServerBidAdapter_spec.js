@@ -889,31 +889,31 @@ describe('S2S Adapter', function () {
         expect(requestBid.imp[0].video).to.exist;
       });
 
-    xit('should add TagID parameter to adunits bid property for Sonobi partner', function () {
-      config.setConfig({ s2sConfig: CONFIG_SONOBI });
+      xit('should add TagID parameter to adunits bid property for Sonobi partner', function () {
+        config.setConfig({ s2sConfig: CONFIG_SONOBI });
 
-      adapter.callBids(REQUEST_SONOBI, BID_REQUESTS, addBidResponse, done, ajax);
+        adapter.callBids(REQUEST_SONOBI, BID_REQUESTS, addBidResponse, done, ajax);
 
-      const requestBid = JSON.parse(server.requests[0].requestBody);
-      expect(requestBid.imp[0].ext.sonobi.TagID).to.exist;
-      expect(requestBid.imp[0].ext.sonobi.TagID).to.equal('/43743431/DMDemo');
-    });
+        const requestBid = JSON.parse(server.requests[0].requestBody);
+        expect(requestBid.imp[0].ext.sonobi.TagID).to.exist;
+        expect(requestBid.imp[0].ext.sonobi.TagID).to.equal('/43743431/DMDemo');
+      });
 
-    it('should default video placement if not defined and instream', function () {
-      let ortb2Config = utils.deepClone(CONFIG);
-      ortb2Config.endpoint.p1Consent = 'https://prebid.adnxs.com/pbs/v1/openrtb2/auction';
+      it('should default video placement if not defined and instream', function () {
+        let ortb2Config = utils.deepClone(CONFIG);
+        ortb2Config.endpoint.p1Consent = 'https://prebid.adnxs.com/pbs/v1/openrtb2/auction';
       
-      config.setConfig({ s2sConfig: ortb2Config });
+        config.setConfig({ s2sConfig: ortb2Config });
 
-      let videoBid = utils.deepClone(VIDEO_REQUEST);
-      videoBid.ad_units[0].mediaTypes.video.context = 'instream';
-      adapter.callBids(videoBid, BID_REQUESTS, addBidResponse, done, ajax);
+        let videoBid = utils.deepClone(VIDEO_REQUEST);
+        videoBid.ad_units[0].mediaTypes.video.context = 'instream';
+        adapter.callBids(videoBid, BID_REQUESTS, addBidResponse, done, ajax);
 
-      const requestBid = JSON.parse(server.requests[0].requestBody);
-      expect(requestBid.imp[0].banner).to.not.exist;
-      expect(requestBid.imp[0].video).to.exist;
-      expect(requestBid.imp[0].video.placement).to.equal(1);
-    });
+        const requestBid = JSON.parse(server.requests[0].requestBody);
+        expect(requestBid.imp[0].banner).to.not.exist;
+        expect(requestBid.imp[0].video).to.exist;
+        expect(requestBid.imp[0].video.placement).to.equal(1);
+      });
 
       it('converts video mediaType properties into openRTB format', function () {
         let ortb2Config = utils.deepClone(CONFIG);

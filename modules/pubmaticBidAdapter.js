@@ -1187,7 +1187,7 @@ export const spec = {
       payload.ext.marketplace.allowedbidders = biddersList.filter(uniques);
     }
 
-	viewData = storage.getDataFromLocalStorage('viewability-data') ? JSON.parse(storage.getDataFromLocalStorage('viewability-data')) : {};
+    viewData = storage.getDataFromLocalStorage('viewability-data') ? JSON.parse(storage.getDataFromLocalStorage('viewability-data')) : {};
     if (Object.keys(viewData).length && bid.bidViewability) {
       removeViewTimeForZeroValue(viewData[_getDomainFromURL(payload.site.page)]);
       payload.ext.bidViewability = {
