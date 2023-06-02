@@ -12,7 +12,7 @@ import {
   getUniqueIdentifierStr,
   getUserConfiguredParams,
   groupBy,
-  isArray,
+  isArray, isPlainObject,
   isValidMediaTypes,
   logError,
   logInfo,
@@ -22,7 +22,6 @@ import {
   shuffle,
   timestamp,
 } from './utils.js';
-import {processAdUnitsForLabels} from './sizeMapping.js';
 import {decorateAdUnitsWithNativeParams, nativeAdapters} from './native.js';
 import {newBidder} from './adapters/bidderFactory.js';
 import {ajaxBuilder} from './ajax.js';
@@ -31,11 +30,12 @@ import {hook} from './hook.js';
 import {find, includes} from './polyfill.js';
 import {adunitCounter} from './adUnits.js';
 import {getRefererInfo} from './refererDetection.js';
-import {GdprConsentHandler, UspConsentHandler, GppConsentHandler} from './consentHandler.js';
+import {GdprConsentHandler, UspConsentHandler, GppConsentHandler, GDPR_GVLIDS} from './consentHandler.js';
 import * as events from './events.js';
 import CONSTANTS from './constants.json';
 import {useMetrics} from './utils/perfMetrics.js';
 import {auctionManager} from './auctionManager.js';
+import {MODULE_TYPE_ANALYTICS, MODULE_TYPE_BIDDER} from './activities/modules.js';
 
 export const PARTITIONS = {
   CLIENT: 'client',
@@ -192,7 +192,7 @@ export let coppaDataHandler = {
  * they should be exposed under `adUnit.bids[].mediaTypes`.
  */
 export const setupAdUnitMediaTypes = hook('sync', (adUnits, labels) => {
-  return processAdUnitsForLabels(adUnits, labels);
+  return adUnits;
 }, 'setupAdUnitMediaTypes')
 
 /**
@@ -236,6 +236,11 @@ adapterManager.makeBidRequests = hook('sync', function (adUnits, auctionStart, a
   if (FEATURES.NATIVE) {
     decorateAdUnitsWithNativeParams(adUnits);
   }
+  adUnits.forEach(au => {
+    if (!isPlainObject(au.mediaTypes)) {
+      au.mediaTypes = {};
+    }
+  })
   adUnits = setupAdUnitMediaTypes(adUnits, labels);
 
   let {[PARTITIONS.CLIENT]: clientBidders, [PARTITIONS.SERVER]: serverBidders} = partitionBidders(adUnits, _s2sConfigs);
@@ -251,7 +256,7 @@ adapterManager.makeBidRequests = hook('sync', function (adUnits, auctionStart, a
   const bidderOrtb2 = ortb2Fragments.bidder || {};
 
   function addOrtb2(bidderRequest) {
-    const fpd = Object.freeze(mergeDeep({}, ortb2, bidderOrtb2[bidderRequest.bidderCode]));
+    const fpd = Object.freeze(mergeDeep({source: {tid: auctionId}}, ortb2, bidderOrtb2[bidderRequest.bidderCode]));
     bidderRequest.ortb2 = fpd;
     bidderRequest.bids.forEach((bid) => bid.ortb2 = fpd);
     return bidderRequest;
@@ -336,13 +341,6 @@ adapterManager.makeBidRequests = hook('sync', function (adUnits, auctionStart, a
     if (gppDataHandler.getConsentData()) {
       bidRequest['gppConsent'] = gppDataHandler.getConsentData();
     }
-  });
-
-  bidRequests.forEach(bidRequest => {
-    config.runWithBidder(bidRequest.bidderCode, () => {
-      const fledgeEnabledFromConfig = config.getConfig('fledgeEnabled');
-      bidRequest['fledgeEnabled'] = navigator.runAdAuction && fledgeEnabledFromConfig
-    });
   });
 
   return bidRequests;
@@ -459,7 +457,7 @@ adapterManager.callBids = (adUnits, bidRequests, addBidResponse, doneCb, request
 
 function getSupportedMediaTypes(bidderCode) {
   let supportedMediaTypes = [];
-  if (includes(adapterManager.videoAdapters, bidderCode)) supportedMediaTypes.push('video');
+  if (FEATURES.VIDEO && includes(adapterManager.videoAdapters, bidderCode)) supportedMediaTypes.push('video');
   if (FEATURES.NATIVE && includes(nativeAdapters, bidderCode)) supportedMediaTypes.push('native');
   return supportedMediaTypes;
 }
@@ -470,8 +468,9 @@ adapterManager.registerBidAdapter = function (bidAdapter, bidderCode, {supported
   if (bidAdapter && bidderCode) {
     if (typeof bidAdapter.callBids === 'function') {
       _bidderRegistry[bidderCode] = bidAdapter;
+      GDPR_GVLIDS.register(MODULE_TYPE_BIDDER, bidderCode, bidAdapter.getSpec?.().gvlid);
 
-      if (includes(supportedMediaTypes, 'video')) {
+      if (FEATURES.VIDEO && includes(supportedMediaTypes, 'video')) {
         adapterManager.videoAdapters.push(bidderCode);
       }
       if (FEATURES.NATIVE && includes(supportedMediaTypes, 'native')) {
@@ -539,6 +538,7 @@ adapterManager.registerAnalyticsAdapter = function ({adapter, code, gvlid}) {
     if (typeof adapter.enableAnalytics === 'function') {
       adapter.code = code;
       _analyticsRegistry[code] = { adapter, gvlid };
+      GDPR_GVLIDS.register(MODULE_TYPE_ANALYTICS, code, gvlid);
     } else {
       logError(`Prebid Error: Analytics adaptor error for analytics "${code}"
         analytics adapter must implement an enableAnalytics() function`);
@@ -589,9 +589,11 @@ function invokeBidderMethod(bidder, method, spec, fn, ...params) {
 }
 
 function tryCallBidderMethod(bidder, method, param) {
-  const target = getBidderMethod(bidder, method);
-  if (target != null) {
-    invokeBidderMethod(bidder, method, ...target, param);
+  if (param?.src !== CONSTANTS.S2S.SRC) {
+    const target = getBidderMethod(bidder, method);
+    if (target != null) {
+      invokeBidderMethod(bidder, method, ...target, param);
+    }
   }
 }
 
@@ -614,6 +616,10 @@ adapterManager.callBidWonBidder = function(bidder, bid, adUnits) {
   bid.params = getUserConfiguredParams(adUnits, bid.adUnitCode, bid.bidder);
   adunitCounter.incrementBidderWinsCounter(bid.adUnitCode, bid.bidder);
   tryCallBidderMethod(bidder, 'onBidWon', bid);
+};
+
+adapterManager.callBidBillableBidder = function(bid) {
+  tryCallBidderMethod(bid.bidder, 'onBidBillable', bid);
 };
 
 adapterManager.callSetTargetingBidder = function(bidder, bid) {

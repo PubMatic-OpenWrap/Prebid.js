@@ -23,7 +23,8 @@ const _approvedLoadExternalJSList = [
   'aaxBlockmeter',
   'pbjs-debug-ui',
   'confiant',
-  'arcspan'
+  'arcspan',
+  'clean.io'
 ]
 
 /**

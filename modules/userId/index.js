@@ -139,14 +139,15 @@ import adapterManager, {gdprDataHandler} from '../../src/adapterManager.js';
 import CONSTANTS from '../../src/constants.json';
 import {hook, module, ready as hooksReady} from '../../src/hook.js';
 import {buildEidPermissions, createEidsArray, USER_IDS_CONFIG} from './eids.js';
-import {getCoreStorageManager} from '../../src/storageManager.js';
-
+import {getCoreStorageManager, STORAGE_TYPE_COOKIES, STORAGE_TYPE_LOCALSTORAGE} from '../../src/storageManager.js';
 import {
   cyrb53Hash,
   deepAccess,
+  deepSetValue,
   delayExecution,
   getPrebidInternal,
   isArray,
+  isEmpty,
   isEmptyStr,
   isFn,
   isGptPubadsDefined,
@@ -169,10 +170,12 @@ import {hasPurpose1Consent} from '../../src/utils/gpdr.js';
 import {registerOrtbProcessor, REQUEST} from '../../src/pbjsORTB.js';
 import {newMetrics, timedAuctionHook, useMetrics} from '../../src/utils/perfMetrics.js';
 import {findRootDomain} from '../../src/fpd/rootDomain.js';
+import {GDPR_GVLIDS} from '../../src/consentHandler.js';
+import {MODULE_TYPE_UID} from '../../src/activities/modules.js';
 
 const MODULE_NAME = 'User ID';
-const COOKIE = 'cookie';
-const LOCAL_STORAGE = 'html5';
+const COOKIE = STORAGE_TYPE_COOKIES;
+const LOCAL_STORAGE = STORAGE_TYPE_LOCALSTORAGE;
 const DEFAULT_SYNC_DELAY = 500;
 const NO_AUCTION_DELAY = 0;
 const CONSENT_DATA_COOKIE_STORAGE_CONFIG = {
@@ -435,7 +438,7 @@ function processSubmoduleCallbacks(submodules, cb) {
       moduleDone();
     }
     try {
-      submodule.callback(callbackCompleted);
+      submodule.callback(callbackCompleted, getStoredValue.bind(null, submodule.config?.storage));
     } catch (e) {
       logError(`Error in userID module '${submodule.submodule.name}':`, e);
       moduleDone();
@@ -1196,7 +1199,7 @@ function updateSubmodules() {
       submodule: i,
       config: submoduleConfig,
       callback: undefined,
-      idObj: undefined
+      idObj: undefined,
     } : null;
   }).filter(submodule => submodule !== null)
     .forEach((sm) => submodules.push(sm));
@@ -1233,6 +1236,7 @@ export function requestDataDeletion(next, ...args) {
 export function attachIdSystem(submodule) {
   if (!find(submoduleRegistry, i => i.name === submodule.name)) {
     submoduleRegistry.push(submodule);
+    GDPR_GVLIDS.register(MODULE_TYPE_UID, submodule.name, submodule.gvlid)
     updateSubmodules();
     // TODO: a test case wants this to work even if called after init (the setConfig({userId}))
     // so we trigger a refresh. But is that even possible outside of tests?
@@ -1301,7 +1305,7 @@ module('userId', attachIdSystem);
 
 export function setOrtbUserExtEids(ortbRequest, bidderRequest, context) {
   const eids = deepAccess(context, 'bidRequests.0.userIdAsEids');
-  if (eids) {
+  if (eids && Object.keys(eids).length > 0) {
     deepSetValue(ortbRequest, 'user.ext.eids', eids);
   }
 }

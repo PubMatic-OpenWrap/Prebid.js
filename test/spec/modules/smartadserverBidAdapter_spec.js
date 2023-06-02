@@ -29,7 +29,11 @@ describe('Smart bid adapter tests', function () {
       ckId: 42
     },
     requestId: 'efgh5678',
-    transactionId: 'zsfgzzg'
+    ortb2Imp: {
+      ext: {
+        tid: 'zsfgzzg'
+      }
+    },
   }];
 
   var DEFAULT_PARAMS_WITH_EIDS = [{
@@ -57,18 +61,80 @@ describe('Smart bid adapter tests', function () {
     },
     requestId: 'efgh5678',
     transactionId: 'zsfgzzg',
-    userId: {
-      britepoolid: '1111',
-      criteoId: '1111',
-      digitrustid: { data: { id: 'DTID', keyv: 4, privacy: { optout: false }, producer: 'ABC', version: 2 } },
-      id5id: { uid: '1111' },
-      idl_env: '1111',
-      lipbid: '1111',
-      parrableid: 'eidVersion.encryptionKeyReference.encryptedValue',
-      pubcid: '1111',
-      tdid: '1111',
-      netId: 'fH5A3n2O8_CZZyPoJVD-eabc6ECb7jhxCicsds7qSg',
-    }
+    userIdAsEids: [
+      {
+        'source': 'pubcid.org',
+        'uids': [
+          {
+            'atype': 1,
+            'id': '1111'
+          }
+        ]
+      },
+      {
+        'source': 'britepoolid',
+        'uids': [
+          {
+            'atype': 1,
+            'id': '1111'
+          }
+        ]
+      },
+      {
+        'source': 'id5id',
+        'uids': [
+          {
+            'atype': 1,
+            'id': '1111'
+          }
+        ]
+      },
+      {
+        'source': 'idl_env',
+        'uids': [
+          {
+            'atype': 1,
+            'id': '1111'
+          }
+        ]
+      },
+      {
+        'source': 'lipbid',
+        'uids': [
+          {
+            'atype': 1,
+            'id': '1111'
+          }
+        ]
+      },
+      {
+        'source': 'parrableid',
+        'uids': [
+          {
+            'atype': 1,
+            'id': 'eidVersion.encryptionKeyReference.encryptedValue'
+          }
+        ]
+      },
+      {
+        'source': 'tdid',
+        'uids': [
+          {
+            'atype': 1,
+            'id': '1111'
+          }
+        ]
+      },
+      {
+        'source': 'netId',
+        'uids': [
+          {
+            'atype': 1,
+            'id': 'fH5A3n2O8_CZZyPoJVD-eabc6ECb7jhxCicsds7qSg'
+          }
+        ]
+      }
+    ]
   }];
 
   // Default params without optional ones
@@ -524,7 +590,11 @@ describe('Smart bid adapter tests', function () {
         }
       },
       requestId: 'efgh5678',
-      transactionId: 'zsfgzzg'
+      ortb2Imp: {
+        ext: {
+          tid: 'zsfgzzg',
+        }
+      },
     }];
 
     var INSTREAM_BID_RESPONSE = {
@@ -793,7 +863,11 @@ describe('Smart bid adapter tests', function () {
           protocol: 7
         }
       },
-      requestId: 'efgh5679',
+      ortb2Imp: {
+        ext: {
+          tid: 'efgh5679',
+        }
+      },
       transactionId: 'zsfgzzga'
     }];
 

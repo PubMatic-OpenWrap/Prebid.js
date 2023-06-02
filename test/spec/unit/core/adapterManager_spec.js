@@ -16,11 +16,13 @@ import CONSTANTS from 'src/constants.json';
 import * as utils from 'src/utils.js';
 import { config } from 'src/config.js';
 import { registerBidder } from 'src/adapters/bidderFactory.js';
-import { setSizeConfig } from 'src/sizeMapping.js';
+import { setSizeConfig } from 'modules/sizeMapping.js';
 import {find, includes} from 'src/polyfill.js';
 import s2sTesting from 'modules/s2sTesting.js';
 import {hook} from '../../../../src/hook.js';
 import {auctionManager} from '../../../../src/auctionManager.js';
+import {GDPR_GVLIDS} from '../../../../src/consentHandler.js';
+import {MODULE_TYPE_ANALYTICS, MODULE_TYPE_BIDDER} from '../../../../src/activities/modules.js';
 var events = require('../../../../src/events');
 
 const CONFIG = {
@@ -351,103 +353,79 @@ describe('adapterManager tests', function () {
     });
   }); // end callTimedOutBidders
 
-  describe('onBidWon', function () {
-    var criteoSpec = { onBidWon: sinon.stub() }
-    var criteoAdapter = {
-      bidder: 'criteo',
-      getSpec: function() { return criteoSpec; }
-    }
+  describe('bidder spec methods', () => {
+    let adUnits, bids, criteoSpec;
     before(function () {
       config.setConfig({s2sConfig: { enabled: false }});
     });
 
-    beforeEach(function () {
-      adapterManager.bidderRegistry['criteo'] = criteoAdapter;
+    beforeEach(() => {
+      criteoSpec = {}
+      adapterManager.bidderRegistry['criteo'] = {
+        bidder: 'criteo',
+        getSpec: function() { return criteoSpec; },
+      }
+      bids = [
+        {bidder: 'criteo', params: {placementId: 'id'}},
+      ];
+      adUnits = [{
+        code: 'adUnit-code',
+        sizes: [[728, 90]],
+        bids
+      }];
     });
 
     afterEach(function () {
       delete adapterManager.bidderRegistry['criteo'];
     });
 
-    it('should call spec\'s onBidWon callback when a bid is won', function () {
-      const bids = [
-        {bidder: 'criteo', params: {placementId: 'id'}},
-      ];
-      const adUnits = [{
-        code: 'adUnit-code',
-        sizes: [[728, 90]],
-        bids
-      }];
+    describe('onBidWon', function () {
+      beforeEach(() => {
+        criteoSpec.onBidWon = sinon.stub()
+      });
+      it('should call spec\'s onBidWon callback when a bid is won', function () {
+        adapterManager.callBidWonBidder(bids[0].bidder, bids[0], adUnits);
+        sinon.assert.called(criteoSpec.onBidWon);
+      });
 
-      adapterManager.callBidWonBidder(bids[0].bidder, bids[0], adUnits);
-      sinon.assert.called(criteoSpec.onBidWon);
-    });
-  }); // end onBidWon
-
-  describe('onSetTargeting', function () {
-    var criteoSpec = { onSetTargeting: sinon.stub() }
-    var criteoAdapter = {
-      bidder: 'criteo',
-      getSpec: function() { return criteoSpec; }
-    }
-    before(function () {
-      config.setConfig({s2sConfig: { enabled: false }});
+      it('should NOT call onBidWon when the bid is S2S', () => {
+        bids[0].src = CONSTANTS.S2S.SRC
+        adapterManager.callBidWonBidder(bids[0].bidder, bids[0], adUnits);
+        sinon.assert.notCalled(criteoSpec.onBidWon);
+      })
     });
 
-    beforeEach(function () {
-      adapterManager.bidderRegistry['criteo'] = criteoAdapter;
-    });
+    describe('onSetTargeting', function () {
+      beforeEach(() => {
+        criteoSpec.onSetTargeting = sinon.stub()
+      })
 
-    afterEach(function () {
-      delete adapterManager.bidderRegistry['criteo'];
-    });
+      it('should call spec\'s onSetTargeting callback when setTargeting is called', function () {
+        adapterManager.callSetTargetingBidder(bids[0].bidder, bids[0], adUnits);
+        sinon.assert.called(criteoSpec.onSetTargeting);
+      });
 
-    it('should call spec\'s onSetTargeting callback when setTargeting is called', function () {
-      const bids = [
-        {bidder: 'criteo', params: {placementId: 'id'}},
-      ];
-      const adUnits = [{
-        code: 'adUnit-code',
-        sizes: [[728, 90]],
-        bids
-      }];
-      adapterManager.callSetTargetingBidder(bids[0].bidder, bids[0], adUnits);
-      sinon.assert.called(criteoSpec.onSetTargeting);
+      it('should NOT call onSetTargeting when bid is S2S', () => {
+        bids[0].src = CONSTANTS.S2S.SRC;
+        adapterManager.callSetTargetingBidder(bids[0].bidder, bids[0], adUnits);
+        sinon.assert.notCalled(criteoSpec.onSetTargeting);
+      })
+    }); // end onSetTargeting
+    describe('onBidViewable', function () {
+      beforeEach(() => {
+        criteoSpec.onBidViewable = sinon.stub();
+      })
+      it('should call spec\'s onBidViewable callback when callBidViewableBidder is called', function () {
+        adapterManager.callBidViewableBidder(bids[0].bidder, bids[0]);
+        sinon.assert.called(criteoSpec.onBidViewable);
+      });
+      it('should NOT call onBidViewable when bid is S2S', () => {
+        bids[0].src = CONSTANTS.S2S.SRC;
+        adapterManager.callBidViewableBidder(bids[0].bidder, bids[0]);
+        sinon.assert.notCalled(criteoSpec.onBidViewable);
+      })
     });
-  }); // end onSetTargeting
-
-  describe('onBidViewable', function () {
-    var criteoSpec = { onBidViewable: sinon.stub() }
-    var criteoAdapter = {
-      bidder: 'criteo',
-      getSpec: function() { return criteoSpec; }
-    }
-    before(function () {
-      config.setConfig({s2sConfig: { enabled: false }});
-    });
-
-    beforeEach(function () {
-      adapterManager.bidderRegistry['criteo'] = criteoAdapter;
-    });
-
-    afterEach(function () {
-      delete adapterManager.bidderRegistry['criteo'];
-    });
-
-    it('should call spec\'s onBidViewable callback when callBidViewableBidder is called', function () {
-      const bids = [
-        {bidder: 'criteo', params: {placementId: 'id'}},
-      ];
-      const adUnits = [{
-        code: 'adUnit-code',
-        sizes: [[728, 90]],
-        bids
-      }];
-      adapterManager.callBidViewableBidder(bids[0].bidder, bids[0]);
-      sinon.assert.called(criteoSpec.onBidViewable);
-    });
-  }); // end onBidViewable
-
+  })
   describe('onBidderError', function () {
     const bidder = 'appnexus';
     const appnexusSpec = { onBidderError: sinon.stub() };
@@ -1602,12 +1580,15 @@ describe('adapterManager tests', function () {
       });
 
       it('should add alias to registry when original adapter is using bidderFactory', function() {
-        let thisSpec = Object.assign(spec, { supportedMediaTypes: ['video'] });
+        const mediaType = FEATURES.VIDEO ? 'video' : 'banner'
+        let thisSpec = Object.assign(spec, { supportedMediaTypes: [mediaType] });
         registerBidder(thisSpec);
         const alias = 'aliasBidder';
         adapterManager.aliasBidAdapter(CODE, alias);
         expect(adapterManager.bidderRegistry).to.have.property(alias);
-        expect(adapterManager.videoAdapters).to.include(alias);
+        if (FEATURES.VIDEO) {
+          expect(adapterManager.videoAdapters).to.include(alias);
+        }
       });
     });
 
@@ -1756,6 +1737,11 @@ describe('adapterManager tests', function () {
       requests.rubicon.bids.forEach((bid) => expect(bid.ortb2).to.eql(requests.rubicon.ortb2));
       requests.appnexus.bids.forEach((bid) => expect(bid.ortb2).to.eql(requests.appnexus.ortb2));
     });
+
+    it('should populate ortb2.source.tid with auctionId', () => {
+      const reqs = adapterManager.makeBidRequests(adUnits, 0, 'mockAuctionId', 1000, [], {global: {}});
+      expect(reqs[0].ortb2.source.tid).to.equal('mockAuctionId');
+    })
 
     it('should merge in bid-level ortb2Imp with adUnit-level ortb2Imp', () => {
       const adUnit = {
@@ -1963,64 +1949,6 @@ describe('adapterManager tests', function () {
       });
     });
 
-    describe('fledgeEnabled', function () {
-      const origRunAdAuction = navigator?.runAdAuction;
-      before(function () {
-        // navigator.runAdAuction doesn't exist, so we can't stub it normally with
-        // sinon.stub(navigator, 'runAdAuction') or something
-        navigator.runAdAuction = sinon.stub();
-      });
-
-      after(function() {
-        navigator.runAdAuction = origRunAdAuction;
-      })
-
-      afterEach(function () {
-        config.resetConfig();
-      });
-
-      it('should set fledgeEnabled correctly per bidder', function () {
-        config.setConfig({bidderSequence: 'fixed'})
-        config.setBidderConfig({
-          bidders: ['appnexus'],
-          config: {
-            fledgeEnabled: true,
-          }
-        });
-
-        const adUnits = [{
-          'code': '/19968336/header-bid-tag1',
-          'mediaTypes': {
-            'banner': {
-              'sizes': [[728, 90]]
-            },
-          },
-          'bids': [
-            {
-              'bidder': 'appnexus',
-            },
-            {
-              'bidder': 'rubicon',
-            },
-          ]
-        }];
-
-        const bidRequests = adapterManager.makeBidRequests(
-          adUnits,
-          Date.now(),
-          utils.getUniqueIdentifierStr(),
-          function callback() {},
-          []
-        );
-
-        expect(bidRequests[0].bids[0].bidder).equals('appnexus');
-        expect(bidRequests[0].fledgeEnabled).to.be.true;
-
-        expect(bidRequests[1].bids[0].bidder).equals('rubicon');
-        expect(bidRequests[1].fledgeEnabled).to.be.undefined;
-      });
-    });
-
     describe('sizeMapping', function () {
       let sandbox;
       beforeEach(function () {
@@ -2053,45 +1981,6 @@ describe('adapterManager tests', function () {
         expect(appnexusBidRequests.bids.length).to.equal(2);
         expect(appnexusBidRequests.bids[0].mediaTypes).to.deep.equal(find(adUnits, adUnit => adUnit.code === appnexusBidRequests.bids[0].adUnitCode).mediaTypes);
         expect(appnexusBidRequests.bids[1].mediaTypes).to.deep.equal(find(adUnits, adUnit => adUnit.code === appnexusBidRequests.bids[1].adUnitCode).mediaTypes);
-      });
-
-      it('should not filter video bids', function () {
-        setSizeConfig([{
-          'mediaQuery': '(min-width: 768px) and (max-width: 1199px)',
-          'sizesSupported': [
-            [728, 90],
-            [300, 250]
-          ],
-          'labels': ['tablet', 'phone']
-        }]);
-
-        let videoAdUnits = [{
-          code: 'test_video',
-          mediaTypes: {
-            video: {
-              playerSize: [300, 300],
-              context: 'outstream'
-            }
-          },
-          bids: [{
-            bidder: 'appnexus',
-            params: {
-              placementId: 13232385,
-              video: {
-                skippable: true,
-                playback_method: ['auto_play_sound_off']
-              }
-            }
-          }]
-        }];
-        let bidRequests = adapterManager.makeBidRequests(
-          videoAdUnits,
-          Date.now(),
-          utils.getUniqueIdentifierStr(),
-          function callback() {},
-          []
-        );
-        expect(bidRequests[0].bids[0].sizes).to.deep.equal([300, 300]);
       });
 
       it('should not filter native bids', function () {
@@ -2791,5 +2680,24 @@ describe('adapterManager tests', function () {
         sinon.assert.calledWith(del2, [bidderRequests[1]]);
       })
     })
+  });
+
+  describe('registers GVL IDs', () => {
+    beforeEach(() => {
+      sinon.stub(GDPR_GVLIDS, 'register');
+    });
+    afterEach(() => {
+      GDPR_GVLIDS.register.restore();
+    });
+
+    it('for bid adapters', () => {
+      adapterManager.registerBidAdapter({getSpec: () => ({gvlid: 123}), callBids: sinon.stub()}, 'mock');
+      sinon.assert.calledWith(GDPR_GVLIDS.register, MODULE_TYPE_BIDDER, 'mock', 123);
+    });
+
+    it('for analytics adapters', () => {
+      adapterManager.registerAnalyticsAdapter({adapter: {enableAnalytics: sinon.stub()}, code: 'mock', gvlid: 123});
+      sinon.assert.calledWith(GDPR_GVLIDS.register, MODULE_TYPE_ANALYTICS, 'mock', 123);
+    });
   });
 });

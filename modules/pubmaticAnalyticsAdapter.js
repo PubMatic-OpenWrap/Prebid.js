@@ -1,5 +1,6 @@
-import { _each, pick, logWarn, isStr, isArray, logError, isFn } from '../src/utils.js';
+import { _each, pick, logWarn, isStr, isArray, logError, isFn, getGptSlotInfoForAdUnitCode } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
+import adapter from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import CONSTANTS from '../src/constants.json';
 import { ajax } from '../src/ajax.js';
@@ -331,7 +332,7 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid) {
   }, [])
 }
 
-function getSizesForAdUnit(adUnit, adUnitId) {
+function getSizesForAdUnit(adUnit) {
   var bid = Object.values(adUnit.bids).filter((bid) => !!bid.bidResponse && bid.bidResponse.mediaType === 'native')[0];
   if (!!bid || (bid === undefined && adUnit.dimensions.length === 0)) {
     return ['1x1'];
@@ -419,9 +420,10 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj.s = Object.keys(auctionCache.adUnitCodes).reduce(function(slotsArray, adUnitId) {
     let adUnit = auctionCache.adUnitCodes[adUnitId];
     let origAdUnit = getAdUnit(auctionCache.origAdUnits, adUnitId) || {};
+    // getGptSlotInfoForAdUnitCode returns gptslot corresponding to adunit provided as input.
     let slotObject = {
       'sn': adUnitId,
-      'au': origAdUnit.adUnitId || adUnitId,
+      'au': origAdUnit.adUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId,
       'mt': getAdUnitAdFormats(origAdUnit),
       'sz': getSizesForAdUnit(adUnit, adUnitId),
       'fskp': floorData ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined,

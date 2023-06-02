@@ -36,6 +36,7 @@ const VIDEO_CUSTOM_PARAMS = {
   'battr': DATA_TYPES.ARRAY,
   'linearity': DATA_TYPES.NUMBER,
   'placement': DATA_TYPES.NUMBER,
+  'plcmt': DATA_TYPES.NUMBER,
   'minbitrate': DATA_TYPES.NUMBER,
   'maxbitrate': DATA_TYPES.NUMBER,
   'skip': DATA_TYPES.NUMBER
@@ -77,6 +78,9 @@ export const spec = {
         id: request.bidId,
         secure: secure
       };
+      if (params.tagid) {
+        impData.tagid = params.tagid;
+      }
       if (request.mediaTypes) {
         for (const mediaType in request.mediaTypes) {
           switch (mediaType) {
@@ -111,7 +115,7 @@ export const spec = {
     });
 
     let payload = {
-      id: bidderRequest.auctionId,
+      id: bidderRequest.bidderRequestId,
       cur: [DEFAULT_CUR],
       imp: imps,
       site: params.site ? params.site : {},
@@ -144,6 +148,15 @@ export const spec = {
     // CCPA
     if (bidderRequest && bidderRequest.uspConsent) {
       deepSetValue(payload, 'regs.ext.us_privacy', bidderRequest.uspConsent);
+    }
+
+    // schain
+    if (validBidRequests[0].schain) {
+      payload.source = {
+        ext: {
+          schain: validBidRequests[0].schain
+        }
+      }
     }
 
     if (bidderRequest?.timeout) {

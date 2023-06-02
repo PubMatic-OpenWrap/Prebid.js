@@ -1,7 +1,6 @@
 import { deepAccess, deepClone, logError, isFn, isPlainObject } from '../src/utils.js';
 import { BANNER, VIDEO } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
-import { createEidsArray } from './userId/eids.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 
 const BIDDER_CODE = 'smartadserver';
@@ -151,7 +150,7 @@ export const spec = {
         tagId: bid.adUnitCode,
         // TODO: is 'page' the right value here?
         pageDomain: bidderRequest && bidderRequest.refererInfo && bidderRequest.refererInfo.page ? bidderRequest.refererInfo.page : undefined,
-        transactionId: bid.transactionId,
+        transactionId: bid.ortb2Imp?.ext?.tid,
         timeout: config.getConfig('bidderTimeout'),
         bidId: bid.bidId,
         prebidVersion: '$prebid.version$',
@@ -177,8 +176,8 @@ export const spec = {
         }
       }
 
-      if (bid && bid.userId) {
-        payload.eids = createEidsArray(bid.userId);
+      if (bid && bid.userIdAsEids) {
+        payload.eids = bid.userIdAsEids;
       }
 
       if (bidderRequest && bidderRequest.uspConsent) {

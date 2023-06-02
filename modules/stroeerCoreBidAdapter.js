@@ -49,6 +49,7 @@ export const spec = {
     const refererInfo = bidderRequest.refererInfo;
 
     const basePayload = {
+      // TODO: fix auctionId leak: https://github.com/prebid/Prebid.js/issues/9781
       id: bidderRequest.auctionId,
       ref: refererInfo.ref,
       ssl: isSecureWindow(),
@@ -68,9 +69,10 @@ export const spec = {
 
     const gdprConsent = bidderRequest.gdprConsent;
 
-    if (gdprConsent && gdprConsent.consentString != null && gdprConsent.gdprApplies != null) {
+    if (gdprConsent) {
       basePayload.gdpr = {
-        consent: bidderRequest.gdprConsent.consentString, applies: bidderRequest.gdprConsent.gdprApplies
+        consent: gdprConsent.consentString,
+        applies: gdprConsent.gdprApplies
       };
     }
 

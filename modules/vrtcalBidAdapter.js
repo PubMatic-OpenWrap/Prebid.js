@@ -8,7 +8,7 @@ export const spec = {
   code: 'vrtcal',
   supportedMediaTypes: [BANNER],
   isBidRequestValid: function (bid) {
-    if (bid.bidId == '' || bid.auctionId == '') { return false; } else { return true; }// No extras params required
+    return true;
   },
   buildRequests: function (bidRequests) {
     const requests = bidRequests.map(function (bid) {
@@ -46,7 +46,7 @@ export const spec = {
         coppa = 1;
       }
 
-      tmax = config.getConfig('bidderTimeout');
+      tmax = bid.timeout;
 
       const params = {
         prebidJS: 1,
