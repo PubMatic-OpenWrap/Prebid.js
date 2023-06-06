@@ -1,4 +1,5 @@
 import { ajaxBuilder } from '../src/ajax.js';
+import { getStorageManager } from '../src/storageManager.js';
 
 const TIMEOUT = 500;
 
@@ -27,4 +28,35 @@ $$PREBID_GLOBAL$$.detectLocation = function(URL, callback) {
     } catch(e) {
         callback({error: e});
     }
+}
+
+var BIDDER_CODE = 'pubmatic';
+var storage = getStorageManager({bidderCode: BIDDER_CODE});
+
+$$PREBID_GLOBAL$$.getDataFromLocalStorage = function(key, expiry) {
+	try {
+		var storedObject = storage.getDataFromLocalStorage(key);
+		if(storedObject) {
+			var createdDate = JSON.parse(storedObject).createdDate;
+			let currentDate = new Date().getDate();
+			const diff = Math.abs(currentDate - createdDate);
+			if (diff > expiry) {
+			  storage.removeDataFromLocalStorage(key);
+			  return undefined;
+			}
+			return storedObject;	
+		}
+		return undefined;
+	} catch(e) {
+		return undefined;
+	}
+}
+
+$$PREBID_GLOBAL$$.setAndStringifyToLocalStorage = function(key, object) {
+	try {
+	  object.createdDate = new Date().getDate();
+	  storage.setDataInLocalStorage(key, JSON.stringify(object));
+	} catch (e) {
+		refThis.logError("Error in setting localstorage ", e);
+	}
 }
