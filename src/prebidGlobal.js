@@ -4,14 +4,22 @@
 if (window.$$PREBID_GLOBAL$$) { console.warn(`Namespace clash happened, with name: ${'window.$$PREBID_GLOBAL$$'} and existing PWT version details: ${JSON.stringify(window?.PWT?.versionDetails)}`); }
 /* eslint-disable */
 
-window.$$PREBID_GLOBAL$$ = (window.$$PREBID_GLOBAL$$ || {});
-window.$$PREBID_GLOBAL$$.cmd = window.$$PREBID_GLOBAL$$.cmd || [];
-window.$$PREBID_GLOBAL$$.que = window.$$PREBID_GLOBAL$$.que || [];
+/* global $$DEFINE_PREBID_GLOBAL$$ */
+const scope = !$$DEFINE_PREBID_GLOBAL$$ ? {} : window;
+const global = scope.$$PREBID_GLOBAL$$ = scope.$$PREBID_GLOBAL$$ || {};
+global.cmd = global.cmd || [];
+global.que = global.que || [];
 
 // create a pbjs global pointer
-window._pbjsGlobals = window._pbjsGlobals || [];
-window._pbjsGlobals.push('$$PREBID_GLOBAL$$');
+if (scope === window) {
+  scope._pbjsGlobals = scope._pbjsGlobals || [];
+  scope._pbjsGlobals.push('$$PREBID_GLOBAL$$');
+}
 
 export function getGlobal() {
-  return window.$$PREBID_GLOBAL$$;
+  return global;
+}
+
+export function registerModule(name) {
+  global.installedModules.push(name);
 }
