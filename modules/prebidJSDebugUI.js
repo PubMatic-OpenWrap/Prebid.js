@@ -35,7 +35,7 @@ function loadUILibIfNotAlreadyLoaded() {
 
 function loadUILibrary() {
   // the js library needs this variable to be defined to know which is the primary prebid-js code on page in case tehre are multiple instances of prebid-js on page
-  window.PBJS_NAMESPACE = getGlobal();
+  window.PBJS_NAMESPACE = '$$PREBID_GLOBAL$$';
   createDebugObjectIfNotPresent();
   createDebugObjectAuctionIfNotPresent();
 
