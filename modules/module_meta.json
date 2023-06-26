@@ -482,7 +482,7 @@
           "module": "express"
       },
       {
-          "name": "currency",
+          "name": "Currency",
           "path": "/modules/currency.js",
           "module": "currency"
       },
