@@ -1,11 +1,10 @@
 import { config } from '../src/config.js';
-// import { ajax } from '../src/ajax.js';
-import { getGlobal } from '../src/prebidGlobal.js';
+import { ajax } from '../src/ajax.js';
 import adapterManager from '../src/adapterManager.js';
 import { targeting } from '../src/targeting.js';
 import * as events from '../src/events.js';
 import CONSTANTS from '../src/constants.json';
-import { isAdUnitCodeMatchingSlot, deepClone, isStr } from '../src/utils.js';
+import { isAdUnitCodeMatchingSlot, deepClone } from '../src/utils.js';
 
 const MODULE_NAME = 'viewabilityScoreGeneration';
 const ENABLED = 'enabled';
@@ -15,61 +14,58 @@ const GPT_IMPRESSION_VIEWABLE_EVENT = 'impressionViewable';
 const GPT_SLOT_VISIBILITY_CHANGED_EVENT = 'slotVisibilityChanged';
 const TOTAL_VIEW_TIME_LIMIT = 1000000000;
 const NATIVE_DEFAULT_SIZE = '0x0';
+const DEFAULT_SERVER_CALL_FREQUENCY = { metric: 'hours', duration: 6 };
 const ADSLOTSIZE_INDEX = 2;
 const ADUNIT_INDEX = 1;
-// const ENDPOINT = 'https://test.pubmatic.com/fake-endpoint/inventory-packaging'
+const ENDPOINT = 'http://localhost:3000/fake-endpoint/inventory-packaging' // TODO: update this to a real endpoint when ready
 const domain = window.location.hostname;
-let enableServerSideTracking = true;
 
-function getDevicePlatform() {
-  var deviceType = 3;
-  try {
-    var ua = navigator.userAgent;
-    if (ua && isStr(ua) && ua.trim() != '') {
-      ua = ua.toLowerCase().trim();
-      var isMobileRegExp = new RegExp('(mobi|tablet|ios).*');
-      if (ua.match(isMobileRegExp)) {
-        deviceType = 2;
-      } else {
-        deviceType = 1;
-      }
-    }
-  } catch (ex) {}
-  return deviceType;
-}
+export const fireToServer = auctionData => {
+  vsgObj = getAndParseFromLocalStorage('viewability-data');
 
-const fireToServer = (keyArr, operID) => {
-  const [domain, adSlotElementId, adSize] = keyArr;
-  const adData = getAdDataByElementId(adSlotElementId)
-  const payload = {
-    operID,
-    dateTime: Date.now(),
-    domain,
-    device: getDevicePlatform(),
-    inventoryType: adData.inventoryType,
-    adSize,
-    adUnit: adSlotElementId,
-    source: getSource(),
-    bidders: adData.bidders
-  };
+  const payload = generatePayload(auctionData, vsgObj);
 
-  if (adData.publisherId) payload.publisherId = adData.publisherId;
-  if (payload.operID === '2') payload.dwellTime = vsgObj[adSlotElementId].totalViewTime;
+  ajax(ENDPOINT, (res) => {
+    // do nothing for now
+  }, JSON.stringify(payload));
 
-  const qString = objectToQueryString(payload);
-
-  // eslint-disable-next-line no-console
-  console.log({ payload, qString });
-  // ajax(ENDPOINT);
+  vsgObj = null;
+  removeFromLocalStorage('viewability-data');
 };
 
-const objectToQueryString = (obj) => {
-  const payloadKeys = Object.keys(obj);
-  let qString = `?`;
-  payloadKeys.forEach((key, index) => {
-    qString += `${key}=${obj[key]}${index === payloadKeys.length - 1 ? '' : '&'}`;
-  });
-  return qString;
+export const generatePayload = (auctionData, lsObj) => {
+  const adSizeKeys = Object.keys(lsObj).filter(key => /([0-9]+x[0-9]+)/.test(key));
+  const adUnitKeys = Object.keys(lsObj).filter(key => !/([0-9]+x[0-9]+)/.test(key) && key !== window.location.hostname);
+
+  return {
+    iid: auctionData.auctionId,
+    pubid: getPubId(auctionData),
+    adDomain: window.location.hostname,
+    adUnits: adUnitKeys.map(adUnitKey => {
+      lsObj[adUnitKey].adUnit = adUnitKey;
+      return lsObj[adUnitKey];
+    }),
+    adSizes: adSizeKeys.map(adSizeKey => {
+      lsObj[adSizeKey].adSize = adSizeKey;
+      return lsObj[adSizeKey];
+    })
+  };
+};
+
+const getPubId = auctionData => {
+  let pubId;
+  const adUnits = auctionData.adUnits;
+
+  if (adUnits && adUnits.length) {
+    adUnits.find(adUnit => {
+      const bid = adUnit.bids.find(bid => bid.bidder === 'pubmatic');
+      if (bid && bid.params) {
+        pubId = bid.params.publisherId;
+      }
+    });
+  }
+
+  return pubId;
 };
 
 // stat hat call to collect data when there is issue while writing to localstorgae.
@@ -84,48 +80,7 @@ const fireStatHatLogger = (statKeyName) => {
   document.body.appendChild(statHatElement)
 };
 
-const getAdDataByElementId = adSlotElementId => {
-  let adData = {};
-  let publisherId;
-  const adUnits = getGlobal().adUnits;
-  const matchingAdSlot = adUnits.find(adunit => adunit.code === adSlotElementId);
-  const inventoryType = Object.keys(matchingAdSlot.mediaTypes)[0];
-  const getVideoContext = () => inventoryType.context ? inventoryType.context : 'video';
-  const bidders = [];
-
-  matchingAdSlot.bids.forEach(bid => {
-    bidders.push(bid.bidder);
-    bid.bidder === 'pubmatic' && (publisherId = bid.params.publisherId);
-    // // eslint-disable-next-line no-console
-    // console.log(bid.bidder);
-    // if (bid.bidder === 'pubmatic') {
-    //   // eslint-disable-next-line no-console
-    //   console.log(bid.params.publisherId);
-    //   publisherId = bid.params.publisherId;
-    // }
-  });
-
-  adData.inventoryType = inventoryType === 'video' ? getVideoContext() : inventoryType;
-  adData.bidders = bidders.join(',');
-  adData.publisherId = publisherId;
-
-  return adData;
-};
-
-const getSource = () => {
-  const performanceResources = window?.performance?.getEntriesByType('resource');
-  const translatorCall = performanceResources.find(perfResource => perfResource.name.includes('hbopenbid.pubmatic.com/translator'));
-  const queryParamsKeyVals = translatorCall.name.split('?')[1].split('&');
-  let source;
-  if (queryParamsKeyVals) {
-    queryParamsKeyVals.forEach(pair => {
-      const [key, value] = pair.split('=');
-      key === 'source' && (source = value);
-    });
-    return source;
-  }
-}
-
+const removeFromLocalStorage = key => window.localStorage.removeItem(key);
 export const getAndParseFromLocalStorage = key => JSON.parse(window.localStorage.getItem(key));
 export const setAndStringifyToLocalStorage = (key, object) => {
   try {
@@ -222,14 +177,11 @@ const incrementRenderCount = keyArr => {
       }
     } else {
       vsgObj = {
-        [key]: defaultInit(keyArr, index)
+        [key]: defaultInit(keyArr, index),
+        createdAt: Date.now()
       }
     }
   });
-
-  if (enableServerSideTracking) {
-    fireToServer(keyArr, '0'); // 0 (rendered), 1 (viewed) & 2 (dwelltime)
-  }
 };
 
 // this function increase viewed count based on slot, size and domain level.
@@ -239,10 +191,6 @@ const incrementViewCount = keyArr => {
       vsgObj[key].viewed = vsgObj[key].viewed + 1;
     }
   });
-
-  if (enableServerSideTracking) {
-    fireToServer(keyArr, '1'); // 0 (rendered), 1 (viewed) & 2 (dwelltime)
-  }
 };
 
 // this function adds totalViewtime based on slot, size and domain level.
@@ -256,9 +204,6 @@ const incrementTotalViewTime = (keyArr, inViewPercentage, setToLocalStorageCb) =
         if (lastViewStarted) {
           updateTotalViewTime(diff, currentTime, lastViewStarted, key);
           delete vsgObj[key].lastViewStarted;
-          if (enableServerSideTracking && key === keyArr[0]) { // only fire once per ad unit that goes out of viewport
-            fireToServer(keyArr, '2'); // 0 (rendered), 1 (viewed) & 2 (dwelltime)
-          }
         }
       } else {
         if (lastViewStarted) {
@@ -405,14 +350,44 @@ const initConfigDefaults = config => {
     typeof config.viewabilityScoreGeneration?.targeting?.bucket === 'boolean'
       ? config.viewabilityScoreGeneration?.targeting?.bucket
       : true;
-
-  config[MODULE_NAME].serverSideTracking =
-    typeof config[MODULE_NAME].serverSideTracking === 'boolean'
-      ? config[MODULE_NAME].serverSideTracking
-      : true;
-
-  enableServerSideTracking = config[MODULE_NAME].serverSideTracking;
 };
+
+export const okToFireToServer = (config, lsObj) => {
+  let result = false;
+
+  // check if server side tracking is disabled in the config
+  if (config?.serverSideTracking?.enabled === false) {
+    return result;
+  }
+
+  // check if viewability data has expired in local storage based on config settings
+  if (lsObj.createdAt) {
+    const vsgCreatedAtTime = lsObj.createdAt;
+    const currentTime = Date.now();
+    const differenceInMilliseconds = Math.round(currentTime - vsgCreatedAtTime);
+    const timeElapsed = msToTime(differenceInMilliseconds);
+    const metric = config?.serverSideTracking?.frequency ? config.serverSideTracking.frequency[0] : DEFAULT_SERVER_CALL_FREQUENCY.metric;
+    const duration = config?.serverSideTracking?.frequency ? config.serverSideTracking.frequency[1] : DEFAULT_SERVER_CALL_FREQUENCY.duration;
+
+    if (Number(timeElapsed[metric]) > duration) {
+      result = true;
+    }
+  }
+
+  // check if viewability data has exceeded the max size of 7000 characters
+  if (JSON.stringify(lsObj).length > 7000) {
+    result = true;
+  }
+
+  return result;
+};
+
+const msToTime = (ms) => {
+  let minutes = (ms / (1000 * 60)).toFixed(3);
+  let hours = (ms / (1000 * 60 * 60)).toFixed(3);
+  let days = (ms / (1000 * 60 * 60 * 24)).toFixed(3);
+  return { days, hours, minutes };
+}
 
 export let init = (setGptCb, setTargetingCb) => {
   config.getConfig(MODULE_NAME, (globalConfig) => {
@@ -431,6 +406,14 @@ export let init = (setGptCb, setTargetingCb) => {
     }
 
     adapterManager.makeBidRequests.after(makeBidRequestsHook);
+
+    events.on(CONSTANTS.EVENTS.AUCTION_END, auctionData => {
+      if (okToFireToServer(globalConfig[MODULE_NAME], vsgObj)) {
+        delete vsgObj.createdAt;
+        setAndStringifyToLocalStorage('viewability-data', vsgObj);
+        fireToServer(auctionData);
+      }
+    });
   });
 }
 

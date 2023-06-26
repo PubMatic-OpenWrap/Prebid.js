@@ -8,7 +8,9 @@ Maintainer: jason.quaccia@pubmatic.com
 
 # Description
 
-- When included and enabled on a publisher page, this module will initialize and wait for the Prebid.js `AUCTION_INIT` event to occur, once it does an integration with the GPT API will be made by setting up event listeners for the following GPT events: `slotRenderEnded`, `impressionViewable`, and `slotVisibilityChanged`
+## Client-Side Viewability Data Collection
+
+- When included and enabled on a publisher page, this module will initialize and wait for the Prebid.js `AUCTION_INIT` event to occur, once it does an integration with the GPT API will be made by setting up event listeners for the following GPT events: `slotRenderEnded`, `slotVisibilityChanged` and `impressionViewable`
   - Additionally, a hook to the Prebid.js `makeBidRequests` function will be created and get invoked immediately after the Prebid `makeBidRequests` function gets invoked
 - As the web page loads, the `slotRenderEnded` event will be emitted as an ad slot is rendered regardless of if it is viewable within the browser viewport or not
 - `localStorage` is then referenced to see if an entry for the newly rendered ad slot exists yet or not
@@ -26,11 +28,11 @@ Maintainer: jason.quaccia@pubmatic.com
   - Ad size level viewability data relative to the size or sizes included in the specific ad unit above
   - Domain level viewability data specific to all ad units a user has interacted with on the domain the ad unit would/could be served on
 
-# localStorage
+> **localStorage**
 
 All viewability data is stored and persisted in browser via `localStorage`.
 
-#### Viewability Data Object
+> **Viewability Data Object**
 
 | Parameter       | Type   | Description                                                                                                                                                                                                                                      |
 | --------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -45,7 +47,7 @@ All viewability data is stored and persisted in browser via `localStorage`.
 | updatedAt       | number | Numeric timestamp indicating the time when the ad slot entry was last updated                                                                                                                                                                    |
 | slot			  | array of strings | Keeps track of creative sizes rendered in respective slots
 
-#### Example
+Example:
 
 ```
 'viewability-data': {
@@ -94,7 +96,7 @@ All viewability data is stored and persisted in browser via `localStorage`.
 }
 ```
 
-# Translator
+> **Translator**
 
 Viewability data gets passed to the translator endpoint in the following format:
 
@@ -143,7 +145,79 @@ Viewability data gets passed to the translator endpoint in the following format:
 }
 ```
 
-# Setup
+## Server-Side Viewability Data Collection
+
+Viewability data from the client-side is sent to a PubMatic endpoint. By default server-side data collection is enabled (though it can be optionally disabled).
+
+> **Request**
+
+The request made from the client-side to the server-side is a POST request passing a JSON payload.
+
+> **Lifecycle**
+
+1. Viewability data is collected on the client-side and temporarily stored within Local Storage in the browser.  Ad unit data is collected on the domain, ad unit name and ad unit size levels (capturing details about if an adunit was rendered, viewed, when the entry was created at and conditionally the total amount of time viewed along with the last time it was viewed.
+2. Viewability data is sent to a server-side endpoint via a POST request with a JSON payload when the criteria for at least 1 of the following scenarios are met:
+    - A time duration of 6 hours have passed since the last time data was sent to the server-side (The time duration will be made configurable, but will default to every 6 hours).
+    - The size of the minified viewability data present in Local Storage exceeds 7000 characters (7000 was decided on because it appears to be the approximate average character count for payloads sent to the logger endpoint as well).
+3. Viewability data in Local Storage is cleared completely from the client and the lifecycle re-starts again.
+
+> **Schema**
+
+Notes on a few of the schema fields:
+
+`totalViewTime` and `lastViewStarted`:
+- These fields may not always be present at the ad unit or ad size level.  They are dependent on how a user interacts on a Publisher page, for example if the user viewed a particular ad slot more than once or not.
+
+`createdAt`:
+- The value of this field is in milliseconds and is generated via the JavaScript Date.now() method.  Specifically.."The Date.now() static method returns the number of milliseconds elapsed since the epoch, which is defined as the midnight at the beginning of January 1, 1970, UTC." ← Taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now
+
+> **Payload**
+
+Example:
+
+```
+{
+    "iid":"UniqueImpressionId",
+    "pubid":5890,
+    "adDomain": "https://pubmatic.com",
+    "adUnits": [
+            {
+                "adUnit": "some-ad-element-id-1",
+                "rendered": 15,
+                "viewed": 15,
+                "createdAt": 1683149760678,
+                "lastViewStarted": 1686698106191,
+                "totalViewTime": 3367020
+            },
+            {
+                "adUnit": "some-ad-element-id-2",
+                "rendered": 1,
+                "viewed": 1,
+                "createdAt": 1686594034628
+            }
+    ],
+    "adSizes": [
+       {
+            "adSize": "300x250",
+            "rendered": 16,
+            "viewed": 16,
+            "slot": [ "some-ad-element-id-1","some-ad-element-id-3"],
+            "createdAt": 1683149760678,
+            "lastViewStarted": 1686698106191,
+            "totalViewTime": 3367020
+        },
+        {
+            "adSize": "728x90",
+            "rendered": 1,
+            "viewed": 1,
+            "slot": [ "some-ad-element-id-2"],
+            "createdAt": 1686594034628
+        }
+    ]
+}
+```
+
+# Configuration/Setup
 
 ```
 pbjs.setConfig({
@@ -156,22 +230,28 @@ pbjs.setConfig({
 			bucket: true,
 			bucketKey:  'bucketScore',
 			bucketCategories: ['VERY LOW', 'LOW', 'MEDIUM', 'HIGH', 'VERY HIGH']
-		}
+		},
+    serverSideTracking: {
+      enabled: true,
+      frequency: ['hours', 5]
+    }
 	},
 });
 ```
 
-| Parameter                  | Type     | Description                                                                                                                                                                                                                                                                                              | Default                     |
-| -------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| enabled                    | boolean  | Determine whether the entire viewabilityScoreGeneration module is on or off.                                                                                                                                                                                                                             | false                       |
-| targeting.enabled          | boolean  | Turns on/off feature support to add additional targeting key/value pairings to be sent to GAM. When enabled the `bidViewabilityScore` and `bidViewabilityBucket` K/V's will be sent (providing custom key names weren't designated via the `targeting.scoreKey` or `targeting.bucketKey` config options. | false                       |
-| targeting.score            | boolean  | Ability to optionally pass/not pass the viewability score key/value pairing to GAM.                                                                                                                                                                                                                      | true                        |
-| targeting.scoreKey         | string   | Optional custom key name to be used when sending the viewabiilty score to GAM.                                                                                                                                                                                                                           | `bidViewabilityScore`       |
-| targeting.bucket           | string   | Ability to optionally pass/not pass the viewability bucket key/value pairing to GAM.                                                                                                                                                                                                                     | true                        |
-| targeting.bucketKey        | string   | Optional custom key name to be used when sending the viewabiilty bucket to GAM.                                                                                                                                                                                                                          | `bidViewabilityBucket`      |
-| targeting.bucketCategories | string[] | Select the bucket category names you would like to map viewability scores to (must be in ascending order).                                                                                                                                                                                               | `['LOW', 'MEDIUM', 'HIGH']` |
+| Parameter | Type | Description | Default
+| -| - | - | -
+| enabled | boolean | Determine whether the entire viewabilityScoreGeneration module is on or off. | false
+| targeting.enabled | boolean | Turns on/off feature support to add additional targeting key/value pairings to be sent to GAM. When enabled the `bidViewabilityScore` and `bidViewabilityBucket` K/V's will be sent (providing custom key names weren't designated via the `targeting.scoreKey` or `targeting.bucketKey` config options. | false
+| targeting.score | boolean | Ability to optionally pass/not pass the viewability score key/value pairing to GAM. | true
+| targeting.scoreKey | string | Optional custom key name to be used when sending the viewabiilty score to GAM. | `bidViewabilityScore`
+| targeting.bucket | string | Ability to optionally pass/not pass the viewability bucket key/value pairing to GAM. | true
+| targeting.bucketKey | string | Optional custom key name to be used when sending the viewabiilty bucket to GAM. | `bidViewabilityBucket`
+| targeting.bucketCategories | string[] | Select the bucket category names you would like to map viewability scores to (must be in ascending order). | `['LOW', 'MEDIUM', 'HIGH']`
+| serverSideTracking.enabled | boolean | Turns on/off the ability to track viewability data on the server-side. | true
+| serverSideTracking.frequency | array | Select the duration frequency to which server-side calls will be made. This value is set in the following format: `[unit of time<string>, duration<number>]`.  For example, to call the server-side endpoint once every hour the following value would be used: `['hours', 1]`.  `unit of time` can be set to `minutes`, `hours` or `days`.  `duration` can be set to any number. | `['hours', 6]`
 
-# Targeting:
+## Targeting:
 
 When enabled, the Prebid JS `AUCTION_END` event is listened for and once emitted, the following Key/Value pairings will be configured and passed with selected bids with GAM requests:
 
@@ -191,7 +271,7 @@ When enabled, the Prebid JS `AUCTION_END` event is listened for and once emitted
   - 'VERY HIGH' = 0.81 - 1
 - Result `bidViewabilityScore=LOW`
 
-# Dynamic Floors:
+## Dynamic Floors:
 
 Set dynamic floors based on viewability buckets with custom matchers.
 
