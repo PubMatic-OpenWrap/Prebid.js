@@ -11,6 +11,8 @@ import {
   setStoredValue,
   setSubmoduleRegistry,
   syncDelay,
+  getRawPDString,
+  updateModuleParams
 } from 'modules/userId/index.js';
 import {createEidsArray} from 'modules/userId/eids.js';
 import {config} from 'src/config.js';
