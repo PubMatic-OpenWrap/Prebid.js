@@ -465,7 +465,8 @@ describe('viewabilityScoreGeneration', function() {
           }
         ],
         'iid': '82eb2c02-580e-45a1-9b74-afeea9d76d1d',
-        'pubid': '156009'
+        'pubid': '156009',
+        'recordTs': 1687810796444,
       };
 
       const result = viewabilityScoreGeneration.generatePayload(auctionData, JSON.parse(localStorageObj));

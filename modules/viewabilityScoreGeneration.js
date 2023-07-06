@@ -39,6 +39,7 @@ export const generatePayload = (auctionData, lsObj) => {
 
   return {
     iid: auctionData.auctionId,
+    recordTs: Date.now(),
     pubid: getPubId(auctionData),
     adDomain: window.location.hostname,
     adUnits: adUnitKeys.map(adUnitKey => {
