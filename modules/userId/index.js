@@ -135,7 +135,7 @@ import {find, includes} from '../../src/polyfill.js';
 import {config} from '../../src/config.js';
 import * as events from '../../src/events.js';
 import {getGlobal} from '../../src/prebidGlobal.js';
-import adapterManager, {gdprDataHandler} from '../../src/adapterManager.js';
+import adapterManager, {gdprDataHandler, gppDataHandler} from '../../src/adapterManager.js';
 import CONSTANTS from '../../src/constants.json';
 import {module, ready as hooksReady} from '../../src/hook.js';
 import {buildEidPermissions, createEidsArray, USER_IDS_CONFIG} from './eids.js';
@@ -206,6 +206,9 @@ let initializedSubmodulesUpdated = false;
 
 /** @type {SubmoduleConfig[]} */
 let configRegistry = [];
+
+/** @type {Object} */
+let idPriority = {};
 
 /** @type {Submodule[]} */
 let submoduleRegistry = [];
@@ -424,7 +427,7 @@ function storedConsentDataMatchesConsentData(storedConsentData, consentData) {
  * @param {SubmoduleContainer[]} submodules
  * @param {function} cb - callback for after processing is done.
  */
-function processSubmoduleCallbacks(submodules, cb) {
+function processSubmoduleCallbacks(submodules, cb, allModules) {
   cb = uidMetrics().fork().startTiming('userId.callbacks.total').stopBefore(cb);
   const done = delayExecution(() => {
     clearTimeout(timeoutID);
@@ -440,7 +443,7 @@ function processSubmoduleCallbacks(submodules, cb) {
         }
         // cache decoded value (this is copied to every adUnit bid)
         submodule.idObj = submodule.submodule.decode(idObj, submodule.config);
-        updatePPID(submodule.idObj);
+        updatePPID(getCombinedSubmoduleIds(allModules));
       } else {
         logInfo(`${MODULE_NAME}: ${submodule.submodule.name} - request id responded with an empty value`);
       }
@@ -465,14 +468,7 @@ function getCombinedSubmoduleIds(submodules) {
   if (!Array.isArray(submodules) || !submodules.length) {
     return {};
   }
-  const combinedSubmoduleIds = submodules.filter(i => isPlainObject(i.idObj) && Object.keys(i.idObj).length).reduce((carry, i) => {
-    Object.keys(i.idObj).forEach(key => {
-      carry[key] = i.idObj[key];
-    });
-    return carry;
-  }, {});
-
-  return combinedSubmoduleIds;
+  return getPrioritizedCombinedSubmoduleIds(submodules)
 }
 
 /**
@@ -484,9 +480,14 @@ function getSubmoduleId(submodules, sourceName) {
   if (!Array.isArray(submodules) || !submodules.length) {
     return {};
   }
-  const submodule = submodules.filter(sub => isPlainObject(sub.idObj) &&
-    Object.keys(sub.idObj).length && USER_IDS_CONFIG[Object.keys(sub.idObj)[0]]?.source === sourceName);
-  return !isEmpty(submodule) ? submodule[0].idObj : [];
+
+  const prioritisedIds = getPrioritizedCombinedSubmoduleIds(submodules);
+  const eligibleIdName = Object.keys(prioritisedIds).find(idName => {
+    const config = USER_IDS_CONFIG[idName];
+    return config?.source === sourceName || (isFn(config?.getSource) && config.getSource() === sourceName);
+  });
+
+  return eligibleIdName ? {[eligibleIdName]: prioritisedIds[eligibleIdName]} : [];
 }
 
 /**
@@ -498,15 +499,38 @@ function getCombinedSubmoduleIdsForBidder(submodules, bidder) {
   if (!Array.isArray(submodules) || !submodules.length || !bidder) {
     return {};
   }
-  return submodules
+  const eligibleSubmodules = submodules
     .filter(i => !i.config.bidders || !isArray(i.config.bidders) || includes(i.config.bidders, bidder))
+
+  return getPrioritizedCombinedSubmoduleIds(eligibleSubmodules);
+}
+
+/**
+ * @param {SubmoduleContainer[]} submodules
+ */
+function getPrioritizedCombinedSubmoduleIds(submodules) {
+  const combinedIdStates = submodules
     .filter(i => isPlainObject(i.idObj) && Object.keys(i.idObj).length)
     .reduce((carry, i) => {
       Object.keys(i.idObj).forEach(key => {
-        carry[key] = i.idObj[key];
+        const maybeCurrentIdPriority = idPriority[key]?.indexOf(i.submodule.name);
+        const currentIdPriority = isNumber(maybeCurrentIdPriority) ? maybeCurrentIdPriority : -1;
+        const currentIdState = {priority: currentIdPriority, value: i.idObj[key]};
+        if (carry[key]) {
+          const winnerIdState = currentIdState.priority > carry[key].priority ? currentIdState : carry[key];
+          carry[key] = winnerIdState;
+        } else {
+          carry[key] = currentIdState;
+        }
       });
       return carry;
     }, {});
+
+  const result = {};
+  Object.keys(combinedIdStates).forEach(key => {
+    result[key] = combinedIdStates[key].value
+  });
+  return result;
 }
 
 /**
@@ -568,10 +592,13 @@ function idSystemInitializer({delay = GreedyPromise.timeout} = {}) {
   function timeGdpr() {
     return gdprDataHandler.promise.finally(initMetrics.startTiming('userId.init.gdpr'));
   }
+  function timeGpp() {
+    return gppDataHandler.promise.finally(initMetrics.startTiming('userId.init.gpp'))
+  }
 
   let done = cancelAndTry(
     GreedyPromise.all([hooksReady, startInit.promise])
-      .then(timeGdpr)
+      .then(() => GreedyPromise.all([timeGdpr(), timeGpp()]).then(([gdpr]) => gdpr))
       .then(checkRefs((consentData) => {
         initSubmodules(initModules, allModules, consentData);
       }))
@@ -579,7 +606,7 @@ function idSystemInitializer({delay = GreedyPromise.timeout} = {}) {
       .then(checkRefs(() => {
         const modWithCb = initModules.filter(item => isFn(item.callback));
         if (modWithCb.length) {
-          return new GreedyPromise((resolve) => processSubmoduleCallbacks(modWithCb, resolve));
+          return new GreedyPromise((resolve) => processSubmoduleCallbacks(modWithCb, resolve, initModules));
         }
       }))
   );
@@ -618,7 +645,7 @@ function idSystemInitializer({delay = GreedyPromise.timeout} = {}) {
               return sm.callback != null;
             });
             if (cbModules.length) {
-              return new GreedyPromise((resolve) => processSubmoduleCallbacks(cbModules, resolve));
+              return new GreedyPromise((resolve) => processSubmoduleCallbacks(cbModules, resolve, initModules));
             }
           }))
       );
@@ -988,7 +1015,7 @@ function generateEmailHash(email, emailHash) {
   }
 }
 
-function populateSubmoduleId(submodule, consentData, storedConsentData, forceRefresh) {
+function populateSubmoduleId(submodule, consentData, storedConsentData, forceRefresh, allSubmodules) {
   // There are two submodule configuration types to handle: storage or value
   // 1. storage: retrieve user id data from cookie/html storage or with the submodule's getId method
   // 2. value: pass directly to bids
@@ -1037,7 +1064,7 @@ function populateSubmoduleId(submodule, consentData, storedConsentData, forceRef
       if (response.id) { submodule.idObj = submodule.submodule.decode(response.id, submodule.config); }
     }
   }
-  updatePPID(submodule.idObj);
+  updatePPID(getCombinedSubmoduleIds(allSubmodules));
 }
 
 function updatePPID(userIds = getUserIds()) {
@@ -1084,7 +1111,7 @@ function initSubmodules(dest, submodules, consentData, forceRefresh = false) {
     const initialized = submodules.reduce((carry, submodule) => {
       return submoduleMetrics(submodule.submodule.name).measureTime('init', () => {
         try {
-          populateSubmoduleId(submodule, consentData, storedConsentData, forceRefresh);
+          populateSubmoduleId(submodule, consentData, storedConsentData, forceRefresh, submodules);
           carry.push(submodule);
         } catch (e) {
           logError(`Error in userID module '${submodule.submodule.name}':`, e);
@@ -1218,6 +1245,25 @@ function updateSubmodules() {
   }
 }
 
+/**
+ * This function will update the idPriority according to the provided configuration
+ * @param {Object} idPriorityConfig
+ * @param {SubmoduleContainer[]} submodules
+ */
+function updateIdPriority(idPriorityConfig, submodules) {
+  if (idPriorityConfig) {
+    const result = {};
+    const aliasToName = new Map(submodules.map(s => s.submodule.aliasName ? [s.submodule.aliasName, s.submodule.name] : []));
+    Object.keys(idPriorityConfig).forEach(key => {
+      const priority = isArray(idPriorityConfig[key]) ? [...idPriorityConfig[key]].reverse() : []
+      result[key] = priority.map(s => aliasToName.has(s) ? aliasToName.get(s) : s);
+    });
+    idPriority = result;
+  } else {
+    idPriority = {};
+  }
+}
+
 export function requestDataDeletion(next, ...args) {
   logInfo('UserID: received data deletion request; deleting all stored IDs...')
   submodules.forEach(submodule => {
@@ -1277,13 +1323,16 @@ export function init(config, {delay = GreedyPromise.timeout} = {}) {
   configListener = config.getConfig('userSync', conf => {
     // Note: support for 'usersync' was dropped as part of Prebid.js 4.0
     const userSync = conf.userSync;
-    ppidSource = userSync.ppid;
-    if (userSync && userSync.userIds) {
-      configRegistry = userSync.userIds;
-      syncDelay = isNumber(userSync.syncDelay) ? userSync.syncDelay : DEFAULT_SYNC_DELAY;
-      auctionDelay = isNumber(userSync.auctionDelay) ? userSync.auctionDelay : NO_AUCTION_DELAY;
-      updateSubmodules();
-      initIdSystem({ready: true});
+    if (userSync) {
+      ppidSource = userSync.ppid;
+      if (userSync.userIds) {
+        configRegistry = userSync.userIds;
+        syncDelay = isNumber(userSync.syncDelay) ? userSync.syncDelay : DEFAULT_SYNC_DELAY;
+        auctionDelay = isNumber(userSync.auctionDelay) ? userSync.auctionDelay : NO_AUCTION_DELAY;
+        updateSubmodules();
+        updateIdPriority(userSync.idPriority, submodules);
+        initIdSystem({ready: true});
+      }
     }
   });
 
