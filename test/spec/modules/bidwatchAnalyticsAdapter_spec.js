@@ -318,7 +318,6 @@ describe('BidWatch Analytics', function () {
       expect(message.auctionEnd[0].bidderRequests[0]).to.have.property('gdprConsent');
       expect(message.auctionEnd[0].bidderRequests[0].gdprConsent).not.to.have.property('vendorData');
     });
-
     it('test bidWon', function() {
       adapterManager.registerAnalyticsAdapter({
         code: 'bidwatch',

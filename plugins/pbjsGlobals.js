@@ -26,7 +26,7 @@ function getNpmVersion(version) {
 }
 
 module.exports = function(api, options) {
-  const pbGlobal = options.globalVarName || prebid.globalVarName;
+  const pbGlobal = prebid.profile === 'IH' ? prebid.ihGlobalVarName : prebid.globalVarName; // options.globalVarName || prebid.globalVarName;
   const defineGlobal = typeof (options.defineGlobal) !== 'undefined' ? options.defineGlobal : prebid.defineGlobal;
   const features = featureMap(options.disableFeatures);
   let replace = {

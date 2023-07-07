@@ -1235,7 +1235,6 @@ function buildIXDiag(validBidRequests) {
 
   return ixdiag;
 }
-
 /**
  *
  * @param  {array}   bannerSizeList list of banner sizes

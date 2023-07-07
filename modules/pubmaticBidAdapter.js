@@ -1,4 +1,4 @@
-import { getBidRequest, logWarn, isBoolean, isStr, isArray, inIframe, mergeDeep, deepAccess, isNumber, deepSetValue, logInfo, logError, deepClone, convertTypes, uniques, isPlainObject, isInteger } from '../src/utils.js';
+import { getBidRequest, logWarn, isBoolean, isStr, isArray, inIframe, mergeDeep, deepAccess, isNumber, deepSetValue, logInfo, logError, deepClone, convertTypes, uniques, isPlainObject, isInteger, parseQueryStringParameters } from '../src/utils.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
@@ -8,11 +8,12 @@ import CONSTANTS from '../src/constants.json';
 
 const BIDDER_CODE = 'pubmatic';
 const LOG_WARN_PREFIX = 'PubMatic: ';
-const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator?source=prebid-client';
+const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator';
 const USER_SYNC_URL_IFRAME = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=';
 const USER_SYNC_URL_IMAGE = 'https://image8.pubmatic.com/AdServer/ImgSync?p=';
 const DEFAULT_CURRENCY = 'USD';
 const AUCTION_TYPE = 1;
+const PUBMATIC_ALIAS = 'pubmatic2';
 const UNDEFINED = undefined;
 const DEFAULT_WIDTH = 0;
 const DEFAULT_HEIGHT = 0;
@@ -135,6 +136,19 @@ let isInvalidNativeRequest = false;
 let biddersList = ['pubmatic'];
 const allBiddersList = ['all'];
 
+const vsgDomain = window.location.hostname;
+const getAndParseFromLocalStorage = key => JSON.parse(window.localStorage.getItem(key));
+let vsgObj = { [vsgDomain]: '' };
+
+const removeViewTimeForZeroValue = obj => {
+  // Deleteing this field as it is only required to calculate totalViewtime and no need to send it to translator.
+  delete obj.lastViewStarted;
+  // Deleteing totalTimeView incase value is less than 1 sec.
+  if (obj.totalViewTime == 0) {
+    delete obj.totalViewTime;
+  }
+};
+
 export function _getDomainFromURL(url) {
   let anchor = document.createElement('a');
   anchor.href = url;
@@ -192,14 +206,16 @@ function _parseAdSlot(bid) {
   bid.params.adUnit = splits[0];
   if (splits.length > 1) {
     // i.e size is specified in adslot, so consider that and ignore sizes array
-    splits = splits[1].split('x');
+    splits = splits.length == 2 ? splits[1].split('x') : splits.length == 3 ? splits[2].split('x') : [];
     if (splits.length != 2) {
       logWarn(LOG_WARN_PREFIX + 'AdSlot Error: adSlot not in required format');
       return;
     }
     bid.params.width = parseInt(splits[0], 10);
     bid.params.height = parseInt(splits[1], 10);
-  } else if (bid.hasOwnProperty('mediaTypes') &&
+  }
+  // Case : if Size is present in ad slot as well as in mediaTypes then ???
+  if (bid.hasOwnProperty('mediaTypes') &&
          bid.mediaTypes.hasOwnProperty(BANNER) &&
           bid.mediaTypes.banner.hasOwnProperty('sizes')) {
     var i = 0;
@@ -213,9 +229,13 @@ function _parseAdSlot(bid) {
     if (bid.mediaTypes.banner.sizes.length >= 1) {
       // set the first size in sizes array in bid.params.width and bid.params.height. These will be sent as primary size.
       // The rest of the sizes will be sent in format array.
-      bid.params.width = bid.mediaTypes.banner.sizes[0][0];
-      bid.params.height = bid.mediaTypes.banner.sizes[0][1];
-      bid.mediaTypes.banner.sizes = bid.mediaTypes.banner.sizes.splice(1, bid.mediaTypes.banner.sizes.length - 1);
+      if (!bid.params.width && !bid.params.height) {
+        bid.params.width = bid.mediaTypes.banner.sizes[0][0];
+        bid.params.height = bid.mediaTypes.banner.sizes[0][1];
+        bid.mediaTypes.banner.sizes = bid.mediaTypes.banner.sizes.splice(1, bid.mediaTypes.banner.sizes.length - 1);
+      } else if (bid.params.width == bid.mediaTypes.banner.sizes[0][0] && bid.params.height == bid.mediaTypes.banner.sizes[0][1]) {
+        bid.mediaTypes.banner.sizes = bid.mediaTypes.banner.sizes.splice(1, bid.mediaTypes.banner.sizes.length - 1);
+      }
     }
   }
 }
@@ -553,12 +573,21 @@ function _createVideoRequest(bid) {
       }
     }
     // read playersize and assign to h and w.
-    if (isArray(bid.mediaTypes.video.playerSize[0])) {
-      videoObj.w = parseInt(bid.mediaTypes.video.playerSize[0][0], 10);
-      videoObj.h = parseInt(bid.mediaTypes.video.playerSize[0][1], 10);
-    } else if (isNumber(bid.mediaTypes.video.playerSize[0])) {
-      videoObj.w = parseInt(bid.mediaTypes.video.playerSize[0], 10);
-      videoObj.h = parseInt(bid.mediaTypes.video.playerSize[1], 10);
+    if (bid.mediaTypes.video.playerSize) {
+      if (isArray(bid.mediaTypes.video.playerSize[0])) {
+        videoObj.w = parseInt(bid.mediaTypes.video.playerSize[0][0], 10);
+        videoObj.h = parseInt(bid.mediaTypes.video.playerSize[0][1], 10);
+      } else if (isNumber(bid.mediaTypes.video.playerSize[0])) {
+        videoObj.w = parseInt(bid.mediaTypes.video.playerSize[0], 10);
+        videoObj.h = parseInt(bid.mediaTypes.video.playerSize[1], 10);
+      }
+    } else if (bid.mediaTypes.video.w && bid.mediaTypes.video.h) {
+      videoObj.w = parseInt(bid.mediaTypes.video.w, 10);
+      videoObj.h = parseInt(bid.mediaTypes.video.h, 10);
+    } else {
+      videoObj = UNDEFINED;
+      logWarn(LOG_WARN_PREFIX + 'Error: Video size params(playersize or w&h) missing for adunit: ' + bid.params.adUnit + ' with mediaType set as video. Ignoring video impression in the adunit.');
+      return videoObj;
     }
   } else {
     videoObj = UNDEFINED;
@@ -584,6 +613,12 @@ function _addPMPDealsInImpression(impObj, bid) {
     } else {
       logWarn(LOG_WARN_PREFIX + 'Error: bid.params.deals should be an array of strings.');
     }
+  }
+}
+
+function _addBidViewabilityData(impObj, bid) {
+  if (bid.bidViewability) {
+    impObj.ext.bidViewability = bid.bidViewability;
   }
 }
 
@@ -642,7 +677,7 @@ function _createImpressionObject(bid, bidderRequest) {
 
   impObj = {
     id: bid.bidId,
-    tagid: bid.params.adUnit || undefined,
+    tagid: bid.params.hashedKey || bid.params.adUnit || undefined,
     bidfloor: _parseSlotParam('kadfloor', bid.params.kadfloor),
     secure: 1,
     ext: {
@@ -654,6 +689,8 @@ function _createImpressionObject(bid, bidderRequest) {
   _addPMPDealsInImpression(impObj, bid);
   _addDealCustomTargetings(impObj, bid);
   _addJWPlayerSegmentData(impObj, bid);
+  _addBidViewabilityData(impObj, bid);
+
   if (bid.hasOwnProperty('mediaTypes')) {
     for (mediaTypes in bid.mediaTypes) {
       switch (mediaTypes) {
@@ -674,6 +711,7 @@ function _createImpressionObject(bid, bidderRequest) {
             logWarn(LOG_WARN_PREFIX + 'Error: Error in Native adunit ' + bid.params.adUnit + '. Ignoring the adunit. Refer to ' + PREBID_NATIVE_HELP_LINK + ' for more details.');
             isInvalidNativeRequest = false;
           }
+          isInvalidNativeRequest = false;
           break;
         case FEATURES.VIDEO && VIDEO:
           videoObj = _createVideoRequest(bid);
@@ -695,10 +733,12 @@ function _createImpressionObject(bid, bidderRequest) {
     if (isArray(sizes) && sizes.length > 1) {
       sizes = sizes.splice(1, sizes.length - 1);
       sizes.forEach(size => {
-        format.push({
-          w: size[0],
-          h: size[1]
-        });
+        if (isArray(size) && size.length == 2) {
+          format.push({
+            w: size[0],
+            h: size[1]
+          });
+        };
       });
       bannerObj.format = format;
     }
@@ -1002,10 +1042,27 @@ export function prepareMetaObject(br, bid, seat) {
   }
 }
 
+/**
+ * returns, boolean value according to translator get request is enabled
+ * and random value should be less than or equal to testGroupPercentage
+ * @returns boolean
+ */
+function hasGetRequestEnabled() {
+  if (!(config.getConfig('translatorGetRequest.enabled') === true)) return false;
+  const randomValue100 = Math.ceil(Math.random() * 100);
+  const testGroupPercentage = config.getConfig('translatorGetRequest.testGroupPercentage') || 0;
+  return randomValue100 <= testGroupPercentage;
+}
+
+function getUniqueNumber(rangeEnd) {
+  return Math.floor(Math.random() * rangeEnd) + 1;
+}
+
 export const spec = {
   code: BIDDER_CODE,
   gvlid: 76,
   supportedMediaTypes: [BANNER, VIDEO, NATIVE],
+  aliases: [PUBMATIC_ALIAS],
   /**
   * Determines whether or not the given bid request is valid. Valid bid request must have placementId and hbid
   *
@@ -1147,6 +1204,14 @@ export const spec = {
       payload.ext.marketplace.allowedbidders = biddersList.filter(uniques);
     }
 
+    if (bid.bidViewability) {
+      vsgObj = getAndParseFromLocalStorage('viewability-data');
+      removeViewTimeForZeroValue(vsgObj[vsgDomain]);
+      payload.ext.bidViewability = {
+        adDomain: vsgObj[vsgDomain]
+      }
+    }
+
     payload.user.gender = (conf.gender ? conf.gender.trim() : UNDEFINED);
     payload.user.geo = {};
     // TODO: fix lat and long to only come from request object, not params
@@ -1204,8 +1269,10 @@ export const spec = {
     // First Party Data
     const commonFpd = (bidderRequest && bidderRequest.ortb2) || {};
     if (commonFpd.site) {
-      const { page, domain, ref } = payload.site;
+      // Saving page, domain & ref property from payload before getting replaced by fpd modules.
+      const {page, domain, ref} = payload.site;
       mergeDeep(payload, {site: commonFpd.site});
+      // Replace original values for page, domain & ref
       payload.site.page = page;
       payload.site.domain = domain;
       payload.site.ref = ref;
@@ -1219,6 +1286,11 @@ export const spec = {
     // check if fpd ortb2 contains device property with sua object
     if (commonFpd.device?.sua) {
       payload.device.sua = commonFpd.device?.sua;
+    }
+
+    // check if fpd ortb2 contains device property with sua object
+    if (commonFpd.device?.sua) {
+      payload.device.sua = commonFpd.device.sua;
     }
 
     if (commonFpd.ext?.prebid?.bidderparams?.[bidderRequest.bidderCode]?.acat) {
@@ -1256,12 +1328,49 @@ export const spec = {
       delete payload.site;
     }
 
-    return {
+    const correlator = getUniqueNumber(1000);
+    let url = ENDPOINT + '?source=ow-client&correlator=' + correlator;
+
+    let serverRequest = {
       method: 'POST',
-      url: ENDPOINT,
+      url: url,
       data: JSON.stringify(payload),
       bidderRequest: bidderRequest
     };
+
+    // Allow translator request to execute it as GET Methoid if flag is set.
+    if (hasGetRequestEnabled()) {
+      // For Auction End Handler
+      if (bidderRequest) {
+        bidderRequest = bidderRequest || {};
+        bidderRequest.nwMonitor = {};
+        bidderRequest.nwMonitor.reqMethod = 'POST';
+        bidderRequest.nwMonitor.correlator = correlator;
+        bidderRequest.nwMonitor.requestUrlPayloadLength = url.length + JSON.stringify(payload).length;
+        // For Timeout handler
+        if (bidderRequest?.bids?.length && isArray(bidderRequest?.bids)) {
+          bidderRequest.bids.forEach(bid => bid.correlator = correlator);
+        }
+      }
+
+      const maxUrlLength = config.getConfig('translatorGetRequest.maxUrlLength') || 63000;
+      const configuredEndPoint = config.getConfig('translatorGetRequest.endPoint') || ENDPOINT;
+      const urlEncodedPayloadStr = parseQueryStringParameters({
+        'source': 'ow-client', 'payload': JSON.stringify(payload), 'correlator': correlator});
+      if ((configuredEndPoint + '?' + urlEncodedPayloadStr)?.length <= maxUrlLength) {
+        serverRequest = {
+          method: 'GET',
+          url: configuredEndPoint,
+          data: urlEncodedPayloadStr,
+          bidderRequest: bidderRequest,
+          payloadStr: JSON.stringify(payload)
+        };
+        bidderRequest.nwMonitor.reqMethod = 'GET';
+        bidderRequest.nwMonitor.requestUrlPayloadLength = configuredEndPoint.length + '?'.length + urlEncodedPayloadStr.length;
+      }
+    }
+
+    return serverRequest;
   },
 
   /**
@@ -1271,12 +1380,16 @@ export const spec = {
    * @return {Bid[]} An array of bids which were nested inside the server.
    */
   interpretResponse: (response, request) => {
-    const bidResponses = [];
+    var bidResponses = [];
     var respCur = DEFAULT_CURRENCY;
+    // In case of Translator GET request, will copy the actual json data from payloadStr to data.
+    if (request?.payloadStr) request.data = request.payloadStr;
     let parsedRequest = JSON.parse(request.data);
     let parsedReferrer = parsedRequest.site && parsedRequest.site.ref ? parsedRequest.site.ref : '';
     try {
+      let requestData = JSON.parse(request.data);
       if (response.body && response.body.seatbid && isArray(response.body.seatbid)) {
+        bidResponses = [];
         // Supporting multiple bid responses for same adSize
         respCur = response.body.cur || respCur;
         response.body.seatbid.forEach(seatbidder => {
@@ -1288,6 +1401,7 @@ export const spec = {
                 cpm: parseFloat((bid.price || 0).toFixed(2)),
                 width: bid.w,
                 height: bid.h,
+                sspID: bid.id || '',
                 creativeId: bid.crid || bid.id,
                 dealId: bid.dealid,
                 currency: respCur,
@@ -1320,11 +1434,19 @@ export const spec = {
                   }
                 });
               }
-              if (bid.ext && bid.ext.deal_channel) {
+              if (newBid['dealId']) {
+                newBid['dealChannel'] = 'PMP';
+              }
+              if (newBid['dealId'] && bid.ext && bid.ext.deal_channel) {
                 newBid['dealChannel'] = dealChannelValues[bid.ext.deal_channel] || null;
               }
-
               prepareMetaObject(newBid, bid, seatbidder.seat);
+
+              // START of Experimental change
+              if (response.body.ext) {
+                newBid['ext'] = response.body.ext;
+              }
+              // END of Experimental change
 
               // adserverTargeting
               if (seatbidder.ext && seatbidder.ext.buyid) {
@@ -1341,6 +1463,31 @@ export const spec = {
 
               bidResponses.push(newBid);
             });
+        });
+      }
+      // adding zero bid for every no-bid
+      if (requestData && requestData.imp && requestData.imp.length > 0) {
+        let requestIds = requestData.imp.map(reqData => reqData.id);
+        let uniqueImpIds = bidResponses.map(bid => bid.requestId)
+          .filter((value, index, self) => self.indexOf(value) === index);
+        let nonBidIds = requestIds.filter(x => !uniqueImpIds.includes(x));
+        nonBidIds.forEach(function(nonBidId) {
+          requestData.imp.forEach(function (impData) {
+            if (impData.id === nonBidId) {
+              bidResponses.push({
+                requestId: impData.id,
+                width: 0,
+                height: 0,
+                ttl: 300,
+                ad: '',
+                creativeId: 0,
+                netRevenue: NET_REVENUE,
+                cpm: 0,
+                currency: respCur,
+                referrer: parsedReferrer
+              });
+            }
+          });
         });
       }
     } catch (error) {
