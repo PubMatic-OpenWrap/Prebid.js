@@ -117,6 +117,7 @@ export function ortbConverter({
         req: Object.assign({bidRequests}, defaultContext, context),
         imp: {}
       }
+      ctx.req.impContext = ctx.imp;
       const imps = bidRequests.map(bidRequest => {
         const impContext = Object.assign({bidderRequest, reqContext: ctx.req}, defaultContext, context);
         const result = buildImp(bidRequest, impContext);
@@ -127,11 +128,11 @@ export function ortbConverter({
             delete bid?.kgpv;
           }
         }
-        if (resultCopy != null) {
-          if (resultCopy.hasOwnProperty('id')) {
-            impContext.bidRequest = bidRequest;
-            ctx.imp[resultCopy.id] = impContext;
-            return resultCopy;
+        if (result != null) {
+          if (result.hasOwnProperty('id')) {
+            Object.assign(impContext, {bidRequest, imp: result});
+            ctx.imp[result.id] = impContext;
+            return result;
           }
           logError('Converted ORTB imp does not specify an id, ignoring bid request', bidRequest, resultCopy);
         }
@@ -165,7 +166,7 @@ export function ortbConverter({
         throw new Error('ortbRequest passed to `fromORTB` must be the same object returned by `toORTB`')
       }
       function augmentContext(ctx, extraParams = {}) {
-        return Object.assign({ortbRequest: request}, extraParams, ctx);
+        return Object.assign(ctx, {ortbRequest: request}, extraParams, ctx);
       }
       const impsById = Object.fromEntries((request.imp || []).map(imp => [imp.id, imp]));
       let impForSlots, partnerBidsForslots;

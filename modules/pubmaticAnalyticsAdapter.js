@@ -1,4 +1,4 @@
-import { _each, pick, logWarn, isStr, isArray, logError, isFn } from '../src/utils.js';
+import { _each, pick, logWarn, isStr, isArray, logError, isFn, getGptSlotInfoForAdUnitCode } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import CONSTANTS from '../src/constants.json';
@@ -117,10 +117,6 @@ function setBidStatus(bid, args) {
     case CONSTANTS.STATUS.GOOD:
       bid.status = SUCCESS;
       delete bid.error; // it's possible for this to be set by a previous timeout
-      break;
-    case CONSTANTS.STATUS.NO_BID:
-      bid.status = NO_BID;
-      delete bid.error;
       break;
     default:
       bid.status = ERROR;
@@ -329,7 +325,7 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid) {
   }, [])
 }
 
-function getSizesForAdUnit(adUnit, adUnitId) {
+function getSizesForAdUnit(adUnit) {
   var bid = Object.values(adUnit.bids).filter((bid) => !!bid.bidResponse && bid.bidResponse.mediaType === 'native')[0];
   if (!!bid || (bid === undefined && adUnit.dimensions.length === 0)) {
     return ['1x1'];
@@ -361,7 +357,7 @@ function getPSL(auctionId) {
   return pslTime;
 }
 
-function getTgid() {
+function getTgId() {
   var testGroupId = parseInt(config.getConfig('testGroupId') || 0);
   if (testGroupId <= 15 && testGroupId >= 0) {
     return testGroupId;
@@ -401,13 +397,12 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['dvc'] = {'plt': getDevicePlatform()};
   outputObj['bm'] = window.PWT && window.PWT.browserMapping;
   outputObj['ih'] = identityOnly;
-  outputObj['tgid'] = getTgid();
-
   outputObj['tpv'] = frequencyDepth?.pageView;
   outputObj['trc'] = frequencyDepth?.slotCnt;
   outputObj['tbs'] = frequencyDepth?.bidServed;
   outputObj['tis'] = frequencyDepth?.impressionServed;
   outputObj['lip'] = frequencyDepth?.lip;
+  outputObj['tgid'] = getTgId();
 
   if (floorData) {
     outputObj['fmv'] = floorData.floorRequestData ? floorData.floorRequestData.modelVersion || undefined : undefined;
@@ -417,9 +412,10 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj.s = Object.keys(auctionCache.adUnitCodes).reduce(function(slotsArray, adUnitId) {
     let adUnit = auctionCache.adUnitCodes[adUnitId];
     let origAdUnit = getAdUnit(auctionCache.origAdUnits, adUnitId) || {};
+    // getGptSlotInfoForAdUnitCode returns gptslot corresponding to adunit provided as input.
     let slotObject = {
       'sn': adUnitId,
-      'au': origAdUnit.adUnitId || adUnitId,
+      'au': origAdUnit.adUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId,
       'mt': getAdUnitAdFormats(origAdUnit),
       'sz': getSizesForAdUnit(adUnit, adUnitId),
       'fskp': floorData ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined,
@@ -481,11 +477,10 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   pixelURL += '&kgpv=' + enc(getValueForKgpv(winningBid, adUnitId));
   pixelURL += '&piid=' + enc(winningBid.bidResponse.partnerImpId || EMPTY_STRING);
   pixelURL += '&rf=' + enc(origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0);
-
   pixelURL += '&plt=' + enc(getDevicePlatform());
   pixelURL += '&psz=' + enc((winningBid?.bidResponse?.dimensions?.width || '0') + 'x' +
     (winningBid?.bidResponse?.dimensions?.height || '0'));
-  pixelURL += '&tgid=' + enc(getTgid());
+  pixelURL += '&tgid=' + enc(getTgId());
   adv && (pixelURL += '&adv=' + enc(adv));
   pixelURL += '&orig=' + enc(getDomainFromUrl(referrer));
   pixelURL += '&ss=' + enc(isS2SBidder(winningBid.bidder));
@@ -565,6 +560,16 @@ function bidResponseHandler(args) {
   setBidStatus(bid, args);
   bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
   bid.bidResponse = parseBidResponse(args);
+}
+
+function bidRejectedHandler(args) {
+  // If bid is rejected due to floors value did not met
+  // make cpm as 0, status as bidRejected and forward the bid for logging
+  if (args.rejectionReason === CONSTANTS.REJECTION_REASON.FLOOR_NOT_MET) {
+    args.cpm = 0;
+    args.status = CONSTANTS.BID_STATUS.BID_REJECTED;
+    bidResponseHandler(args);
+  }
 }
 
 function bidderDoneHandler(args) {
@@ -671,6 +676,9 @@ let pubmaticAdapter = Object.assign({}, baseAdapter, {
         break;
       case CONSTANTS.EVENTS.BID_RESPONSE:
         bidResponseHandler(args);
+        break;
+      case CONSTANTS.EVENTS.BID_REJECTED:
+        bidRejectedHandler(args)
         break;
       case CONSTANTS.EVENTS.BIDDER_DONE:
         bidderDoneHandler(args);

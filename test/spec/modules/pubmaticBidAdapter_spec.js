@@ -84,7 +84,11 @@ describe('PubMatic adapter', function () {
       bidId: '23acc48ad47af5',
       requestId: '0fb4905b-9456-4152-86be-c6f6d259ba99',
       bidderRequestId: '1c56ad30b9b8ca8',
-      transactionId: '92489f71-1bf2-49a0-adf9-000cea934729',
+      ortb2Imp: {
+        ext: {
+          tid: '92489f71-1bf2-49a0-adf9-000cea934729',
+        }
+      },
       schain: schainConfig
     };
 
@@ -811,12 +815,86 @@ describe('PubMatic adapter', function () {
         expect(isValid).to.equal(true);
       });
 
-      it('should check for context if video is present', function() {
-        let bid = {
+      if (FEATURES.VIDEO) {
+        it('should check for context if video is present', function() {
+          let bid = {
+              'bidder': 'pubmatic',
+              'params': {
+                'adSlot': 'SLOT_NHB1@728x90',
+                'publisherId': '5890'
+              },
+              'mediaTypes': {
+                'video': {
+                  'playerSize': [
+                    [640, 480]
+                  ],
+                  'protocols': [1, 2, 5],
+                  'context': 'instream',
+                  'mimes': ['video/flv'],
+                  'skippable': false,
+                  'skip': 1,
+                  'linearity': 2
+                }
+              },
+              'adUnitCode': 'video1',
+              'transactionId': '803e3750-0bbe-4ffe-a548-b6eca15087bf',
+              'sizes': [
+                [640, 480]
+              ],
+              'bidId': '2c95df014cfe97',
+              'bidderRequestId': '1fe59391566442',
+              'auctionId': '3a4118ef-fb96-4416-b0b0-3cfc1cebc142',
+              'src': 'client',
+              'bidRequestsCount': 1,
+              'bidderRequestsCount': 1,
+              'bidderWinsCount': 0
+            },
+            isValid = spec.isBidRequestValid(bid);
+          expect(isValid).to.equal(true);
+        })
+
+        it('should return false if context is not present in video', function() {
+          let bid = {
+              'bidder': 'pubmatic',
+              'params': {
+                'adSlot': 'SLOT_NHB1@728x90',
+                'publisherId': '5890'
+              },
+              'mediaTypes': {
+                'video': {
+                  'w': 640,
+                  'h': 480,
+                  'protocols': [1, 2, 5],
+                  'mimes': ['video/flv'],
+                  'skippable': false,
+                  'skip': 1,
+                  'linearity': 2
+                }
+              },
+              'adUnitCode': 'video1',
+              'transactionId': '803e3750-0bbe-4ffe-a548-b6eca15087bf',
+              'sizes': [
+                [640, 480]
+              ],
+              'bidId': '2c95df014cfe97',
+              'bidderRequestId': '1fe59391566442',
+              'auctionId': '3a4118ef-fb96-4416-b0b0-3cfc1cebc142',
+              'src': 'client',
+              'bidRequestsCount': 1,
+              'bidderRequestsCount': 1,
+              'bidderWinsCount': 0
+            },
+            isValid = spec.isBidRequestValid(bid);
+          expect(isValid).to.equal(false);
+        })
+
+        it('bid.mediaTypes.video.mimes OR bid.params.video.mimes should be present and must be a non-empty array', function() {
+          let bid = {
             'bidder': 'pubmatic',
             'params': {
               'adSlot': 'SLOT_NHB1@728x90',
-              'publisherId': '5890'
+              'publisherId': '5890',
+              'video': {}
             },
             'mediaTypes': {
               'video': {
@@ -825,7 +903,6 @@ describe('PubMatic adapter', function () {
                 ],
                 'protocols': [1, 2, 5],
                 'context': 'instream',
-                'mimes': ['video/flv'],
                 'skippable': false,
                 'skip': 1,
                 'linearity': 2
@@ -843,195 +920,124 @@ describe('PubMatic adapter', function () {
             'bidRequestsCount': 1,
             'bidderRequestsCount': 1,
             'bidderWinsCount': 0
-          },
-          isValid = spec.isBidRequestValid(bid);
-        expect(isValid).to.equal(true);
-      })
+          };
 
-      it('should return false if context is not present in video', function() {
-        let bid = {
-            'bidder': 'pubmatic',
-            'params': {
-              'adSlot': 'SLOT_NHB1@728x90',
-              'publisherId': '5890'
-            },
-            'mediaTypes': {
-              'video': {
-                'w': 640,
-                'h': 480,
-                'protocols': [1, 2, 5],
-                'mimes': ['video/flv'],
-                'skippable': false,
-                'skip': 1,
-                'linearity': 2
-              }
-            },
-            'adUnitCode': 'video1',
-            'transactionId': '803e3750-0bbe-4ffe-a548-b6eca15087bf',
-            'sizes': [
-              [640, 480]
-            ],
-            'bidId': '2c95df014cfe97',
-            'bidderRequestId': '1fe59391566442',
-            'auctionId': '3a4118ef-fb96-4416-b0b0-3cfc1cebc142',
-            'src': 'client',
-            'bidRequestsCount': 1,
-            'bidderRequestsCount': 1,
-            'bidderWinsCount': 0
-          },
-          isValid = spec.isBidRequestValid(bid);
-        expect(isValid).to.equal(false);
-      })
+          delete bid.params.video.mimes; // Undefined
+          bid.mediaTypes.video.mimes = 'string'; // NOT array
+          expect(spec.isBidRequestValid(bid)).to.equal(false);
 
-      it('bid.mediaTypes.video.mimes OR bid.params.video.mimes should be present and must be a non-empty array', function() {
-        let bid = {
-          'bidder': 'pubmatic',
-          'params': {
-            'adSlot': 'SLOT_NHB1@728x90',
-            'publisherId': '5890',
-            'video': {}
-          },
-          'mediaTypes': {
-            'video': {
-              'playerSize': [
-                [640, 480]
-              ],
-              'protocols': [1, 2, 5],
-              'context': 'instream',
-              'skippable': false,
-              'skip': 1,
-              'linearity': 2
-            }
-          },
-          'adUnitCode': 'video1',
-          'transactionId': '803e3750-0bbe-4ffe-a548-b6eca15087bf',
-          'sizes': [
-            [640, 480]
-          ],
-          'bidId': '2c95df014cfe97',
-          'bidderRequestId': '1fe59391566442',
-          'auctionId': '3a4118ef-fb96-4416-b0b0-3cfc1cebc142',
-          'src': 'client',
-          'bidRequestsCount': 1,
-          'bidderRequestsCount': 1,
-          'bidderWinsCount': 0
-        };
+          delete bid.params.video.mimes; // Undefined
+          delete bid.mediaTypes.video.mimes; // Undefined
+          expect(spec.isBidRequestValid(bid)).to.equal(false);
 
-        delete bid.params.video.mimes; // Undefined
-        bid.mediaTypes.video.mimes = 'string'; // NOT array
-        expect(spec.isBidRequestValid(bid)).to.equal(false);
+          delete bid.params.video.mimes; // Undefined
+          bid.mediaTypes.video.mimes = ['video/flv']; // Valid
+          expect(spec.isBidRequestValid(bid)).to.equal(true);
 
-        delete bid.params.video.mimes; // Undefined
-        delete bid.mediaTypes.video.mimes; // Undefined
-        expect(spec.isBidRequestValid(bid)).to.equal(false);
+          delete bid.mediaTypes.video.mimes; // mediaTypes.video.mimes undefined
+          bid.params.video = {mimes: 'string'}; // NOT array
+          expect(spec.isBidRequestValid(bid)).to.equal(false);
 
-        delete bid.params.video.mimes; // Undefined
-        bid.mediaTypes.video.mimes = ['video/flv']; // Valid
-        expect(spec.isBidRequestValid(bid)).to.equal(true);
+          delete bid.mediaTypes.video.mimes; // mediaTypes.video.mimes undefined
+          delete bid.params.video.mimes; // Undefined
+          expect(spec.isBidRequestValid(bid)).to.equal(false);
 
-        delete bid.mediaTypes.video.mimes; // mediaTypes.video.mimes undefined
-        bid.params.video = {mimes: 'string'}; // NOT array
-        expect(spec.isBidRequestValid(bid)).to.equal(false);
+          delete bid.mediaTypes.video.mimes; // mediaTypes.video.mimes undefined
+          bid.params.video.mimes = ['video/flv']; // Valid
+          expect(spec.isBidRequestValid(bid)).to.equal(true);
 
-        delete bid.mediaTypes.video.mimes; // mediaTypes.video.mimes undefined
-        delete bid.params.video.mimes; // Undefined
-        expect(spec.isBidRequestValid(bid)).to.equal(false);
+          delete bid.mediaTypes.video.mimes; // Undefined
+          bid.params.video.mimes = ['video/flv']; // Valid
+          expect(spec.isBidRequestValid(bid)).to.equal(true);
 
-        delete bid.mediaTypes.video.mimes; // mediaTypes.video.mimes undefined
-        bid.params.video.mimes = ['video/flv']; // Valid
-        expect(spec.isBidRequestValid(bid)).to.equal(true);
+          delete bid.mediaTypes.video.mimes; // Undefined
+          delete bid.params.video.mimes; // Undefined
+          expect(spec.isBidRequestValid(bid)).to.equal(false);
+        });
 
-        delete bid.mediaTypes.video.mimes; // Undefined
-        bid.params.video.mimes = ['video/flv']; // Valid
-        expect(spec.isBidRequestValid(bid)).to.equal(true);
+        it('checks on bid.params.outstreamAU & bid.renderer & bid.mediaTypes.video.renderer', function() {
+          const getThebid = function() {
+            let bid = utils.deepClone(validOutstreamBidRequest.bids[0]);
+            bid.params.outstreamAU = 'pubmatic-test';
+            bid.renderer = ' '; // we are only checking if this key is set or not
+            bid.mediaTypes.video.renderer = ' '; // we are only checking if this key is set or not
+            return bid;
+          }
 
-        delete bid.mediaTypes.video.mimes; // Undefined
-        delete bid.params.video.mimes; // Undefined
-        expect(spec.isBidRequestValid(bid)).to.equal(false);
-      });
+          // true: when all are present
+          // mdiatype: outstream
+          // bid.params.outstreamAU : Y
+          // bid.renderer : Y
+          // bid.mediaTypes.video.renderer : Y
+          let bid = getThebid();
+          expect(spec.isBidRequestValid(bid)).to.equal(true);
 
-      it('checks on bid.params.outstreamAU & bid.renderer & bid.mediaTypes.video.renderer', function() {
-        const getThebid = function() {
-          let bid = utils.deepClone(validOutstreamBidRequest.bids[0]);
-          bid.params.outstreamAU = 'pubmatic-test';
-          bid.renderer = ' '; // we are only checking if this key is set or not
-          bid.mediaTypes.video.renderer = ' '; // we are only checking if this key is set or not
-          return bid;
-        }
+          // true: atleast one is present; 3 cases
+          // mdiatype: outstream
+          // bid.params.outstreamAU : Y
+          // bid.renderer : N
+          // bid.mediaTypes.video.renderer : N
+          bid = getThebid();
+          delete bid.renderer;
+          delete bid.mediaTypes.video.renderer;
+          expect(spec.isBidRequestValid(bid)).to.equal(true);
 
-        // true: when all are present
-        // mdiatype: outstream
-        // bid.params.outstreamAU : Y
-        // bid.renderer : Y
-        // bid.mediaTypes.video.renderer : Y
-        let bid = getThebid();
-        expect(spec.isBidRequestValid(bid)).to.equal(true);
+          // true: atleast one is present; 3 cases
+          // mdiatype: outstream
+          // bid.params.outstreamAU : N
+          // bid.renderer : Y
+          // bid.mediaTypes.video.renderer : N
+          bid = getThebid();
+          delete bid.params.outstreamAU;
+          delete bid.mediaTypes.video.renderer;
+          expect(spec.isBidRequestValid(bid)).to.equal(true);
 
-        // true: atleast one is present; 3 cases
-        // mdiatype: outstream
-        // bid.params.outstreamAU : Y
-        // bid.renderer : N
-        // bid.mediaTypes.video.renderer : N
-        bid = getThebid();
-        delete bid.renderer;
-        delete bid.mediaTypes.video.renderer;
-        expect(spec.isBidRequestValid(bid)).to.equal(true);
+          // true: atleast one is present; 3 cases
+          // mdiatype: outstream
+          // bid.params.outstreamAU : N
+          // bid.renderer : N
+          // bid.mediaTypes.video.renderer : Y
+          bid = getThebid();
+          delete bid.params.outstreamAU;
+          delete bid.renderer;
+          expect(spec.isBidRequestValid(bid)).to.equal(true);
 
-        // true: atleast one is present; 3 cases
-        // mdiatype: outstream
-        // bid.params.outstreamAU : N
-        // bid.renderer : Y
-        // bid.mediaTypes.video.renderer : N
-        bid = getThebid();
-        delete bid.params.outstreamAU;
-        delete bid.mediaTypes.video.renderer;
-        expect(spec.isBidRequestValid(bid)).to.equal(true);
+          // false: none present; only outstream
+          // mdiatype: outstream
+          // bid.params.outstreamAU : N
+          // bid.renderer : N
+          // bid.mediaTypes.video.renderer : N
+          bid = getThebid();
+          delete bid.params.outstreamAU;
+          delete bid.renderer;
+          delete bid.mediaTypes.video.renderer;
+          expect(spec.isBidRequestValid(bid)).to.equal(false);
 
-        // true: atleast one is present; 3 cases
-        // mdiatype: outstream
-        // bid.params.outstreamAU : N
-        // bid.renderer : N
-        // bid.mediaTypes.video.renderer : Y
-        bid = getThebid();
-        delete bid.params.outstreamAU;
-        delete bid.renderer;
-        expect(spec.isBidRequestValid(bid)).to.equal(true);
+          // true: none present; outstream + Banner
+          // mdiatype: outstream, banner
+          // bid.params.outstreamAU : N
+          // bid.renderer : N
+          // bid.mediaTypes.video.renderer : N
+          bid = getThebid();
+          delete bid.params.outstreamAU;
+          delete bid.renderer;
+          delete bid.mediaTypes.video.renderer;
+          bid.mediaTypes.banner = {sizes: [ [300, 250], [300, 600] ]};
+          expect(spec.isBidRequestValid(bid)).to.equal(true);
 
-        // false: none present; only outstream
-        // mdiatype: outstream
-        // bid.params.outstreamAU : N
-        // bid.renderer : N
-        // bid.mediaTypes.video.renderer : N
-        bid = getThebid();
-        delete bid.params.outstreamAU;
-        delete bid.renderer;
-        delete bid.mediaTypes.video.renderer;
-        expect(spec.isBidRequestValid(bid)).to.equal(false);
-
-        // true: none present; outstream + Banner
-        // mdiatype: outstream, banner
-        // bid.params.outstreamAU : N
-        // bid.renderer : N
-        // bid.mediaTypes.video.renderer : N
-        bid = getThebid();
-        delete bid.params.outstreamAU;
-        delete bid.renderer;
-        delete bid.mediaTypes.video.renderer;
-        bid.mediaTypes.banner = {sizes: [ [300, 250], [300, 600] ]};
-        expect(spec.isBidRequestValid(bid)).to.equal(true);
-
-        // true: none present; outstream + Native
-        // mdiatype: outstream, native
-        // bid.params.outstreamAU : N
-        // bid.renderer : N
-        // bid.mediaTypes.video.renderer : N
-        bid = getThebid();
-        delete bid.params.outstreamAU;
-        delete bid.renderer;
-        delete bid.mediaTypes.video.renderer;
-        bid.mediaTypes.native = {}
-        expect(spec.isBidRequestValid(bid)).to.equal(true);
-      });
+          // true: none present; outstream + Native
+          // mdiatype: outstream, native
+          // bid.params.outstreamAU : N
+          // bid.renderer : N
+          // bid.mediaTypes.video.renderer : N
+          bid = getThebid();
+          delete bid.params.outstreamAU;
+          delete bid.renderer;
+          delete bid.mediaTypes.video.renderer;
+          bid.mediaTypes.native = {}
+          expect(spec.isBidRequestValid(bid)).to.equal(true);
+        });
+      }
     });
 
   	describe('Request formation', function () {
@@ -1108,7 +1114,7 @@ describe('PubMatic adapter', function () {
   		  expect(data.user.geo.lon).to.equal(parseFloat(bidRequests[0].params.lon)); // Lognitude
   		  expect(data.ext.wrapper.wv).to.equal($$REPO_AND_VERSION$$); // Wrapper Version
   		  expect(data.ext.wrapper.transactionId).to.equal(bidRequests[0].transactionId); // Prebid TransactionId
-        expect(data.source.tid).to.equal(bidRequests[0].transactionId); // Prebid TransactionId
+        expect(data.source.tid).to.equal(bidRequests[0].ortb2Imp.ext.tid); // Prebid TransactionId
   		  expect(data.ext.wrapper.wiid).to.equal(bidRequests[0].params.wiid); // OpenWrap: Wrapper Impression ID
   		  expect(data.ext.wrapper.profile).to.equal(parseInt(bidRequests[0].params.profId)); // OpenWrap: Wrapper Profile ID
   		  expect(data.ext.wrapper.version).to.equal(parseInt(bidRequests[0].params.verId)); // OpenWrap: Wrapper Profile Version ID
@@ -1361,7 +1367,7 @@ describe('PubMatic adapter', function () {
         expect(data.user.geo.lat).to.equal(parseFloat(bidRequests[0].params.lat)); // Latitude
         expect(data.user.geo.lon).to.equal(parseFloat(bidRequests[0].params.lon)); // Lognitude
         expect(data.ext.wrapper.wv).to.equal($$REPO_AND_VERSION$$); // Wrapper Version
-        expect(data.ext.wrapper.transactionId).to.equal(bidRequests[0].transactionId); // Prebid TransactionId
+        expect(data.ext.wrapper.transactionId).to.equal(bidRequests[0].ortb2Imp.ext.tid); // Prebid TransactionId
         expect(data.ext.wrapper.wiid).to.equal(bidRequests[0].params.wiid); // OpenWrap: Wrapper Impression ID
         expect(data.ext.wrapper.profile).to.equal(parseInt(bidRequests[0].params.profId)); // OpenWrap: Wrapper Profile ID
         expect(data.ext.wrapper.version).to.equal(parseInt(bidRequests[0].params.verId)); // OpenWrap: Wrapper Profile Version ID
@@ -1562,7 +1568,7 @@ describe('PubMatic adapter', function () {
         expect(data.imp[1].bidfloorcur).to.equal('USD');
       });
 
-      it('Pass auctiondId as wiid if wiid is not passed in params', function () {
+      it('Pass auctionId as wiid if wiid is not passed in params', function () {
         delete bidRequests[0].params.wiid;
         delete bidRequests[1].params.wiid;
         let bidRequest = {
@@ -1582,7 +1588,7 @@ describe('PubMatic adapter', function () {
         expect(data.user.geo.lat).to.equal(parseFloat(bidRequests[0].params.lat)); // Latitude
         expect(data.user.geo.lon).to.equal(parseFloat(bidRequests[0].params.lon)); // Lognitude
         expect(data.ext.wrapper.wv).to.equal($$REPO_AND_VERSION$$); // Wrapper Version
-        expect(data.ext.wrapper.transactionId).to.equal(bidRequests[0].transactionId); // Prebid TransactionId
+        expect(data.ext.wrapper.transactionId).to.equal(bidRequests[0].ortb2Imp.ext.tid); // Prebid TransactionId
         expect(data.ext.wrapper.wiid).to.equal('new-auction-id'); // OpenWrap: Wrapper Impression ID
         expect(data.ext.wrapper.profile).to.equal(parseInt(bidRequests[0].params.profId)); // OpenWrap: Wrapper Profile ID
         expect(data.ext.wrapper.version).to.equal(parseInt(bidRequests[0].params.verId)); // OpenWrap: Wrapper Profile Version ID
@@ -1618,7 +1624,7 @@ describe('PubMatic adapter', function () {
   		  expect(data.user.geo.lat).to.equal(parseFloat(bidRequests[0].params.lat)); // Latitude
   		  expect(data.user.geo.lon).to.equal(parseFloat(bidRequests[0].params.lon)); // Lognitude
   		  expect(data.ext.wrapper.wv).to.equal($$REPO_AND_VERSION$$); // Wrapper Version
-  		  expect(data.ext.wrapper.transactionId).to.equal(bidRequests[0].transactionId); // Prebid TransactionId
+  		  expect(data.ext.wrapper.transactionId).to.equal(bidRequests[0].ortb2Imp.ext.tid); // Prebid TransactionId
   		  expect(data.ext.wrapper.wiid).to.equal(bidRequests[0].params.wiid); // OpenWrap: Wrapper Impression ID
         expect(data.ext.wrapper.profile).to.equal(parseInt(bidRequests[0].params.profId)); // OpenWrap: Wrapper Profile ID
   		  expect(data.ext.wrapper.version).to.equal(parseInt(bidRequests[0].params.verId)); // OpenWrap: Wrapper Profile Version ID
@@ -1650,7 +1656,7 @@ describe('PubMatic adapter', function () {
         expect(data.user.geo.lat).to.equal(parseFloat(bidRequests[0].params.lat)); // Latitude
         expect(data.user.geo.lon).to.equal(parseFloat(bidRequests[0].params.lon)); // Lognitude
         expect(data.ext.wrapper.wv).to.equal($$REPO_AND_VERSION$$); // Wrapper Version
-        expect(data.ext.wrapper.transactionId).to.equal(bidRequests[0].transactionId); // Prebid TransactionId
+        expect(data.ext.wrapper.transactionId).to.equal(bidRequests[0].ortb2Imp.ext.tid); // Prebid TransactionId
         expect(data.ext.wrapper.wiid).to.equal(bidRequests[0].params.wiid); // OpenWrap: Wrapper Impression ID
         expect(data.ext.wrapper.profile).to.equal(parseInt(bidRequests[0].params.profId)); // OpenWrap: Wrapper Profile ID
         expect(data.ext.wrapper.version).to.equal(parseInt(bidRequests[0].params.verId)); // OpenWrap: Wrapper Profile Version ID
@@ -1953,27 +1959,29 @@ describe('PubMatic adapter', function () {
             expect(data.bidfloor).to.equal(undefined);
           });
 
-          it('ignore floormodule o/p if floor is not number', function() {
-            floorModuleTestData.banner.floor = 'INR';
-            newRequest[0].params.kadfloor = undefined;
-            let request = spec.buildRequests(newRequest, {
-              auctionId: 'new-auction-id'
+          if (FEATURES.VIDEO) {
+            it('ignore floormodule o/p if floor is not number', function() {
+              floorModuleTestData.banner.floor = 'INR';
+              newRequest[0].params.kadfloor = undefined;
+              let request = spec.buildRequests(newRequest, {
+                auctionId: 'new-auction-id'
+              });
+              let data = JSON.parse(request.data);
+              data = data.imp[0];
+              expect(data.bidfloor).to.equal(2.5); // video will be lowest now
             });
-            let data = JSON.parse(request.data);
-            data = data.imp[0];
-            expect(data.bidfloor).to.equal(2.5); // video will be lowest now
-          });
 
-          it('ignore floormodule o/p if currency is not matched', function() {
-            floorModuleTestData.banner.currency = 'INR';
-            newRequest[0].params.kadfloor = undefined;
-            let request = spec.buildRequests(newRequest, {
-              auctionId: 'new-auction-id'
+            it('ignore floormodule o/p if currency is not matched', function() {
+              floorModuleTestData.banner.currency = 'INR';
+              newRequest[0].params.kadfloor = undefined;
+              let request = spec.buildRequests(newRequest, {
+                auctionId: 'new-auction-id'
+              });
+              let data = JSON.parse(request.data);
+              data = data.imp[0];
+              expect(data.bidfloor).to.equal(2.5); // video will be lowest now
             });
-            let data = JSON.parse(request.data);
-            data = data.imp[0];
-            expect(data.bidfloor).to.equal(2.5); // video will be lowest now
-          });
+          }
 
           it('kadfloor is not passed, use minimum from floorModule', function() {
             newRequest[0].params.kadfloor = undefined;
@@ -2715,75 +2723,6 @@ describe('PubMatic adapter', function () {
       expect(data.device.sua).to.deep.equal(suaObject);
     });
 
-    it('Request params check for 1 banner and 1 video ad', function () {
-      let request = spec.buildRequests(multipleMediaRequests, {
-        auctionId: 'new-auction-id'
-      });
-      let data = JSON.parse(request.data);
-      expect(data.imp).to.be.an('array')
-      expect(data.imp).with.length.above(1);
-
-      expect(data.at).to.equal(1); // auction type
-      expect(data.cur[0]).to.equal('USD'); // currency
-      expect(data.site.domain).to.be.a('string'); // domain should be set
-      expect(data.site.page).to.equal(multipleMediaRequests[0].params.kadpageurl); // forced pageURL
-      expect(data.site.publisher.id).to.equal(multipleMediaRequests[0].params.publisherId); // publisher Id
-      expect(data.user.yob).to.equal(parseInt(multipleMediaRequests[0].params.yob)); // YOB
-      expect(data.user.gender).to.equal(multipleMediaRequests[0].params.gender); // Gender
-      expect(data.device.geo.lat).to.equal(parseFloat(multipleMediaRequests[0].params.lat)); // Latitude
-      expect(data.device.geo.lon).to.equal(parseFloat(multipleMediaRequests[0].params.lon)); // Lognitude
-      expect(data.user.geo.lat).to.equal(parseFloat(multipleMediaRequests[0].params.lat)); // Latitude
-      expect(data.user.geo.lon).to.equal(parseFloat(multipleMediaRequests[0].params.lon)); // Lognitude
-      expect(data.ext.wrapper.wv).to.equal($$REPO_AND_VERSION$$); // Wrapper Version
-      expect(data.ext.wrapper.transactionId).to.equal(multipleMediaRequests[0].transactionId); // Prebid TransactionId
-      expect(data.ext.wrapper.wiid).to.equal(multipleMediaRequests[0].params.wiid); // OpenWrap: Wrapper Impression ID
-      expect(data.ext.wrapper.profile).to.equal(parseInt(multipleMediaRequests[0].params.profId)); // OpenWrap: Wrapper Profile ID
-      expect(data.ext.wrapper.version).to.equal(parseInt(multipleMediaRequests[0].params.verId)); // OpenWrap: Wrapper Profile Version ID
-
-      // banner imp object check
-      expect(data.imp[0].id).to.equal(multipleMediaRequests[0].bidId); // Prebid bid id is passed as id
-      expect(data.imp[0].bidfloor).to.equal(parseFloat(multipleMediaRequests[0].params.kadfloor)); // kadfloor
-      expect(data.imp[0].tagid).to.equal('/15671365/DMDemo'); // tagid
-      expect(data.imp[0].banner.w).to.equal(300); // width
-      expect(data.imp[0].banner.h).to.equal(250); // height
-      expect(data.imp[0].ext.pmZoneId).to.equal(multipleMediaRequests[0].params.pmzoneid.split(',').slice(0, 50).map(id => id.trim()).join()); // pmzoneid
-
-      // video imp object check
-      expect(data.imp[1].video).to.exist;
-      expect(data.imp[1].tagid).to.equal('Div1');
-      expect(data.imp[1]['video']['mimes']).to.exist.and.to.be.an('array');
-      expect(data.imp[1]['video']['mimes'][0]).to.equal(multipleMediaRequests[1].params.video['mimes'][0]);
-      expect(data.imp[1]['video']['mimes'][1]).to.equal(multipleMediaRequests[1].params.video['mimes'][1]);
-      expect(data.imp[1]['video']['minduration']).to.equal(multipleMediaRequests[1].params.video['minduration']);
-      expect(data.imp[1]['video']['maxduration']).to.equal(multipleMediaRequests[1].params.video['maxduration']);
-      expect(data.imp[1]['video']['startdelay']).to.equal(multipleMediaRequests[1].params.video['startdelay']);
-
-      expect(data.imp[1]['video']['playbackmethod']).to.exist.and.to.be.an('array');
-      expect(data.imp[1]['video']['playbackmethod'][0]).to.equal(multipleMediaRequests[1].params.video['playbackmethod'][0]);
-      expect(data.imp[1]['video']['playbackmethod'][1]).to.equal(multipleMediaRequests[1].params.video['playbackmethod'][1]);
-
-      expect(data.imp[1]['video']['api']).to.exist.and.to.be.an('array');
-      expect(data.imp[1]['video']['api'][0]).to.equal(multipleMediaRequests[1].params.video['api'][0]);
-      expect(data.imp[1]['video']['api'][1]).to.equal(multipleMediaRequests[1].params.video['api'][1]);
-
-      expect(data.imp[1]['video']['protocols']).to.exist.and.to.be.an('array');
-      expect(data.imp[1]['video']['protocols'][0]).to.equal(multipleMediaRequests[1].params.video['protocols'][0]);
-      expect(data.imp[1]['video']['protocols'][1]).to.equal(multipleMediaRequests[1].params.video['protocols'][1]);
-
-      expect(data.imp[1]['video']['battr']).to.exist.and.to.be.an('array');
-      expect(data.imp[1]['video']['battr'][0]).to.equal(multipleMediaRequests[1].params.video['battr'][0]);
-      expect(data.imp[1]['video']['battr'][1]).to.equal(multipleMediaRequests[1].params.video['battr'][1]);
-
-      expect(data.imp[1]['video']['linearity']).to.equal(multipleMediaRequests[1].params.video['linearity']);
-      expect(data.imp[1]['video']['placement']).to.equal(multipleMediaRequests[1].params.video['placement']);
-      expect(data.imp[1]['video']['plcmt']).to.equal(multipleMediaRequests[1].params.video['plcmt']);
-      expect(data.imp[1]['video']['minbitrate']).to.equal(multipleMediaRequests[1].params.video['minbitrate']);
-      expect(data.imp[1]['video']['maxbitrate']).to.equal(multipleMediaRequests[1].params.video['maxbitrate']);
-
-      expect(data.imp[1]['video']['w']).to.equal(multipleMediaRequests[1].mediaTypes.video.playerSize[0]);
-      expect(data.imp[1]['video']['h']).to.equal(multipleMediaRequests[1].mediaTypes.video.playerSize[1]);
-    });
-
     it('invalid adslot', () => {
       firstBid.params.adSlot = '/15671365/DMDemo';
       firstBid.params.sizes = [];
@@ -2951,88 +2890,8 @@ describe('PubMatic adapter', function () {
       expect(data.video).to.exist;
     });
 
-    it('Request params - should not contain banner imp if mediaTypes.banner is not present and sizes is specified in bid.sizes', function() {
-      delete bannerAndVideoBidRequests[0].mediaTypes.banner;
-      bannerAndVideoBidRequests[0].params.sizes = [300, 250];
-
-      let request = spec.buildRequests(bannerAndVideoBidRequests, {
-        auctionId: 'new-auction-id'
-      });
-      let data = JSON.parse(request.data);
-      data = data.imp[0];
-      expect(data.banner).to.not.exist;
-    });
-
-    it('Request params - should handle banner and native format in single adunit', function() {
-      let request = spec.buildRequests(bannerAndNativeBidRequests, {
-        auctionId: 'new-auction-id'
-      });
-      let data = JSON.parse(request.data);
-      data = data.imp[0];
-
-      expect(data.banner).to.exist;
-      expect(data.banner.w).to.equal(300);
-      expect(data.banner.h).to.equal(250);
-      expect(data.banner.format).to.exist;
-      expect(data.banner.format.length).to.equal(bannerAndNativeBidRequests[0].mediaTypes.banner.sizes.length - 1);
-
-      expect(data.native).to.exist;
-      expect(data.native.request).to.exist;
-    });
-
-    it('Request params - should handle video and native format in single adunit', function() {
-      let request = spec.buildRequests(videoAndNativeBidRequests, {
-        auctionId: 'new-auction-id'
-      });
-      let data = JSON.parse(request.data);
-      data = data.imp[0];
-
-      expect(data.video).to.exist;
-      expect(data.video.w).to.equal(bannerAndVideoBidRequests[0].mediaTypes.video.playerSize[0]);
-      expect(data.video.h).to.equal(bannerAndVideoBidRequests[0].mediaTypes.video.playerSize[1]);
-
-      expect(data.native).to.exist;
-      expect(data.native.request).to.exist;
-    });
-
-    it('Request params - should handle banner, video and native format in single adunit', function() {
-      let request = spec.buildRequests(bannerVideoAndNativeBidRequests, {
-        auctionId: 'new-auction-id'
-      });
-      let data = JSON.parse(request.data);
-      data = data.imp[0];
-
-      expect(data.banner).to.exist;
-      expect(data.banner.w).to.equal(300);
-      expect(data.banner.h).to.equal(250);
-      expect(data.banner.format).to.exist;
-      expect(data.banner.format.length).to.equal(bannerAndNativeBidRequests[0].mediaTypes.banner.sizes.length - 1);
-
-      expect(data.video).to.exist;
-      expect(data.video.w).to.equal(bannerAndVideoBidRequests[0].mediaTypes.video.playerSize[0]);
-      expect(data.video.h).to.equal(bannerAndVideoBidRequests[0].mediaTypes.video.playerSize[1]);
-
-      expect(data.native).to.exist;
-      expect(data.native.request).to.exist;
-    });
-
-    it('Request params - should not add banner object if mediaTypes.banner is missing, but adunits.sizes is present', function() {
-      delete bannerAndNativeBidRequests[0].mediaTypes.banner;
-      bannerAndNativeBidRequests[0].sizes = [729, 90];
-
-      let request = spec.buildRequests(bannerAndNativeBidRequests, {
-        auctionId: 'new-auction-id'
-      });
-      let data = JSON.parse(request.data);
-      data = data.imp[0];
-
-      expect(data.banner).to.not.exist;
-
-      expect(data.native).to.exist;
-      expect(data.native.request).to.exist;
-    });
-
-    xit('Request params - banner and native multiformat request - should not have native object incase of invalid config present', function() {
+    // Removed xit
+    it('Request params - banner and native multiformat request - should not have native object incase of invalid config present', function() {
       bannerAndNativeBidRequests[0].mediaTypes.native = {
         title: { required: true },
         image: { required: true },
@@ -3055,7 +2914,8 @@ describe('PubMatic adapter', function () {
       expect(data.native).to.not.exist;
     });
 
-    xit('Request params - video and native multiformat request - should not have native object incase of invalid config present', function() {
+    // removed xit
+    it('Request params - video and native multiformat request - should not have native object incase of invalid config present', function() {
       videoAndNativeBidRequests[0].mediaTypes.native = {
         title: { required: true },
         image: { required: true },
@@ -3078,91 +2938,308 @@ describe('PubMatic adapter', function () {
       expect(data.native).to.not.exist;
     });
 
-    it('should build video impression if video params are present in adunit.mediaTypes instead of bid.params', function() {
-      let videoReq = [{
-        'bidder': 'pubmatic',
-        'params': {
-          'adSlot': 'SLOT_NHB1@728x90',
-          'publisherId': '5890',
-        },
-        'mediaTypes': {
-          'video': {
-            'playerSize': [
-              [640, 480]
-            ],
-            'protocols': [1, 2, 5],
-            'context': 'instream',
-            'mimes': ['video/flv'],
-            'skip': 1,
-            'linearity': 2
-          }
-        },
-        'adUnitCode': 'video1',
-        'transactionId': 'adc36682-887c-41e9-9848-8b72c08332c0',
-        'sizes': [
-          [640, 480]
-        ],
-        'bidId': '21b59b1353ba82',
-        'bidderRequestId': '1a08245305e6dd',
-        'auctionId': 'bad3a743-7491-4d19-9a96-b0a69dd24a67',
-        'src': 'client',
-        'bidRequestsCount': 1,
-        'bidderRequestsCount': 1,
-        'bidderWinsCount': 0
-      }]
-      let request = spec.buildRequests(videoReq, {
-        auctionId: 'new-auction-id'
-      });
-      let data = JSON.parse(request.data);
-      data = data.imp[0];
-      expect(data.video).to.exist;
-    });
+    if (FEATURES.VIDEO) {
+      it('Request params - should not contain banner imp if mediaTypes.banner is not present and sizes is specified in bid.sizes', function() {
+        delete bannerAndVideoBidRequests[0].mediaTypes.banner;
+        bannerAndVideoBidRequests[0].params.sizes = [300, 250];
 
-    it('should build video impression with overwriting video params present in adunit.mediaTypes with bid.params', function() {
-      let videoReq = [{
-        'bidder': 'pubmatic',
-        'params': {
-          'adSlot': 'SLOT_NHB1@728x90',
-          'publisherId': '5890',
-          'video': {
-            'mimes': ['video/mp4'],
-            'protocols': [1, 2, 5],
-            'linearity': 1
-          }
-        },
-        'mediaTypes': {
-          'video': {
-            'playerSize': [
-              [640, 480]
-            ],
-            'protocols': [1, 2, 5],
-            'context': 'instream',
-            'mimes': ['video/flv'],
-            'skip': 1,
-            'linearity': 2
-          }
-        },
-        'adUnitCode': 'video1',
-        'transactionId': 'adc36682-887c-41e9-9848-8b72c08332c0',
-        'sizes': [
-          [640, 480]
-        ],
-        'bidId': '21b59b1353ba82',
-        'bidderRequestId': '1a08245305e6dd',
-        'auctionId': 'bad3a743-7491-4d19-9a96-b0a69dd24a67',
-        'src': 'client',
-        'bidRequestsCount': 1,
-        'bidderRequestsCount': 1,
-        'bidderWinsCount': 0
-      }]
-      let request = spec.buildRequests(videoReq, {
-        auctionId: 'new-auction-id'
+        let request = spec.buildRequests(bannerAndVideoBidRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let data = JSON.parse(request.data);
+        data = data.imp[0];
+        expect(data.banner).to.not.exist;
       });
-      let data = JSON.parse(request.data);
-      data = data.imp[0];
 
-      expect(data.video).to.exist;
-      expect(data.video.linearity).to.equal(1);
+      it('Request params check for 1 banner and 1 video ad', function () {
+        let request = spec.buildRequests(multipleMediaRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let data = JSON.parse(request.data);
+        expect(data.imp).to.be.an('array')
+        expect(data.imp).with.length.above(1);
+
+        expect(data.at).to.equal(1); // auction type
+        expect(data.cur[0]).to.equal('USD'); // currency
+        expect(data.site.domain).to.be.a('string'); // domain should be set
+        expect(data.site.page).to.equal(multipleMediaRequests[0].params.kadpageurl); // forced pageURL
+        expect(data.site.publisher.id).to.equal(multipleMediaRequests[0].params.publisherId); // publisher Id
+        expect(data.user.yob).to.equal(parseInt(multipleMediaRequests[0].params.yob)); // YOB
+        expect(data.user.gender).to.equal(multipleMediaRequests[0].params.gender); // Gender
+        expect(data.device.geo.lat).to.equal(parseFloat(multipleMediaRequests[0].params.lat)); // Latitude
+        expect(data.device.geo.lon).to.equal(parseFloat(multipleMediaRequests[0].params.lon)); // Lognitude
+        expect(data.user.geo.lat).to.equal(parseFloat(multipleMediaRequests[0].params.lat)); // Latitude
+        expect(data.user.geo.lon).to.equal(parseFloat(multipleMediaRequests[0].params.lon)); // Lognitude
+        expect(data.ext.wrapper.wv).to.equal($$REPO_AND_VERSION$$); // Wrapper Version
+        expect(data.ext.wrapper.transactionId).to.equal(multipleMediaRequests[0].transactionId); // Prebid TransactionId
+        expect(data.ext.wrapper.wiid).to.equal(multipleMediaRequests[0].params.wiid); // OpenWrap: Wrapper Impression ID
+        expect(data.ext.wrapper.profile).to.equal(parseInt(multipleMediaRequests[0].params.profId)); // OpenWrap: Wrapper Profile ID
+        expect(data.ext.wrapper.version).to.equal(parseInt(multipleMediaRequests[0].params.verId)); // OpenWrap: Wrapper Profile Version ID
+
+        // banner imp object check
+        expect(data.imp[0].id).to.equal(multipleMediaRequests[0].bidId); // Prebid bid id is passed as id
+        expect(data.imp[0].bidfloor).to.equal(parseFloat(multipleMediaRequests[0].params.kadfloor)); // kadfloor
+        expect(data.imp[0].tagid).to.equal('/15671365/DMDemo'); // tagid
+        expect(data.imp[0].banner.w).to.equal(300); // width
+        expect(data.imp[0].banner.h).to.equal(250); // height
+        expect(data.imp[0].ext.pmZoneId).to.equal(multipleMediaRequests[0].params.pmzoneid.split(',').slice(0, 50).map(id => id.trim()).join()); // pmzoneid
+
+        // video imp object check
+        expect(data.imp[1].video).to.exist;
+        expect(data.imp[1].tagid).to.equal('Div1');
+        expect(data.imp[1]['video']['mimes']).to.exist.and.to.be.an('array');
+        expect(data.imp[1]['video']['mimes'][0]).to.equal(multipleMediaRequests[1].params.video['mimes'][0]);
+        expect(data.imp[1]['video']['mimes'][1]).to.equal(multipleMediaRequests[1].params.video['mimes'][1]);
+        expect(data.imp[1]['video']['minduration']).to.equal(multipleMediaRequests[1].params.video['minduration']);
+        expect(data.imp[1]['video']['maxduration']).to.equal(multipleMediaRequests[1].params.video['maxduration']);
+        expect(data.imp[1]['video']['startdelay']).to.equal(multipleMediaRequests[1].params.video['startdelay']);
+
+        expect(data.imp[1]['video']['playbackmethod']).to.exist.and.to.be.an('array');
+        expect(data.imp[1]['video']['playbackmethod'][0]).to.equal(multipleMediaRequests[1].params.video['playbackmethod'][0]);
+        expect(data.imp[1]['video']['playbackmethod'][1]).to.equal(multipleMediaRequests[1].params.video['playbackmethod'][1]);
+
+        expect(data.imp[1]['video']['api']).to.exist.and.to.be.an('array');
+        expect(data.imp[1]['video']['api'][0]).to.equal(multipleMediaRequests[1].params.video['api'][0]);
+        expect(data.imp[1]['video']['api'][1]).to.equal(multipleMediaRequests[1].params.video['api'][1]);
+
+        expect(data.imp[1]['video']['protocols']).to.exist.and.to.be.an('array');
+        expect(data.imp[1]['video']['protocols'][0]).to.equal(multipleMediaRequests[1].params.video['protocols'][0]);
+        expect(data.imp[1]['video']['protocols'][1]).to.equal(multipleMediaRequests[1].params.video['protocols'][1]);
+
+        expect(data.imp[1]['video']['battr']).to.exist.and.to.be.an('array');
+        expect(data.imp[1]['video']['battr'][0]).to.equal(multipleMediaRequests[1].params.video['battr'][0]);
+        expect(data.imp[1]['video']['battr'][1]).to.equal(multipleMediaRequests[1].params.video['battr'][1]);
+
+        expect(data.imp[1]['video']['linearity']).to.equal(multipleMediaRequests[1].params.video['linearity']);
+        expect(data.imp[1]['video']['placement']).to.equal(multipleMediaRequests[1].params.video['placement']);
+        expect(data.imp[1]['video']['plcmt']).to.equal(multipleMediaRequests[1].params.video['plcmt']);
+        expect(data.imp[1]['video']['minbitrate']).to.equal(multipleMediaRequests[1].params.video['minbitrate']);
+        expect(data.imp[1]['video']['maxbitrate']).to.equal(multipleMediaRequests[1].params.video['maxbitrate']);
+
+        expect(data.imp[1]['video']['w']).to.equal(multipleMediaRequests[1].mediaTypes.video.playerSize[0]);
+        expect(data.imp[1]['video']['h']).to.equal(multipleMediaRequests[1].mediaTypes.video.playerSize[1]);
+      });
+
+      it('Request params - should handle banner and native format in single adunit', function() {
+        let request = spec.buildRequests(bannerAndNativeBidRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let data = JSON.parse(request.data);
+        data = data.imp[0];
+
+        expect(data.banner).to.exist;
+        expect(data.banner.w).to.equal(300);
+        expect(data.banner.h).to.equal(250);
+        expect(data.banner.format).to.exist;
+        expect(data.banner.format.length).to.equal(bannerAndNativeBidRequests[0].mediaTypes.banner.sizes.length - 1);
+
+        expect(data.native).to.exist;
+        expect(data.native.request).to.exist;
+      });
+
+      it('Request params - should handle video and native format in single adunit', function() {
+        let request = spec.buildRequests(videoAndNativeBidRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let data = JSON.parse(request.data);
+        data = data.imp[0];
+
+        expect(data.video).to.exist;
+        expect(data.video.w).to.equal(bannerAndVideoBidRequests[0].mediaTypes.video.playerSize[0]);
+        expect(data.video.h).to.equal(bannerAndVideoBidRequests[0].mediaTypes.video.playerSize[1]);
+
+        expect(data.native).to.exist;
+        expect(data.native.request).to.exist;
+      });
+
+      it('Request params - should handle banner, video and native format in single adunit', function() {
+        let request = spec.buildRequests(bannerVideoAndNativeBidRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let data = JSON.parse(request.data);
+        data = data.imp[0];
+
+        expect(data.banner).to.exist;
+        expect(data.banner.w).to.equal(300);
+        expect(data.banner.h).to.equal(250);
+        expect(data.banner.format).to.exist;
+        expect(data.banner.format.length).to.equal(bannerAndNativeBidRequests[0].mediaTypes.banner.sizes.length - 1);
+
+        expect(data.video).to.exist;
+        expect(data.video.w).to.equal(bannerAndVideoBidRequests[0].mediaTypes.video.playerSize[0]);
+        expect(data.video.h).to.equal(bannerAndVideoBidRequests[0].mediaTypes.video.playerSize[1]);
+
+        expect(data.native).to.exist;
+        expect(data.native.request).to.exist;
+      });
+
+      it('Request params - should not add banner object if mediaTypes.banner is missing, but adunits.sizes is present', function() {
+        delete bannerAndNativeBidRequests[0].mediaTypes.banner;
+        bannerAndNativeBidRequests[0].sizes = [729, 90];
+
+        let request = spec.buildRequests(bannerAndNativeBidRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let data = JSON.parse(request.data);
+        data = data.imp[0];
+
+        expect(data.banner).to.not.exist;
+
+        expect(data.native).to.exist;
+        expect(data.native.request).to.exist;
+      });
+
+      it('should build video impression if video params are present in adunit.mediaTypes instead of bid.params', function() {
+        let videoReq = [{
+          'bidder': 'pubmatic',
+          'params': {
+            'adSlot': 'SLOT_NHB1@728x90',
+            'publisherId': '5890',
+          },
+          'mediaTypes': {
+            'video': {
+              'playerSize': [
+                [640, 480]
+              ],
+              'protocols': [1, 2, 5],
+              'context': 'instream',
+              'mimes': ['video/flv'],
+              'skip': 1,
+              'linearity': 2
+            }
+          },
+          'adUnitCode': 'video1',
+          'transactionId': 'adc36682-887c-41e9-9848-8b72c08332c0',
+          'sizes': [
+            [640, 480]
+          ],
+          'bidId': '21b59b1353ba82',
+          'bidderRequestId': '1a08245305e6dd',
+          'auctionId': 'bad3a743-7491-4d19-9a96-b0a69dd24a67',
+          'src': 'client',
+          'bidRequestsCount': 1,
+          'bidderRequestsCount': 1,
+          'bidderWinsCount': 0
+        }]
+        let request = spec.buildRequests(videoReq, {
+          auctionId: 'new-auction-id'
+        });
+        let data = JSON.parse(request.data);
+        data = data.imp[0];
+        expect(data.video).to.exist;
+      });
+
+      it('should build video impression with overwriting video params present in adunit.mediaTypes with bid.params', function() {
+        let videoReq = [{
+          'bidder': 'pubmatic',
+          'params': {
+            'adSlot': 'SLOT_NHB1@728x90',
+            'publisherId': '5890',
+            'video': {
+              'mimes': ['video/mp4'],
+              'protocols': [1, 2, 5],
+              'linearity': 1
+            }
+          },
+          'mediaTypes': {
+            'video': {
+              'playerSize': [
+                [640, 480]
+              ],
+              'protocols': [1, 2, 5],
+              'context': 'instream',
+              'mimes': ['video/flv'],
+              'skip': 1,
+              'linearity': 2
+            }
+          },
+          'adUnitCode': 'video1',
+          'transactionId': 'adc36682-887c-41e9-9848-8b72c08332c0',
+          'sizes': [
+            [640, 480]
+          ],
+          'bidId': '21b59b1353ba82',
+          'bidderRequestId': '1a08245305e6dd',
+          'auctionId': 'bad3a743-7491-4d19-9a96-b0a69dd24a67',
+          'src': 'client',
+          'bidRequestsCount': 1,
+          'bidderRequestsCount': 1,
+          'bidderWinsCount': 0
+        }]
+        let request = spec.buildRequests(videoReq, {
+          auctionId: 'new-auction-id'
+        });
+        let data = JSON.parse(request.data);
+        data = data.imp[0];
+
+        expect(data.video).to.exist;
+        expect(data.video.linearity).to.equal(1);
+      });
+
+      it('Request params check for video ad', function () {
+        let request = spec.buildRequests(videoBidRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let data = JSON.parse(request.data);
+        expect(data.imp[0].video).to.exist;
+        expect(data.imp[0].tagid).to.equal('Div1');
+        expect(data.imp[0]['video']['mimes']).to.exist.and.to.be.an('array');
+        expect(data.imp[0]['video']['mimes'][0]).to.equal(videoBidRequests[0].params.video['mimes'][0]);
+        expect(data.imp[0]['video']['mimes'][1]).to.equal(videoBidRequests[0].params.video['mimes'][1]);
+        expect(data.imp[0]['video']['minduration']).to.equal(videoBidRequests[0].params.video['minduration']);
+        expect(data.imp[0]['video']['maxduration']).to.equal(videoBidRequests[0].params.video['maxduration']);
+        expect(data.imp[0]['video']['startdelay']).to.equal(videoBidRequests[0].params.video['startdelay']);
+
+        expect(data.imp[0]['video']['playbackmethod']).to.exist.and.to.be.an('array');
+        expect(data.imp[0]['video']['playbackmethod'][0]).to.equal(videoBidRequests[0].params.video['playbackmethod'][0]);
+        expect(data.imp[0]['video']['playbackmethod'][1]).to.equal(videoBidRequests[0].params.video['playbackmethod'][1]);
+
+        expect(data.imp[0]['video']['api']).to.exist.and.to.be.an('array');
+        expect(data.imp[0]['video']['api'][0]).to.equal(videoBidRequests[0].params.video['api'][0]);
+        expect(data.imp[0]['video']['api'][1]).to.equal(videoBidRequests[0].params.video['api'][1]);
+
+        expect(data.imp[0]['video']['protocols']).to.exist.and.to.be.an('array');
+        expect(data.imp[0]['video']['protocols'][0]).to.equal(videoBidRequests[0].params.video['protocols'][0]);
+        expect(data.imp[0]['video']['protocols'][1]).to.equal(videoBidRequests[0].params.video['protocols'][1]);
+
+        expect(data.imp[0]['video']['battr']).to.exist.and.to.be.an('array');
+        expect(data.imp[0]['video']['battr'][0]).to.equal(videoBidRequests[0].params.video['battr'][0]);
+        expect(data.imp[0]['video']['battr'][1]).to.equal(videoBidRequests[0].params.video['battr'][1]);
+
+        expect(data.imp[0]['video']['linearity']).to.equal(videoBidRequests[0].params.video['linearity']);
+        expect(data.imp[0]['video']['placement']).to.equal(videoBidRequests[0].params.video['placement']);
+        expect(data.imp[0]['video']['plcmt']).to.equal(videoBidRequests[0].params.video['plcmt']);
+        expect(data.imp[0]['video']['minbitrate']).to.equal(videoBidRequests[0].params.video['minbitrate']);
+        expect(data.imp[0]['video']['maxbitrate']).to.equal(videoBidRequests[0].params.video['maxbitrate']);
+
+        expect(data.imp[0]['video']['w']).to.equal(videoBidRequests[0].mediaTypes.video.playerSize[0]);
+        expect(data.imp[0]['video']['h']).to.equal(videoBidRequests[0].mediaTypes.video.playerSize[1]);
+      });
+    }
+
+    describe('Fledge', function() {
+      it('should not send imp.ext.ae when FLEDGE is disabled, ', function () {
+        let bidRequest = Object.assign([], bidRequests);
+        bidRequest[0].ortb2Imp = {
+          ext: { ae: 1 }
+        };
+        const req = spec.buildRequests(bidRequest, { ...bidRequest, fledgeEnabled: false });
+        let data = JSON.parse(req.data);
+        if (data.imp[0].ext) {
+          expect(data.imp[0].ext).to.not.have.property('ae');
+        }
+      });
+
+      it('when FLEDGE is enabled, should send whatever is set in ortb2imp.ext.ae in all bid requests', function () {
+        let bidRequest = Object.assign([], bidRequests);
+        delete bidRequest[0].params.test;
+        bidRequest[0].ortb2Imp = {
+          ext: { ae: 1 }
+        };
+        const req = spec.buildRequests(bidRequest, { ...bidRequest, fledgeEnabled: true });
+        let data = JSON.parse(req.data);
+        expect(data.imp[0].ext.ae).to.equal(1);
+      });
     });
   });
 
@@ -4096,383 +4173,349 @@ describe('PubMatic adapter', function () {
       expect(response[0].mediaType).to.equal('banner');
     });
 
-    it('should check for valid video mediaType in case of multiformat request', function() {
-      let request = spec.buildRequests(videoBidRequests, {
-        auctionId: 'new-auction-id'
+    if (FEATURES.VIDEO) {
+      it('should check for valid video mediaType in case of multiformat request', function() {
+        let request = spec.buildRequests(videoBidRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let response = spec.interpretResponse(videoBidResponse, request);
+        expect(response[0].mediaType).to.equal('video');
       });
-      let response = spec.interpretResponse(videoBidResponse, request);
-      expect(response[0].mediaType).to.equal('video');
-    });
 
-    it('should check for valid native mediaType in case of multiformat request', function() {
-      let request = spec.buildRequests(nativeBidRequests, {
-        auctionId: 'new-auction-id'
+      it('should check for valid native mediaType in case of multiformat request', function() {
+        let request = spec.buildRequests(nativeBidRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let response = spec.interpretResponse(nativeBidResponse, request);
+
+        expect(response[0].mediaType).to.equal('native');
       });
-      let response = spec.interpretResponse(nativeBidResponse, request);
 
-      expect(response[0].mediaType).to.equal('native');
-    });
-
-    it('should assign renderer if bid is video and request is for outstream', function() {
-      let request = spec.buildRequests(outstreamBidRequest, validOutstreamBidRequest);
-      let response = spec.interpretResponse(outstreamVideoBidResponse, request);
-      expect(response[0].renderer).to.exist;
-    });
-
-    it('should not assign renderer if bidderRequest is not present', function() {
-      let request = spec.buildRequests(outstreamBidRequest, {
-        auctionId: 'new-auction-id'
+      it('should assign renderer if bid is video and request is for outstream', function() {
+        let request = spec.buildRequests(outstreamBidRequest, validOutstreamBidRequest);
+        let response = spec.interpretResponse(outstreamVideoBidResponse, request);
+        expect(response[0].renderer).to.exist;
       });
-      let response = spec.interpretResponse(outstreamVideoBidResponse, request);
-      expect(response[0].renderer).to.not.exist;
-    });
 
-    it('should not assign renderer if bid is video and request is for instream', function() {
-      let request = spec.buildRequests(videoBidRequests, {
-        auctionId: 'new-auction-id'
+      it('should not assign renderer if bidderRequest is not present', function() {
+        let request = spec.buildRequests(outstreamBidRequest, {
+          auctionId: 'new-auction-id'
+        });
+        let response = spec.interpretResponse(outstreamVideoBidResponse, request);
+        expect(response[0].renderer).to.not.exist;
       });
-      let response = spec.interpretResponse(videoBidResponse, request);
-      expect(response[0].renderer).to.not.exist;
-    });
 
-    it('should not assign renderer if bid is native', function() {
-      let request = spec.buildRequests(nativeBidRequests, {
-        auctionId: 'new-auction-id'
+      it('should not assign renderer if bid is video and request is for instream', function() {
+        let request = spec.buildRequests(videoBidRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let response = spec.interpretResponse(videoBidResponse, request);
+        expect(response[0].renderer).to.not.exist;
       });
-      let response = spec.interpretResponse(nativeBidResponse, request);
-      expect(response[0].renderer).to.not.exist;
-    });
 
-    it('should not assign renderer if bid is of banner', function() {
-      let request = spec.buildRequests(bidRequests, {
-        auctionId: 'new-auction-id'
+      it('should not assign renderer if bid is native', function() {
+        let request = spec.buildRequests(nativeBidRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let response = spec.interpretResponse(nativeBidResponse, request);
+        expect(response[0].renderer).to.not.exist;
       });
-      let response = spec.interpretResponse(bidResponses, request);
-      expect(response[0].renderer).to.not.exist;
-    });
 
-    it('should assign mediaType by reading bid.ext.mediaType', function() {
-      let newvideoRequests = [{
-        'bidder': 'pubmatic',
-        'params': {
-          'adSlot': 'SLOT_NHB1@728x90',
-          'publisherId': '5670',
-          'video': {
-            'mimes': ['video/mp4'],
-            'skippable': true,
-            'protocols': [1, 2, 5],
-            'linearity': 1
-          }
-        },
-        'mediaTypes': {
-          'video': {
-            'playerSize': [
-              [640, 480]
-            ],
-            'protocols': [1, 2, 5],
-            'context': 'instream',
-            'mimes': ['video/flv'],
-            'skippable': false,
-            'skip': 1,
-            'linearity': 2
-          }
-        },
-        'adUnitCode': 'video1',
-        'transactionId': '803e3750-0bbe-4ffe-a548-b6eca15087bf',
-        'sizes': [
-          [640, 480]
-        ],
-        'bidId': '2c95df014cfe97',
-        'bidderRequestId': '1fe59391566442',
-        'auctionId': '3a4118ef-fb96-4416-b0b0-3cfc1cebc142',
-        'src': 'client',
-        'bidRequestsCount': 1,
-        'bidderRequestsCount': 1,
-        'bidderWinsCount': 0
-      }];
-      let newvideoBidResponses = {
-        'body': {
-          'id': '1621441141473',
-          'cur': 'USD',
-          'customdata': 'openrtb1',
-          'ext': {
-            'buyid': 'myBuyId'
+      it('should not assign renderer if bid is of banner', function() {
+        let request = spec.buildRequests(bidRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let response = spec.interpretResponse(bidResponses, request);
+        expect(response[0].renderer).to.not.exist;
+      });
+
+      it('should assign mediaType by reading bid.ext.mediaType', function() {
+        let newvideoRequests = [{
+          'bidder': 'pubmatic',
+          'params': {
+            'adSlot': 'SLOT_NHB1@728x90',
+            'publisherId': '5670',
+            'video': {
+              'mimes': ['video/mp4'],
+              'skippable': true,
+              'protocols': [1, 2, 5],
+              'linearity': 1
+            }
           },
-          'seatbid': [{
-            'bid': [{
-              'id': '2c95df014cfe97',
-              'impid': '2c95df014cfe97',
-              'price': 4.2,
-              'cid': 'test1',
-              'crid': 'test2',
-              'adm': "<VAST version='3.0'><Ad id='601364'><InLine><AdSystem>Acudeo Compatible</AdSystem><AdTitle>VAST 2.0 Instream Test 1</AdTitle><Description>VAST 2.0 Instream Test 1</Description><Creatives><Creative AdID='601364'><Linear skipoffset='20%'><TrackingEvents><Tracking event='close'><![CDATA[https://mytracking.com/linear/close]]></Tracking><Tracking event='skip'><![CDATA[https://mytracking.com/linear/skip]]></Tracking><MediaFiles><MediaFile delivery='progressive' type='video/mp4' bitrate='500' width='400' height='300' scalable='true' maintainAspectRatio='true'><![CDATA[https://localhost/pubmatic.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>",
-              'w': 0,
-              'h': 0,
-              'dealId': 'ASEA-MS-KLY-TTD-DESKTOP-ID-VID-6S-030420',
+          'mediaTypes': {
+            'video': {
+              'playerSize': [
+                [640, 480]
+              ],
+              'protocols': [1, 2, 5],
+              'context': 'instream',
+              'mimes': ['video/flv'],
+              'skippable': false,
+              'skip': 1,
+              'linearity': 2
+            }
+          },
+          'adUnitCode': 'video1',
+          'transactionId': '803e3750-0bbe-4ffe-a548-b6eca15087bf',
+          'sizes': [
+            [640, 480]
+          ],
+          'bidId': '2c95df014cfe97',
+          'bidderRequestId': '1fe59391566442',
+          'auctionId': '3a4118ef-fb96-4416-b0b0-3cfc1cebc142',
+          'src': 'client',
+          'bidRequestsCount': 1,
+          'bidderRequestsCount': 1,
+          'bidderWinsCount': 0
+        }];
+        let newvideoBidResponses = {
+          'body': {
+            'id': '1621441141473',
+            'cur': 'USD',
+            'customdata': 'openrtb1',
+            'ext': {
+              'buyid': 'myBuyId'
+            },
+            'seatbid': [{
+              'bid': [{
+                'id': '2c95df014cfe97',
+                'impid': '2c95df014cfe97',
+                'price': 4.2,
+                'cid': 'test1',
+                'crid': 'test2',
+                'adm': "<VAST version='3.0'><Ad id='601364'><InLine><AdSystem>Acudeo Compatible</AdSystem><AdTitle>VAST 2.0 Instream Test 1</AdTitle><Description>VAST 2.0 Instream Test 1</Description><Creatives><Creative AdID='601364'><Linear skipoffset='20%'><TrackingEvents><Tracking event='close'><![CDATA[https://mytracking.com/linear/close]]></Tracking><Tracking event='skip'><![CDATA[https://mytracking.com/linear/skip]]></Tracking><MediaFiles><MediaFile delivery='progressive' type='video/mp4' bitrate='500' width='400' height='300' scalable='true' maintainAspectRatio='true'><![CDATA[https://localhost/pubmatic.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>",
+                'w': 0,
+                'h': 0,
+                'dealId': 'ASEA-MS-KLY-TTD-DESKTOP-ID-VID-6S-030420',
+                'ext': {
+                  'BidType': 1
+                }
+              }],
               'ext': {
-                'BidType': 1
+                'buyid': 'myBuyId'
               }
-            }],
-            'ext': {
-              'buyid': 'myBuyId'
-            }
-          }]
-        },
-        'headers': {}
-      }
-      let newrequest = spec.buildRequests(newvideoRequests, {
-        auctionId: 'new-auction-id'
-      });
-      let newresponse = spec.interpretResponse(newvideoBidResponses, newrequest);
-      expect(newresponse[0].mediaType).to.equal('video')
-    })
-
-    it('should assign mediaType even if bid.ext.mediaType does not exists', function() {
-      let newvideoRequests = [{
-        'bidder': 'pubmatic',
-        'params': {
-          'adSlot': 'SLOT_NHB1@728x90',
-          'publisherId': '5670',
-          'video': {
-            'mimes': ['video/mp4'],
-            'skippable': true,
-            'protocols': [1, 2, 5],
-            'linearity': 1
-          }
-        },
-        'mediaTypes': {
-          'video': {
-            'playerSize': [
-              [640, 480]
-            ],
-            'protocols': [1, 2, 5],
-            'context': 'instream',
-            'mimes': ['video/flv'],
-            'skippable': false,
-            'skip': 1,
-            'linearity': 2
-          }
-        },
-        'adUnitCode': 'video1',
-        'transactionId': '803e3750-0bbe-4ffe-a548-b6eca15087bf',
-        'sizes': [
-          [640, 480]
-        ],
-        'bidId': '2c95df014cfe97',
-        'bidderRequestId': '1fe59391566442',
-        'auctionId': '3a4118ef-fb96-4416-b0b0-3cfc1cebc142',
-        'src': 'client',
-        'bidRequestsCount': 1,
-        'bidderRequestsCount': 1,
-        'bidderWinsCount': 0
-      }];
-      let newvideoBidResponses = {
-        'body': {
-          'id': '1621441141473',
-          'cur': 'USD',
-          'customdata': 'openrtb1',
-          'ext': {
-            'buyid': 'myBuyId'
+            }]
           },
-          'seatbid': [{
-            'bid': [{
-              'id': '2c95df014cfe97',
-              'impid': '2c95df014cfe97',
-              'price': 4.2,
-              'cid': 'test1',
-              'crid': 'test2',
-              'adm': "<VAST version='3.0'><Ad id='601364'><InLine><AdSystem>Acudeo Compatible</AdSystem><AdTitle>VAST 2.0 Instream Test 1</AdTitle><Description>VAST 2.0 Instream Test 1</Description><Creatives><Creative AdID='601364'><Linear skipoffset='20%'><TrackingEvents><Tracking event='close'><![CDATA[https://mytracking.com/linear/close]]></Tracking><Tracking event='skip'><![CDATA[https://mytracking.com/linear/skip]]></Tracking><MediaFiles><MediaFile delivery='progressive' type='video/mp4' bitrate='500' width='400' height='300' scalable='true' maintainAspectRatio='true'><![CDATA[https://localhost/pubmatic.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>",
-              'w': 0,
-              'h': 0,
-              'dealId': 'ASEA-MS-KLY-TTD-DESKTOP-ID-VID-6S-030420'
-            }],
+          'headers': {}
+        }
+        let newrequest = spec.buildRequests(newvideoRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let newresponse = spec.interpretResponse(newvideoBidResponses, newrequest);
+        expect(newresponse[0].mediaType).to.equal('video')
+      })
+
+      it('should assign mediaType even if bid.ext.mediaType does not exists', function() {
+        let newvideoRequests = [{
+          'bidder': 'pubmatic',
+          'params': {
+            'adSlot': 'SLOT_NHB1@728x90',
+            'publisherId': '5670',
+            'video': {
+              'mimes': ['video/mp4'],
+              'skippable': true,
+              'protocols': [1, 2, 5],
+              'linearity': 1
+            }
+          },
+          'mediaTypes': {
+            'video': {
+              'playerSize': [
+                [640, 480]
+              ],
+              'protocols': [1, 2, 5],
+              'context': 'instream',
+              'mimes': ['video/flv'],
+              'skippable': false,
+              'skip': 1,
+              'linearity': 2
+            }
+          },
+          'adUnitCode': 'video1',
+          'transactionId': '803e3750-0bbe-4ffe-a548-b6eca15087bf',
+          'sizes': [
+            [640, 480]
+          ],
+          'bidId': '2c95df014cfe97',
+          'bidderRequestId': '1fe59391566442',
+          'auctionId': '3a4118ef-fb96-4416-b0b0-3cfc1cebc142',
+          'src': 'client',
+          'bidRequestsCount': 1,
+          'bidderRequestsCount': 1,
+          'bidderWinsCount': 0
+        }];
+        let newvideoBidResponses = {
+          'body': {
+            'id': '1621441141473',
+            'cur': 'USD',
+            'customdata': 'openrtb1',
             'ext': {
               'buyid': 'myBuyId'
-            }
-          }]
-        },
-        'headers': {}
-      }
-      let newrequest = spec.buildRequests(newvideoRequests, {
-        auctionId: 'new-auction-id'
-      });
-      let newresponse = spec.interpretResponse(newvideoBidResponses, newrequest);
-      expect(newresponse[0].mediaType).to.equal('video')
-    })
-  });
-
-  describe('Checking for Video.Placement property', function() {
-    let sandbox, utilsMock;
-    const adUnit = 'Div1';
-    const msg_placement_missing = 'Video.Placement param missing for Div1';
-    let videoData = {
-      battr: [6, 7],
-      skipafter: 15,
-      maxduration: 50,
-      context: 'instream',
-      playerSize: [640, 480],
-      skip: 0,
-      connectiontype: [1, 2, 6],
-      skipmin: 10,
-      minduration: 10,
-      mimes: ['video/mp4', 'video/x-flv'],
+            },
+            'seatbid': [{
+              'bid': [{
+                'id': '2c95df014cfe97',
+                'impid': '2c95df014cfe97',
+                'price': 4.2,
+                'cid': 'test1',
+                'crid': 'test2',
+                'adm': "<VAST version='3.0'><Ad id='601364'><InLine><AdSystem>Acudeo Compatible</AdSystem><AdTitle>VAST 2.0 Instream Test 1</AdTitle><Description>VAST 2.0 Instream Test 1</Description><Creatives><Creative AdID='601364'><Linear skipoffset='20%'><TrackingEvents><Tracking event='close'><![CDATA[https://mytracking.com/linear/close]]></Tracking><Tracking event='skip'><![CDATA[https://mytracking.com/linear/skip]]></Tracking><MediaFiles><MediaFile delivery='progressive' type='video/mp4' bitrate='500' width='400' height='300' scalable='true' maintainAspectRatio='true'><![CDATA[https://localhost/pubmatic.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>",
+                'w': 0,
+                'h': 0,
+                'dealId': 'ASEA-MS-KLY-TTD-DESKTOP-ID-VID-6S-030420'
+              }],
+              'ext': {
+                'buyid': 'myBuyId'
+              }
+            }]
+          },
+          'headers': {}
+        }
+        let newrequest = spec.buildRequests(newvideoRequests, {
+          auctionId: 'new-auction-id'
+        });
+        let newresponse = spec.interpretResponse(newvideoBidResponses, newrequest);
+        expect(newresponse[0].mediaType).to.equal('video')
+      })
     }
-    beforeEach(() => {
-      utilsMock = sinon.mock(utils);
-      sandbox = sinon.sandbox.create();
-      sandbox.spy(utils, 'logWarn');
-    });
-
-    afterEach(() => {
-      utilsMock.restore();
-      sandbox.restore();
-    })
-
-    it('should log Video.Placement param missing', function() {
-      checkVideoPlacement(videoData, adUnit);
-      sinon.assert.calledWith(utils.logWarn, msg_placement_missing);
-    })
-    it('shoud not log Video.Placement param missing', function() {
-      videoData['placement'] = 1;
-      checkVideoPlacement(videoData, adUnit);
-      sinon.assert.neverCalledWith(utils.logWarn, msg_placement_missing);
-    })
   });
 
-  describe('Video request params', function() {
-    let sandbox, utilsMock, newVideoRequest;
-    beforeEach(() => {
-      utilsMock = sinon.mock(utils);
-      sandbox = sinon.sandbox.create();
-      sandbox.spy(utils, 'logWarn');
-      newVideoRequest = utils.deepClone(videoBidRequests)
+  if (FEATURES.VIDEO) {
+    describe('Checking for Video.Placement property', function() {
+      let sandbox, utilsMock;
+      const adUnit = 'Div1';
+      const msg_placement_missing = 'Video.Placement param missing for Div1';
+      let videoData = {
+        battr: [6, 7],
+        skipafter: 15,
+        maxduration: 50,
+        context: 'instream',
+        playerSize: [640, 480],
+        skip: 0,
+        connectiontype: [1, 2, 6],
+        skipmin: 10,
+        minduration: 10,
+        mimes: ['video/mp4', 'video/x-flv'],
+      }
+      beforeEach(() => {
+        utilsMock = sinon.mock(utils);
+        sandbox = sinon.sandbox.create();
+        sandbox.spy(utils, 'logWarn');
+      });
+
+      afterEach(() => {
+        utilsMock.restore();
+        sandbox.restore();
+      })
+
+      it('should log Video.Placement param missing', function() {
+        checkVideoPlacement(videoData, adUnit);
+        sinon.assert.calledWith(utils.logWarn, msg_placement_missing);
+      })
+      it('shoud not log Video.Placement param missing', function() {
+        videoData['placement'] = 1;
+        checkVideoPlacement(videoData, adUnit);
+        sinon.assert.neverCalledWith(utils.logWarn, msg_placement_missing);
+      })
     });
+  }
 
-    afterEach(() => {
-      utilsMock.restore();
-      sandbox.restore();
-    })
-
-    it('Should log warning if video params from mediaTypes and params obj of bid are not present', function () {
-      delete newVideoRequest[0].mediaTypes.video;
-      delete newVideoRequest[0].params.video;
-
-      let request = spec.buildRequests(newVideoRequest, {
-        auctionId: 'new-auction-id'
+  if (FEATURES.VIDEO) {
+    describe('Video request params', function() {
+      let sandbox, utilsMock, newVideoRequest;
+      beforeEach(() => {
+        utilsMock = sinon.mock(utils);
+        sandbox = sinon.sandbox.create();
+        sandbox.spy(utils, 'logWarn');
+        newVideoRequest = utils.deepClone(videoBidRequests)
       });
 
-      sinon.assert.calledOnce(utils.logWarn);
-      expect(request).to.equal(undefined);
-    });
+      afterEach(() => {
+        utilsMock.restore();
+        sandbox.restore();
+      })
 
-    it('Should consider video params from mediaType object of bid', function () {
-      delete newVideoRequest[0].params.video;
+      it('Should log warning if video params from mediaTypes and params obj of bid are not present', function () {
+        delete newVideoRequest[0].mediaTypes.video;
+        delete newVideoRequest[0].params.video;
 
-      let request = spec.buildRequests(newVideoRequest, {
-        auctionId: 'new-auction-id'
-      });
-      let data = JSON.parse(request.data);
-      expect(data.imp[0].video).to.exist;
-      expect(data.imp[0]['video']['w']).to.equal(videoBidRequests[0].mediaTypes.video.playerSize[0]);
-      expect(data.imp[0]['video']['h']).to.equal(videoBidRequests[0].mediaTypes.video.playerSize[1]);
-      expect(data.imp[0]['video']['battr']).to.equal(undefined);
-    });
-  });
+        let request = spec.buildRequests(newVideoRequest, {
+          auctionId: 'new-auction-id'
+        });
 
-  describe('Video request params', function() {
-    let sandbox, utilsMock, newVideoRequest;
-    beforeEach(() => {
-      utilsMock = sinon.mock(utils);
-      sandbox = sinon.sandbox.create();
-      sandbox.spy(utils, 'logWarn');
-      newVideoRequest = utils.deepClone(videoBidRequests)
-    });
-
-    afterEach(() => {
-      utilsMock.restore();
-      sandbox.restore();
-    })
-
-    it('Should log warning if video params from mediaTypes and params obj of bid are not present', function () {
-      delete newVideoRequest[0].mediaTypes.video;
-      delete newVideoRequest[0].params.video;
-
-      let request = spec.buildRequests(newVideoRequest, {
-        auctionId: 'new-auction-id'
+        sinon.assert.calledOnce(utils.logWarn);
+        expect(request).to.equal(undefined);
       });
 
-      sinon.assert.calledOnce(utils.logWarn);
-      expect(request).to.equal(undefined);
-    });
+      it('Should consider video params from mediaType object of bid', function () {
+        delete newVideoRequest[0].params.video;
 
-    it('Should consider video params from mediaType object of bid', function () {
-      delete newVideoRequest[0].params.video;
-
-      let request = spec.buildRequests(newVideoRequest, {
-        auctionId: 'new-auction-id'
-      });
-      let data = JSON.parse(request.data);
-      expect(data.imp[0].video).to.exist;
-      expect(data.imp[0]['video']['w']).to.equal(videoBidRequests[0].mediaTypes.video.playerSize[0]);
-      expect(data.imp[0]['video']['h']).to.equal(videoBidRequests[0].mediaTypes.video.playerSize[1]);
-      expect(data.imp[0]['video']['battr']).to.equal(undefined);
-    });
-
-    describe('Assign Deal Tier (i.e. prebidDealPriority)', function () {
-      let videoSeatBid, request, newBid;
-      // let data = JSON.parse(request.data);
-      beforeEach(function () {
-        videoSeatBid = videoBidResponse.body.seatbid[0].bid[0];
-        // const adpodValidOutstreamBidRequest = validOutstreamBidRequest.bids[0].mediaTypes.video.context = 'adpod';
-        request = spec.buildRequests(bidRequests, validOutstreamBidRequest);
-        newBid = {
-          requestId: '47acc48ad47af5'
-        };
-        videoSeatBid.ext = videoSeatBid.ext || {};
-        videoSeatBid.ext.video = videoSeatBid.ext.video || {};
-        // videoBidRequests[0].mediaTypes.video = videoBidRequests[0].mediaTypes.video || {};
+        let request = spec.buildRequests(newVideoRequest, {
+          auctionId: 'new-auction-id'
+        });
+        let data = JSON.parse(request.data);
+        expect(data.imp[0].video).to.exist;
+        expect(data.imp[0]['video']['w']).to.equal(videoBidRequests[0].mediaTypes.video.playerSize[0]);
+        expect(data.imp[0]['video']['h']).to.equal(videoBidRequests[0].mediaTypes.video.playerSize[1]);
+        expect(data.imp[0]['video']['battr']).to.equal(undefined);
       });
 
-      it('should not assign video object if deal priority is missing', function () {
-        assignDealTier(newBid, videoSeatBid, request);
-        expect(newBid.video).to.equal(undefined);
-        expect(newBid.video).to.not.exist;
-      });
-
-      it('should not assign video object if context is not a adpod', function () {
-        videoSeatBid.ext.prebiddealpriority = 5;
-        assignDealTier(newBid, videoSeatBid, request);
-        expect(newBid.video).to.equal(undefined);
-        expect(newBid.video).to.not.exist;
-      });
-
-      describe('when video deal tier object is present', function () {
+      describe('Assign Deal Tier (i.e. prebidDealPriority)', function () {
+        let videoSeatBid, request, newBid;
+        // let data = JSON.parse(request.data);
         beforeEach(function () {
-          videoSeatBid.ext.prebiddealpriority = 5;
-          request.bidderRequest.bids[0].mediaTypes.video = {
-            ...request.bidderRequest.bids[0].mediaTypes.video,
-            context: 'adpod',
-            maxduration: 50
+          videoSeatBid = videoBidResponse.body.seatbid[0].bid[0];
+          // const adpodValidOutstreamBidRequest = validOutstreamBidRequest.bids[0].mediaTypes.video.context = 'adpod';
+          request = spec.buildRequests(bidRequests, validOutstreamBidRequest);
+          newBid = {
+            requestId: '47acc48ad47af5'
           };
+          videoSeatBid.ext = videoSeatBid.ext || {};
+          videoSeatBid.ext.video = videoSeatBid.ext.video || {};
+        // videoBidRequests[0].mediaTypes.video = videoBidRequests[0].mediaTypes.video || {};
         });
 
-        it('should set video deal tier object, when maxduration is present in ext', function () {
+        it('should not assign video object if deal priority is missing', function () {
           assignDealTier(newBid, videoSeatBid, request);
-          expect(newBid.video.durationSeconds).to.equal(50);
-          expect(newBid.video.context).to.equal('adpod');
-          expect(newBid.video.dealTier).to.equal(5);
+          expect(newBid.video).to.equal(undefined);
+          expect(newBid.video).to.not.exist;
         });
 
-        it('should set video deal tier object, when duration is present in ext', function () {
-          videoSeatBid.ext.video.duration = 20;
+        it('should not assign video object if context is not a adpod', function () {
+          videoSeatBid.ext.prebiddealpriority = 5;
           assignDealTier(newBid, videoSeatBid, request);
-          expect(newBid.video.durationSeconds).to.equal(20);
-          expect(newBid.video.context).to.equal('adpod');
-          expect(newBid.video.dealTier).to.equal(5);
+          expect(newBid.video).to.equal(undefined);
+          expect(newBid.video).to.not.exist;
+        });
+
+        describe('when video deal tier object is present', function () {
+          beforeEach(function () {
+            videoSeatBid.ext.prebiddealpriority = 5;
+            request.bidderRequest.bids[0].mediaTypes.video = {
+              ...request.bidderRequest.bids[0].mediaTypes.video,
+              context: 'adpod',
+              maxduration: 50
+            };
+          });
+
+          it('should set video deal tier object, when maxduration is present in ext', function () {
+            assignDealTier(newBid, videoSeatBid, request);
+            expect(newBid.video.durationSeconds).to.equal(50);
+            expect(newBid.video.context).to.equal('adpod');
+            expect(newBid.video.dealTier).to.equal(5);
+          });
+
+          it('should set video deal tier object, when duration is present in ext', function () {
+            videoSeatBid.ext.video.duration = 20;
+            assignDealTier(newBid, videoSeatBid, request);
+            expect(newBid.video.durationSeconds).to.equal(20);
+            expect(newBid.video.context).to.equal('adpod');
+            expect(newBid.video.dealTier).to.equal(5);
+          });
         });
       });
     });
-  });
+  }
 
   describe('Marketplace params', function () {
     let sandbox, utilsMock, newBidRequests, newBidResponses;

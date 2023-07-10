@@ -3,6 +3,7 @@ import * as events from '../src/events.js';
 import { EVENTS } from '../src/constants.json';
 import {isPlainObject, isArray} from '../src/utils.js';
 import { loadExternalScript } from '../src/adloader.js'
+import {getGlobal} from '../src/prebidGlobal.js';
 
 // const MODULE_NAME = 'Prebid JS Debug UI';
 const UI_LIBRARY_END_POINT = 'https://pm-harshad-mane.github.io/pbjs-debug-ui/bundle.js';
@@ -50,25 +51,25 @@ function loadUILibrary() {
 }
 
 function createDebugObjectIfNotPresent() {
-  if (isPlainObject($$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME]) === false) {
-    $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME] = {};
+  if (isPlainObject(getGlobal()[DEBUG_OBJECT_KEY_NAME]) === false) {
+    getGlobal()[DEBUG_OBJECT_KEY_NAME] = {};
   }
 }
 
 function createDebugObjectAuctionIfNotPresent() {
-  if (isArray($$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY]) === false) {
-    $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY] = [];
+  if (isArray(getGlobal()[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY]) === false) {
+    getGlobal()[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY] = [];
   }
 }
 
 function getAuctionIdEntry(auctionId) {
   // create one if not present
-  let auctionEntry = $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY].find(
+  let auctionEntry = getGlobal()[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY].find(
     auctionEntry => auctionEntry.auctionId === auctionId
   );
   if (isPlainObject(auctionEntry) === false) {
     auctionEntry = { auctionId };
-    $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY].push(auctionEntry);
+    getGlobal()[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY].push(auctionEntry);
   }
   return auctionEntry;
 }
@@ -77,7 +78,7 @@ function getAuctionIdEntry(auctionId) {
 //       current logic fails when multiple auctions are initiated simultaneously
 //       better if pbjs passes respective auctionId with each event
 function getLatestAuctionEntry() {
-  return $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY][ $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY].length - 1 ];
+  return getGlobal()[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY][ getGlobal()[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY].length - 1 ];
 }
 
 function auctionInitHandler(auctionInitData) {
@@ -97,13 +98,13 @@ function auctionEndHandler(auctionEndData) {
 }
 
 function createDebugObjectAuctionDebugIfNotPresent() {
-  if (isArray($$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][DEBUG_KEY]) === false) {
-    $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][DEBUG_KEY] = [];
+  if (isArray(getGlobal()[DEBUG_OBJECT_KEY_NAME][DEBUG_KEY]) === false) {
+    getGlobal()[DEBUG_OBJECT_KEY_NAME][DEBUG_KEY] = [];
   }
 }
 
 function saveAuctionDebugData(auctionDebugData) {
-  $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][DEBUG_KEY].push(auctionDebugData);
+  getGlobal()[DEBUG_OBJECT_KEY_NAME][DEBUG_KEY].push(auctionDebugData);
 }
 
 function auctionDebugHandler(auctionDebugData) {
@@ -114,13 +115,13 @@ function auctionDebugHandler(auctionDebugData) {
 }
 
 function createDebugObjectTcf2IfNotPresent() {
-  if (isPlainObject($$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][TCF2_KEY]) === false) {
-    $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][TCF2_KEY] = {};
+  if (isPlainObject(getGlobal()[DEBUG_OBJECT_KEY_NAME][TCF2_KEY]) === false) {
+    getGlobal()[DEBUG_OBJECT_KEY_NAME][TCF2_KEY] = {};
   }
 }
 
 function saveTcf2EnforcementData(tcf2EnforcementData) {
-  $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][TCF2_KEY] = tcf2EnforcementData;
+  getGlobal()[DEBUG_OBJECT_KEY_NAME][TCF2_KEY] = tcf2EnforcementData;
 }
 
 function tcf2EnforcementHandler(tcf2EnforcementData) {
