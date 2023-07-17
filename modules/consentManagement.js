@@ -11,6 +11,7 @@ import {includes} from '../src/polyfill.js';
 import {timedAuctionHook} from '../src/utils/perfMetrics.js';
 import {registerOrtbProcessor, REQUEST} from '../src/pbjsORTB.js';
 import {enrichFPD} from '../src/fpd/enrichment.js';
+import * as events from '../src/events.js';
 
 const DEFAULT_CMP = 'iab';
 const DEFAULT_CONSENT_TIMEOUT = 10000;
@@ -82,7 +83,8 @@ function lookupIabConsent({onSuccess, onError, onEvent}) {
     if (success) {
       onEvent(tcfData);
       if (tcfData && (tcfData.gdprApplies === false || tcfData.eventStatus === 'tcloaded' || tcfData.eventStatus === 'useractioncomplete')) {
-        processCmpData(tcfData, {onSuccess, onError});
+        events.emit("CMP_Loaded", tcfData.eventStatus);
+	processCmpData(tcfData, {onSuccess, onError});
       }
     } else {
       onError('CMP unable to register callback function.  Please check CMP setup.');
