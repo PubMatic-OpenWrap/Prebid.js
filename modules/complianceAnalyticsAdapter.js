@@ -40,7 +40,7 @@ export function fireComplianceLoggerCall() {
  // events.emit(COMPLIANCE_INIT);
 };
 
-function executeComplianceLoggerCall() {
+function executeComplianceLoggerCall(args) {
   let pixelURL = END_POINT_BID_LOGGER;
   let outputObj = {};
   let cmConfig = 
@@ -49,22 +49,21 @@ function executeComplianceLoggerCall() {
   outputObj['pdvid'] = '' + profileVersionId;
   outputObj['ih'] = identityOnly;
   outputObj['orig'] = domain;
-  /* cmpConfig: {
-					gdprEnabled: CONFIG.getGdpr(),
-					cmpApi: CONFIG.getCmpApi(),
-					gdprTO: CONFIG.getGdprTimeout(),
-					//actionTO: CONFIG.getActionTimeout(),
-					ccpaEnabled: CONFIG.getCCPA(),
-					ccpaCmpAPI: CONFIG.getCCPACmpApi(),
-					ccpaTO: CONFIG.getCCPATimeout()
-				}
-        */
-  outputObj['ge'] = cmpConfig.gdprEnabled; 
-  outputObj["ce"] = cmpConfig.ccpaEnabled;
-  outputObj["ga"] = cmpConfig.cmpApi;
-  outputObj["gto"] = cmpConfig.gdprTO;
-  outputObj["ca"] = cmpConfig.ccpaCmpAPI;
-  outputObj["cto"] + cmpConfig.ccpaTO;
+  outputObj['ge'] = cmpConfig.gdprEnabled;  // is gdpr enabled
+  outputObj["ce"] = cmpConfig.ccpaEnabled; // is ccpa enabled
+  outputObj["gApi"] = cmpConfig.cmpApi; // gdpr api
+  outputObj["gto"] = cmpConfig.gdprTO; // gdpr timeout
+  outputObj["cApi"] = cmpConfig.ccpaCmpAPI; // ccpa api
+  outputObj["cto"] = cmpConfig.ccpaTO; // ccpa timeout
+  outputObj['gaTo'] = cmpConfig.actionTO; // gdpr action timeout
+  outputObj['cmpEv'] = args.eventCode; // cmp event code
+  outputObj['cmpNm'] = args.cmp.name; // cmp name
+  outputObj['cmpId'] = args.cmp.id; // cmp id
+  outputObj['tcS'] = args.tcString;
+  outputObj['gdprA'] = args.gdprApplies; // whether gdpr applies or not
+  outputObj['cc'] = args.publisherCC; // geo of publisher or site
+
+
   pixelURL += 'pubid=' + publisherId;
   ajax(
     pixelURL,
@@ -131,7 +130,7 @@ let complianceAdapter = Object.assign({}, baseAdapter, {
       case COMPLIANCE_INIT:
         logInfo('Compliance Logger fired - ');
         logInfo(args);
-        executeComplianceLoggerCall();
+        executeComplianceLoggerCall(args);
         break;
     }
   }
