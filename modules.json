@@ -1,1 +1,6 @@
-["appnexusBidAdapter","consentManagement","pulsepointBidAdapter","openxBidAdapter","rubiconBidAdapter","sovrnBidAdapter","pubmaticBidAdapter","adgenerationBidAdapter","ixBidAdapter","criteoBidAdapter", "viewabilityScoreGeneration", "priceFloors"]
+[
+"pubmaticBidAdapter",
+"viewabilityScoreGeneration",
+"owmodule",
+"auctionUserDetails"
+]

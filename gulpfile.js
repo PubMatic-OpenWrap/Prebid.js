@@ -517,7 +517,8 @@ gulp.task('coveralls', gulp.series('test-coverage', coveralls));
 gulp.task('build', gulp.series(clean, 'build-bundle-prod'));
 gulp.task('build-postbid', gulp.series(escapePostbidConfig, buildPostbid));
 
-gulp.task('serve', gulp.series(clean, lint, gulp.parallel('build-bundle-dev', watch, test)));
+// gulp.task('serve', gulp.series(clean, lint, gulp.parallel('build-bundle-dev', watch, test)));
+gulp.task('serve', gulp.series(clean, lint, gulp.parallel('build-bundle-dev', watch)));
 gulp.task('serve-fast', gulp.series(clean, gulp.parallel('build-bundle-dev', watch)));
 gulp.task('serve-fake', gulp.series(clean, gulp.parallel('build-bundle-dev', watch), injectFakeServerEndpointDev, test, startFakeServer));
 
