@@ -102,14 +102,11 @@ function lookupIabConsent({onSuccess, onError, onEvent}) {
       if(typeof __tcfapi === 'function') {
         __tcfapi('ping', 2, (pingReturn) => {
           events.emit("CMP_Loaded", {
-            'eventCode': tcfData.eventStatus,
             'cmp': {
               name: cmpList[pingReturn.cmpId] || undefined,
               id: pingReturn.cmpId
             },
-            tcString: tcfData.tcString,
-            gdprApplies: tcfData.gdprApplies,
-            countryCode: tcfData.publisherCC
+            consentData: tcfData
           });
         });
       }
