@@ -46,7 +46,9 @@ export const coreStorage = getCoreStorageManager('userid');
 
 function collectBasicConsentData(args) {
   console.log("Compliance logger call - collectConsentData");
+
   outputObj['namespaces'] = window._pbjsGlobals;
+  outputObj['pv'] = owpbjs.version;
   outputObj['pubid'] = '' + publisherId;
   outputObj['pid'] = '' + profileId;
   outputObj['pdvid'] = '' + profileVersionId;
@@ -116,6 +118,7 @@ function populateDummyData() {
     outputObj['namespaces'] = ["owpbjs", "owpbjs", "pbjs"];
     outputObj['loc'] = 'UK';
     outputObj['gdprA'] = false;
+    outputObj['pv'] = "v6.18.0";
   }
 }
 

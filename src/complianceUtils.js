@@ -45,7 +45,23 @@ const COMPLIANCE_MISCONFIGS = {
     2: "GDPR Action timeout not set/set to 0",
     3: "GDPR config not set for GDPR applicable region. Region detected - ",
     4: "CCPA is not configured for a CCPA region. Region detected - ",
-    5: "More than 1 instance of pwt detected."
+    5: "More than 1 instance of pwt detected.",
+    6: "Prebid version is less than v7.39. We highly recommend you to use prebid v7.39 or above"
+}
+
+function isVersionSmaller(version1, version2) {
+    const parseVersion = (version) => version.slice(1).split('.').map(Number);
+
+    const [major1, minor1, patch1] = parseVersion(version1);
+    const [major2, minor2, patch2] = parseVersion(version2);
+
+    if (major1 < major2) return true;
+    if (major1 > major2) return false;
+
+    if (minor1 < minor2) return true;
+    if (minor1 > minor2) return false;
+
+    return patch1 < patch2;
 }
 
 export function validateConsentData(dataObj) {
@@ -97,6 +113,10 @@ export function validateConsentData(dataObj) {
     }
     if(dataObj.namespaces.indexOf("owpbjs") !== dataObj.namespaces.lastIndexOf("owpbjs")) {
         errors['misconfigs'].push(COMPLIANCE_MISCONFIGS[5]);
+    }
+
+    if (isVersionSmaller(dataObj.pv, 'v7.39.0')) {
+        errors['misconfigs'].push(COMPLIANCE_MISCONFIGS[6]);
     }
 
     dataObj.errors = errors;
