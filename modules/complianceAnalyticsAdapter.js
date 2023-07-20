@@ -6,6 +6,7 @@ import { ajax } from '../src/ajax.js';
 import { getCoreStorageManager } from '../src/storageManager.js';
 import { getParameterByName } from '../src/utils.js';
 import { configurationMap, validateConsentData } from '../src/complianceUtils.js';
+import { getGlobal } from '../src/prebidGlobal.js';
 /* installed modules = 
 'complianceAnalyticsAdapter', 'consentManagement', 'gdprEnforcement', , 'userId'
 'criteoBidAdapter', 'pubmaticBidAdapter', 
@@ -67,6 +68,8 @@ function collectBasicConsentData(args) {
   outputObj['tcS'] = args.consentData.tcString;
   outputObj['gdprA'] = args.consentData.gdprApplies; // whether gdpr applies or not
   outputObj['cc'] = args.consentData.publisherCC; // geo of publisher or site
+  outputObj['im'] = getGlobal().installedModules;
+  outputObj['ts'] = new Date().getTime();//timstamp
 };
 
 function collectUserConsentDataAndFireLogger(args) {
