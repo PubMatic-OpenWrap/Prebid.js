@@ -5,7 +5,10 @@ import { targeting } from '../src/targeting.js';
 import * as events from '../src/events.js';
 import CONSTANTS from '../src/constants.json';
 import { isAdUnitCodeMatchingSlot, deepClone } from '../src/utils.js';
+import { getStorageManager } from '../src/storageManager.js';
 
+const BIDDER_CODE = 'pubmatic';
+const storage = getStorageManager({bidderCode: BIDDER_CODE});
 const MODULE_NAME = 'viewabilityScoreGeneration';
 const ENABLED = 'enabled';
 const TARGETING = 'targeting';
@@ -19,10 +22,13 @@ const ADSLOTSIZE_INDEX = 2;
 const ADUNIT_INDEX = 1;
 const ENDPOINT = 'http://localhost:3000/fake-endpoint/inventory-packaging' // TODO: update this to a real endpoint when ready
 const domain = window.location.hostname;
+let vsgObj;
+
+storage.getDataFromLocalStorage('viewability-data', val => {
+  vsgObj = JSON.parse(val);
+});
 
 export const fireToServer = auctionData => {
-  vsgObj = getAndParseFromLocalStorage('viewability-data');
-
   const payload = generatePayload(auctionData, vsgObj);
 
   ajax(ENDPOINT, (res) => {
@@ -81,18 +87,15 @@ const fireStatHatLogger = (statKeyName) => {
   document.body.appendChild(statHatElement)
 };
 
-const removeFromLocalStorage = key => window.localStorage.removeItem(key);
-export const getAndParseFromLocalStorage = key => JSON.parse(window.localStorage.getItem(key));
+const removeFromLocalStorage = key => storage.removeDataFromLocalStorage(key);
 export const setAndStringifyToLocalStorage = (key, object) => {
   try {
-    window.localStorage.setItem(key, JSON.stringify(object));
+    storage.setDataInLocalStorage(key, JSON.stringify(object));
   } catch (e) {
     // send error to stathat endpoint
     fireStatHatLogger(`${e} --- ${window.location.href}`);
   }
 };
-
-let vsgObj = getAndParseFromLocalStorage('viewability-data');
 
 export const makeBidRequestsHook = (fn, bidderRequests) => {
   if (vsgObj && config.getConfig(MODULE_NAME)?.enabled) {

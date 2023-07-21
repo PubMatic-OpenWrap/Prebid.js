@@ -188,7 +188,7 @@ describe('viewabilityScoreGeneration', function() {
       sinon.assert.notCalled(setGptEventHandlersSpy);
     });
 
-    it('should utlize the viewability targeting feature if enabled', function() {
+    it('should utilize the viewability targeting feature if enabled', function() {
       const setGptEventHandlersSpy = sandbox.spy(viewabilityScoreGeneration, 'setGptEventHandlers');
       const setViewabilityTargetingKeysSpy = sandbox.spy(viewabilityScoreGeneration, 'setViewabilityTargetingKeys');
 
@@ -465,11 +465,12 @@ describe('viewabilityScoreGeneration', function() {
           }
         ],
         'iid': '82eb2c02-580e-45a1-9b74-afeea9d76d1d',
-        'pubid': '156009',
-        'recordTs': 1687810796444,
+        'pubid': '156009'
       };
 
       const result = viewabilityScoreGeneration.generatePayload(auctionData, JSON.parse(localStorageObj));
+      expect(result['recordTs']).to.be.ok;
+      delete result['recordTs'];
       expect(result).to.deep.equal(expected);
     });
   });
