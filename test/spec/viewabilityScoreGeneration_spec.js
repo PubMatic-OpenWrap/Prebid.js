@@ -307,4 +307,170 @@ describe('viewabilityScoreGeneration', function() {
       expect(spyCall.args[0]).to.deep.equal(result);
     });
   });
+
+  describe('server-side tracking', function() {
+    it('should call the server-side endpoint by default if viewability data in local storage has been collected for more than 6 hours', function() {
+      const config = {
+        enabled: true,
+        targeting: {
+          enabled: true
+        }
+      };
+
+      const now = new Date();
+      const minusSevenHours = new Date();
+      minusSevenHours.setHours(now.getHours() - 7);
+
+      const localStorageObj = {
+        createdAt: Date.parse(minusSevenHours)
+      };
+
+      const result = viewabilityScoreGeneration.okToFireToServer(config, localStorageObj);
+      expect(result).to.equal(true);
+    });
+
+    it('should not call the server-side endpoint if it is explicitly disabled', function() {
+      const config = {
+        enabled: true,
+        targeting: {
+          enabled: true
+        },
+        serverSideTracking: {
+          enabled: false
+        }
+      };
+
+      const localStorageObj = {
+        createdAt: Date.now()
+      };
+
+      const result = viewabilityScoreGeneration.okToFireToServer(config, localStorageObj);
+      expect(result).to.equal(false);
+    });
+
+    it('should call the server-side endpoint if the JSON stringified viewability data in local storage has a character count greater than 7000', function() {
+      const config = {
+        enabled: true,
+        targeting: {
+          enabled: true
+        }
+      };
+
+      const dummyData = 'a'.repeat(7001);
+      const localStorageObj = {
+        dummyViewData: dummyData
+      };
+
+      const result = viewabilityScoreGeneration.okToFireToServer(config, localStorageObj);
+      expect(result).to.equal(true);
+    });
+
+    it('should call or not call the server-side endpoint correctly based on how the serverSideTracking.frequency value set', function() {
+      const config = {
+        enabled: true,
+        targeting: {
+          enabled: true
+        },
+        serverSideTracking: {
+          enabled: true,
+          frequency: ['minutes', 5]
+        }
+      };
+
+      const now = new Date();
+      const minusSixMinutes = new Date();
+      minusSixMinutes.setMinutes(now.getMinutes() - 6);
+
+      const localStorageObj1 = {
+        createdAt: Date.parse(minusSixMinutes)
+      };
+
+      const localStorageObj2 = {
+        createdAt: Date.now()
+      };
+
+      const result1 = viewabilityScoreGeneration.okToFireToServer(config, localStorageObj1);
+      const result2 = viewabilityScoreGeneration.okToFireToServer(config, localStorageObj2);
+
+      expect(result1).to.equal(true);
+      expect(result2).to.equal(false);
+    });
+
+    it('should correctly generate the payload to be sent to the server-side tracking endpoint in the correct schema format', function() {
+      const localStorageObj = '{"localhost":{"rendered":3,"viewed":3,"createdAt":1687810796444,"lastViewStarted":1687810796453,"totalViewTime":0},"div-gpt-ad-1460505748561-0":{"rendered":1,"viewed":1,"createdAt":1687810796444,"lastViewStarted":1687810796453},"300x250":{"rendered":2,"viewed":2,"slot":["div-gpt-ad-1460505748561-0","div-gpt-ad-1460505748561-2"],"createdAt":1687810796444,"lastViewStarted":1687810796453,"totalViewTime":0},"div-gpt-ad-1460505748561-1":{"rendered":1,"viewed":1,"createdAt":1687810796444,"lastViewStarted":1687810796453},"728x90":{"rendered":1,"viewed":1,"slot":["div-gpt-ad-1460505748561-1"],"createdAt":1687810796444,"lastViewStarted":1687810796453},"div-gpt-ad-1460505748561-2":{"rendered":1,"viewed":1,"createdAt":1687810796444,"lastViewStarted":1687810796453}}';
+
+      const auctionData = {
+        auctionId: '82eb2c02-580e-45a1-9b74-afeea9d76d1d',
+        adUnits: [
+          {
+            bids: [
+              {
+                bidder: 'pubmatic',
+                params: {
+                  publisherId: '156009'
+                }
+              }
+            ]
+          }
+        ]
+      };
+
+      const expected = {
+        'adDomain': 'localhost',
+        'adSizes': [
+          {
+            'adSize': '300x250',
+            'createdAt': 1687810796444,
+            'lastViewStarted': 1687810796453,
+            'rendered': 2,
+            'slot': [
+              'div-gpt-ad-1460505748561-0',
+              'div-gpt-ad-1460505748561-2'
+            ],
+            'totalViewTime': 0,
+            'viewed': 2
+          },
+          {
+            'adSize': '728x90',
+            'createdAt': 1687810796444,
+            'lastViewStarted': 1687810796453,
+            'rendered': 1,
+            'slot': [
+              'div-gpt-ad-1460505748561-1'
+            ],
+            'viewed': 1
+          },
+        ],
+        'adUnits': [
+          {
+            'adUnit': 'div-gpt-ad-1460505748561-0',
+            'createdAt': 1687810796444,
+            'lastViewStarted': 1687810796453,
+            'rendered': 1,
+            'viewed': 1
+          },
+          {
+            'adUnit': 'div-gpt-ad-1460505748561-1',
+            'createdAt': 1687810796444,
+            'lastViewStarted': 1687810796453,
+            'rendered': 1,
+            'viewed': 1
+          },
+          {
+            'adUnit': 'div-gpt-ad-1460505748561-2',
+            'createdAt': 1687810796444,
+            'lastViewStarted': 1687810796453,
+            'rendered': 1,
+            'viewed': 1
+          }
+        ],
+        'iid': '82eb2c02-580e-45a1-9b74-afeea9d76d1d',
+        'pubid': '156009',
+        'recordTs': 1687810796444,
+      };
+
+      const result = viewabilityScoreGeneration.generatePayload(auctionData, JSON.parse(localStorageObj));
+      expect(result).to.deep.equal(expected);
+    });
+  });
 });
