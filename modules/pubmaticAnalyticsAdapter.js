@@ -641,7 +641,7 @@ function bidResponseHandler(args) {
   }
   bid.bidResponse = parseBidResponse(args);
   // 9484 replace kgpv if required
-  var kgpvAndRegexOfBid = checkAndModifySizeOfKGPVIfRequired(bid, window.PWT.kgpvMap[bid.adUnit.adUnitCode]);
+  var kgpvAndRegexOfBid = checkAndModifySizeOfKGPVIfRequired(bid);
   bid.params.kgpv = kgpvAndRegexOfBid.responseKGPV;
   bid.params.regexPattern = kgpvAndRegexOfBid.responseRegex;
 }
