@@ -234,6 +234,63 @@ function getUpdatedKGPVForVideo(kgpv, bidResponse) {
   return kgpv;
 }
 
+function checkAndModifySizeOfKGPVIfRequired(bid){
+	var responseObject={
+		"responseKGPV" : bid.params.kgpv,
+		"responseRegex": bid.params.regexPattern
+	};
+
+	// Logic to find out KGPV for partner for which the bid is recieved.
+	// Need to check for No Bid Case.
+	// kgpv.kgpvs.length > 0 && kgpv.kgpvs.forEach(function(ele){
+	// 	/* istanbul ignore else */
+	// 	if(bid.bidder == ele.adapterID){
+	// 		responseObject.responseKGPV = ele.kgpv;
+	// 		responseObject.responseRegex = ele.regexPattern;
+	// 	}
+	// });
+	var responseIdArray = responseObject.responseKGPV.split("@");
+	var sizeIndex = 1;
+	var isRegex = false;
+	/* istanbul ignore else */
+	if(responseIdArray &&  (responseIdArray.length == 2 || ((responseIdArray.length == 3) && (sizeIndex = 2) && (isRegex=true))) && bid.bidResponse.mediaType != "video"){
+		var responseIdSize = responseIdArray[sizeIndex];
+		var responseIndex = null;
+		// Below check if ad unit index is present then ignore it
+		// TODO: Confirm it needs to be ignored or not
+		/* istanbul ignore else */
+		if(responseIdArray[sizeIndex].indexOf(":")>0){
+			responseIdSize= responseIdArray[sizeIndex].split(":")[0];
+			responseIndex = responseIdArray[sizeIndex].split(":")[1];
+		}
+		/* istanbul ignore else */
+		if(bid.bidResponse.dimensions &&
+      (bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height) != responseIdSize &&
+      ((bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height).toUpperCase() != "0X0")){
+			// Below check is for size level mapping
+			// ex. 300x250@300X250 is KGPV generated for first size but the winning size is 728x90 
+			// then new KGPV will be replaced to 728x90@728X90
+			/* istanbul ignore else */
+			if(responseIdArray[0].toUpperCase() == responseIdSize.toUpperCase()){
+				responseIdArray[0] = (bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height).toLowerCase();
+			}
+			if(isRegex){
+				responseObject.responseKGPV = responseIdArray[0] + "@" + responseIdArray[1] + "@" +  (bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height);
+			}
+			else{
+				responseObject.responseKGPV = responseIdArray[0] + "@" +  (bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height);
+			}
+			// Below check is to make consistent behaviour with ad unit index
+			// it again appends index if it was originally present
+			if(responseIndex){
+				responseObject.responseKGPV = responseObject.responseKGPV + ":" + responseIndex;
+			}
+		}
+	
+	}
+	return responseObject;
+}
+
 function getAdapterNameForAlias(aliasName) {
   // This condition  is OpenWrap specific, not to contribute to Prebid
   if (window.PWT && isFn(window.PWT.getAdapterNameForAlias)) {
@@ -580,6 +637,10 @@ function bidResponseHandler(args) {
   setBidStatus(bid, args);
   bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
   bid.bidResponse = parseBidResponse(args);
+  // 9484 replace kgpv if required
+  var kgpvAndRegexOfBid = checkAndModifySizeOfKGPVIfRequired(bid, window.PWT.kgpvMap[bid.adUnit.adUnitCode]);
+  bid.params.kgpv = kgpvAndRegexOfBid.responseKGPV;
+  bid.params.regexPattern = kgpvAndRegexOfBid.responseRegex;
 }
 
 function bidderDoneHandler(args) {
