@@ -20,7 +20,7 @@ const NATIVE_DEFAULT_SIZE = '0x0';
 const DEFAULT_SERVER_CALL_FREQUENCY = { metric: 'hours', duration: 6 };
 const ADSLOTSIZE_INDEX = 2;
 const ADUNIT_INDEX = 1;
-const ENDPOINT = 'http://localhost:3000/fake-endpoint/inventory-packaging' // TODO: update this to a real endpoint when ready
+const ENDPOINT = 'https://ut.pubmatic.com/vw'
 const domain = window.location.hostname;
 let vsgObj;
 
