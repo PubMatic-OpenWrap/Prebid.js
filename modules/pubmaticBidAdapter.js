@@ -1,4 +1,4 @@
-import { getBidRequest, logWarn, isBoolean, isStr, isArray, inIframe, mergeDeep, deepAccess, isNumber, deepSetValue, logInfo, logError, deepClone, convertTypes, uniques, isPlainObject, isInteger, parseQueryStringParameters } from '../src/utils.js';
+import { getBidRequest, logWarn, isBoolean, isStr, isArray, inIframe, mergeDeep, deepAccess, isNumber, deepSetValue, logInfo, logError, deepClone, convertTypes, uniques, isPlainObject, isInteger, parseQueryStringParameters, generateUUID } from '../src/utils.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
@@ -1133,6 +1133,8 @@ export const spec = {
     var bid;
     var blockedIabCategories = [];
     var allowedIabCategories = [];
+    var wiid = generateUUID();
+    bidderRequest.wiid = wiid;
 
     validBidRequests.forEach(originalBid => {
       bid = deepClone(originalBid);
@@ -1183,7 +1185,7 @@ export const spec = {
     payload.ext.wrapper.profile = parseInt(conf.profId) || UNDEFINED;
     payload.ext.wrapper.version = parseInt(conf.verId) || UNDEFINED;
     // TODO: fix auctionId leak: https://github.com/prebid/Prebid.js/issues/9781
-    payload.ext.wrapper.wiid = conf.wiid || bidderRequest.auctionId;
+    payload.ext.wrapper.wiid = conf.wiid || wiid;
     // eslint-disable-next-line no-undef
     payload.ext.wrapper.wv = $$REPO_AND_VERSION$$;
     payload.ext.wrapper.transactionId = conf.transactionId;
