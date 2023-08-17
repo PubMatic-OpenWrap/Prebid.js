@@ -365,7 +365,7 @@ export const okToFireToServer = (config, lsObj) => {
   }
 
   // check if viewability data has expired in local storage based on config settings
-  if (lsObj?.createdAt) {
+  if (lsObj.createdAt) {
     const vsgCreatedAtTime = lsObj.createdAt;
     const currentTime = Date.now();
     const differenceInMilliseconds = Math.round(currentTime - vsgCreatedAtTime);
