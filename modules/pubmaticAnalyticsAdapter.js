@@ -638,7 +638,7 @@ function bidResponseHandler(args) {
   bid.source = formatSource(bid.source || args.source);
   setBidStatus(bid, args);
   bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
-  if(window.PWT && !!isFn(window.PWT.HookForBidReceived)){
+  if (window.PWT && !!isFn(window.PWT.HookForBidReceived)) {
     window.PWT.HookForBidReceived(args.adUnitCode, args);
   }
   bid.bidResponse = parseBidResponse(args);
@@ -697,7 +697,7 @@ function bidTimeoutHandler(args) {
 }
 
 /// /////////// ADAPTER DEFINITION //////////////
-setDebounceDelay(30);
+setDebounceDelay(0);
 
 let baseAdapter = adapter({
   analyticsType: 'endpoint'
