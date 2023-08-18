@@ -385,6 +385,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   let auctionId = e.auctionId;
   let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId]?.referer || '';
   let auctionCache = cache.auctions[auctionId];
+  let wiid = auctionCache?.wiid;
   let floorData = auctionCache?.floorData;
   let floorFetchStatus = getFloorFetchStatus(auctionCache.floorData);
   let outputObj = { s: [] };
@@ -400,7 +401,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
 
   pixelURL += 'pubid=' + publisherId;
   outputObj['pubid'] = '' + publisherId;
-  outputObj['iid'] = '' + auctionId;
+  outputObj['iid'] = '' + wiid;
   outputObj['to'] = '' + auctionCache.timeout;
   outputObj['purl'] = referrer;
   outputObj['orig'] = getDomainFromUrl(referrer);
@@ -471,6 +472,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   var origAdUnitId = origAdUnit.adUnitId || adUnitId;
   let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId].referer || '';
   let floorData = cache.auctions[auctionId].floorData;
+  let wiid = cache.auctions[auctionId]?.wiid;
   let adv = winningBid.bidResponse ? getAdDomain(winningBid.bidResponse) || undefined : undefined;
   let fskp = floorData ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined;
 
@@ -478,7 +480,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   pixelURL += 'pubid=' + publisherId;
   pixelURL += '&purl=' + enc(referrer);
   pixelURL += '&tst=' + Math.round((new window.Date()).getTime() / 1000);
-  pixelURL += '&iid=' + enc(auctionId);
+  pixelURL += '&iid=' + enc(wiid);
   pixelURL += '&bidid=' + (generatedBidId ? enc(generatedBidId) : enc(winningBidId));
   pixelURL += '&origbidid=' + enc(winningBidId);
   pixelURL += '&pid=' + enc(profileId);
@@ -539,6 +541,9 @@ function bidRequestedHandler(args) {
         bidWon: false,
         dimensions: bid.sizes
       };
+    }
+    if (bid.bidder === 'pubmatic' && !!bid?.params?.wiid) {
+      cache.auctions[args.auctionId].wiid = bid.params.wiid;
     }
     cache.auctions[args.auctionId].adUnitCodes[bid.adUnitCode].bids[bid.bidId] = [copyRequiredBidDetails(bid)];
     if (bid.floorData) {
