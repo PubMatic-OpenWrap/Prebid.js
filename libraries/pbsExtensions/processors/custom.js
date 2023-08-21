@@ -48,7 +48,7 @@ export function setReqParams(ortbRequest, bidderRequest, context, {am = adapterM
   firstBidRequest = context.actualBidderRequests[0];
   // check if isPrebidPubMaticAnalyticsEnabled in s2sConfig and if it is then get auctionId from adUnit
   let isAnalyticsEnabled = s2sConfig.extPrebid && s2sConfig.extPrebid.isPrebidPubMaticAnalyticsEnabled;
-  iidValue = isAnalyticsEnabled ? firstBidRequest.auctionId : firstBidRequest.bids[0].params.wiid;
+  iidValue = firstBidRequest.bids[0].params.wiid || firstBidRequest.auctionId;
   if (typeof s2sConfig.extPrebid === 'object') {
     owAliases = s2sConfig.extPrebid.aliases;
   }
@@ -138,9 +138,9 @@ export function setResponseParams(bidResponse, bid, context) {
     let extPrebidTargeting = deepAccess(bid, 'ext.prebid.targeting');
     if (isPlainObject(extPrebidTargeting)) {
       if (extPrebidTargeting.hasOwnProperty('hb_buyid_pubmatic')) {
-                context?.s2sBidRequest?.s2sConfig?.extPrebid?.isUsePrebidKeysEnabled
-                  ? bidResponse.adserverTargeting['hb_buyid_pubmatic'] = extPrebidTargeting['hb_buyid_pubmatic']
-                  : bidResponse.adserverTargeting['pwtbuyid_pubmatic'] = extPrebidTargeting['hb_buyid_pubmatic'];
+        context?.s2sBidRequest?.s2sConfig?.extPrebid?.isUsePrebidKeysEnabled
+          ? bidResponse.adserverTargeting['hb_buyid_pubmatic'] = extPrebidTargeting['hb_buyid_pubmatic']
+          : bidResponse.adserverTargeting['pwtbuyid_pubmatic'] = extPrebidTargeting['hb_buyid_pubmatic'];
       }
     }
 
