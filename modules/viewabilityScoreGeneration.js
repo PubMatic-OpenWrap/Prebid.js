@@ -398,14 +398,16 @@ export let init = (setGptCb, setTargetingCb) => {
     if (globalConfig[MODULE_NAME][ENABLED] !== true) {
       return;
     }
-    storage.getDataFromLocalStorage('viewability-data', val => {
-      vsgObj = JSON.parse(val);
-      initConfigDefaults(globalConfig);
-      setGptCb();
 
-      if (globalConfig.viewabilityScoreGeneration?.targeting?.enabled && (globalConfig.viewabilityScoreGeneration?.targeting?.score || globalConfig.viewabilityScoreGeneration?.targeting?.bucket)) {
-        setTargetingCb(globalConfig);
-      }
+    initConfigDefaults(globalConfig);
+    setGptCb();
+
+    if (
+      globalConfig.viewabilityScoreGeneration?.targeting?.enabled &&
+      (globalConfig.viewabilityScoreGeneration?.targeting?.score || globalConfig.viewabilityScoreGeneration?.targeting?.bucket)
+    ) {
+      setTargetingCb(globalConfig);
+    }
 
     adapterManager.makeBidRequests.after(makeBidRequestsHook);
 
