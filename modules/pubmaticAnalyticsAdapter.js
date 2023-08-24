@@ -580,7 +580,7 @@ function bidResponseHandler(args) {
   bid.source = formatSource(bid.source || args.source);
   setBidStatus(bid, args);
   const latency = args?.timeToRespond || Date.now() - cache.auctions[args.auctionId].timestamp;
-  bid.partnerTimeToRespond =  window.PWT?.versionDetails?.timeout ? (latency > window.PWT.versionDetails.timeout ? (window.PWT.versionDetails.timeout + 100) : latency) : latency;
+  bid.partnerTimeToRespond =  window.PWT?.versionDetails?.timeout ? (latency > (window.PWT.versionDetails.timeout + 100) ? (window.PWT.versionDetails.timeout + 100) : latency) : latency;
   bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
   bid.bidResponse = parseBidResponse(args);
 }
