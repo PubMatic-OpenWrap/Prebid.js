@@ -22,6 +22,7 @@ const NO_BID = 'no-bid';
 const ERROR = 'error';
 const REQUEST_ERROR = 'request-error';
 const TIMEOUT_ERROR = 'timeout-error';
+const OPEN_AUCTION_DEAL_ID = '-1';
 const EMPTY_STRING = '';
 const MEDIA_TYPE_BANNER = 'banner';
 const CURRENCY_USD = 'USD';
@@ -230,6 +231,63 @@ function getUpdatedKGPVForVideo(kgpv, bidResponse) {
   return kgpv;
 }
 
+function checkAndModifySizeOfKGPVIfRequired(bid){
+	var responseObject={
+		"responseKGPV" : bid.params.kgpv,
+		"responseRegex": bid.params.regexPattern
+	};
+
+	// Logic to find out KGPV for partner for which the bid is recieved.
+	// Need to check for No Bid Case.
+	// kgpv.kgpvs.length > 0 && kgpv.kgpvs.forEach(function(ele){
+	// 	/* istanbul ignore else */
+	// 	if(bid.bidder == ele.adapterID){
+	// 		responseObject.responseKGPV = ele.kgpv;
+	// 		responseObject.responseRegex = ele.regexPattern;
+	// 	}
+	// });
+	var responseIdArray = responseObject.responseKGPV.split("@");
+	var sizeIndex = 1;
+	var isRegex = false;
+	/* istanbul ignore else */
+	if(responseIdArray &&  (responseIdArray.length == 2 || ((responseIdArray.length == 3) && (sizeIndex = 2) && (isRegex=true))) && bid.bidResponse.mediaType != "video"){
+		var responseIdSize = responseIdArray[sizeIndex];
+		var responseIndex = null;
+		// Below check if ad unit index is present then ignore it
+		// TODO: Confirm it needs to be ignored or not
+		/* istanbul ignore else */
+		if(responseIdArray[sizeIndex].indexOf(":")>0){
+			responseIdSize= responseIdArray[sizeIndex].split(":")[0];
+			responseIndex = responseIdArray[sizeIndex].split(":")[1];
+		}
+		/* istanbul ignore else */
+		if(bid.bidResponse.dimensions &&
+      (bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height) != responseIdSize &&
+      ((bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height).toUpperCase() != "0X0")){
+			// Below check is for size level mapping
+			// ex. 300x250@300X250 is KGPV generated for first size but the winning size is 728x90 
+			// then new KGPV will be replaced to 728x90@728X90
+			/* istanbul ignore else */
+			if(responseIdArray[0].toUpperCase() == responseIdSize.toUpperCase()){
+				responseIdArray[0] = (bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height).toLowerCase();
+			}
+			if(isRegex){
+				responseObject.responseKGPV = responseIdArray[0] + "@" + responseIdArray[1] + "@" +  (bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height);
+			}
+			else{
+				responseObject.responseKGPV = responseIdArray[0] + "@" +  (bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height);
+			}
+			// Below check is to make consistent behaviour with ad unit index
+			// it again appends index if it was originally present
+			if(responseIndex){
+				responseObject.responseKGPV = responseObject.responseKGPV + ":" + responseIndex;
+			}
+		}
+	
+	}
+	return responseObject;
+}
+
 function getAdapterNameForAlias(aliasName) {
   // This condition  is OpenWrap specific, not to contribute to Prebid
   if (window.PWT && isFn(window.PWT.getAdapterNameForAlias)) {
@@ -306,7 +364,7 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid) {
         'psz': bid.bidResponse ? (bid.bidResponse.dimensions.width + 'x' + bid.bidResponse.dimensions.height) : '0x0',
         'eg': bid.bidResponse ? bid.bidResponse.bidGrossCpmUSD : 0,
         'en': bid.bidResponse ? bid.bidResponse.bidPriceUSD : 0,
-        'di': bid.bidResponse ? (bid.bidResponse.dealId || EMPTY_STRING) : EMPTY_STRING,
+        'di': bid.bidResponse ? (bid.bidResponse.dealId || OPEN_AUCTION_DEAL_ID) : OPEN_AUCTION_DEAL_ID,
         'dc': bid.bidResponse ? (bid.bidResponse.dealChannel || EMPTY_STRING) : EMPTY_STRING,
         'l1': bid.bidResponse ? bid.clientLatencyTimeMs : 0,
         'l2': 0,
@@ -494,6 +552,8 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   pixelURL += '&kgpv=' + enc(getValueForKgpv(winningBid, adUnitId));
   pixelURL += '&piid=' + enc(winningBid.bidResponse.partnerImpId || EMPTY_STRING);
   pixelURL += '&rf=' + enc(origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0);
+  pixelURL += '&di=' + enc(winningBid?.bidResponse?.dealId || OPEN_AUCTION_DEAL_ID);
+
   pixelURL += '&plt=' + enc(getDevicePlatform());
   pixelURL += '&psz=' + enc((winningBid?.bidResponse?.dimensions?.width || '0') + 'x' +
     (winningBid?.bidResponse?.dimensions?.height || '0'));
@@ -579,7 +639,14 @@ function bidResponseHandler(args) {
   bid.source = formatSource(bid.source || args.source);
   setBidStatus(bid, args);
   bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
+  if (window.PWT && !!isFn(window.PWT.HookForBidReceived)) {
+    window.PWT.HookForBidReceived(args.adUnitCode, args);
+  }
   bid.bidResponse = parseBidResponse(args);
+  // 9484 replace kgpv if required
+  var kgpvAndRegexOfBid = checkAndModifySizeOfKGPVIfRequired(bid);
+  bid.params.kgpv = kgpvAndRegexOfBid.responseKGPV;
+  bid.params.regexPattern = kgpvAndRegexOfBid.responseRegex;
 }
 
 function bidRejectedHandler(args) {
@@ -641,7 +708,7 @@ function bidTimeoutHandler(args) {
 }
 
 /// /////////// ADAPTER DEFINITION //////////////
-setDebounceDelay(30);
+setDebounceDelay(0);
 
 let baseAdapter = adapter({
   analyticsType: 'endpoint'
