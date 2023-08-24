@@ -1,4 +1,5 @@
-import {config} from '../src/config.js';
+import { config } from '../src/config.js';
+import { ajax } from '../src/ajax.js';
 import adapterManager from '../src/adapterManager.js';
 import { targeting } from '../src/targeting.js';
 import * as events from '../src/events.js';
@@ -15,10 +16,64 @@ const GPT_SLOT_RENDER_ENDED_EVENT = 'slotRenderEnded';
 const GPT_IMPRESSION_VIEWABLE_EVENT = 'impressionViewable';
 const GPT_SLOT_VISIBILITY_CHANGED_EVENT = 'slotVisibilityChanged';
 const TOTAL_VIEW_TIME_LIMIT = 1000000000;
-const domain = window.location.hostname;
 const NATIVE_DEFAULT_SIZE = '0x0';
+const DEFAULT_SERVER_CALL_FREQUENCY = { metric: 'hours', duration: 6 };
 const ADSLOTSIZE_INDEX = 2;
 const ADUNIT_INDEX = 1;
+const ENDPOINT = 'https://ut.pubmatic.com/vw'
+const domain = window.location.hostname;
+let vsgObj;
+
+storage.getDataFromLocalStorage('viewability-data', val => {
+  vsgObj = JSON.parse(val);
+});
+
+export const fireToServer = auctionData => {
+  const payload = generatePayload(auctionData, vsgObj);
+
+  ajax(ENDPOINT, (res) => {
+    // do nothing for now
+  }, JSON.stringify(payload));
+
+  vsgObj = null;
+  removeFromLocalStorage('viewability-data');
+};
+
+export const generatePayload = (auctionData, lsObj) => {
+  const adSizeKeys = Object.keys(lsObj).filter(key => /([0-9]+x[0-9]+)/.test(key));
+  const adUnitKeys = Object.keys(lsObj).filter(key => !/([0-9]+x[0-9]+)/.test(key) && key !== window.location.hostname);
+
+  return {
+    iid: auctionData.auctionId,
+    recordTs: Date.now(),
+    pubid: getPubId(auctionData),
+    adDomain: window.location.hostname,
+    adUnits: adUnitKeys.map(adUnitKey => {
+      lsObj[adUnitKey].adUnit = adUnitKey;
+      return lsObj[adUnitKey];
+    }),
+    adSizes: adSizeKeys.map(adSizeKey => {
+      lsObj[adSizeKey].adSize = adSizeKey;
+      return lsObj[adSizeKey];
+    })
+  };
+};
+
+const getPubId = auctionData => {
+  let pubId;
+  const adUnits = auctionData.adUnits;
+
+  if (adUnits && adUnits.length) {
+    adUnits.find(adUnit => {
+      const bid = adUnit.bids.find(bid => bid.bidder === 'pubmatic');
+      if (bid && bid.params) {
+        pubId = bid.params.publisherId;
+      }
+    });
+  }
+
+  return pubId;
+};
 
 // stat hat call to collect data when there is issue while writing to localstorgae.
 const fireStatHatLogger = (statKeyName) => {
@@ -32,6 +87,7 @@ const fireStatHatLogger = (statKeyName) => {
   document.body.appendChild(statHatElement)
 };
 
+const removeFromLocalStorage = key => storage.removeDataFromLocalStorage(key);
 export const setAndStringifyToLocalStorage = (key, object) => {
   try {
     storage.setDataInLocalStorage(key, JSON.stringify(object));
@@ -40,8 +96,6 @@ export const setAndStringifyToLocalStorage = (key, object) => {
     fireStatHatLogger(`${e} --- ${window.location.href}`);
   }
 };
-
-let vsgObj;
 
 export const makeBidRequestsHook = (fn, bidderRequests) => {
   if (vsgObj && config.getConfig(MODULE_NAME)?.enabled) {
@@ -127,7 +181,8 @@ const incrementRenderCount = keyArr => {
       }
     } else {
       vsgObj = {
-        [key]: defaultInit(keyArr, index)
+        [key]: defaultInit(keyArr, index),
+        createdAt: Date.now()
       }
     }
   });
@@ -301,6 +356,43 @@ const initConfigDefaults = config => {
       : true;
 };
 
+export const okToFireToServer = (config, lsObj) => {
+  let result = false;
+
+  // check if server side tracking is disabled in the config
+  if (config?.serverSideTracking?.enabled === false) {
+    return result;
+  }
+
+  // check if viewability data has expired in local storage based on config settings
+  if (lsObj.createdAt) {
+    const vsgCreatedAtTime = lsObj.createdAt;
+    const currentTime = Date.now();
+    const differenceInMilliseconds = Math.round(currentTime - vsgCreatedAtTime);
+    const timeElapsed = msToTime(differenceInMilliseconds);
+    const metric = config?.serverSideTracking?.frequency ? config.serverSideTracking.frequency[0] : DEFAULT_SERVER_CALL_FREQUENCY.metric;
+    const duration = config?.serverSideTracking?.frequency ? config.serverSideTracking.frequency[1] : DEFAULT_SERVER_CALL_FREQUENCY.duration;
+
+    if (Number(timeElapsed[metric]) > duration) {
+      result = true;
+    }
+  }
+
+  // check if viewability data has exceeded the max size of 7000 characters
+  if (JSON.stringify(lsObj).length > 7000) {
+    result = true;
+  }
+
+  return result;
+};
+
+const msToTime = (ms) => {
+  let minutes = (ms / (1000 * 60)).toFixed(3);
+  let hours = (ms / (1000 * 60 * 60)).toFixed(3);
+  let days = (ms / (1000 * 60 * 60 * 24)).toFixed(3);
+  return { days, hours, minutes };
+}
+
 export let init = (setGptCb, setTargetingCb) => {
   config.getConfig(MODULE_NAME, (globalConfig) => {
     if (globalConfig[MODULE_NAME][ENABLED] !== true) {
@@ -315,7 +407,14 @@ export let init = (setGptCb, setTargetingCb) => {
         setTargetingCb(globalConfig);
       }
 
-      adapterManager.makeBidRequests.after(makeBidRequestsHook);
+    adapterManager.makeBidRequests.after(makeBidRequestsHook);
+
+    events.on(CONSTANTS.EVENTS.AUCTION_END, auctionData => {
+      if (okToFireToServer(globalConfig[MODULE_NAME], vsgObj)) {
+        delete vsgObj.createdAt;
+        setAndStringifyToLocalStorage('viewability-data', vsgObj);
+        fireToServer(auctionData);
+      }
     });
   });
 }
