@@ -579,7 +579,8 @@ function bidResponseHandler(args) {
   bid.adId = args.adId;
   bid.source = formatSource(bid.source || args.source);
   setBidStatus(bid, args);
-  bid.partnerTimeToRespond = (args?.timeToRespond ? args?.timeToRespond : (window.PWT?.versionDetails ? (Date.now() - cache.auctions[args.auctionId].timestamp > window.PWT?.versionDetails.timeout ? (window.PWT?.versionDetails.timeout + 100) : Date.now() - cache.auctions[args.auctionId].timestamp) : Date.now() - cache.auctions[args.auctionId].timestamp)); 
+  const latency = args?.timeToRespond || Date.now() - cache.auctions[args.auctionId].timestamp;
+  bid.partnerTimeToRespond =  window.PWT?.versionDetails?.timeout ? (latency > window.PWT.versionDetails.timeout ? (window.PWT.versionDetails.timeout + 100) : latency) : latency;
   bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
   bid.bidResponse = parseBidResponse(args);
 }
