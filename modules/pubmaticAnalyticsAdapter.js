@@ -371,7 +371,7 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid) {
         'di': bid.bidResponse ? (bid.bidResponse.dealId || OPEN_AUCTION_DEAL_ID) : OPEN_AUCTION_DEAL_ID,
         'dc': bid.bidResponse ? (bid.bidResponse.dealChannel || EMPTY_STRING) : EMPTY_STRING,
         'l1': bid.bidResponse ? bid.partnerTimeToRespond : 0,
-		'ol1': bid.bidResponse ? bid.clientLatencyTimeMs : 0,
+        'ol1': bid.bidResponse ? bid.clientLatencyTimeMs : 0,
         'l2': 0,
         'adv': bid.bidResponse ? getAdDomain(bid.bidResponse) || undefined : undefined,
         'ss': isS2SBidder(bid.bidder),
@@ -639,7 +639,7 @@ function bidResponseHandler(args) {
   bid.source = formatSource(bid.source || args.source);
   setBidStatus(bid, args);
   const latency = args?.timeToRespond || Date.now() - cache.auctions[args.auctionId].timestamp;
-  bid.partnerTimeToRespond =  window.PWT?.versionDetails?.timeout ? (latency > (window.PWT.versionDetails.timeout + 100) ? (window.PWT.versionDetails.timeout + 100) : latency) : latency;
+  bid.partnerTimeToRespond = window.PWT?.versionDetails?.timeout ? (latency > (window.PWT.versionDetails.timeout + 100) ? (window.PWT.versionDetails.timeout + 100) : latency) : latency;
   bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
   if (window.PWT && !!isFn(window.PWT.HookForBidReceived)) {
     window.PWT.HookForBidReceived(args.adUnitCode, args);
