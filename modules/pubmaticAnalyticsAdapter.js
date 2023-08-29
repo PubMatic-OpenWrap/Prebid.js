@@ -580,6 +580,8 @@ function bidResponseHandler(args) {
   bid.source = formatSource(bid.source || args.source);
   setBidStatus(bid, args);
   const latency = args?.timeToRespond || Date.now() - cache.auctions[args.auctionId].timestamp;
+  // Checking if latency is greater than auctiontime+100, if yes instead of logging actual latency log
+  // auctiontime+100 to keep actual values and to keep avarage latency in expected range.
   bid.partnerTimeToRespond = window.PWT?.versionDetails?.timeout ? (latency > (window.PWT.versionDetails.timeout + 100) ? (window.PWT.versionDetails.timeout + 100) : latency) : latency;
   bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
   bid.bidResponse = parseBidResponse(args);
