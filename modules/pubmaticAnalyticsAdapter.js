@@ -430,7 +430,8 @@ function getTgId() {
 }
 
 function getIntegrationType() {
-  const s2sBiddersLength = config.getConfig('s2sConfig')['bidders'].length;
+  let s2sConfig = config.getConfig('s2sConfig');
+  const s2sBiddersLength = s2sConfig && s2sConfig.bidders && isArray(s2sConfig.bidders) ? s2sConfig.bidders.length : 0;
   const integrationType = s2sBiddersLength !== 0 ? 'hybrid' : 'web';
   return integrationType;
 }
@@ -481,7 +482,6 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['bm'] = window.PWT && window.PWT.browserMapping;
   outputObj['ih'] = identityOnly;
   outputObj['it'] = getIntegrationType()
-
   outputObj['tpv'] = frequencyDepth?.pageView;
   outputObj['trc'] = frequencyDepth?.slotCnt;
   outputObj['tbs'] = frequencyDepth?.bidServed;
