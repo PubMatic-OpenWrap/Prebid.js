@@ -176,6 +176,7 @@ function processUspData(consentObject, {onSuccess, onError}) {
   }
 
   storeUspConsentData(consentObject);
+  window.consentData = consentObject.usPrivacy;
   onSuccess(consentData);
 }
 
