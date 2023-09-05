@@ -365,7 +365,7 @@ export const okToFireToServer = (config, lsObj) => {
   }
 
   // check if viewability data has expired in local storage based on config settings
-  if (lsObj.createdAt) {
+  if (lsObj?.createdAt) {
     const vsgCreatedAtTime = lsObj.createdAt;
     const currentTime = Date.now();
     const differenceInMilliseconds = Math.round(currentTime - vsgCreatedAtTime);
@@ -413,7 +413,7 @@ export let init = (setGptCb, setTargetingCb) => {
 
     events.on(CONSTANTS.EVENTS.AUCTION_END, auctionData => {
       if (okToFireToServer(globalConfig[MODULE_NAME], vsgObj)) {
-        delete vsgObj.createdAt;
+        delete vsgObj?.createdAt;
         setAndStringifyToLocalStorage('viewability-data', vsgObj);
         fireToServer(auctionData);
       }
