@@ -377,14 +377,16 @@ export const okToFireToServer = (config, lsObj) => {
 		if (Number(timeElapsed[metric]) > duration) {
 		  result = true;
 		}
-	  }
+	}
+	
+	// check if viewability data has exceeded the max size of 7000 characters
+	if (JSON.stringify(lsObj).length > 7000) {
+		result = true;
+	}  
   } catch (e) {
 	logInfo(e);
   }	
-  // check if viewability data has exceeded the max size of 7000 characters
-  if (JSON.stringify(lsObj).length > 7000) {
-    result = true;
-  }
+  
 
   return result;
 };
