@@ -4,7 +4,7 @@ import adapterManager from '../src/adapterManager.js';
 import { targeting } from '../src/targeting.js';
 import * as events from '../src/events.js';
 import CONSTANTS from '../src/constants.json';
-import { isAdUnitCodeMatchingSlot, deepClone } from '../src/utils.js';
+import { isAdUnitCodeMatchingSlot, deepClone, logInfo } from '../src/utils.js';
 import { getStorageManager } from '../src/storageManager.js';
 
 const BIDDER_CODE = 'pubmatic';
@@ -365,19 +365,22 @@ export const okToFireToServer = (config, lsObj) => {
   }
 
   // check if viewability data has expired in local storage based on config settings
-  if (lsObj?.createdAt) {
-    const vsgCreatedAtTime = lsObj.createdAt;
-    const currentTime = Date.now();
-    const differenceInMilliseconds = Math.round(currentTime - vsgCreatedAtTime);
-    const timeElapsed = msToTime(differenceInMilliseconds);
-    const metric = config?.serverSideTracking?.frequency ? config.serverSideTracking.frequency[0] : DEFAULT_SERVER_CALL_FREQUENCY.metric;
-    const duration = config?.serverSideTracking?.frequency ? config.serverSideTracking.frequency[1] : DEFAULT_SERVER_CALL_FREQUENCY.duration;
-
-    if (Number(timeElapsed[metric]) > duration) {
-      result = true;
-    }
-  }
-
+  try {
+    if (lsObj?.createdAt) {
+		const vsgCreatedAtTime = lsObj.createdAt;
+		const currentTime = Date.now();
+		const differenceInMilliseconds = Math.round(currentTime - vsgCreatedAtTime);
+		const timeElapsed = msToTime(differenceInMilliseconds);
+		const metric = config?.serverSideTracking?.frequency ? config.serverSideTracking.frequency[0] : DEFAULT_SERVER_CALL_FREQUENCY.metric;
+		const duration = config?.serverSideTracking?.frequency ? config.serverSideTracking.frequency[1] : DEFAULT_SERVER_CALL_FREQUENCY.duration;
+	
+		if (Number(timeElapsed[metric]) > duration) {
+		  result = true;
+		}
+	  }
+  } catch (e) {
+	logInfo(e);
+  }	
   // check if viewability data has exceeded the max size of 7000 characters
   if (JSON.stringify(lsObj).length > 7000) {
     result = true;
