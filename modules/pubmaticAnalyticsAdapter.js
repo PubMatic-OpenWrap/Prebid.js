@@ -431,9 +431,7 @@ function getTgId() {
 
 function getIntegrationType() {
   let s2sConfig = config.getConfig('s2sConfig');
-  const s2sBiddersLength = s2sConfig && s2sConfig.bidders && isArray(s2sConfig.bidders) ? s2sConfig.bidders.length : 0;
-  const integrationType = s2sBiddersLength !== 0 ? 'hybrid' : 'web';
-  return integrationType;
+  return s2sConfig?.bidders?.length ? 'hybrid' : 'web';
 }
 
 function getFloorFetchStatus(floorData) {
