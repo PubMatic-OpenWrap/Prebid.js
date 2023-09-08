@@ -1234,8 +1234,10 @@ export const spec = {
     // update device.language to ISO-639-1-alpha-2 (2 character language)
     payload.device.language = payload.device.language && payload.device.language.split('-')[0];
 
-    // passing transactionId in source.tid
-    deepSetValue(payload, 'source.tid', bidderRequest?.ortb2?.source?.tid);
+    // passing transactionId in source.tid if present
+    if (bidderRequest?.ortb2?.source?.tid) {
+      deepSetValue(payload, 'source.tid', bidderRequest?.ortb2?.source?.tid);
+    }
 
     // test bids
     if (window.location.href.indexOf('pubmaticTest=true') !== -1) {
