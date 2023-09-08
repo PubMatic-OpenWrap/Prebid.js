@@ -429,6 +429,11 @@ function getTgId() {
   return 0;
 }
 
+function getIntegrationType() {
+  let s2sConfig = config.getConfig('s2sConfig');
+  return s2sConfig?.bidders?.length ? 'hybrid' : 'web';
+}
+
 function getFloorFetchStatus(floorData) {
   if (!floorData?.floorRequestData) {
     return false;
@@ -474,6 +479,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['dvc'] = {'plt': getDevicePlatform()};
   outputObj['bm'] = window.PWT && window.PWT.browserMapping;
   outputObj['ih'] = identityOnly;
+  outputObj['it'] = getIntegrationType()
   outputObj['tpv'] = frequencyDepth?.pageView;
   outputObj['trc'] = frequencyDepth?.slotCnt;
   outputObj['tbs'] = frequencyDepth?.bidServed;
