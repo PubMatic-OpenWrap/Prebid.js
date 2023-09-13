@@ -1,4 +1,4 @@
-import { _each, pick, logWarn, isStr, isArray, logError, isFn } from '../src/utils.js';
+import { _each, pick, logWarn, isStr, isArray, logError, isFn, getGptSlotInfoForAdUnitCode } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import CONSTANTS from '../src/constants.json';
@@ -22,7 +22,7 @@ const NO_BID = 'no-bid';
 const ERROR = 'error';
 const REQUEST_ERROR = 'request-error';
 const TIMEOUT_ERROR = 'timeout-error';
-const OPEN_AUCTION_DEAL_ID = "-1";
+const OPEN_AUCTION_DEAL_ID = '-1';
 const EMPTY_STRING = '';
 const MEDIA_TYPE_BANNER = 'banner';
 const CURRENCY_USD = 'USD';
@@ -120,10 +120,6 @@ function setBidStatus(bid, args) {
     case CONSTANTS.STATUS.GOOD:
       bid.status = SUCCESS;
       delete bid.error; // it's possible for this to be set by a previous timeout
-      break;
-    case CONSTANTS.STATUS.NO_BID:
-      bid.status = NO_BID;
-      delete bid.error;
       break;
     default:
       bid.status = ERROR;
@@ -235,61 +231,64 @@ function getUpdatedKGPVForVideo(kgpv, bidResponse) {
   return kgpv;
 }
 
-function checkAndModifySizeOfKGPVIfRequired(bid){
-	var responseObject={
-		"responseKGPV" : bid.params.kgpv,
-		"responseRegex": bid.params.regexPattern
-	};
+function checkAndModifySizeOfKGPVIfRequired(bid) {
+  var responseObject = {
+    'responseKGPV': bid.params.kgpv,
+    'responseRegex': bid.params.regexPattern
+  };
 
-	// Logic to find out KGPV for partner for which the bid is recieved.
-	// Need to check for No Bid Case.
-	// kgpv.kgpvs.length > 0 && kgpv.kgpvs.forEach(function(ele){
-	// 	/* istanbul ignore else */
-	// 	if(bid.bidder == ele.adapterID){
-	// 		responseObject.responseKGPV = ele.kgpv;
-	// 		responseObject.responseRegex = ele.regexPattern;
-	// 	}
-	// });
-	var responseIdArray = responseObject.responseKGPV.split("@");
-	var sizeIndex = 1;
-	var isRegex = false;
-	/* istanbul ignore else */
-	if(responseIdArray &&  (responseIdArray.length == 2 || ((responseIdArray.length == 3) && (sizeIndex = 2) && (isRegex=true))) && bid.bidResponse.mediaType != "video"){
-		var responseIdSize = responseIdArray[sizeIndex];
-		var responseIndex = null;
-		// Below check if ad unit index is present then ignore it
-		// TODO: Confirm it needs to be ignored or not
-		/* istanbul ignore else */
-		if(responseIdArray[sizeIndex].indexOf(":")>0){
-			responseIdSize= responseIdArray[sizeIndex].split(":")[0];
-			responseIndex = responseIdArray[sizeIndex].split(":")[1];
-		}
-		/* istanbul ignore else */
-		if(bid.bidResponse.dimensions &&
-      (bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height) != responseIdSize &&
-      ((bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height).toUpperCase() != "0X0")){
-			// Below check is for size level mapping
-			// ex. 300x250@300X250 is KGPV generated for first size but the winning size is 728x90 
-			// then new KGPV will be replaced to 728x90@728X90
-			/* istanbul ignore else */
-			if(responseIdArray[0].toUpperCase() == responseIdSize.toUpperCase()){
-				responseIdArray[0] = (bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height).toLowerCase();
-			}
-			if(isRegex){
-				responseObject.responseKGPV = responseIdArray[0] + "@" + responseIdArray[1] + "@" +  (bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height);
-			}
-			else{
-				responseObject.responseKGPV = responseIdArray[0] + "@" +  (bid.bidResponse.dimensions.width + "x" + bid.bidResponse.dimensions.height);
-			}
-			// Below check is to make consistent behaviour with ad unit index
-			// it again appends index if it was originally present
-			if(responseIndex){
-				responseObject.responseKGPV = responseObject.responseKGPV + ":" + responseIndex;
-			}
-		}
-	
-	}
-	return responseObject;
+  // Logic to find out KGPV for partner for which the bid is recieved.
+  // Need to check for No Bid Case.
+  // kgpv.kgpvs.length > 0 && kgpv.kgpvs.forEach(function(ele){
+  // eslint-disable-next-line no-tabs
+  // 	/* istanbul ignore else */
+  // eslint-disable-next-line no-tabs
+  // 	if(bid.bidder == ele.adapterID){
+  // eslint-disable-next-line no-tabs
+  // 		responseObject.responseKGPV = ele.kgpv;
+  // eslint-disable-next-line no-tabs
+  // 		responseObject.responseRegex = ele.regexPattern;
+  // eslint-disable-next-line no-tabs
+  // 	}
+  // });
+  var responseIdArray = responseObject.responseKGPV.split('@');
+  var sizeIndex = 1;
+  var isRegex = false;
+  /* istanbul ignore else */
+  if (responseIdArray && (responseIdArray.length == 2 || ((responseIdArray.length == 3) && (sizeIndex = 2) && (isRegex = true))) && bid.bidResponse.mediaType != 'video') {
+    var responseIdSize = responseIdArray[sizeIndex];
+    var responseIndex = null;
+    // Below check if ad unit index is present then ignore it
+    // TODO: Confirm it needs to be ignored or not
+    /* istanbul ignore else */
+    if (responseIdArray[sizeIndex].indexOf(':') > 0) {
+      responseIdSize = responseIdArray[sizeIndex].split(':')[0];
+      responseIndex = responseIdArray[sizeIndex].split(':')[1];
+    }
+    /* istanbul ignore else */
+    if (bid.bidResponse.dimensions &&
+      (bid.bidResponse.dimensions.width + 'x' + bid.bidResponse.dimensions.height) != responseIdSize &&
+      ((bid.bidResponse.dimensions.width + 'x' + bid.bidResponse.dimensions.height).toUpperCase() != '0X0')) {
+      // Below check is for size level mapping
+      // ex. 300x250@300X250 is KGPV generated for first size but the winning size is 728x90
+      // then new KGPV will be replaced to 728x90@728X90
+      /* istanbul ignore else */
+      if (responseIdArray[0].toUpperCase() == responseIdSize.toUpperCase()) {
+        responseIdArray[0] = (bid.bidResponse.dimensions.width + 'x' + bid.bidResponse.dimensions.height).toLowerCase();
+      }
+      if (isRegex) {
+        responseObject.responseKGPV = responseIdArray[0] + '@' + responseIdArray[1] + '@' + (bid.bidResponse.dimensions.width + 'x' + bid.bidResponse.dimensions.height);
+      } else {
+        responseObject.responseKGPV = responseIdArray[0] + '@' + (bid.bidResponse.dimensions.width + 'x' + bid.bidResponse.dimensions.height);
+      }
+      // Below check is to make consistent behaviour with ad unit index
+      // it again appends index if it was originally present
+      if (responseIndex) {
+        responseObject.responseKGPV = responseObject.responseKGPV + ':' + responseIndex;
+      }
+    }
+  }
+  return responseObject;
 }
 
 function getAdapterNameForAlias(aliasName) {
@@ -390,7 +389,7 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid) {
   }, [])
 }
 
-function getSizesForAdUnit(adUnit, adUnitId) {
+function getSizesForAdUnit(adUnit) {
   var bid = Object.values(adUnit.bids).filter((bid) => !!bid.bidResponse && bid.bidResponse.mediaType === 'native')[0];
   if (!!bid || (bid === undefined && adUnit.dimensions.length === 0)) {
     return ['1x1'];
@@ -422,12 +421,17 @@ function getPSL(auctionId) {
   return pslTime;
 }
 
-function getTgid() {
+function getTgId() {
   var testGroupId = parseInt(config.getConfig('testGroupId') || 0);
   if (testGroupId <= 15 && testGroupId >= 0) {
     return testGroupId;
   }
   return 0;
+}
+
+function getIntegrationType() {
+  let s2sConfig = config.getConfig('s2sConfig');
+  return s2sConfig?.bidders?.length ? 'hybrid' : 'web';
 }
 
 function getFloorFetchStatus(floorData) {
@@ -448,6 +452,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   let auctionId = e.auctionId;
   let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId]?.referer || '';
   let auctionCache = cache.auctions[auctionId];
+  let wiid = auctionCache?.wiid;
   let floorData = auctionCache?.floorData;
   let floorFetchStatus = getFloorFetchStatus(auctionCache?.floorData);
   let outputObj = { s: [] };
@@ -463,7 +468,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
 
   pixelURL += 'pubid=' + publisherId;
   outputObj['pubid'] = '' + publisherId;
-  outputObj['iid'] = '' + auctionId;
+  outputObj['iid'] = '' + wiid;
   outputObj['to'] = '' + auctionCache.timeout;
   outputObj['purl'] = referrer;
   outputObj['orig'] = getDomainFromUrl(referrer);
@@ -474,13 +479,13 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['dvc'] = {'plt': getDevicePlatform()};
   outputObj['bm'] = window.PWT && window.PWT.browserMapping;
   outputObj['ih'] = identityOnly;
-  outputObj['tgid'] = getTgid();
-
+  outputObj['it'] = getIntegrationType()
   outputObj['tpv'] = frequencyDepth?.pageView;
   outputObj['trc'] = frequencyDepth?.slotCnt;
   outputObj['tbs'] = frequencyDepth?.bidServed;
   outputObj['tis'] = frequencyDepth?.impressionServed;
   outputObj['lip'] = frequencyDepth?.lip;
+  outputObj['tgid'] = getTgId();
 
   if (floorData && floorFetchStatus) {
     outputObj['fmv'] = floorData.floorRequestData ? floorData.floorRequestData.modelVersion || undefined : undefined;
@@ -491,9 +496,10 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj.s = Object.keys(auctionCache.adUnitCodes).reduce(function(slotsArray, adUnitId) {
     let adUnit = auctionCache.adUnitCodes[adUnitId];
     let origAdUnit = getAdUnit(auctionCache.origAdUnits, adUnitId) || {};
+    // getGptSlotInfoForAdUnitCode returns gptslot corresponding to adunit provided as input.
     let slotObject = {
       'sn': adUnitId,
-      'au': origAdUnit.adUnitId || adUnitId,
+      'au': origAdUnit.adUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId,
       'mt': getAdUnitAdFormats(origAdUnit),
       'sz': getSizesForAdUnit(adUnit, adUnitId),
       'fskp': floorData && floorFetchStatus ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined,
@@ -534,6 +540,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   var origAdUnitId = origAdUnit.adUnitId || adUnitId;
   let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId].referer || '';
   let floorData = cache.auctions[auctionId].floorData;
+  let wiid = cache.auctions[auctionId]?.wiid;
   let adv = winningBid.bidResponse ? getAdDomain(winningBid.bidResponse) || undefined : undefined;
   let fskp = floorData ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined;
 
@@ -541,7 +548,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   pixelURL += 'pubid=' + publisherId;
   pixelURL += '&purl=' + enc(referrer);
   pixelURL += '&tst=' + Math.round((new window.Date()).getTime() / 1000);
-  pixelURL += '&iid=' + enc(auctionId);
+  pixelURL += '&iid=' + enc(wiid);
   pixelURL += '&bidid=' + (generatedBidId ? enc(generatedBidId) : enc(winningBidId));
   pixelURL += '&origbidid=' + enc(winningBidId);
   pixelURL += '&pid=' + enc(profileId);
@@ -560,7 +567,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   pixelURL += '&plt=' + enc(getDevicePlatform());
   pixelURL += '&psz=' + enc((winningBid?.bidResponse?.dimensions?.width || '0') + 'x' +
     (winningBid?.bidResponse?.dimensions?.height || '0'));
-  pixelURL += '&tgid=' + enc(getTgid());
+  pixelURL += '&tgid=' + enc(getTgId());
   adv && (pixelURL += '&adv=' + enc(adv));
   pixelURL += '&orig=' + enc(getDomainFromUrl(referrer));
   pixelURL += '&ss=' + enc(isS2SBidder(winningBid.bidder));
@@ -605,6 +612,9 @@ function bidRequestedHandler(args) {
         dimensions: bid.sizes
       };
     }
+    if (bid.bidder === 'pubmatic' && !!bid?.params?.wiid) {
+      cache.auctions[args.auctionId].wiid = bid.params.wiid;
+    }
     cache.auctions[args.auctionId].adUnitCodes[bid.adUnitCode].bids[bid.bidId] = [copyRequiredBidDetails(bid)];
     if (bid.floorData) {
       cache.auctions[args.auctionId].floorData['floorRequestData'] = bid.floorData;
@@ -639,9 +649,10 @@ function bidResponseHandler(args) {
   bid.source = formatSource(bid.source || args.source);
   setBidStatus(bid, args);
   const latency = args?.timeToRespond || Date.now() - cache.auctions[args.auctionId].timestamp;
+  const auctionTime = cache.auctions[args.auctionId].timeout;
   // Checking if latency is greater than auctiontime+100, if yes instead of logging actual latency log
   // auctiontime+100 to keep actual values and to keep avarage latency in expected range.
-  bid.partnerTimeToRespond = window.PWT?.versionDetails?.timeout ? (latency > (window.PWT.versionDetails.timeout + 100) ? (window.PWT.versionDetails.timeout + 100) : latency) : latency;
+  bid.partnerTimeToRespond = latency > (auctionTime + 150) ? (auctionTime + 150) : latency;
   bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
   if (window.PWT && !!isFn(window.PWT.HookForBidReceived)) {
     window.PWT.HookForBidReceived(args.adUnitCode, args);
@@ -651,6 +662,16 @@ function bidResponseHandler(args) {
   var kgpvAndRegexOfBid = checkAndModifySizeOfKGPVIfRequired(bid);
   bid.params.kgpv = kgpvAndRegexOfBid.responseKGPV;
   bid.params.regexPattern = kgpvAndRegexOfBid.responseRegex;
+}
+
+function bidRejectedHandler(args) {
+  // If bid is rejected due to floors value did not met
+  // make cpm as 0, status as bidRejected and forward the bid for logging
+  if (args.rejectionReason === CONSTANTS.REJECTION_REASON.FLOOR_NOT_MET) {
+    args.cpm = 0;
+    args.status = CONSTANTS.BID_STATUS.BID_REJECTED;
+    bidResponseHandler(args);
+  }
 }
 
 function bidderDoneHandler(args) {
@@ -757,6 +778,9 @@ let pubmaticAdapter = Object.assign({}, baseAdapter, {
         break;
       case CONSTANTS.EVENTS.BID_RESPONSE:
         bidResponseHandler(args);
+        break;
+      case CONSTANTS.EVENTS.BID_REJECTED:
+        bidRejectedHandler(args)
         break;
       case CONSTANTS.EVENTS.BIDDER_DONE:
         bidderDoneHandler(args);

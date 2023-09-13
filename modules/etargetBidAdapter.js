@@ -35,7 +35,7 @@ export const spec = {
         lastCountry = countryMap[bid.params.country];
       }
       reqParams = bid.params;
-      reqParams.transactionId = bid.transactionId;
+      reqParams.transactionId = bid.ortb2Imp?.ext?.tid;
       request.push(formRequestUrl(reqParams));
       floors[i] = getBidFloor(bid);
     }
@@ -138,7 +138,6 @@ export const spec = {
           vastXml: data.vast_content,
           vastUrl: data.vast_link,
           mediaType: data.response,
-          transactionId: bid.transactionId
         };
         if (bidRequest.gdpr) {
           bidObject.gdpr = bidRequest.gdpr.gdpr;
