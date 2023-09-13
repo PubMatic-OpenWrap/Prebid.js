@@ -454,7 +454,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   let auctionCache = cache.auctions[auctionId];
   let wiid = auctionCache?.wiid;
   let floorData = auctionCache?.floorData;
-  let floorFetchStatus = getFloorFetchStatus(auctionCache.floorData);
+  let floorFetchStatus = getFloorFetchStatus(auctionCache?.floorData);
   let outputObj = { s: [] };
   let pixelURL = END_POINT_BID_LOGGER;
 
