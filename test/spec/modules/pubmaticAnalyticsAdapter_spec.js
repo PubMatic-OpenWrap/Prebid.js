@@ -54,6 +54,7 @@ const BID = {
   'requestTimestamp': 1519149628471,
   'adUnitCode': '/19968336/header-bid-tag-0',
   'timeToRespond': 944,
+  'serverSideResponseTime': 20,
   'prebidBidId': '792d8d2135d28b',
   'pbLg': '1.00',
   'pbMg': '1.20',
@@ -435,7 +436,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[0].ps[0].dc).to.equal('');
 	  expect(data.s[0].ps[0].l1).to.equal(944);
 	  expect(data.s[0].ps[0].ol1).to.equal(3214);
-      expect(data.s[0].ps[0].l2).to.equal(0);
+      expect(data.s[0].ps[0].l2).to.equal(20);
       expect(data.s[0].ps[0].ss).to.equal(1);
       expect(data.s[0].ps[0].t).to.equal(0);
       expect(data.s[0].ps[0].wb).to.equal(1);
@@ -470,7 +471,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps[0].adv).to.equal('example.com');
       expect(data.s[0].ps[0].l1).to.equal(944);
 	  expect(data.s[0].ps[0].ol1).to.equal(3214);
-      expect(data.s[1].ps[0].l2).to.equal(0);
+      expect(data.s[1].ps[0].l2).to.equal(20);
       expect(data.s[1].ps[0].ss).to.equal(1);
       expect(data.s[1].ps[0].t).to.equal(0);
       expect(data.s[1].ps[0].wb).to.equal(1);
@@ -788,7 +789,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps[0].dc).to.equal('');
       expect(data.s[1].ps[0].mi).to.equal(undefined);
       expect(data.s[1].ps[0].l1).to.equal(0);
-      expect(data.s[1].ps[0].l2).to.equal(0);
+      expect(data.s[1].ps[0].l2).to.equal(20);
       expect(data.s[1].ps[0].ss).to.equal(1);
       expect(data.s[1].ps[0].t).to.equal(0);
       expect(data.s[1].ps[0].wb).to.equal(0);
@@ -831,7 +832,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps[0].dc).to.equal('');
       expect(data.s[1].ps[0].mi).to.equal(undefined);
       expect(data.s[1].ps[0].l1).to.equal(0);
-      expect(data.s[1].ps[0].l2).to.equal(0);
+      expect(data.s[1].ps[0].l2).to.equal(20);
       expect(data.s[1].ps[0].ss).to.equal(1);
       expect(data.s[1].ps[0].t).to.equal(1);
       expect(data.s[1].ps[0].wb).to.equal(0);
@@ -882,7 +883,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps[0].adv).to.equal('example.com');
       expect(data.s[0].ps[0].l1).to.equal(0);
 	  expect(data.s[0].ps[0].ol1).to.equal(0);
-      expect(data.s[1].ps[0].l2).to.equal(0);
+      expect(data.s[1].ps[0].l2).to.equal(20);
       expect(data.s[1].ps[0].ss).to.equal(1);
       expect(data.s[1].ps[0].t).to.equal(1);
       expect(data.s[1].ps[0].wb).to.equal(1); // todo
@@ -946,7 +947,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps[0].adv).to.equal('example.com');
       expect(data.s[0].ps[0].l1).to.equal(944);
 	  expect(data.s[0].ps[0].ol1).to.equal(3214);
-      expect(data.s[1].ps[0].l2).to.equal(0);
+      expect(data.s[1].ps[0].l2).to.equal(20);
       expect(data.s[1].ps[0].ss).to.equal(1);
       expect(data.s[1].ps[0].t).to.equal(0);
       expect(data.s[1].ps[0].wb).to.equal(0); // bidPriceUSD is not getting set as currency module is not added, so unable to set wb to 1
@@ -999,7 +1000,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps[0].adv).to.equal('example.com');
       expect(data.s[0].ps[0].l1).to.equal(944);
 	  expect(data.s[0].ps[0].ol1).to.equal(3214);
-      expect(data.s[1].ps[0].l2).to.equal(0);
+      expect(data.s[1].ps[0].l2).to.equal(20);
       expect(data.s[1].ps[0].ss).to.equal(1);
       expect(data.s[1].ps[0].t).to.equal(0);
       expect(data.s[1].ps[0].wb).to.equal(0); // bidPriceUSD is not getting set as currency module is not added, so unable to set wb to 1
@@ -1064,7 +1065,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps[0].adv).to.equal('example.com');
       expect(data.s[0].ps[0].l1).to.equal(944);
 	  expect(data.s[0].ps[0].ol1).to.equal(3214);
-      expect(data.s[1].ps[0].l2).to.equal(0);
+      expect(data.s[1].ps[0].l2).to.equal(20);
       expect(data.s[1].ps[0].ss).to.equal(1);
       expect(data.s[1].ps[0].t).to.equal(0);
       expect(data.s[1].ps[0].wb).to.equal(0); // bidPriceUSD is not getting set as currency module is not added, so unable to set wb to 1
@@ -1121,7 +1122,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps[0].adv).to.equal('example.com');
       expect(data.s[0].ps[0].l1).to.equal(944);
 	  expect(data.s[0].ps[0].ol1).to.equal(3214);
-      expect(data.s[1].ps[0].l2).to.equal(0);
+      expect(data.s[1].ps[0].l2).to.equal(20);
       expect(data.s[1].ps[0].ss).to.equal(1);
       expect(data.s[1].ps[0].t).to.equal(0);
       expect(data.s[1].ps[0].wb).to.equal(0); // bidPriceUSD is not getting set as currency module is not added, so unable to set wb to 1
@@ -1177,7 +1178,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps[0].adv).to.equal('example.com');
       expect(data.s[0].ps[0].l1).to.equal(944);
 	  expect(data.s[0].ps[0].ol1).to.equal(3214);
-      expect(data.s[1].ps[0].l2).to.equal(0);
+      expect(data.s[1].ps[0].l2).to.equal(20);
       expect(data.s[1].ps[0].ss).to.equal(1);
       expect(data.s[1].ps[0].t).to.equal(0);
       expect(data.s[1].ps[0].wb).to.equal(0); // bidPriceUSD is not getting set as currency module is not added, so unable to set wb to 1
@@ -1262,7 +1263,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[0].ps[0].dc).to.equal('');
       expect(data.s[0].ps[0].l1).to.equal(944);
 	  expect(data.s[0].ps[0].ol1).to.equal(3214);
-      expect(data.s[0].ps[0].l2).to.equal(0);
+      expect(data.s[0].ps[0].l2).to.equal(20);
       expect(data.s[0].ps[0].ss).to.equal(0);
       expect(data.s[0].ps[0].t).to.equal(0);
       expect(data.s[0].ps[0].wb).to.equal(1);
@@ -1298,7 +1299,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps[0].adv).to.equal('example.com');
       expect(data.s[0].ps[0].l1).to.equal(944);
 	  expect(data.s[0].ps[0].ol1).to.equal(3214);
-      expect(data.s[1].ps[0].l2).to.equal(0);
+      expect(data.s[1].ps[0].l2).to.equal(20);
       expect(data.s[1].ps[0].ss).to.equal(1);
       expect(data.s[1].ps[0].t).to.equal(0);
       expect(data.s[1].ps[0].wb).to.equal(1);
@@ -1397,7 +1398,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[0].ps[0].dc).to.equal('');
       expect(data.s[0].ps[0].l1).to.equal(944);
 	  expect(data.s[0].ps[0].ol1).to.equal(3214);
-      expect(data.s[0].ps[0].l2).to.equal(0);
+      expect(data.s[0].ps[0].l2).to.equal(20);
       expect(data.s[0].ps[0].ss).to.equal(0);
       expect(data.s[0].ps[0].t).to.equal(0);
       expect(data.s[0].ps[0].wb).to.equal(1);
@@ -1427,7 +1428,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps[0].adv).to.equal('example.com');
       expect(data.s[0].ps[0].l1).to.equal(944);
 	  expect(data.s[0].ps[0].ol1).to.equal(3214);
-      expect(data.s[1].ps[0].l2).to.equal(0);
+      expect(data.s[1].ps[0].l2).to.equal(20);
       expect(data.s[1].ps[0].ss).to.equal(1);
       expect(data.s[1].ps[0].t).to.equal(0);
       expect(data.s[1].ps[0].wb).to.equal(1);

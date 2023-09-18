@@ -371,7 +371,7 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid) {
         'dc': bid.bidResponse ? (bid.bidResponse.dealChannel || EMPTY_STRING) : EMPTY_STRING,
         'l1': bid.bidResponse ? bid.partnerTimeToRespond : 0,
         'ol1': bid.bidResponse ? bid.clientLatencyTimeMs : 0,
-        'l2': 0,
+        'l2': bid?.serverPartnerLatency || 0,
         'adv': bid.bidResponse ? getAdDomain(bid.bidResponse) || undefined : undefined,
         'ss': isS2SBidder(bid.bidder),
         't': (bid.status == ERROR && bid.error.code == TIMEOUT_ERROR) ? 1 : 0,
@@ -650,8 +650,8 @@ function bidResponseHandler(args) {
   setBidStatus(bid, args);
   const latency = args?.timeToRespond || Date.now() - cache.auctions[args.auctionId].timestamp;
   const auctionTime = cache.auctions[args.auctionId].timeout;
-  // Checking if latency is greater than auctiontime+100, if yes instead of logging actual latency log
-  // auctiontime+100 to keep actual values and to keep avarage latency in expected range.
+  // Check if latency is greater than auctiontime+150, then log auctiontime+150 to avoid large numbers
+  bid.serverPartnerLatency = args?.serverSideResponseTime;
   bid.partnerTimeToRespond = latency > (auctionTime + 150) ? (auctionTime + 150) : latency;
   bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
   if (window.PWT && !!isFn(window.PWT.HookForBidReceived)) {
