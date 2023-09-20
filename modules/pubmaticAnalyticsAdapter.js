@@ -514,7 +514,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     return slotsArray;
   }, []);
   outputObj.owv = window.PWT?.versionDetails?.openwrap_version || '-1';
-  outputObj.pbv = window.PWT?.versionDetails?.prebid_version || '-1';
+  outputObj.pbv = getGlobal()?.version || '-1';
 
   auctionCache.sent = true;
 
