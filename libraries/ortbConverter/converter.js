@@ -161,7 +161,7 @@ export function ortbConverter({
       const s2sConfig = ctx.req?.s2sBidRequest?.s2sConfig;
       let isAnalyticsEnabled = s2sConfig?.extPrebid?.isPrebidPubMaticAnalyticsEnabled;
       if (firstBidRequest) {
-        const iidValue = isAnalyticsEnabled ? firstBidRequest.auctionId : firstBidRequest.bids[0].params.wiid;
+        const iidValue = isAnalyticsEnabled ? firstBidRequest.auctionId : firstBidRequest?.bids[0]?.params?.wiid;
         createLatencyMap(iidValue, firstBidRequest.auctionId);
       }
       return request;

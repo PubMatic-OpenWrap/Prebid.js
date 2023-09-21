@@ -48,7 +48,7 @@ export function setReqParams(ortbRequest, bidderRequest, context, {am = adapterM
   firstBidRequest = context.actualBidderRequests[0];
   // check if isPrebidPubMaticAnalyticsEnabled in s2sConfig and if it is then get auctionId from adUnit
   let isAnalyticsEnabled = s2sConfig.extPrebid && s2sConfig.extPrebid.isPrebidPubMaticAnalyticsEnabled;
-  iidValue = firstBidRequest.bids[0].params.wiid || firstBidRequest.auctionId;
+  iidValue = firstBidRequest.bids[0]?.params?.wiid || firstBidRequest.auctionId;
   if (typeof s2sConfig.extPrebid === 'object') {
     owAliases = s2sConfig.extPrebid.aliases;
   }
