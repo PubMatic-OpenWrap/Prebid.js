@@ -22,8 +22,8 @@ const NO_BID = 'no-bid';
 const ERROR = 'error';
 const REQUEST_ERROR = 'request-error';
 const TIMEOUT_ERROR = 'timeout-error';
-const OPEN_AUCTION_DEAL_ID = '-1';
 const EMPTY_STRING = '';
+const OPEN_AUCTION_DEAL_ID = '-1';
 const MEDIA_TYPE_BANNER = 'banner';
 const CURRENCY_USD = 'USD';
 const BID_PRECISION = 2;
@@ -492,7 +492,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     outputObj['ft'] = floorData.floorResponseData ? (floorData.floorResponseData.enforcements.enforceJS == false ? 0 : 1) : undefined;
   }
 
-  window.PWT.CC?.cc && (outputObj.ctr = window.PWT.CC.cc);
+  window.PWT?.CC?.cc && (outputObj.ctr = window.PWT.CC.cc);
   outputObj.s = Object.keys(auctionCache.adUnitCodes).reduce(function(slotsArray, adUnitId) {
     let adUnit = auctionCache.adUnitCodes[adUnitId];
     let origAdUnit = getAdUnit(auctionCache.origAdUnits, adUnitId) || {};

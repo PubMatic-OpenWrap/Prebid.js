@@ -1,6 +1,7 @@
 import { logInfo, logError } from './../src/utils.js';
 import { ajaxBuilder } from '../src/ajax.js';
 import { getStorageManager } from '../src/storageManager.js';
+import { getGlobal } from '../src/prebidGlobal.js';
 
 const TIMEOUT = 500;
 
@@ -8,7 +9,7 @@ const TIMEOUT = 500;
     GeoDetection module is to be used to get the region information.
     This needs to be called with the URL of API and path of region (e.g. location.data.region)
 */
-$$PREBID_GLOBAL$$.detectLocation = function(URL, passBack) {
+getGlobal().detectLocation = function(URL, passBack) {
   const getRegion = function(loc) {
     try {
       let location = JSON.parse(loc);
@@ -34,7 +35,7 @@ $$PREBID_GLOBAL$$.detectLocation = function(URL, passBack) {
 var BIDDER_CODE = 'pubmatic';
 var storage = getStorageManager({bidderCode: BIDDER_CODE});
 
-$$PREBID_GLOBAL$$.getDataFromLocalStorage = function(key, expiry) {
+getGlobal().getDataFromLocalStorage = function(key, expiry) {
   try {
     var storedObject = storage.getDataFromLocalStorage(key);
     if (storedObject) {
@@ -53,7 +54,7 @@ $$PREBID_GLOBAL$$.getDataFromLocalStorage = function(key, expiry) {
   }
 }
 
-$$PREBID_GLOBAL$$.setAndStringifyToLocalStorage = function(key, object) {
+getGlobal().setAndStringifyToLocalStorage = function(key, object) {
   try {
     object.createdDate = new Date().valueOf();
     storage.setDataInLocalStorage(key, JSON.stringify(object));

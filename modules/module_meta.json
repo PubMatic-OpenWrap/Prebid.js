@@ -16,9 +16,19 @@
             "module": "jwplayerRtdProvider"
         },
         {
+            "name": "experianRtdProvider",
+            "path": "/modules/experianRtdProvider.js",
+            "module": "experianRtdProvider"
+        },
+        {
             "name": "cleanioRtdProvider",
             "path": "/modules/cleanioRtdProvider.js",
             "module": "cleanioRtdProvider"
+        },
+        {
+            "name": "a1MediaRtdProvider",
+            "path": "/modules/a1MediaRtdProvider.js",
+            "module": "a1MediaRtdProvider"
         },
         {
             "name": "iasRtdProvider",
@@ -34,6 +44,11 @@
             "name": "medianetRtdProvider",
             "path": "/modules/medianetRtdProvider.js",
             "module": "medianetRtdProvider"
+        },
+        {
+            "name": "geolocationRtdProvider",
+            "path": "/modules/geolocationRtdProvider.js",
+            "module": "geolocationRtdProvider"
         },
         {
             "name": "growthCodeRtdProvider",
@@ -313,6 +328,11 @@
             "module": "roxotAnalyticsAdapter"
         },
         {
+            "name": "automatadAnalyticsAdapter",
+            "path": "/modules/automatadAnalyticsAdapter.js",
+            "module": "automatadAnalyticsAdapter"
+        },
+        {
             "name": "adkernelAdnAnalyticsAdapter",
             "path": "/modules/adkernelAdnAnalyticsAdapter.js",
             "module": "adkernelAdnAnalyticsAdapter"
@@ -348,6 +368,11 @@
             "module": "sonobiAnalyticsAdapter"
         },
         {
+            "name": "nobidAnalyticsAdapter",
+            "path": "/modules/nobidAnalyticsAdapter.js",
+            "module": "nobidAnalyticsAdapter"
+        },
+        {
             "name": "relevantAnalyticsAdapter",
             "path": "/modules/relevantAnalyticsAdapter.js",
             "module": "relevantAnalyticsAdapter"
@@ -376,11 +401,6 @@
             "name": "adomikAnalyticsAdapter",
             "path": "/modules/adomikAnalyticsAdapter.js",
             "module": "adomikAnalyticsAdapter"
-        },
-        {
-            "name": "pubmaticIHAnalyticsAdapter",
-            "path": "/modules/pubmaticIHAnalyticsAdapter.js",
-            "module": "pubmaticIHAnalyticsAdapter"
         },
         {
             "name": "pubstackAnalyticsAdapter",
@@ -460,7 +480,7 @@
             "module": "konduitWrapper"
         },
         {
-            "name": "Currency",
+            "name": "currency",
             "path": "/modules/currency.js",
             "module": "currency"
         },
@@ -535,24 +555,9 @@
             "module": "gdprEnforcement"
         },
         {
-            "name": "pubmaticAutoRefresh",
-            "path": "/modules/pubmaticAutoRefresh.js",
-            "module": "pubmaticAutoRefresh"
-        },
-        {
-            "name": "prebidJSDebugUI",
-            "path": "/modules/prebidJSDebugUI.js",
-            "module": "prebidJSDebugUI"
-        },
-        {
             "name": "sizeMapping",
             "path": "/modules/sizeMapping.js",
             "module": "sizeMapping"
-        },
-        {
-            "name": "viewabilityScoreGeneration",
-            "path": "/modules/viewabilityScoreGeneration.js",
-            "module": "viewabilityScoreGeneration"
         },
         {
             "name": "utiqSystem",
@@ -568,11 +573,6 @@
             "name": "consentManagementGpp",
             "path": "/modules/consentManagementGpp.js",
             "module": "consentManagementGpp"
-        },
-        {
-            "name": "idLibrary",
-            "path": "/modules/idLibrary.js",
-            "module": "idLibrary"
         },
         {
             "name": "enrichmentFpdModule",

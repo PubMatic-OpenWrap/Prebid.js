@@ -57,7 +57,7 @@ export function ortbConverter({
       const ortbRequest = {imp: imps};
       process(ortbRequest, bidderRequest, context);
 
-	  // PM: Stop overwriting page, domain and ref as mentioned in UOE-8675 for s2s partners
+      // PM: Stop overwriting page, domain and ref as mentioned in UOE-8675 for s2s partners
       const page = bidderRequest?.refererInfo?.page || '';
       const domain = bidderRequest?.refererInfo?.domain || '';
       const ref = window?.document?.referrer;
