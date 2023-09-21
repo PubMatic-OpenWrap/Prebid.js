@@ -1923,6 +1923,7 @@ describe('S2S Adapter', function () {
             includebidderkeys: true,
             includewinners: true
           },
+          createtids: false,
           channel: {
             name: 'pbjs',
             version: 'v$prebid.version$'
