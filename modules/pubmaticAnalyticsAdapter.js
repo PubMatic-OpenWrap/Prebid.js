@@ -492,7 +492,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     outputObj['ft'] = floorData.floorResponseData ? (floorData.floorResponseData.enforcements.enforceJS == false ? 0 : 1) : undefined;
   }
 
-  window.PWT.CC?.cc && (outputObj.ctr = window.PWT.CC.cc);
+  window.PWT?.CC?.cc && (outputObj.ctr = window.PWT.CC.cc);
   outputObj.s = Object.keys(auctionCache.adUnitCodes).reduce(function(slotsArray, adUnitId) {
     let adUnit = auctionCache.adUnitCodes[adUnitId];
     let origAdUnit = getAdUnit(auctionCache.origAdUnits, adUnitId) || {};
@@ -510,6 +510,20 @@ function executeBidsLoggerCall(e, highestCpmBids) {
       'vw': frequencyDepth?.viewedSlot?.[origAdUnit.adUnitId],
       'rf': origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0
     };
+    if (floorData?.floorRequestData) {
+      const { location, fetchStatus, floorProvider } = floorData?.floorRequestData;
+      slotObject.ffs = {
+        [CONSTANTS.FLOOR_VALUES.SUCCESS]: 1,
+        [CONSTANTS.FLOOR_VALUES.ERROR]: 2,
+        [CONSTANTS.FLOOR_VALUES.TIMEOUT]: 4,
+      }[fetchStatus];
+      slotObject.fsrc = {
+        [CONSTANTS.FLOOR_VALUES.FETCH] : 2,
+		[CONSTANTS.FLOOR_VALUES.NO_DATA]: 2,
+        [CONSTANTS.FLOOR_VALUES.AD_UNIT]: 1,
+      }[location];
+      slotObject.fp = floorProvider;
+    }
     slotsArray.push(slotObject);
     return slotsArray;
   }, []);
