@@ -375,7 +375,7 @@ export const okToFireToServer = (config, lsObj) => {
       const duration = config?.serverSideTracking?.frequency ? config.serverSideTracking.frequency[1] : DEFAULT_SERVER_CALL_FREQUENCY.duration;
 
       if (Number(timeElapsed[metric]) > duration) {
-		  result = true;
+        result = true;
       }
     }
 

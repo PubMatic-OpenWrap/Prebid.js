@@ -516,13 +516,13 @@ function executeBidsLoggerCall(e, highestCpmBids) {
         [CONSTANTS.FLOOR_VALUES.SUCCESS]: 1,
         [CONSTANTS.FLOOR_VALUES.ERROR]: 2,
         [CONSTANTS.FLOOR_VALUES.TIMEOUT]: 4,
-		undefined: 0
+        undefined: 0
       }[fetchStatus];
       slotObject.fsrc = {
-        [CONSTANTS.FLOOR_VALUES.FETCH] : 2,
-		[CONSTANTS.FLOOR_VALUES.NO_DATA]: 2,
+        [CONSTANTS.FLOOR_VALUES.FETCH]: 2,
+        [CONSTANTS.FLOOR_VALUES.NO_DATA]: 2,
         [CONSTANTS.FLOOR_VALUES.AD_UNIT]: 1,
-		[CONSTANTS.FLOOR_VALUES.SET_CONFIG]: 1
+        [CONSTANTS.FLOOR_VALUES.SET_CONFIG]: 1
       }[location];
       slotObject.fp = floorProvider;
     }
