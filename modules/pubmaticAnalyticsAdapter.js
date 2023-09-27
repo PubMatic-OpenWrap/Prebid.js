@@ -486,6 +486,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['tis'] = frequencyDepth?.impressionServed;
   outputObj['lip'] = frequencyDepth?.lip;
   outputObj['tgid'] = getTgId();
+  outputObj['pbv'] = getGlobal()?.version || '-1';
 
   if (floorData && floorFetchStatus) {
     outputObj['fmv'] = floorData.floorRequestData ? floorData.floorRequestData.modelVersion || undefined : undefined;

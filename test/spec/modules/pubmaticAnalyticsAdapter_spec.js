@@ -7,6 +7,7 @@ import {
   addBidResponseHook,
 } from 'modules/currency.js';
 import { getGlobal } from '../../../src/prebidGlobal';
+import 'src/prebid.js';
 
 let events = require('src/events');
 let ajax = require('src/ajax');
@@ -417,6 +418,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.it).to.equal('hybrid');
       expect(data.fmv).to.equal('floorModelTest');
       expect(data.ft).to.equal(1);
+      expect(data.pbv).to.equal(getGlobal()?.version || '-1');
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);
       expect(data.owv).to.equal(window?.PWT?.versionDetails?.openwrap_version || '-1');
@@ -648,6 +650,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.pid).to.equal('1111');
       expect(data.fmv).to.equal('floorModelTest');
       expect(data.ft).to.equal(1);
+      expect(data.pbv).to.equal(getGlobal()?.version || '-1');
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);
 	    expect(data.bm).not.to.be.null;
@@ -735,6 +738,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.it).to.equal('hybrid');
       expect(data.fmv).to.equal('floorModelTest');
       expect(data.ft).to.equal(1);
+      expect(data.pbv).to.equal(getGlobal()?.version || '-1');
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);
       // slot 1
@@ -1272,6 +1276,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.tgid).to.equal(15);
       expect(data.it).to.equal('hybrid');
       expect(data.fmv).to.equal('floorModelTest');
+      expect(data.pbv).to.equal(getGlobal()?.version || '-1');
       expect(data.ft).to.equal(1);
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);
@@ -1412,6 +1417,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.tgid).to.equal(15);
       expect(data.it).to.equal('hybrid');
       expect(data.fmv).to.equal('floorModelTest');
+      expect(data.pbv).to.equal(getGlobal()?.version || '-1');
       expect(data.ft).to.equal(1);
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);
