@@ -64,7 +64,10 @@ export const zeotapIdPlusSubmodule = {
   eids: {
     'IDP': {
       source: 'zeotap.com',
-      atype: 1
+      atype: 1,
+      getValue: function getValue(data) {
+        return isPlainObject(data) ? data.id : data;
+      }
     },
   }
 };
