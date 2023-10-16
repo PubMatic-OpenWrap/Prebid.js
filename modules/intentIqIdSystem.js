@@ -197,7 +197,10 @@ export const intentIqIdSubmodule = {
   eids: {
     'intentIqId': {
       source: 'intentiq.com',
-      atype: 1
+      atype: 1,
+      getValue: function(data) {
+        return data.RESULT;
+      }
     },
   }
 };
