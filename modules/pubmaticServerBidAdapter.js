@@ -617,7 +617,7 @@ export const spec = {
   */
   interpretResponse: (response, request) => {
     var endTime = utils.timestamp();
-    var wiid = JSON.parse(request.data).ext.wrapper.wiid;
+    var wiid = JSON.parse(request.data).ext?.wrapper?.wiid;
     if (window.PWT.owLatency.hasOwnProperty(wiid)) {
       window.PWT.owLatency[wiid].endTime = endTime;
     } else {

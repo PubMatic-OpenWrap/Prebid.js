@@ -60,6 +60,15 @@ export const zeotapIdPlusSubmodule = {
   getId() {
     const id = readCookie() || readFromLocalStorage();
     return id ? { id } : undefined;
+  },
+  eids: {
+    'IDP': {
+      source: 'zeotap.com',
+      atype: 1,
+      getValue: function getValue(data) {
+        return isPlainObject(data) ? data.id : data;
+      }
+    },
   }
 };
 submodule('userId', zeotapIdPlusSubmodule);
