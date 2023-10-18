@@ -1,4 +1,4 @@
-import { getBidRequest, logWarn, isBoolean, isStr, isArray, inIframe, mergeDeep, deepAccess, isNumber, deepSetValue, logInfo, logError, deepClone, convertTypes, uniques, isPlainObject, isInteger, parseQueryStringParameters } from '../src/utils.js';
+import { getBidRequest, logWarn, isBoolean, isStr, isArray, inIframe, mergeDeep, deepAccess, isNumber, deepSetValue, logInfo, logError, deepClone, uniques, isPlainObject, isInteger, parseQueryStringParameters } from '../src/utils.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
@@ -6,6 +6,7 @@ import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
 import { getStorageManager } from '../src/storageManager.js'
 import CONSTANTS from '../src/constants.json';
+import {convertTypes} from '../libraries/transformParamsUtils/convertTypes.js';
 
 const BIDDER_CODE = 'pubmatic';
 const storage = getStorageManager({bidderCode: BIDDER_CODE});
@@ -1203,13 +1204,15 @@ export const spec = {
       payload.ext.marketplace.allowedbidders = biddersList.filter(uniques);
     }
 
-    viewData = storage.getDataFromLocalStorage('viewability-data') ? JSON.parse(storage.getDataFromLocalStorage('viewability-data')) : {};
-    if (Object.keys(viewData).length && bid.bidViewability) {
-      removeViewTimeForZeroValue(viewData[_getDomainFromURL(payload.site.page)]);
-      payload.ext.bidViewability = {
-        adDomain: viewData[_getDomainFromURL(payload.site.page)]
+    try {
+      viewData = storage && !!storage.getDataFromLocalStorage('viewability-data') ? JSON.parse(storage.getDataFromLocalStorage('viewability-data')) : {};
+      if (Object.keys(viewData).length && bid.bidViewability) {
+        removeViewTimeForZeroValue(viewData[_getDomainFromURL(payload.site.page)]);
+        payload.ext.bidViewability = {
+          adDomain: viewData[_getDomainFromURL(payload.site.page)]
+        }
       }
-    }
+    } catch (e) {}
 
     payload.user.gender = (conf.gender ? conf.gender.trim() : UNDEFINED);
     payload.user.geo = {};
@@ -1499,6 +1502,21 @@ export const spec = {
             }
           });
         });
+      }
+      let fledgeAuctionConfigs = deepAccess(response.body, 'ext.fledge_auction_configs');
+      if (fledgeAuctionConfigs) {
+        fledgeAuctionConfigs = Object.entries(fledgeAuctionConfigs).map(([bidId, cfg]) => {
+          return {
+            bidId,
+            config: Object.assign({
+              auctionSignals: {},
+            }, cfg)
+          }
+        });
+        return {
+          bids: bidResponses,
+          fledgeAuctionConfigs,
+        }
       }
     } catch (error) {
       logError(error);
