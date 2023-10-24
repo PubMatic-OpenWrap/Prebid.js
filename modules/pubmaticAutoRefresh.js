@@ -17,9 +17,10 @@
 import { config } from '../src/config.js';
 import * as events from '../src/events.js';
 import { EVENTS } from '../src/constants.json';
-import { mergeDeep, logMessage, logWarn, pick, timestamp, isFn, isArray, isSlotMatchingAdUnitCode, getGptSlotForAdUnitCode } from '../src/utils.js';
+import { mergeDeep, logMessage, logWarn, pick, timestamp, isFn, isArray, isSlotMatchingAdUnitCode } from '../src/utils.js';
 import { getGlobal } from '../src/prebidGlobal.js';
 import { find } from '../src/polyfill.js';
+import { getGptSlotForAdUnitCode } from '../libraries/gptUtils/gptUtils.js';
 // import find from 'core-js-pure/features/array/find.js';
 
 const MODULE_NAME = 'pubmaticAutoRefresh';
