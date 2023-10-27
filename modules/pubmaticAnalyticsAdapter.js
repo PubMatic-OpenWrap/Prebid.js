@@ -1,4 +1,4 @@
-import { _each, pick, logWarn, isStr, isArray, logError, isFn, getGptSlotInfoForAdUnitCode } from '../src/utils.js';
+import { _each, pick, logWarn, isStr, isArray, logError, isFn } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import CONSTANTS from '../src/constants.json';
@@ -6,6 +6,7 @@ import { ajax } from '../src/ajax.js';
 import { config } from '../src/config.js';
 import { getGlobal } from '../src/prebidGlobal.js';
 import { getStorageManager } from '../src/storageManager.js';
+import {getGptSlotInfoForAdUnitCode} from '../libraries/gptUtils/gptUtils.js';
 
 /// /////////// CONSTANTS //////////////
 const ADAPTER_CODE = 'pubmatic';
@@ -517,13 +518,13 @@ function executeBidsLoggerCall(e, highestCpmBids) {
         [CONSTANTS.FLOOR_VALUES.SUCCESS]: 1,
         [CONSTANTS.FLOOR_VALUES.ERROR]: 2,
         [CONSTANTS.FLOOR_VALUES.TIMEOUT]: 4,
-		undefined: 0
+        undefined: 0
       }[fetchStatus];
       slotObject.fsrc = {
-        [CONSTANTS.FLOOR_VALUES.FETCH] : 2,
-		[CONSTANTS.FLOOR_VALUES.NO_DATA]: 2,
+        [CONSTANTS.FLOOR_VALUES.FETCH]: 2,
+        [CONSTANTS.FLOOR_VALUES.NO_DATA]: 2,
         [CONSTANTS.FLOOR_VALUES.AD_UNIT]: 1,
-		[CONSTANTS.FLOOR_VALUES.SET_CONFIG]: 1
+        [CONSTANTS.FLOOR_VALUES.SET_CONFIG]: 1
       }[location];
       slotObject.fp = floorProvider;
     }

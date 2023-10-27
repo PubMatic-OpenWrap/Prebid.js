@@ -21,6 +21,11 @@
             "module": "experianRtdProvider"
         },
         {
+            "name": "qortexRtdProvider",
+            "path": "/modules/qortexRtdProvider.js",
+            "module": "qortexRtdProvider"
+        },
+        {
             "name": "cleanioRtdProvider",
             "path": "/modules/cleanioRtdProvider.js",
             "module": "cleanioRtdProvider"
@@ -550,11 +555,6 @@
             "module": "schain"
         },
         {
-            "name": "gdprEnforcement",
-            "path": "/modules/gdprEnforcement.js",
-            "module": "gdprEnforcement"
-        },
-        {
             "name": "sizeMapping",
             "path": "/modules/sizeMapping.js",
             "module": "sizeMapping"
@@ -563,11 +563,6 @@
             "name": "utiqSystem",
             "path": "/modules/utiqSystem.js",
             "module": "utiqSystem"
-        },
-        {
-            "name": "sizeMappingV2",
-            "path": "/modules/sizeMappingV2.js",
-            "module": "sizeMappingV2"
         },
         {
             "name": "consentManagementGpp",
@@ -588,6 +583,16 @@
             "name": "gppControl_usnat",
             "path": "/modules/gppControl_usnat.js",
             "module": "gppControl_usnat"
+        },
+        {
+            "name": "bidViewabilityIO",
+            "path": "/modules/bidViewabilityIO.js",
+            "module": "bidViewabilityIO"
+        },
+        {
+            "name": "gppControl_usstates",
+            "path": "/modules/gppControl_usstates.js",
+            "module": "gppControl_usstates"
         },
         {
             "name": "uid2IdSystem_shared",
@@ -634,9 +639,10 @@
             "module": "videojsVideoProvider"
         },
         {
-            "name": "freeWheelAdserverVideo",
-            "path": "/modules/freeWheelAdserverVideo.js",
-            "module": "freeWheelAdserverVideo"
+            "name": "freeWheelAdserverVideo.js",
+            "path": "/modules/freeWheelAdserverVideo.js.js",
+            "module": "freeWheelAdserverVideo.js"
         }
+        
     ]
 }
