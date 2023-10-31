@@ -1,4 +1,4 @@
-import { _each, pick, logWarn, isStr, isArray, logError, isFn } from '../src/utils.js';
+import { _each, pick, logWarn, isStr, isArray, logError, isFn, generateUUID } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import CONSTANTS from '../src/constants.json';
@@ -510,7 +510,8 @@ function executeBidsLoggerCall(e, highestCpmBids) {
       'is': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.impressionServed,
       'rc': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.slotCnt,
       'vw': frequencyDepth?.viewedSlot?.[origAdUnit.adUnitId],
-      'rf': origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0
+      'rf': origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0,
+      'sid': generateUUID()
     };
     if (floorData?.floorRequestData) {
       const { location, fetchStatus, floorProvider } = floorData?.floorRequestData;

@@ -434,6 +434,7 @@ describe('pubmatic analytics adapter', function () {
 	  expect(data.s[0].fsrc).to.equal(2);
 	  expect(data.s[0].fp).to.equal('pubmatic');
 	  expect(data.s[0].rf).to.equal(1);
+	  expect(data.s[0].sid).not.to.be.undefined;
       expect(data.s[0].mt).to.be.an('array');
       expect(data.s[0].mt[0]).to.equal(0);
       expect(data.s[0].sz).to.deep.equal(['640x480']);
@@ -475,6 +476,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].fskp).to.equal(0);
       expect(data.s[1].ffs).to.equal(1);
       expect(data.s[1].fsrc).to.equal(2);
+	  expect(data.s[1].sid).not.to.be.undefined;
       expect(data.s[1].fp).to.equal('pubmatic');
       expect(data.s[1].ps[0].pn).to.equal('pubmatic');
       expect(data.s[1].ps[0].bc).to.equal('pubmatic');
@@ -570,11 +572,13 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[0].sn).to.equal('/19968336/header-bid-tag-0');
       expect(data.s[0].au).to.equal('/19968336/header-bid-tag-0');
       expect(data.s[0].fskp).to.equal(undefined);
+	  expect(data.s[0].sid).not.to.be.undefined;
 
       // slot 2
       expect(data.s[1].sn).to.equal('/19968336/header-bid-tag-1');
       expect(data.s[1].au).to.equal('/19968336/header-bid-tag-1');
       expect(data.s[1].fskp).to.equal(undefined);
+	  expect(data.s[1].sid).not.to.be.undefined;
 	  });
 
 	  it('Logger: log floor fields when prebids floor shows setConfig in location property', function() {
@@ -616,11 +620,13 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[0].sn).to.equal('/19968336/header-bid-tag-0');
       expect(data.s[0].au).to.equal('/19968336/header-bid-tag-0');
       expect(data.s[0].fskp).to.equal(0);
+	  expect(data.s[0].sid).not.to.be.undefined;
 
       // slot 2
       expect(data.s[1].sn).to.equal('/19968336/header-bid-tag-1');
       expect(data.s[1].au).to.equal('/19968336/header-bid-tag-1');
       expect(data.s[1].fskp).to.equal(0);
+	  expect(data.s[1].sid).not.to.be.undefined;
 	  });
 
     it('bidCpmAdjustment: USD: Logger: best case + win tracker', function() {
@@ -669,6 +675,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[0].fsrc).to.equal(2);
       expect(data.s[0].fp).to.equal('pubmatic');
       expect(data.s[0].rf).to.equal(1);
+	  expect(data.s[0].sid).not.to.be.undefined;
       expect(data.s[0].ps).to.be.an('array');
 	    expect(data.s[0].au).to.equal('/19968336/header-bid-tag-0');
       expect(data.s[0].ps.length).to.equal(1);
@@ -803,6 +810,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].fskp).to.equal(0);
       expect(data.s[1].ffs).to.equal(1);
       expect(data.s[1].fsrc).to.equal(2);
+	  expect(data.s[1].sid).not.to.be.undefined;
       expect(data.s[1].fp).to.equal('pubmatic');
       expect(data.s[1].ps).to.be.an('array');
       expect(data.s[1].ps.length).to.equal(1);
@@ -849,6 +857,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].fskp).to.equal(0);
       expect(data.s[1].ffs).to.equal(1);
       expect(data.s[1].fsrc).to.equal(2);
+	  expect(data.s[1].sid).not.to.be.undefined;
       expect(data.s[1].fp).to.equal('pubmatic');
       expect(data.s[1].ps).to.be.an('array');
       expect(data.s[1].ps.length).to.equal(1);
@@ -900,6 +909,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].fskp).to.equal(0);
       expect(data.s[1].ffs).to.equal(1);
       expect(data.s[1].fsrc).to.equal(2);
+	  expect(data.s[1].sid).not.to.be.undefined;
 	    expect(data.s[1].fp).to.equal('pubmatic');
       expect(data.s[1].ps).to.be.an('array');
       expect(data.s[1].ps.length).to.equal(1);
@@ -1021,6 +1031,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].fskp).to.equal(0);
       expect(data.s[1].ffs).to.equal(1);
       expect(data.s[1].fsrc).to.equal(2);
+	  expect(data.s[1].sid).not.to.be.undefined;
       expect(data.s[1].fp).to.equal('pubmatic');
       expect(data.s[1].ps).to.be.an('array');
       expect(data.s[1].ps.length).to.equal(1);
@@ -1089,7 +1100,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ffs).to.equal(1);
       expect(data.s[1].fsrc).to.equal(2);
       expect(data.s[1].fp).to.equal('pubmatic');
-      // expect(data.s[1].ft).to.equal(1);
+      expect(data.s[1].sid).not.to.be.undefined;
       expect(data.s[1].ps).to.be.an('array');
       expect(data.s[1].ps.length).to.equal(1);
       expect(data.s[1].ps[0].pn).to.equal('pubmatic');
@@ -1148,6 +1159,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].fskp).to.equal(0);
       expect(data.s[1].ffs).to.equal(1);
       expect(data.s[1].fsrc).to.equal(2);
+	  expect(data.s[1].sid).not.to.be.undefined;
       expect(data.s[1].fp).to.equal('pubmatic');
       expect(data.s[1].sz).to.deep.equal(['1000x300', '970x250', '728x90']);
       expect(data.s[1].ps).to.be.an('array');
@@ -1266,6 +1278,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].fskp).to.equal(0);
       expect(data.s[1].sz).to.deep.equal(['1000x300', '970x250', '728x90']);
       expect(data.s[1].ps).to.be.an('array');
+	  expect(data.s[1].sid).not.to.be.undefined;
       expect(data.s[1].ps.length).to.equal(1);
       expect(data.s[1].ps[0].pn).to.equal('pubmatic');
       expect(data.s[0].ps[0].bc).to.equal('pubmatic');
@@ -1347,6 +1360,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[0].fskp).to.equal(0);
       expect(data.s[0].ffs).to.equal(1);
       expect(data.s[0].fsrc).to.equal(2);
+	  expect(data.s[0].sid).not.to.be.undefined;
       expect(data.s[0].fp).to.equal('pubmatic');
       expect(data.s[0].rf).to.equal(1);
       expect(data.s[0].ps).to.be.an('array');
@@ -1386,6 +1400,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].fskp).to.equal(0);
       expect(data.s[1].ffs).to.equal(1);
       expect(data.s[1].fsrc).to.equal(2);
+	  expect(data.s[1].sid).not.to.be.undefined;
       expect(data.s[1].fp).to.equal('pubmatic');
       expect(data.s[1].ps).to.be.an('array');
       expect(data.s[1].ps.length).to.equal(1);
@@ -1488,6 +1503,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[0].fskp).to.equal(0);
       expect(data.s[0].ffs).to.equal(1);
       expect(data.s[0].fsrc).to.equal(2);
+	  expect(data.s[0].sid).not.to.be.undefined;
       expect(data.s[0].fp).to.equal('pubmatic');
       expect(data.s[0].rf).to.equal(1);
       expect(data.s[0].ps).to.be.an('array');
@@ -1616,6 +1632,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[0].rc).to.be.not.null;
       expect(data.s[0].is).to.be.not.null;
       expect(data.s[0].fskp).to.equal(0);
+	  expect(data.s[0].sid).not.to.be.undefined;
       expect(data.s[0].ffs).to.equal(1);
       expect(data.s[0].fsrc).to.equal(2);
       expect(data.s[0].fp).to.equal('pubmatic');
