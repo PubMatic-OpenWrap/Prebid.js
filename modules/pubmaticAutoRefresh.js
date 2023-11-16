@@ -133,11 +133,11 @@ let DEFAULT_CONFIG = {
   // set it to 0 to refresh all gptSlots w/o visibility percentage check
   refreshAdSlotWithMinimumViewabilityPercentage: 50,
   // this key will be added on gptSlot with kvValueForRefresh value; set it to null to not set it
-  kvKeyForRefresh: 'pm-autorefresh',
+  kvKeyForRefresh: 'pm-refresh',
   // this value will be added for the key kvKeyForRefresh on the gptSlot
   kvValueForRefresh: '1',
   // this key will be added on the gptSlot and its value will be the refresh count; set it to null to not set it
-  kvKeyForRefreshCount: 'pm-autorefresh-count',
+  kvKeyForRefreshCount: 'pm-refresh-count',
   // a function; the default callback function
   callbackFunction: isOpenWrapSetup ? openWrapSetup.callbackFunction : pbjsSetup.callbackFunction,
   // a function; if you are using customConfig for some gptSlots then we need a way to find name of the gptSlot in customConfig
