@@ -13,6 +13,7 @@ import {registerOrtbProcessor, REQUEST} from '../src/pbjsORTB.js';
 import {enrichFPD} from '../src/fpd/enrichment.js';
 import {getGlobal} from '../src/prebidGlobal.js';
 import {cmpClient} from '../libraries/cmp/cmpClient.js';
+import * as events from '../src/events.js';
 
 const DEFAULT_CMP = 'iab';
 const DEFAULT_CONSENT_TIMEOUT = 10000;
@@ -26,6 +27,21 @@ let actionTimeout;
 
 let consentData;
 let addedConsentHook = false;
+
+let cmpList =
+{
+  3: 'LiveRamp',
+  10: 'Quantcast',
+  28: 'OneTrust LLC',
+  46: 'Mediavine, Inc.',
+  7: 'Didomi',
+  300: 'Google LLC',
+  9: 'Admiral',
+  299: 'Ezoic',
+  63: 'ALZ Software Ltd (Clickio)',
+  31: 'consentmanager.net',
+  61: 'Tri-table Sp. z o.o.'
+};
 
 // add new CMPs here, with their dedicated lookup function
 const cmpCallMap = {
@@ -55,6 +71,17 @@ function lookupIabConsent({onSuccess, onError, onEvent}) {
       onEvent(tcfData);
       if (tcfData && (tcfData.gdprApplies === false || tcfData.eventStatus === 'tcloaded' || tcfData.eventStatus === 'useractioncomplete')) {
         processCmpData(tcfData, {onSuccess, onError});
+      }
+      if(typeof __tcfapi === 'function') {
+        __tcfapi('ping', 2, (pingReturn) => {
+          events.emit("CMP_Loaded", {
+            'cmp': {
+              name: cmpList[pingReturn.cmpId] || undefined,
+              id: pingReturn.cmpId
+            },
+            consentData: tcfData
+          });
+        });
       }
     } else {
       onError('CMP unable to register callback function.  Please check CMP setup.');
