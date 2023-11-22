@@ -1,12 +1,19 @@
 import pubmaticIHAnalyticsAdapter, { getMetadata } from 'modules/pubmaticIHAnalyticsAdapter.js';
 import CONSTANTS from 'src/constants.json';
+import {server} from '../../mocks/xhr.js';
 import { config } from 'src/config.js';
+import { getCoreStorageManager } from 'src/storageManager.js';
 
 let events = require('src/events');
 let utils = require('src/utils');
 
 window.IHPWT = window.IHPT || {};
 window.IHPWT.ihAnalyticsAdapterExpiry = 7;
+export const coreStorage = getCoreStorageManager('userid');
+
+function getLoggerJsonFromRequest(requestBody) {
+  return JSON.parse(decodeURIComponent(requestBody.split('json=')[1]));
+}
 
 const {
   EVENTS: {
@@ -24,7 +31,8 @@ describe('pubmatic analytics adapter', function () {
     sandbox = sinon.sandbox.create();
 
     xhr = sandbox.useFakeXMLHttpRequest();
-    requests = [];
+    requests = server.requests;
+
     xhr.onCreate = request => requests.push(request);
 
     sandbox.stub(events, 'getEvents').returns([]);
@@ -45,11 +53,8 @@ describe('pubmatic analytics adapter', function () {
     expect(utils.logError.called).to.equal(true);
   });
 
-  /* describe('when handling events', function() {
+  describe('when handling events', function() {
     beforeEach(function () {
-      requests = [];
-      sandbox = sinon.sandbox.create();
-      sandbox.stub('executeIHLoggerCall').returns({});
       pubmaticIHAnalyticsAdapter.enableAnalytics({
         options: {
           publisherId: 9999,
@@ -67,12 +72,22 @@ describe('pubmatic analytics adapter', function () {
 
     it('IH_INIT: Logger fired when identity hub initialises', function() {
       events.emit(IH_INIT, {});
+      let request = requests[0];
 
-      expect(executeIHLoggerCall.called).to.equal(true);
       let data = getLoggerJsonFromRequest(request.requestBody);
-      expect(data.pubid).to.equal('9999');
-      expect(data.pid).to.equal('1111');
-      expect(data.pdvid).to.equal('20');
+      expect(data).to.be.not.null;
     });
-  }); */
+
+    it('IH_INIT: expect request data to match actual values', function() {
+      events.emit(IH_INIT, {});
+      let request = requests[0];
+
+      let data = getLoggerJsonFromRequest(request.requestBody);
+      expect(data.pubid).to.be.equal('9999');
+      expect(data.pid).to.be.equal('1111');
+      expect(data.pdvid).to.be.equal('20');
+      expect(data.ih).to.be.equal(1);
+      expect(data.orig).to.be.equal('');
+    });
+  });
 });
