@@ -138,6 +138,7 @@ let publisherId = 0;
 let isInvalidNativeRequest = false;
 let biddersList = ['pubmatic'];
 let viewData;
+let isFormatLevelFloor = false;
 const allBiddersList = ['all'];
 
 const removeViewTimeForZeroValue = obj => {
@@ -803,6 +804,7 @@ function _addImpressionFPD(imp, bid) {
 }
 
 function _addFloorFromFloorModule(impObj, bid) {
+  let isMultiFormat = Object.keys(bid.mediaTypes).length > 1 && isFormatLevelFloor;
   let bidFloor = -1;
   // get lowest floor from floorModule
   if (typeof bid.getFloor === 'function' && !config.getConfig('pubmatic.disableFloors')) {
@@ -828,7 +830,9 @@ function _addFloorFromFloorModule(impObj, bid) {
           logInfo(LOG_WARN_PREFIX, 'floor from floor module returned for mediatype:', mediaType, ' and size:', size, ' is: currency', floorInfo.currency, 'floor', floorInfo.floor);
           if (typeof floorInfo === 'object' && floorInfo.currency === impObj.bidfloorcur && !isNaN(parseInt(floorInfo.floor))) {
             let mediaTypeFloor = parseFloat(floorInfo.floor);
-            impObj[mediaType]['ext'] = {'bidfloor': mediaTypeFloor};
+			if(isMultiFormat) {
+				impObj[mediaType]['ext'] = {'bidfloor': mediaTypeFloor};
+			}
             logInfo(LOG_WARN_PREFIX, 'floor from floor module:', mediaTypeFloor, 'previous floor value', bidFloor, 'Min:', Math.min(mediaTypeFloor, bidFloor));
             if (bidFloor === -1) {
               bidFloor = mediaTypeFloor;
@@ -1058,6 +1062,13 @@ function hasGetRequestEnabled() {
   return randomValue100 <= testGroupPercentage;
 }
 
+function applyFormatLevelFloor() {
+	if (!(config.getConfig('formatLevelFloor.enabled') === true)) return false;
+	const randomValue100 = Math.ceil(Math.random() * 100);
+	const trafficPercentage = config.getConfig('formatLevelFloor.trafficPercentage') || 0;
+	return randomValue100 <= trafficPercentage;
+}
+
 function getUniqueNumber(rangeEnd) {
   return Math.floor(Math.random() * rangeEnd) + 1;
 }
@@ -1138,7 +1149,7 @@ export const spec = {
     var bid;
     var blockedIabCategories = [];
     var allowedIabCategories = [];
-
+	isFormatLevelFloor = applyFormatLevelFloor();
     validBidRequests.forEach(originalBid => {
       bid = deepClone(originalBid);
       bid.params.adSlot = bid.params.adSlot || '';
