@@ -1,4 +1,4 @@
-import { _each, pick, logWarn, isStr, isArray, logError, isFn, generateUUID } from '../src/utils.js';
+import { _each, pick, logWarn, isStr, isArray, logError, isFn, generateUUID, isEmptyStr } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import CONSTANTS from '../src/constants.json';
@@ -446,6 +446,41 @@ function getFloorFetchStatus(floorData) {
   return isDataValid && (isAdUnitOrSetConfig || isFetchSuccessful);
 }
 
+function getCDSData() {
+  var pbConf = config.getConfig();
+  return pbConf && pbConf.cds;
+}
+
+function getCDSDataLoggerStr() {
+  var separator = ";";
+  var cdsData = getCDSData();
+  if(!cdsData) {
+    return cdsData;
+  } else {
+    cdsStr = '';
+    Object.keys(cdsData).map(function(key) {
+      cdsStr += key + "=" + enc(cdsData[key].value) + separator;
+    });
+    return cdsStr.slice(0, -1);
+  }
+}
+
+function getCDSDataGAMStr() {
+  var separator = "&";
+  var cdsData = getCDSData();
+  if(!cdsData) {
+    return cdsData;
+  } else {
+    cdsStr = '';
+    Object.keys(cdsData).map(function(key) {
+      if(cdsData[key].sendtoGAM !== false) {
+        cdsStr += key + "=" + cdsData[key].value + separator;
+      }
+    });
+    return cdsStr.slice(0, -1);
+  }
+}
+
 function executeBidsLoggerCall(e, highestCpmBids) {
   const HOSTNAME = window.location.host;
   const storedObject = storage.getDataFromLocalStorage(PREFIX + HOSTNAME);
@@ -533,7 +568,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     return slotsArray;
   }, []);
   outputObj.owv = window.PWT?.versionDetails?.openwrap_version || '-1';
-
+  outputObj.cds = getCDSDataLoggerStr();
   auctionCache.sent = true;
 
   ajax(
@@ -621,6 +656,8 @@ function auctionInitHandler(args) {
   cacheEntry.origAdUnits = args.adUnits;
   cacheEntry.referer = args.bidderRequests[0].refererInfo.topmostLocation;
   cache.auctions[args.auctionId] = cacheEntry;
+  let cdsData = getCDSDataGAMStr();
+  !isEmptyStr(cdsData) && googletag.pubads().setTargeting('cds', cdsData);
 }
 
 function bidRequestedHandler(args) {
