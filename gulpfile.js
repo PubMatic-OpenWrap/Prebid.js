@@ -34,9 +34,8 @@ var explicitModules = [
   'pre1api'
 ];
 
-const OS = require('os')
 console.log("UV_THREADPOOL_SIZE ==>", process.env.UV_THREADPOOL_SIZE);
-process.env.UV_THREADPOOL_SIZE = OS.cpus().length;
+process.env.UV_THREADPOOL_SIZE = 24;
 console.log("UV_THREADPOOL_SIZE ==>", process.env.UV_THREADPOOL_SIZE);
 
 // all the following functions are task functions
