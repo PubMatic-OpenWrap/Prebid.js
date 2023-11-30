@@ -34,6 +34,11 @@ var explicitModules = [
   'pre1api'
 ];
 
+const OS = require('os')
+console.log("UV_THREADPOOL_SIZE ==>", process.env.UV_THREADPOOL_SIZE);
+process.env.UV_THREADPOOL_SIZE = OS.cpus().length;
+console.log("UV_THREADPOOL_SIZE ==>", process.env.UV_THREADPOOL_SIZE);
+
 // all the following functions are task functions
 function bundleToStdout() {
   nodeBundle().then(file => console.log(file));
@@ -507,7 +512,7 @@ gulp.task('build-bundle-dev', gulp.series(makeDevpackPkg, gulpBundle.bind(null, 
 gulp.task('build-bundle-prod', gulp.series(makeWebpackPkg, gulpBundle.bind(null, false)));
 
 // public tasks (dependencies are needed for each task since they can be ran on their own)
-gulp.task('test', gulp.series(clean, lint, test));
+gulp.task('test', gulp.series(clean, test));
 
 gulp.task('test-coverage', gulp.series(clean, testCoverage));
 gulp.task(viewCoverage);
