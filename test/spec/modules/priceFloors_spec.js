@@ -12,7 +12,7 @@ import {
   isFloorsDataValid,
   addBidResponseHook,
   fieldMatchingFunctions,
-  allowedFields, parseFloorData, normalizeDefault, getFloorDataFromAdUnits
+  allowedFields, parseFloorData, normalizeDefault, getFloorDataFromAdUnits, getFloorSourceType
 } from 'modules/priceFloors.js';
 import * as events from 'src/events.js';
 import * as mockGpt from '../integration/faker/googletag.js';
@@ -2187,5 +2187,49 @@ describe('the price floors module', function () {
         })
       });
     })
+  });
+
+  describe('getFloorSourceType', () => {
+    it('should return true when resolvedFloorsData is undefined', () => {
+      const result = getFloorSourceType(undefined);
+      expect(result).to.be.true;
+    });
+
+    it('should return true when resolvedFloorsData.data is undefined', () => {
+      const result = getFloorSourceType({});
+      expect(result).to.be.true;
+    });
+
+    it('should return true when usefetchdatarate is undefined', () => {
+      const resolvedFloorsData = {
+        data: {}
+      };
+      const result = getFloorSourceType(resolvedFloorsData);
+      expect(result).to.be.true;
+    });
+
+    it('should return true when Math.random() * 100 is greater than parseFloat(usefetchdatarate)', () => {
+      const resolvedFloorsData = {
+        data: {
+          usefetchdatarate: 50
+        }
+      };
+      const randomStub = sinon.stub(Math, 'random').returns(0.6);
+      const result = getFloorSourceType(resolvedFloorsData);
+      expect(result).to.be.false;
+      randomStub.restore();
+    });
+
+    it('should return false when Math.random() * 100 is less than or equal to parseFloat(usefetchdatarate)', () => {
+      const resolvedFloorsData = {
+        data: {
+          usefetchdatarate: 50
+        }
+      };
+      const randomStub = sinon.stub(Math, 'random').returns(0.4);
+      const result = getFloorSourceType(resolvedFloorsData);
+      expect(result).to.be.true;
+      randomStub.restore();
+    });
   });
 });
