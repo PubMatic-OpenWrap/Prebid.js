@@ -459,7 +459,7 @@ function getCDSDataLoggerStr() {
   } else {
     cdsStr = '';
     Object.keys(cdsData).map(function(key) {
-      cdsStr += key + "=" + enc(cdsData[key].value) + separator;
+      cdsStr += enc(key + "=" + cdsData[key].value + separator);
     });
     return cdsStr.slice(0, -1);
   }
