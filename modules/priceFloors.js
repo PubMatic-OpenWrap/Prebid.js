@@ -373,7 +373,7 @@ export function pickRandomModel(modelGroups, weightSum) {
 };
 
 export function getFloorSourceType(resolvedFloorsData) {
-  if (resolvedFloorsData?.data?.usefetchdatarate) {
+  if (resolvedFloorsData?.data && resolvedFloorsData.data.hasOwnProperty('usefetchdatarate')) {
     const { usefetchdatarate } = resolvedFloorsData.data;
     return !(Math.random() * 100 > parseFloat(usefetchdatarate));
   }
