@@ -451,33 +451,41 @@ function getCDSData() {
   return pbConf && pbConf.cds;
 }
 
-function getCDSDataLoggerStr() {
-  var separator = ';';
-  var cdsData = getCDSData();
-  if (!cdsData) {
-    return cdsData;
-  } else {
-    var cdsStr = '';
-    Object.keys(cdsData).map(function(key) {
-      cdsStr += (key + '=' + cdsData[key].value + separator);
+function isFunction(functionToCheck) {
+  return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';    
+}
+
+function readCustDimenData() {
+  var owpbjs = window.owpbjs || {};
+  const cdsData = isFunction(window.getCustomDimensionsDataFromPublisher) ? window.getCustomDimensionsDataFromPublisher() : null;
+  if(cdsData){
+    owpbjs.setConfig({
+      cds:cdsData.cds
     });
-    return enc(cdsStr.slice(0, -1));
   }
 }
 
-function getCDSDataGAMStr() {
-  var separator = '&';
+function getCDSDataLoggerStr() {
+  var separator = ';';
   var cdsData = getCDSData();
-  if (!cdsData) {
-    return cdsData;
-  } else {
-    var cdsStr = '';
+  var cdsStr = '';
+  if (cdsData) {
+    Object.keys(cdsData).map(function(key) {
+      cdsStr += (key + '=' + cdsData[key].value + separator);
+    });
+    cdsStr = cdsStr.slice(0, -1);
+  }
+  return enc(cdsStr);
+}
+
+function addCdsDataToGAM() {
+  var cdsData = getCDSData();
+  if (cdsData) {
     Object.keys(cdsData).map(function(key) {
       if (cdsData[key].sendtoGAM !== false) {
-        cdsStr += key + '=' + cdsData[key].value + separator;
+        window?.googletag?.pubads().setTargeting(key, cdsData[key].value);
       }
     });
-    return cdsStr.slice(0, -1);
   }
 }
 
@@ -657,8 +665,8 @@ function auctionInitHandler(args) {
   cacheEntry.origAdUnits = args.adUnits;
   cacheEntry.referer = args.bidderRequests[0].refererInfo.topmostLocation;
   cache.auctions[args.auctionId] = cacheEntry;
-  let cdsData = getCDSDataGAMStr();
-  !isEmptyStr(cdsData) && window.googletag.pubads().setTargeting('cds', cdsData);
+  readCustDimenData();
+  addCdsDataToGAM();
 }
 
 function bidRequestedHandler(args) {
