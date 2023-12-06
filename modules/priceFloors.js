@@ -353,7 +353,7 @@ export function updateAdUnitsForAuction(adUnits, floorData, auctionId) {
         modelWeight: deepAccess(floorData, 'data.modelWeight'),
         modelTimestamp: deepAccess(floorData, 'data.modelTimestamp'),
         location: deepAccess(floorData, 'data.location', 'noData'),
-        floorProvider: floorData.floorProvider,
+        floorProvider: deepAccess(floorData, 'data.floorProvider') || floorData.floorProvider,
         fetchStatus: _floorsConfig.fetchStatus
       };
     });
