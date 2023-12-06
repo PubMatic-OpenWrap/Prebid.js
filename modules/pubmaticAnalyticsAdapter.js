@@ -452,29 +452,29 @@ function getCDSData() {
 }
 
 function getCDSDataLoggerStr() {
-  var separator = ";";
+  var separator = ';';
   var cdsData = getCDSData();
-  if(!cdsData) {
+  if (!cdsData) {
     return cdsData;
   } else {
-    cdsStr = '';
+    var cdsStr = '';
     Object.keys(cdsData).map(function(key) {
-      cdsStr += enc(key + "=" + cdsData[key].value + separator);
+      cdsStr += (key + '=' + cdsData[key].value + separator);
     });
-    return cdsStr.slice(0, -1);
+    return enc(cdsStr.slice(0, -1));
   }
 }
 
 function getCDSDataGAMStr() {
-  var separator = "&";
+  var separator = '&';
   var cdsData = getCDSData();
-  if(!cdsData) {
+  if (!cdsData) {
     return cdsData;
   } else {
-    cdsStr = '';
+    var cdsStr = '';
     Object.keys(cdsData).map(function(key) {
-      if(cdsData[key].sendtoGAM !== false) {
-        cdsStr += key + "=" + cdsData[key].value + separator;
+      if (cdsData[key].sendtoGAM !== false) {
+        cdsStr += key + '=' + cdsData[key].value + separator;
       }
     });
     return cdsStr.slice(0, -1);
@@ -657,7 +657,7 @@ function auctionInitHandler(args) {
   cacheEntry.referer = args.bidderRequests[0].refererInfo.topmostLocation;
   cache.auctions[args.auctionId] = cacheEntry;
   let cdsData = getCDSDataGAMStr();
-  !isEmptyStr(cdsData) && googletag.pubads().setTargeting('cds', cdsData);
+  !isEmptyStr(cdsData) && window.googletag.pubads().setTargeting('cds', cdsData);
 }
 
 function bidRequestedHandler(args) {
