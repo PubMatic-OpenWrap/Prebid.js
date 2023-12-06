@@ -458,11 +458,9 @@ function isFunction(functionToCheck) {
 function readCustDimenData() {
   var owpbjs = window.owpbjs || {};
   const cdsData = isFunction(window.getCustomDimensionsDataFromPublisher) ? window.getCustomDimensionsDataFromPublisher() : null;
-  if(cdsData){
-    owpbjs.setConfig({
-      cds:cdsData.cds
-    });
-  }
+  cdsData && owpbjs.setConfig({
+    cds:cdsData.cds
+  });
 }
 
 function getCDSDataLoggerStr() {
@@ -480,13 +478,11 @@ function getCDSDataLoggerStr() {
 
 function addCdsDataToGAM() {
   var cdsData = getCDSData();
-  if (cdsData) {
-    Object.keys(cdsData).map(function(key) {
-      if (cdsData[key].sendtoGAM !== false) {
-        window?.googletag?.pubads().setTargeting(key, cdsData[key].value);
-      }
-    });
-  }
+  cdsData && Object.keys(cdsData).map(function(key) {
+    if (cdsData[key].sendtoGAM !== false) {
+      window?.googletag?.pubads().setTargeting(key, cdsData[key].value);
+    }
+  });
 }
 
 function executeBidsLoggerCall(e, highestCpmBids) {
