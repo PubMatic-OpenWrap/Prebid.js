@@ -452,14 +452,14 @@ function getCDSData() {
 }
 
 function isFunction(functionToCheck) {
-  return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';    
+  return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
 }
 
 function readCustDimenData() {
   var owpbjs = window.owpbjs || {};
   const cdsData = isFunction(window.getCustomDimensionsDataFromPublisher) ? window.getCustomDimensionsDataFromPublisher() : null;
   cdsData && owpbjs.setConfig({
-    cds:cdsData.cds
+    cds: cdsData.cds
   });
 }
 
@@ -479,9 +479,8 @@ function getCDSDataLoggerStr() {
 function addCdsDataToGAM() {
   var cdsData = getCDSData();
   cdsData && Object.keys(cdsData).map(function(key) {
-    if (cdsData[key].sendtoGAM !== false) {
-      window?.googletag?.pubads().setTargeting(key, cdsData[key].value);
-    }
+    (cdsData[key].sendtoGAM !== false) && window.googletag &&
+      window.googletag.pubads().setTargeting(key, cdsData[key].value);
   });
 }
 
