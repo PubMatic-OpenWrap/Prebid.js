@@ -628,6 +628,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   pixelURL += '&ss=' + enc(isS2SBidder(winningBid.bidder));
   (fskp != undefined) && (pixelURL += '&fskp=' + enc(fskp));
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
+  pixelURL += '&cds=' + getCDSDataLoggerStr(); // encoded string is returned from function
 
   ajax(
     pixelURL,

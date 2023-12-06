@@ -1914,9 +1914,13 @@ describe('pubmatic analytics adapter', function () {
 
       clock.tick(2000 + 1000);
       expect(requests.length).to.equal(2); // 1 logger and 1 tracker
-      let request = requests[1]; // logger is executed late, tracker executes first
+      let request = requests[1]; // logger is executed late
       let data = getLoggerJsonFromRequest(request.requestBody);
-      expect(data.cds).to.equal('traffic%3Demail%3Bauthor%3Dpubmatic%3Bkey3%3Dsomething');
+      let encodedDataStr = 'traffic%3Demail%3Bauthor%3Dpubmatic%3Bkey3%3Dsomething';
+      expect(data.cds).to.equal(encodedDataStr);
+      let trackerData = {};
+      requests[0].url.split('?')[1].split('&').map(e => e.split('=')).forEach(e => trackerData[e[0]] = e[1]);
+      expect(trackerData.cds).to.equal(encodedDataStr);
     });
   });
 });
