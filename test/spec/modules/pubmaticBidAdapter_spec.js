@@ -2065,6 +2065,18 @@ describe('PubMatic adapter', function () {
             expect(data.bidfloor).to.equal(undefined);
           });
 
+		     it('bidfloor should set according to media format', function() {
+            newRequest[0].params.kadfloor = undefined;
+            let request = spec.buildRequests(newRequest, {
+              auctionId: 'new-auction-id'
+            });
+            let data = JSON.parse(request.data);
+            data = data.imp[0];
+            expect(data.banner.ext.bidfloor).to.equal(1.5);
+            expect(data.video.ext.bidfloor).to.equal(2.5);
+            expect(data.native.ext.bidfloor).to.equal(3.5);
+          });
+
           if (FEATURES.VIDEO) {
             it('ignore floormodule o/p if floor is not number', function() {
               floorModuleTestData.banner.floor = 'INR';
