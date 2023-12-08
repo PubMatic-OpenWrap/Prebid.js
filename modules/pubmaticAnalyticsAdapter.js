@@ -523,7 +523,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
       }[fetchStatus];
       slotObject.fsrc = {
         [CONSTANTS.FLOOR_VALUES.FETCH]: 2,
-        [CONSTANTS.FLOOR_VALUES.NO_DATA]: 2,
+        [CONSTANTS.FLOOR_VALUES.NO_DATA]: 0,
         [CONSTANTS.FLOOR_VALUES.AD_UNIT]: 1,
         [CONSTANTS.FLOOR_VALUES.SET_CONFIG]: 1
       }[location];
