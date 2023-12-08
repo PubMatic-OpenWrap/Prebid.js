@@ -353,7 +353,7 @@ export function updateAdUnitsForAuction(adUnits, floorData, auctionId) {
         modelWeight: deepAccess(floorData, 'data.modelWeight'),
         modelTimestamp: deepAccess(floorData, 'data.modelTimestamp'),
         location: deepAccess(floorData, 'data.location', 'noData'),
-        floorProvider: deepAccess(floorData, 'data.floorProvider'),
+        floorProvider: floorData.floorProvider,
         fetchStatus: _floorsConfig.fetchStatus
       };
     });
@@ -398,6 +398,7 @@ export function createFloorsDataForAuction(adUnits, auctionId) {
   if (useAdUnitData || !useResolvedFloorsData) {
     resolvedFloorsData.data = getFloorDataFromAdUnits(adUnits);
     resolvedFloorsData.skipRate = resolvedFloorsData.data.skipRate || 0;
+    resolvedFloorsData.floorProvider = resolvedFloorsData.data.floorProvider;
   } else {
     resolvedFloorsData.data = getFloorsDataForAuction(resolvedFloorsData.data);
   }
