@@ -12,9 +12,9 @@
 | countdownDuration   | int       | 30000 | time in milliseconds|
 | startCountdownWithMinimumViewabilityPercentage | int (0-100) | 50 | the countDown will start when ad-slot will have viewability percenatge more than this. When set to 0 the count-down will start after rendering the creative, even when ad slot is not viewable. |
 | refreshAdSlotWithMinimumViewabilityPercentage | int (0-100) | 50 | the ad slot will be refreshed only if it has viewability percenathge more than this value. When set to 0 the ad-slot will be refreshed even if it is not viewable|
-| kvKeyForRefresh | string | 'pm-auto-refresh' | this key will be added on gptSlot with kvValueForRefresh value; set it to null to not set it |
+| kvKeyForRefresh | string | 'pm-refresh' | this key will be added on gptSlot with kvValueForRefresh value; set it to null to not set it. This key had default value of 'pm-auto-refresh' before v27.5.0 |
 | kvValueForRefresh | string | '1' | this value will be added for the key kvKeyForRefresh on the gptSlot |
-| kvKeyForRefreshCount | string | 'pm-auto-refresh-count' | this key will be added on the gptSlot and its value will be the refresh count; set it to null to not set it |
+| kvKeyForRefreshCount | string | 'pm-refresh-count' | this key will be added on the gptSlot and its value will be the refresh count; set it to null to not set it. This key had default value of 'pm-auto-refresh-count' before v27.5.0|
 | slotIdFunctionForCustomConfig | function | `(gpttSlot) => gptSlot.getSlotElementId()` | a function; if you are using customConfig for some gptSlots then we need a way to find name of the gptSlot in customConfig |
 | callbackFunction | function | `(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs) => { performs pbjs auction, sets kvs, refreshes GPT slot}` | the default callback function, if you set own callback function then you will need to take care of initiating Prebid auction, setting KVs and refresing GPT slot |
 | gptSlotToPbjsAdUnitMapFunction | function | `(gptSlot) => (gptSlot.getAdUnitPath() === pbjsAU.code || gptSlot.getSlotElementId() === pbjsAU.code)` | this function will help find the GPT gptSlots matching PBJS AdUnit |
