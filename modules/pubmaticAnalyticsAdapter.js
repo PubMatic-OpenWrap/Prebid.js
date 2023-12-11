@@ -563,7 +563,8 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   let wiid = cache.auctions[auctionId]?.wiid || auctionId;
   let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId].referer || '';
   let adv = winningBid.bidResponse ? getAdDomain(winningBid.bidResponse) || undefined : undefined;
-  let fskp = floorData ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined;
+  let floorFetchStatus = getFloorFetchStatus(floorData);
+  let fskp = floorData && floorFetchStatus ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined;
 
   let pixelURL = END_POINT_WIN_BID_LOGGER;
   pixelURL += 'pubid=' + publisherId;
