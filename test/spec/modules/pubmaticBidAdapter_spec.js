@@ -159,6 +159,7 @@ describe('PubMatic adapter', function () {
       params: {
         publisherId: '5890',
         adSlot: 'Div1@640x480', // ad_id or tagid
+        wiid: '1234567890',
         video: {
           mimes: ['video/mp4', 'video/x-flv'],
           skippable: true,
@@ -260,6 +261,7 @@ describe('PubMatic adapter', function () {
       params: {
         publisherId: '5670',
         adSlot: '/43743431/NativeAutomationPrebid@1x1',
+        wiid: 'new-unique-wiid'
       },
       bidId: '2a5571261281d4',
       requestId: 'B68287E1-DC39-4B38-9790-FE4F179739D6',
@@ -286,6 +288,7 @@ describe('PubMatic adapter', function () {
       params: {
         publisherId: '5670',
         adSlot: '/43743431/NativeAutomationPrebid@1x1',
+        wiid: 'new-unique-wiid'
       }
     }];
 
@@ -318,6 +321,7 @@ describe('PubMatic adapter', function () {
       params: {
         publisherId: '5670',
         adSlot: '/43743431/NativeAutomationPrebid@1x1',
+        wiid: 'new-unique-wiid'
       }
     }];
 
@@ -460,6 +464,7 @@ describe('PubMatic adapter', function () {
         params: {
           publisherId: '5670',
           adSlot: '/15671365/DMDemo@300x250:0',
+          wiid: 'new-unique-wiid',
           video: {
             mimes: ['video/mp4', 'video/x-flv'],
             skippable: true,
@@ -522,6 +527,7 @@ describe('PubMatic adapter', function () {
         params: {
           publisherId: '5670',
           adSlot: '/15671365/DMDemo@300x250:0',
+          wiid: 'new-unique-wiid',
           video: {
             mimes: ['video/mp4', 'video/x-flv'],
             skippable: true,
