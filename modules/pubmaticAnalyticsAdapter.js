@@ -523,7 +523,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
       }[fetchStatus];
       slotObject.fsrc = {
         [CONSTANTS.FLOOR_VALUES.FETCH]: 2,
-        [CONSTANTS.FLOOR_VALUES.NO_DATA]: 2,
+        [CONSTANTS.FLOOR_VALUES.NO_DATA]: 0,
         [CONSTANTS.FLOOR_VALUES.AD_UNIT]: 1,
         [CONSTANTS.FLOOR_VALUES.SET_CONFIG]: 1
       }[location];
@@ -562,7 +562,8 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   let floorData = cache.auctions[auctionId].floorData;
   let wiid = cache.auctions[auctionId]?.wiid;
   let adv = winningBid.bidResponse ? getAdDomain(winningBid.bidResponse) || undefined : undefined;
-  let fskp = floorData ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined;
+  let floorFetchStatus = getFloorFetchStatus(floorData);
+  let fskp = floorData && floorFetchStatus ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined;
 
   let pixelURL = END_POINT_WIN_BID_LOGGER;
   pixelURL += 'pubid=' + publisherId;
