@@ -1849,4 +1849,90 @@ describe('pubmatic analytics adapter', function () {
       expect(metadataObj).to.equal(undefined);
     });
   });
+
+  describe('custom dimensions', function() {
+    beforeEach(function () {
+      pubmaticAnalyticsAdapter.enableAnalytics({
+        options: {
+          publisherId: 9999,
+          profileId: 1111,
+          profileVersionId: 20,
+          identityOnly: 1
+        }
+      });
+    });
+
+    afterEach(function () {
+      window.PWT = {};
+      config.resetConfig();
+      window.getCustomDimensionsDataFromPublisher = undefined;
+      pubmaticAnalyticsAdapter.disableAnalytics();
+    });
+
+    it('Custom dimension data', function() {
+      this.timeout(5000)
+
+      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+        return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
+      });
+
+      window.getCustomDimensionsDataFromPublisher = function() {
+        return {
+          cds: {
+            traffic: {
+              value: 'email',
+              sendtoGAM: true
+            },
+            author: {
+              value: 'pubmatic',
+              sendtoGAM: false
+            },
+            key3: {
+              value: 'something'
+            }
+          }
+        }
+      };
+
+      events.emit(AUCTION_INIT, MOCK.AUCTION_INIT);
+      events.emit(BID_REQUESTED, MOCK.BID_REQUESTED);
+      events.emit(BID_RESPONSE, MOCK.BID_RESPONSE[0]);
+      events.emit(BIDDER_DONE, MOCK.BIDDER_DONE);
+      events.emit(AUCTION_END, MOCK.AUCTION_END);
+      events.emit(SET_TARGETING, MOCK.SET_TARGETING);
+      events.emit(BID_WON, MOCK.BID_WON[0]);
+
+      clock.tick(2000 + 1000);
+      expect(requests.length).to.equal(2); // 1 logger and 1 tracker
+      let request = requests[1]; // logger is executed late
+      let data = getLoggerJsonFromRequest(request.requestBody);
+      let encodedDataStr = 'traffic%3Demail%3Bauthor%3Dpubmatic%3Bkey3%3Dsomething';
+      expect(data.cds).to.equal(encodedDataStr);
+      let trackerData = {};
+      requests[0].url.split('?')[1].split('&').map(e => e.split('=')).forEach(e => trackerData[e[0]] = e[1]);
+      expect(trackerData.cds).to.equal(encodedDataStr);
+    });
+
+    it('Empty custom dimension data', function() {
+      this.timeout(5000)
+
+      events.emit(AUCTION_INIT, MOCK.AUCTION_INIT);
+      events.emit(BID_REQUESTED, MOCK.BID_REQUESTED);
+      events.emit(BID_RESPONSE, MOCK.BID_RESPONSE[0]);
+      events.emit(BIDDER_DONE, MOCK.BIDDER_DONE);
+      events.emit(AUCTION_END, MOCK.AUCTION_END);
+      events.emit(SET_TARGETING, MOCK.SET_TARGETING);
+      events.emit(BID_WON, MOCK.BID_WON[0]);
+
+      clock.tick(2000 + 1000);
+      expect(requests.length).to.equal(2); // 1 logger and 1 tracker
+      let request = requests[1]; // logger is executed late
+      let data = getLoggerJsonFromRequest(request.requestBody);
+      let encodedDataStr = '';
+      expect(data.cds).to.equal(encodedDataStr);
+      let trackerData = {};
+      requests[0].url.split('?')[1].split('&').map(e => e.split('=')).forEach(e => trackerData[e[0]] = e[1]);
+      expect(trackerData.cds).to.equal(encodedDataStr);
+    });
+  });
 });
