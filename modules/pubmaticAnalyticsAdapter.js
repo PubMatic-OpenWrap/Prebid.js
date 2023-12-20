@@ -451,37 +451,18 @@ function getCDSData() {
   return pbConf && pbConf.cds;
 }
 
-function isFunction(functionToCheck) {
-  return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
-}
-
-function readCustDimenData() {
-  var owpbjs = window.owpbjs || {};
-  const cdsData = isFunction(window.getCustomDimensionsDataFromPublisher) ? window.getCustomDimensionsDataFromPublisher() : null;
-  cdsData && owpbjs.setConfig({
-    cds: cdsData.cds
-  });
-}
-
 function getCDSDataLoggerStr() {
   var separator = ';';
   var cdsData = getCDSData();
   var cdsStr = '';
   if (cdsData) {
     Object.keys(cdsData).map(function(key) {
-      cdsStr += (key + '=' + cdsData[key].value + separator);
+      const val = typeof cdsData[key].value === 'string' ? cdsData[key].value : '';
+      cdsStr += (key + '=' + val + separator);
     });
     cdsStr = cdsStr.slice(0, -1);
   }
   return enc(cdsStr);
-}
-
-function addCdsDataToGAM() {
-  var cdsData = getCDSData();
-  cdsData && Object.keys(cdsData).map(function(key) {
-    (cdsData[key].sendtoGAM !== false) && window.googletag &&
-      window.googletag.pubads().setTargeting(key, cdsData[key].value);
-  });
 }
 
 function executeBidsLoggerCall(e, highestCpmBids) {
@@ -662,8 +643,6 @@ function auctionInitHandler(args) {
   cacheEntry.origAdUnits = args.adUnits;
   cacheEntry.referer = args.bidderRequests[0].refererInfo.topmostLocation;
   cache.auctions[args.auctionId] = cacheEntry;
-  readCustDimenData();
-  addCdsDataToGAM();
 }
 
 function bidRequestedHandler(args) {
