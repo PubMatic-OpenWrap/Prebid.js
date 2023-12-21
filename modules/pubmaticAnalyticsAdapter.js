@@ -458,8 +458,8 @@ function getCDSDataLoggerStr() {
   if (cdsData) {
     Object.keys(cdsData).map(function(key) {
       var val = cdsData[key].value;
-      val = (val && !Array.isArray(val) && typeof val !== 'object'
-        && typeof val !== 'function') ? val : '';
+      val = (val && !Array.isArray(val) && typeof val !== 'object' &&
+        typeof val !== 'function') ? val : '';
       cdsStr += (key + '=' + val + separator);
     });
     cdsStr = cdsStr.slice(0, -1);
