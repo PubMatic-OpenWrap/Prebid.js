@@ -457,7 +457,9 @@ function getCDSDataLoggerStr() {
   var cdsStr = '';
   if (cdsData) {
     Object.keys(cdsData).map(function(key) {
-      const val = typeof cdsData[key].value === 'string' ? cdsData[key].value : '';
+      var val = cdsData[key].value;
+      val = (val && !Array.isArray(val) && typeof val !== 'object'
+        && typeof val !== 'function') ? val : '';
       cdsStr += (key + '=' + val + separator);
     });
     cdsStr = cdsStr.slice(0, -1);
