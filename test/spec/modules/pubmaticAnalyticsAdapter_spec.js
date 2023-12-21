@@ -1876,23 +1876,21 @@ describe('pubmatic analytics adapter', function () {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 
-      window.getCustomDimensionsDataFromPublisher = function() {
-        return {
-          cds: {
-            traffic: {
-              value: 'email',
-              sendtoGAM: true
-            },
-            author: {
-              value: 'pubmatic',
-              sendtoGAM: false
-            },
-            key3: {
-              value: 'something'
-            }
+      config.setConfig({
+        cds: {
+          traffic: {
+            value: 'email',
+            sendtoGAM: true
+          },
+          author: {
+            value: 'pubmatic',
+            sendtoGAM: false
+          },
+          key3: {
+            value: 'something'
           }
         }
-      };
+      })
 
       events.emit(AUCTION_INIT, MOCK.AUCTION_INIT);
       events.emit(BID_REQUESTED, MOCK.BID_REQUESTED);
