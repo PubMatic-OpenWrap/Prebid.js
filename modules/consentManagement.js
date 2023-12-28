@@ -18,6 +18,7 @@ import * as events from '../src/events.js';
 const DEFAULT_CMP = 'iab';
 const DEFAULT_CONSENT_TIMEOUT = 10000;
 const CMP_VERSION = 2;
+let CMP_EVENTS_FIRED = []
 
 export let userCMP;
 export let consentTimeout;
@@ -67,21 +68,25 @@ function lookupStaticConsentData({onSuccess, onError}) {
 function lookupIabConsent({onSuccess, onError, onEvent}) {
   function cmpResponseCallback(tcfData, success) {
     logInfo('Received a response from CMP', tcfData);
+    const tcfapi = window.__tcfapi || undefined;
     if (success) {
       onEvent(tcfData);
       if (tcfData && (tcfData.gdprApplies === false || tcfData.eventStatus === 'tcloaded' || tcfData.eventStatus === 'useractioncomplete')) {
         processCmpData(tcfData, {onSuccess, onError});
       }
-      if(typeof __tcfapi === 'function') {
-        __tcfapi('ping', 2, (pingReturn) => {
-          events.emit("CMP_Loaded", {
-            'cmp': {
-              name: cmpList[pingReturn.cmpId] || undefined,
-              id: pingReturn.cmpId
-            },
-            consentData: tcfData
+      if (typeof tcfapi === 'function') {
+        if (CMP_EVENTS_FIRED.indexOf(tcfData.eventStatus) < 0) {
+          tcfapi('ping', 2, (pingReturn) => {
+            events.emit('CMP_Loaded', {
+              'cmp': {
+                name: cmpList[pingReturn.cmpId] || undefined,
+                id: pingReturn.cmpId
+              },
+              consentData: tcfData
+            });
           });
-        });
+          CMP_EVENTS_FIRED.push(tcfData.eventStatus);
+        }
       }
     } else {
       onError('CMP unable to register callback function.  Please check CMP setup.');
