@@ -1,8 +1,6 @@
 import adapterManager from '../../../src/adapterManager.js';
 import {deepAccess, timestamp, isEmpty, isPlainObject, getParameterByName} from '../../../src/utils.js';
 
-const BIDDER_CODE = 'pubmatic';
-
 let defaultAliases = {
   adg: 'adgeneration',
   districtm: 'appnexus',
