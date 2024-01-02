@@ -1,9 +1,7 @@
 import adapterManager from '../../../src/adapterManager.js';
 import {deepAccess, timestamp, isEmpty, isPlainObject, getParameterByName} from '../../../src/utils.js';
-import {getStorageManager} from '../../../src/storageManager.js';
 
 const BIDDER_CODE = 'pubmatic';
-const storage = getStorageManager({bidderCode: BIDDER_CODE});
 
 let defaultAliases = {
   adg: 'adgeneration',
@@ -14,17 +12,6 @@ let defaultAliases = {
 
 let iidValue;
 let firstBidRequest;
-const vsgDomain = window.location.hostname;
-const removeViewTimeForZeroValue = obj => {
-  // Deleteing this field as it is only required to calculate totalViewtime and no need to send it to translator.
-  delete obj.lastViewStarted;
-  // Deleteing totalTimeView incase value is less than 1 sec.
-  if (obj.totalViewTime == 0) {
-    delete obj.totalViewTime;
-  }
-  return obj;
-};
-
 /**
  * Checks if window.location.search(i.e. string of query params on the page URL)
  * has specified query param with a values.

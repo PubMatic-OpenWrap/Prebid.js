@@ -4,12 +4,10 @@ import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
 import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
-import { getStorageManager } from '../src/storageManager.js'
 import CONSTANTS from '../src/constants.json';
 import {convertTypes} from '../libraries/transformParamsUtils/convertTypes.js';
 
 const BIDDER_CODE = 'pubmatic';
-const storage = getStorageManager({bidderCode: BIDDER_CODE});
 const LOG_WARN_PREFIX = 'PubMatic: ';
 const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator';
 const USER_SYNC_URL_IFRAME = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=';
@@ -137,7 +135,6 @@ const MEDIATYPE = [
 let publisherId = 0;
 let isInvalidNativeRequest = false;
 let biddersList = ['pubmatic'];
-let viewData;
 const allBiddersList = ['all'];
 
 export function _getDomainFromURL(url) {
