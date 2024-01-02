@@ -66,10 +66,6 @@ export function setReqParams(ortbRequest, bidderRequest, context, {am = adapterM
     listOfPubMaticBidders.forEach(function(bidder) {
       if (ortbRequest.ext.prebid.bidderparams[bidder]) {
         ortbRequest.ext.prebid.bidderparams[bidder]['wiid'] = iidValue;
-        if (firstBidRequest.bids[0]?.bidViewability) {
-          let vsgObj = storage.getDataFromLocalStorage('viewability-data') ? JSON.parse(storage.getDataFromLocalStorage('viewability-data')) : {};
-          ortbRequest.ext.prebid.bidderparams[bidder]['bidViewability'] = {'adDomain': removeViewTimeForZeroValue(vsgObj[vsgDomain])};
-        }
       }
     })
   }
