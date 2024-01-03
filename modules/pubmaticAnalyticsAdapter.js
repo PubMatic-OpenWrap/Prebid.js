@@ -446,6 +446,26 @@ function getFloorFetchStatus(floorData) {
   return isDataValid && (isAdUnitOrSetConfig || isFetchSuccessful);
 }
 
+function getCDSData() {
+  return config.getConfig('cds');
+}
+
+function getCDSDataLoggerStr() {
+  var separator = ';';
+  var cdsData = getCDSData();
+  var cdsStr = '';
+  if (cdsData) {
+    Object.keys(cdsData).map(function(key) {
+      var val = cdsData[key].value;
+      val = (!Array.isArray(val) && typeof val !== 'object' &&
+        typeof val !== 'function' && typeof val !== 'undefined') ? val : '';
+      cdsStr += (key + '=' + val + separator);
+    });
+    cdsStr = cdsStr.slice(0, -1);
+  }
+  return enc(cdsStr);
+}
+
 function executeBidsLoggerCall(e, highestCpmBids) {
   const HOSTNAME = window.location.host;
   const storedObject = storage.getDataFromLocalStorage(PREFIX + HOSTNAME);
@@ -533,6 +553,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     return slotsArray;
   }, []);
   outputObj.owv = window.PWT?.versionDetails?.openwrap_version || '-1';
+  outputObj.cds = getCDSDataLoggerStr();
 
   auctionCache.sent = true;
 
@@ -595,6 +616,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   pixelURL += '&ss=' + enc(isS2SBidder(winningBid.bidder));
   (fskp != undefined) && (pixelURL += '&fskp=' + enc(fskp));
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
+  pixelURL += '&cds=' + getCDSDataLoggerStr(); // encoded string is returned from function
 
   ajax(
     pixelURL,
