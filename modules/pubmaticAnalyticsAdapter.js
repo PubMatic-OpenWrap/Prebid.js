@@ -447,8 +447,7 @@ function getFloorFetchStatus(floorData) {
 }
 
 function getCDSData() {
-  var pbConf = config.getConfig();
-  return pbConf && pbConf.cds;
+  return config.getConfig('cds');
 }
 
 function getCDSDataLoggerStr() {
