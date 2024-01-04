@@ -4,12 +4,10 @@ import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
 import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
-import { getStorageManager } from '../src/storageManager.js'
 import CONSTANTS from '../src/constants.json';
 import {convertTypes} from '../libraries/transformParamsUtils/convertTypes.js';
 
 const BIDDER_CODE = 'pubmatic';
-const storage = getStorageManager({bidderCode: BIDDER_CODE});
 const LOG_WARN_PREFIX = 'PubMatic: ';
 const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator';
 const USER_SYNC_URL_IFRAME = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=';
@@ -137,17 +135,7 @@ const MEDIATYPE = [
 let publisherId = 0;
 let isInvalidNativeRequest = false;
 let biddersList = ['pubmatic'];
-let viewData;
 const allBiddersList = ['all'];
-
-const removeViewTimeForZeroValue = obj => {
-  // Deleteing this field as it is only required to calculate totalViewtime and no need to send it to translator.
-  delete obj.lastViewStarted;
-  // Deleteing totalTimeView incase value is less than 1 sec.
-  if (obj.totalViewTime == 0) {
-    delete obj.totalViewTime;
-  }
-};
 
 export function _getDomainFromURL(url) {
   let anchor = document.createElement('a');
@@ -616,12 +604,6 @@ function _addPMPDealsInImpression(impObj, bid) {
   }
 }
 
-function _addBidViewabilityData(impObj, bid) {
-  if (bid.bidViewability) {
-    impObj.ext.bidViewability = bid.bidViewability;
-  }
-}
-
 function _addDealCustomTargetings(imp, bid) {
   var dctr = '';
   var dctrLen;
@@ -689,7 +671,6 @@ function _createImpressionObject(bid, bidderRequest) {
   _addPMPDealsInImpression(impObj, bid);
   _addDealCustomTargetings(impObj, bid);
   _addJWPlayerSegmentData(impObj, bid);
-  _addBidViewabilityData(impObj, bid);
 
   if (bid.hasOwnProperty('mediaTypes')) {
     for (mediaTypes in bid.mediaTypes) {
@@ -1208,16 +1189,6 @@ export const spec = {
       }
       payload.ext.marketplace.allowedbidders = biddersList.filter(uniques);
     }
-
-    try {
-      viewData = storage && !!storage.getDataFromLocalStorage('viewability-data') ? JSON.parse(storage.getDataFromLocalStorage('viewability-data')) : {};
-      if (Object.keys(viewData).length && bid.bidViewability) {
-        removeViewTimeForZeroValue(viewData[_getDomainFromURL(payload.site.page)]);
-        payload.ext.bidViewability = {
-          adDomain: viewData[_getDomainFromURL(payload.site.page)]
-        }
-      }
-    } catch (e) {}
 
     payload.user.gender = (conf.gender ? conf.gender.trim() : UNDEFINED);
     payload.user.geo = {};
