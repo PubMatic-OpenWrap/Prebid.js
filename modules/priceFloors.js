@@ -372,11 +372,20 @@ export function pickRandomModel(modelGroups, weightSum) {
   }
 };
 
+export function getFloorSourceType(resolvedFloorsData) {
+  if (resolvedFloorsData?.data && resolvedFloorsData.data.hasOwnProperty('usefetchdatarate')) {
+    const { usefetchdatarate } = resolvedFloorsData.data;
+    return !(Math.random() * 100 > parseFloat(usefetchdatarate));
+  }
+  return true;
+}
+
 /**
  * @summary Updates the adUnits accordingly and returns the necessary floorsData for the current auction
  */
 export function createFloorsDataForAuction(adUnits, auctionId) {
   let resolvedFloorsData = deepClone(_floorsConfig);
+  let useResolvedFloorsData = getFloorSourceType(resolvedFloorsData);
   // if using schema 2 pick a model here:
   if (deepAccess(resolvedFloorsData, 'data.floorsSchemaVersion') === 2) {
     // merge the models specific stuff into the top level data settings (now it looks like floorsSchemaVersion 1!)
@@ -386,8 +395,10 @@ export function createFloorsDataForAuction(adUnits, auctionId) {
 
   // if we do not have a floors data set, we will try to use data set on adUnits
   let useAdUnitData = Object.keys(deepAccess(resolvedFloorsData, 'data.values') || {}).length === 0;
-  if (useAdUnitData) {
+  if (useAdUnitData || !useResolvedFloorsData) {
     resolvedFloorsData.data = getFloorDataFromAdUnits(adUnits);
+    resolvedFloorsData.skipRate = resolvedFloorsData.data.skipRate || 0;
+    resolvedFloorsData.floorProvider = resolvedFloorsData.data.floorProvider;
   } else {
     resolvedFloorsData.data = getFloorsDataForAuction(resolvedFloorsData.data);
   }
