@@ -197,46 +197,52 @@ function nodeBundle(modules) {
 }
 
 function bundle(dev, moduleArr) {
-  var modules = moduleArr || helpers.getArgModules();
-  var allModules = helpers.getModuleNames(modules);
-
-  if (modules.length === 0) {
-    modules = allModules.filter(module => explicitModules.indexOf(module) === -1);
-  } else {
-    var diff = _.difference(modules, allModules);
-    if (diff.length !== 0) {
-      throw new gutil.PluginError({
-        plugin: 'bundle',
-        message: 'invalid modules: ' + diff.join(', ')
-      });
-    }
+	var modules = moduleArr || helpers.getArgModules();
+	var allModules = helpers.getModuleNames(modules);
+	if (modules.length === 0) {
+	  modules = allModules.filter(module => explicitModules.indexOf(module) === -1);
+	} else {
+	  var diff = _.difference(modules, allModules);
+	  if (diff.length !== 0) {
+		throw new gutil.PluginError({
+		  plugin: 'bundle',
+		  message: 'invalid modules: ' + diff.join(', ')
+		});
+	  }
+	}
+	const coreFile = helpers.getBuiltPrebidCoreFile(dev);
+	const moduleFiles = helpers.getBuiltModules(dev, modules);
+	const depGraph = require(helpers.getBuiltPath(dev, 'dependencies.json'));
+	const dependencies = new Set();
+	[coreFile].concat(moduleFiles).map(name => path.basename(name)).forEach((file) => {
+	  (depGraph[file] || []).forEach((dep) => dependencies.add(helpers.getBuiltPath(dev, dep)));
+	});
+  
+	const entries = [coreFile].concat(Array.from(dependencies), moduleFiles);
+  
+	var outputFileName = argv.bundleName ? argv.bundleName : 'prebid.js';
+  
+	// change output filename if argument --tag given
+	if (argv.tag && argv.tag.length) {
+	  outputFileName = outputFileName.replace(/\.js$/, `.${argv.tag}.js`);
+	}
+  
+	// gutil.log('Concatenating files:\n', entries);
+	// gutil.log('Appending ' + prebid.globalVarName + '.processQueue();');
+	// gutil.log('Generating bundle:', outputFileName);
+  
+	var globalVarName = prebid.globalVarName;
+	return gulp.src(entries, { allowEmpty: true })
+	  // Need to uodate the "Modules: ..." section in comment with the current modules list
+	  .pipe(replace(/(Modules: )(.*?)(\*\/)/, ('$1' + getModulesListToAddInBanner(helpers.getArgModules()) + ' $3')))
+	  .pipe(gulpif(dev, sourcemaps.init({ loadMaps: true })))
+	  .pipe(concat(outputFileName))
+	  .pipe(gulpif(!argv.manualEnable, footer('\n<%= global %>.processQueue();', {
+		global: globalVarName
+	  }
+	  )))
+	  .pipe(gulpif(dev, sourcemaps.write('.')));
   }
-  var entries = [helpers.getBuiltPrebidCoreFile(dev)].concat(helpers.getBuiltModules(dev, modules));
-
-  var outputFileName = argv.bundleName ? argv.bundleName : 'prebid.js';
-
-  // change output filename if argument --tag given
-  if (argv.tag && argv.tag.length) {
-    outputFileName = outputFileName.replace(/\.js$/, `.${argv.tag}.js`);
-  }
-
-  gutil.log('Concatenating files:\n', entries);
-  gutil.log('Appending ' + prebid.globalVarName + '.processQueue();');
-  gutil.log('Generating bundle:', outputFileName);
-
-  return gulp.src(
-    entries
-  )
-    // Need to uodate the "Modules: ..." section in comment with the current modules list
-    .pipe(replace(/(Modules: )(.*?)(\*\/)/, ('$1' + getModulesListToAddInBanner(helpers.getArgModules()) + ' $3')))
-    .pipe(gulpif(dev, sourcemaps.init({ loadMaps: true })))
-    .pipe(concat(outputFileName))
-    .pipe(gulpif(!argv.manualEnable, footer('\n<%= global %>.processQueue();', {
-      global: prebid.globalVarName
-    }
-    )))
-    .pipe(gulpif(dev, sourcemaps.write('.')));
-}
 
 // Run the unit tests.
 //
