@@ -18,6 +18,7 @@ var webpackConfig = require('./webpack.conf.js');
 var helpers = require('./gulpHelpers.js');
 var header = require('gulp-header');
 var gutil = require('gulp-util');
+var fs = require('fs');
 var footer = require('gulp-footer');
 var sourcemaps = require('gulp-sourcemaps');
 
@@ -174,25 +175,25 @@ function makeWebpackPkg() {
 }
 
 function buildCreative() {
-return gulp.src(['**/*'])
-.pipe(webpackStream(require('./webpack.creative.js')))
-.pipe(gulp.dest('build/creative'))
+  return gulp.src(['**/*'])
+    .pipe(webpackStream(require('./webpack.creative.js')))
+    .pipe(gulp.dest('build/creative'))
 }
 
 function updateCreativeExample(cb) {
-const CREATIVE_EXAMPLE = 'integrationExamples/gpt/x-domain/creative.html';
-const root = require('node-html-parser').parse(fs.readFileSync(CREATIVE_EXAMPLE));
-root.querySelectorAll('script')[0].textContent = fs.readFileSync('build/creative/creative.js')
-fs.writeFileSync(CREATIVE_EXAMPLE, root.toString())
-cb();
+  const CREATIVE_EXAMPLE = 'integrationExamples/gpt/x-domain/creative.html';
+  const root = require('node-html-parser').parse(fs.readFileSync(CREATIVE_EXAMPLE));
+  root.querySelectorAll('script')[0].textContent = fs.readFileSync('build/creative/creative.js')
+  fs.writeFileSync(CREATIVE_EXAMPLE, root.toString())
+  cb();
 }
 
 function getModulesListToAddInBanner(modules) {
-if (!modules || modules.length === helpers.getModuleNames().length) {
-return 'All available modules for this version.'
-} else {
-return modules.join(', ')
-}
+  if (!modules || modules.length === helpers.getModuleNames().length) {
+    return 'All available modules for this version.'
+  } else {
+    return modules.join(', ')
+  }
 }
 
 function gulpBundle(dev) {
@@ -276,7 +277,7 @@ function testTaskMaker(options = {}) {
   var KarmaServer = require('karma').Server;
   var karmaConfMaker = require('./karma.conf.maker.js');
   ['watch', 'e2e', 'file', 'browserstack', 'notest'].forEach(opt => {
-	options[opt] = options.hasOwnProperty(opt) ? options[opt] : argv[opt];
+    options[opt] = options.hasOwnProperty(opt) ? options[opt] : argv[opt];
   })
 
   return function test(done) {
@@ -457,7 +458,7 @@ gulp.task('build-bundle-dev', gulp.series(makeDevpackPkg, gulpBundle.bind(null, 
 
 // gulp.task('build-bundle-prod', gulp.series(makeWebpackPkg, makeWebpackPkgForIh, gulpBundle.bind(null, false)));
 gulp.task('build-bundle-prod', gulp.series(makeWebpackPkg, gulpBundle.bind(null, false)));
-
+gulp.task('build-creative', gulp.series(buildCreative, updateCreativeExample));
 // public tasks (dependencies are needed for each task since they can be ran on their own)
 gulp.task('test-only', test);
 gulp.task('test', gulp.series(clean, lint, 'test-only'));
