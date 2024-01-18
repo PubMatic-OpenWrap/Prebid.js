@@ -1873,6 +1873,33 @@ describe('PubMatic adapter', function () {
               }
             });
 
+            it('should send gpid if imp[].ext.gpid is specified', function() {
+              bidRequests[0].ortb2Imp = {
+                ext: {
+                  gpid: 'ortb2Imp.ext.gpid'
+                }
+              };
+              const request = spec.buildRequests(bidRequests, {});
+              let data = JSON.parse(request.data);
+              expect(data.imp[0].ext).to.have.property('gpid');
+              expect(data.imp[0].ext.gpid).to.equal('ortb2Imp.ext.gpid');
+            });
+
+            it('should not send if imp[].ext.gpid is not specified', function() {
+              bidRequests[0].ortb2Imp = { ext: { } };
+              const request = spec.buildRequests(bidRequests, {});
+              let data = JSON.parse(request.data);
+              expect(data.imp[0].ext).to.not.have.property('gpid');
+            });
+          });
+
+          describe('ortb2Imp.ext.data.pbadslot', function() {
+            beforeEach(function () {
+              if (bidRequests[0].hasOwnProperty('ortb2Imp')) {
+                delete bidRequests[0].ortb2Imp;
+              }
+            });
+
             it('should not send if imp[].ext.data object is invalid', function() {
               bidRequests[0].ortb2Imp = {
                 ext: {}
@@ -2841,6 +2868,23 @@ describe('PubMatic adapter', function () {
       firstBid.params.sizes = [];
       let request = spec.buildRequests([]);
       expect(request).to.equal(undefined);
+    });
+
+    it('should pass device.ext.cdep if present in bidderRequest fpd ortb2 object', function () {
+      const cdepObj = {
+        cdep: 'example_label_1'
+      };
+      let request = spec.buildRequests(multipleMediaRequests, {
+        auctionId: 'new-auction-id',
+        ortb2: {
+          device: {
+            ext: cdepObj
+          }
+        }
+      });
+      let data = JSON.parse(request.data);
+      expect(data.device.ext.cdep).to.exist.and.to.be.an('string');
+      expect(data.device.ext).to.deep.equal(cdepObj);
     });
 
     it('Request params should have valid native bid request for all valid params', function () {
