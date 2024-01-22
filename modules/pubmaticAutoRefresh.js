@@ -81,6 +81,7 @@ let openWrapSetup = {
     Object.keys(KeyValuePairs).forEach(key => gptSlot.setTargeting(key, KeyValuePairs[key]));
 
     let adServerInitiated = false;
+    let PWT = window.PWT || {};
 
     let sendAdserverRequest = function() {
       if (adServerInitiated === true) {
