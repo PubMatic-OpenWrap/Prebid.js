@@ -1266,7 +1266,7 @@ export const spec = {
       mergeDeep(payload, {user: user});
     }
     if (badv) {
-	  mergeDeep(payload, {badv: badv});
+      mergeDeep(payload, {badv: badv});
     }
     if (bcat) {
       blockedIabCategories = blockedIabCategories.concat(bcat);
