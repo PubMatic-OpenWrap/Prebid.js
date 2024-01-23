@@ -605,11 +605,6 @@
             "module": "prebidJSDebugUI"
         },
         {
-            "name": "prebidJSDebugUI",
-            "path": "/modules/prebidJSDebugUI.js",
-            "module": "prebidJSDebugUI"
-        },
-        {
             "name": "sizeMapping",
             "path": "/modules/sizeMapping.js",
             "module": "sizeMapping"
