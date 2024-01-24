@@ -1038,9 +1038,9 @@ function hasGetRequestEnabled() {
   return randomValue100 <= testGroupPercentage;
 }
 
-function getUniqueNumber(rangeEnd) {
-  return Math.floor(Math.random() * rangeEnd) + 1;
-}
+// function getUniqueNumber(rangeEnd) {
+//   return Math.floor(Math.random() * rangeEnd) + 1;
+// }
 
 export const spec = {
   code: BIDDER_CODE,
@@ -1324,35 +1324,36 @@ export const spec = {
       delete payload.site;
     }
 
-    const correlator = getUniqueNumber(1000);
-    let url = ENDPOINT + '?source=ow-client&correlator=' + correlator;
+    // const correlator = getUniqueNumber(1000);
+    // let url = ENDPOINT + '?source=ow-client&correlator=' + correlator;
 
     let serverRequest = {
       method: 'POST',
-      url: url,
+      url: ENDPOINT + '?source=ow-client',
       data: JSON.stringify(payload),
       bidderRequest: bidderRequest
     };
 
     // Allow translator request to execute it as GET Methoid if flag is set.
     if (hasGetRequestEnabled()) {
-      // For Auction End Handler
-      if (bidderRequest) {
-        bidderRequest = bidderRequest || {};
-        bidderRequest.nwMonitor = {};
-        bidderRequest.nwMonitor.reqMethod = 'POST';
-        bidderRequest.nwMonitor.correlator = correlator;
-        bidderRequest.nwMonitor.requestUrlPayloadLength = url.length + JSON.stringify(payload).length;
-        // For Timeout handler
-        if (bidderRequest?.bids?.length && isArray(bidderRequest?.bids)) {
-          bidderRequest.bids.forEach(bid => bid.correlator = correlator);
-        }
-      }
+      // // nwMonitor object is used to identify the network latency, it is being no longer used.
+      // // For Auction End Handler
+      // if (bidderRequest) {
+      //   bidderRequest = bidderRequest || {};
+      //   bidderRequest.nwMonitor = {};
+      //   bidderRequest.nwMonitor.reqMethod = 'POST';
+      //   bidderRequest.nwMonitor.correlator = correlator;
+      //   bidderRequest.nwMonitor.requestUrlPayloadLength = url.length + JSON.stringify(payload).length;
+      //   // For Timeout handler
+      //   if (bidderRequest?.bids?.length && isArray(bidderRequest?.bids)) {
+      //     bidderRequest.bids.forEach(bid => bid.correlator = correlator);
+      //   }
+      // }
 
       const maxUrlLength = config.getConfig('translatorGetRequest.maxUrlLength') || 63000;
       const configuredEndPoint = config.getConfig('translatorGetRequest.endPoint') || ENDPOINT;
       const urlEncodedPayloadStr = parseQueryStringParameters({
-        'source': 'ow-client', 'payload': JSON.stringify(payload), 'correlator': correlator});
+        'source': 'ow-client', 'payload': JSON.stringify(payload)});
       if ((configuredEndPoint + '?' + urlEncodedPayloadStr)?.length <= maxUrlLength) {
         serverRequest = {
           method: 'GET',
@@ -1361,8 +1362,9 @@ export const spec = {
           bidderRequest: bidderRequest,
           payloadStr: JSON.stringify(payload)
         };
-        bidderRequest.nwMonitor.reqMethod = 'GET';
-        bidderRequest.nwMonitor.requestUrlPayloadLength = configuredEndPoint.length + '?'.length + urlEncodedPayloadStr.length;
+
+        // bidderRequest.nwMonitor.reqMethod = 'GET';
+        // bidderRequest.nwMonitor.requestUrlPayloadLength = configuredEndPoint.length + '?'.length + urlEncodedPayloadStr.length;
       }
     }
 
