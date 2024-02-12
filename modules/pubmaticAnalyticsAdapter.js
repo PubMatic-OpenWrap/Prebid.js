@@ -102,7 +102,7 @@ function copyRequiredBidDetails(bid) {
     'bidderCode',
     'adapterCode',
     'bidId',
-    'status', () => NO_BID, // default a bid to NO_BID until response is recieved or bid is timed out
+    'status', () => NO_BID, // default a bid to NO_BID until response is received or bid is timed out
     'finalSource as source',
     'params',
     'floorData',
@@ -524,13 +524,13 @@ function executeBidsLoggerCall(e, highestCpmBids) {
       'au': origAdUnit.adUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId,
       'mt': getAdUnitAdFormats(origAdUnit),
       'sz': getSizesForAdUnit(adUnit, adUnitId),
-      'fskp': floorData && floorFetchStatus ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined,
       'ps': gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestCpmBids.filter(bid => bid.adUnitCode === adUnitId)),
       'bs': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.bidServed,
       'is': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.impressionServed,
       'rc': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.adUnitId]?.slotCnt,
       'vw': frequencyDepth?.viewedSlot?.[origAdUnit.adUnitId],
       'rf': origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0,
+      'fskp': floorData && floorFetchStatus ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined,
       'sid': generateUUID()
     };
     if (floorData?.floorRequestData) {

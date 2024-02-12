@@ -1254,7 +1254,7 @@ export const spec = {
 
     // First Party Data
     const commonFpd = (bidderRequest && bidderRequest.ortb2) || {};
-    const { user, device, site, bcat } = commonFpd;
+    const { user, device, site, bcat, badv } = commonFpd;
     if (site) {
       const { page, domain, ref } = payload.site;
       mergeDeep(payload, {site: site});
@@ -1265,12 +1265,19 @@ export const spec = {
     if (user) {
       mergeDeep(payload, {user: user});
     }
+    if (badv) {
+      mergeDeep(payload, {badv: badv});
+    }
     if (bcat) {
       blockedIabCategories = blockedIabCategories.concat(bcat);
     }
     // check if fpd ortb2 contains device property with sua object
     if (device?.sua) {
       payload.device.sua = device?.sua;
+    }
+
+    if (device?.ext?.cdep) {
+      deepSetValue(payload, 'device.ext.cdep', device.ext.cdep);
     }
 
     if (user?.geo && device?.geo) {

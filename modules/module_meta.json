@@ -21,6 +21,11 @@
             "module": "experianRtdProvider"
         },
         {
+            "name": "goldfishAdsRtdProvider",
+            "path": "/modules/goldfishAdsRtdProvider.js",
+            "module": "goldfishAdsRtdProvider"
+        },
+        {
             "name": "qortexRtdProvider",
             "path": "/modules/qortexRtdProvider.js",
             "module": "qortexRtdProvider"
@@ -44,6 +49,11 @@
             "name": "sirdataRtdProvider",
             "path": "/modules/sirdataRtdProvider.js",
             "module": "sirdataRtdProvider"
+        },
+        {
+            "name": "dynamicAdBoostRtdProvider",
+            "path": "/modules/dynamicAdBoostRtdProvider.js",
+            "module": "dynamicAdBoostRtdProvider"
         },
         {
             "name": "medianetRtdProvider",
@@ -119,6 +129,11 @@
             "name": "airgridRtdProvider",
             "path": "/modules/airgridRtdProvider.js",
             "module": "airgridRtdProvider"
+        },
+        {
+            "name": "mediafilterRtdProvider",
+            "path": "/modules/mediafilterRtdProvider.js",
+            "module": "mediafilterRtdProvider"
         },
         {
             "name": "neuwoRtdProvider",
@@ -218,6 +233,11 @@
             "module": "ucfunnelAnalyticsAdapter"
         },
         {
+            "name": "agmaAnalyticsAdapter",
+            "path": "/modules/agmaAnalyticsAdapter.js",
+            "module": "agmaAnalyticsAdapter"
+        },
+        {
             "name": "yieldoneAnalyticsAdapter",
             "path": "/modules/yieldoneAnalyticsAdapter.js",
             "module": "yieldoneAnalyticsAdapter"
@@ -298,6 +318,11 @@
             "module": "fintezaAnalyticsAdapter"
         },
         {
+            "name": "33acrossAnalyticsAdapter",
+            "path": "/modules/33acrossAnalyticsAdapter.js",
+            "module": "33acrossAnalyticsAdapter"
+        },
+        {
             "name": "optimonAnalyticsAdapter",
             "path": "/modules/optimonAnalyticsAdapter.js",
             "module": "optimonAnalyticsAdapter"
@@ -346,6 +371,11 @@
             "name": "id5AnalyticsAdapter",
             "path": "/modules/id5AnalyticsAdapter.js",
             "module": "id5AnalyticsAdapter"
+        },
+        {
+            "name": "asteriobidAnalyticsAdapter",
+            "path": "/modules/asteriobidAnalyticsAdapter.js",
+            "module": "asteriobidAnalyticsAdapter"
         },
         {
             "name": "rivrAnalyticsAdapter",
@@ -406,6 +436,11 @@
             "name": "adomikAnalyticsAdapter",
             "path": "/modules/adomikAnalyticsAdapter.js",
             "module": "adomikAnalyticsAdapter"
+        },
+        {
+            "name": "pubmaticIHAnalyticsAdapter",
+            "path": "/modules/pubmaticIHAnalyticsAdapter.js",
+            "module": "pubmaticIHAnalyticsAdapter"
         },
         {
             "name": "pubstackAnalyticsAdapter",
@@ -555,6 +590,21 @@
             "module": "schain"
         },
         {
+            "name": "gdprEnforcement",
+            "path": "/modules/gdprEnforcement.js",
+            "module": "gdprEnforcement"
+        },
+        {
+            "name": "pubmaticAutoRefresh",
+            "path": "/modules/pubmaticAutoRefresh.js",
+            "module": "pubmaticAutoRefresh"
+        },
+        {
+            "name": "prebidJSDebugUI",
+            "path": "/modules/prebidJSDebugUI.js",
+            "module": "prebidJSDebugUI"
+        },
+        {
             "name": "sizeMapping",
             "path": "/modules/sizeMapping.js",
             "module": "sizeMapping"
@@ -565,9 +615,19 @@
             "module": "utiqSystem"
         },
         {
+            "name": "sizeMappingV2",
+            "path": "/modules/sizeMappingV2.js",
+            "module": "sizeMappingV2"
+        },
+        {
             "name": "consentManagementGpp",
             "path": "/modules/consentManagementGpp.js",
             "module": "consentManagementGpp"
+        },
+        {
+            "name": "idLibrary",
+            "path": "/modules/idLibrary.js",
+            "module": "idLibrary"
         },
         {
             "name": "enrichmentFpdModule",
@@ -593,6 +653,11 @@
             "name": "gppControl_usstates",
             "path": "/modules/gppControl_usstates.js",
             "module": "gppControl_usstates"
+        },
+        {
+            "name": "geoDetection",
+            "path": "/modules/geoDetection.js",
+            "module": "geoDetection"
         },
         {
             "name": "uid2IdSystem_shared",
@@ -639,10 +704,9 @@
             "module": "videojsVideoProvider"
         },
         {
-            "name": "freeWheelAdserverVideo.js",
-            "path": "/modules/freeWheelAdserverVideo.js.js",
-            "module": "freeWheelAdserverVideo.js"
+            "name": "freeWheelAdserverVideo",
+            "path": "/modules/freeWheelAdserverVideo.js",
+            "module": "freeWheelAdserverVideo"
         }
-        
     ]
 }
