@@ -9,7 +9,7 @@ import * as IdHub from '../controllers/idhub.js';
 var usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
 var isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
 
-const displayHookIsAdded = false;
+var displayHookIsAdded = false;
 
 /* start-test-block */
 export { displayHookIsAdded };
@@ -19,7 +19,7 @@ let disableInitialLoadIsSet = false;
 const sendTargetingInfoIsSet = true;
 
 // todo: combine these maps
-const wrapperTargetingKeys = {}; // key is div id
+var wrapperTargetingKeys = {}; // key is div id
 
 /* start-test-block */
 export { wrapperTargetingKeys };
@@ -35,7 +35,7 @@ export { slotsMap };
 const gptTargetingMap = {};
 let windowReference = null;
 
-const refThis = this;
+// const refThis = this;
 
 function setWindowReference(win) { // TDD, i/o: done
   if (util.isObject(win)) {
@@ -110,13 +110,13 @@ export { setDisplayFunctionCalledIfRequired };
 
 function storeInSlotsMap(dmSlotName, currentGoogleSlot, isDisplayFlow) { // TDD, i/o : done
   // note: here dmSlotName is actually the DivID
-  if (!util.isOwnProperty(refThis.slotsMap, dmSlotName)) {
+  if (!util.isOwnProperty(slotsMap, dmSlotName)) {
     const slot = SLOT.createSlot(dmSlotName);
     slot.setDivID(dmSlotName);
     slot.setPubAdServerObject(currentGoogleSlot);
     slot.setAdUnitID(currentGoogleSlot.getAdUnitPath());
-    slot.setAdUnitIndex(refThis.getAdUnitIndex(currentGoogleSlot));
-    slot.setSizes(refThis.getAdSlotSizesArray(dmSlotName, currentGoogleSlot));
+    slot.setAdUnitIndex(getAdUnitIndex(currentGoogleSlot));
+    slot.setSizes(getAdSlotSizesArray(dmSlotName, currentGoogleSlot));
     slot.setStatus(CONSTANTS.SLOT_STATUS.CREATED);
     // todo: find and set position
     /* istanbul ignore else */
@@ -126,13 +126,13 @@ function storeInSlotsMap(dmSlotName, currentGoogleSlot, isDisplayFlow) { // TDD,
       });
     }
 
-    refThis.slotsMap[dmSlotName] = slot;
+    slotsMap[dmSlotName] = slot;
     // googleSlot.getSizes() returns applicable sizes as per sizemapping if we pass current available view-port width and height
     util.createVLogInfoPanel(dmSlotName, slot.getSizes(window.innerWidth, window.innerHeight));
   } else {
     /* istanbul ignore else */
     if (!isDisplayFlow) {
-      refThis.slotsMap[dmSlotName].setSizes(refThis.getAdSlotSizesArray(dmSlotName, currentGoogleSlot));
+      slotsMap[dmSlotName].setSizes(getAdSlotSizesArray(dmSlotName, currentGoogleSlot));
     }
   }
 }
@@ -162,16 +162,16 @@ function updateSlotsMapFromGoogleSlots(googleSlotsArray, argumentsFromCallingFun
   util.log('Generating slotsMap');
 
   util.forEachOnArray(googleSlotsArray, (index, currentGoogleSlot) => {
-    const dmSlotName = refThis.generateSlotName(currentGoogleSlot);
-    refThis.storeInSlotsMap(dmSlotName, currentGoogleSlot, isDisplayFlow);
-    if (isDisplayFlow && util.isOwnProperty(refThis.slotsMap, dmSlotName)) {
-      refThis.setDisplayFunctionCalledIfRequired(refThis.slotsMap[dmSlotName], argumentsFromCallingFunction);
+    const dmSlotName = generateSlotName(currentGoogleSlot);
+    storeInSlotsMap(dmSlotName, currentGoogleSlot, isDisplayFlow);
+    if (isDisplayFlow && util.isOwnProperty(slotsMap, dmSlotName)) {
+      setDisplayFunctionCalledIfRequired(slotsMap[dmSlotName], argumentsFromCallingFunction);
     }
   });
 
   window.PWT.adUnits = window.PWT.adUnits || {};
-  Object.keys(refThis.slotsMap).forEach(key => {
-    const activeSlot = refThis.slotsMap[key];
+  Object.keys(slotsMap).forEach(key => {
+    const activeSlot = slotsMap[key];
     window.PWT.adUnits[activeSlot.divID] = {
       divID: activeSlot.divID,
       adUnitId: activeSlot.adUnitID,
@@ -179,7 +179,7 @@ function updateSlotsMapFromGoogleSlots(googleSlotsArray, argumentsFromCallingFun
     }
   });
 
-  util.log(refThis.slotsMap);
+  util.log(slotsMap);
 }
 
 /* start-test-block */
@@ -195,8 +195,8 @@ function getStatusOfSlotForDivId(divID) { // TDD, i/o : done
     }
   }
   /* istanbul ignore else */
-  if (util.isOwnProperty(refThis.slotsMap, divID)) {
-    return refThis.slotsMap[divID].getStatus();
+  if (util.isOwnProperty(slotsMap, divID)) {
+    return slotsMap[divID].getStatus();
   }
   return CONSTANTS.SLOT_STATUS.DISPLAYED;
 }
@@ -208,8 +208,8 @@ export { getStatusOfSlotForDivId };
 
 function updateStatusAfterRendering(divID, isRefreshCall) { // TDD, i/o : done
   /* istanbul ignore else */
-  if (util.isOwnProperty(refThis.slotsMap, divID)) {
-    refThis.slotsMap[divID].updateStatusAfterRendering(isRefreshCall);
+  if (util.isOwnProperty(slotsMap, divID)) {
+    slotsMap[divID].updateStatusAfterRendering(isRefreshCall);
   }
 }
 
@@ -220,7 +220,7 @@ export { updateStatusAfterRendering };
 
 function getSlotNamesByStatus(statusObject) { // TDD, i/o : done
   const slots = [];
-  util.forEachOnObject(refThis.slotsMap, (key, slot) => {
+  util.forEachOnObject(slotsMap, (key, slot) => {
     /* istanbul ignore else */
     if (util.isOwnProperty(statusObject, slot.getStatus())) {
       slots.push(key);
@@ -238,8 +238,8 @@ function removeDMTargetingFromSlot(key) { // TDD, i/o : done
   let currentGoogleSlot;
   const targetingMap = {};
   /* istanbul ignore else */
-  if (util.isOwnProperty(refThis.slotsMap, key)) {
-    currentGoogleSlot = refThis.slotsMap[key].getPubAdServerObject();
+  if (util.isOwnProperty(slotsMap, key)) {
+    currentGoogleSlot = slotsMap[key].getPubAdServerObject();
     util.forEachOnArray(currentGoogleSlot.getTargetingKeys(), (index, key) => {
       targetingMap[key] = currentGoogleSlot.getTargeting(key);
     });
@@ -247,7 +247,7 @@ function removeDMTargetingFromSlot(key) { // TDD, i/o : done
     currentGoogleSlot.clearTargeting();
     // now set all settings from backup
     util.forEachOnObject(targetingMap, (key, value) => {
-      if (!util.isOwnProperty(refThis.wrapperTargetingKeys, key)) {
+      if (!util.isOwnProperty(wrapperTargetingKeys, key)) {
         currentGoogleSlot.setTargeting(key, value);
       }
     });
@@ -262,12 +262,12 @@ export { removeDMTargetingFromSlot };
 function updateStatusOfQualifyingSlotsBeforeCallingAdapters(slotNames, argumentsFromCallingFunction, isRefreshCall) { // TDD : done
   util.forEachOnArray(slotNames, (index, slotName) => {
     /* istanbul ignore else */
-    if (util.isOwnProperty(refThis.slotsMap, slotName)) {
-      const slot = refThis.slotsMap[slotName];
+    if (util.isOwnProperty(slotsMap, slotName)) {
+      const slot = slotsMap[slotName];
       slot.setStatus(CONSTANTS.SLOT_STATUS.PARTNERS_CALLED);
       /* istanbul ignore else */
       if (isRefreshCall) {
-        refThis.removeDMTargetingFromSlot(slotName);
+        removeDMTargetingFromSlot(slotName);
         slot.setRefreshFunctionCalled(true);
         slot.setArguments(argumentsFromCallingFunction);
       }
@@ -283,7 +283,7 @@ export { updateStatusOfQualifyingSlotsBeforeCallingAdapters };
 function arrayOfSelectedSlots(slotNames) { // TDD, i/o : done
   const output = [];
   util.forEachOnArray(slotNames, (index, slotName) => {
-    output.push(refThis.slotsMap[slotName]);
+    output.push(slotsMap[slotName]);
   });
   return output;
 }
@@ -315,7 +315,7 @@ function findWinningBidAndApplyTargeting(divID) { // TDD, i/o : done
   }
   const winningBid = data.wb || null;
   const keyValuePairs = data.kvp || {};
-  const googleDefinedSlot = refThis.slotsMap[divID].getPubAdServerObject();
+  const googleDefinedSlot = slotsMap[divID].getPubAdServerObject();
   const ignoreTheseKeys = !usePrebidKeys ? CONSTANTS.IGNORE_PREBID_KEYS : {};
 
   util.log(`DIV: ${divID} winningBid: `);
@@ -323,7 +323,7 @@ function findWinningBidAndApplyTargeting(divID) { // TDD, i/o : done
 
   /* istanbul ignore else */
   if (isPrebidPubMaticAnalyticsEnabled === false && winningBid && winningBid.getNetEcpm() > 0) {
-    refThis.slotsMap[divID].setStatus(CONSTANTS.SLOT_STATUS.TARGETING_ADDED);
+    slotsMap[divID].setStatus(CONSTANTS.SLOT_STATUS.TARGETING_ADDED);
     bidManager.setStandardKeys(winningBid, keyValuePairs);
   };
 
@@ -340,7 +340,7 @@ function findWinningBidAndApplyTargeting(divID) { // TDD, i/o : done
     else if (!util.isOwnProperty(ignoreTheseKeys, key) && !util.isOwnProperty({ 'pwtpb': 1 }, key)) {
       googleDefinedSlot.setTargeting(key, value);
       // adding key in wrapperTargetingKeys as every key added by OpenWrap should be removed before calling refresh on slot
-      refThis.defineWrapperTargetingKey(key);
+      defineWrapperTargetingKey(key);
     }
   });
 }
@@ -352,10 +352,10 @@ export { findWinningBidAndApplyTargeting };
 
 function defineWrapperTargetingKey(key) { // TDD, i/o : done
   /* istanbul ignore else */
-  if (!util.isObject(refThis.wrapperTargetingKeys)) {
-    refThis.wrapperTargetingKeys = {};
+  if (!util.isObject(wrapperTargetingKeys)) {
+    wrapperTargetingKeys = {};
   }
-  refThis.wrapperTargetingKeys[key] = '';
+  wrapperTargetingKeys[key] = '';
 }
 
 /* start-test-block */
@@ -462,7 +462,7 @@ function newDestroySlotsFunction(theObject, originalFunction) { // TDD, i/o : do
       const slots = args[0] || window.googletag.pubads().getSlots();
       /* istanbul ignore next */
       util.forEachOnArray(slots, (index, slot) => {
-        delete slotsMap[refThis.generateSlotName(slot)];
+        delete slotsMap[generateSlotName(slot)];
       });
       /* istanbul ignore next */
       return originalFunction.apply(theObject, args);
@@ -499,7 +499,7 @@ export { newAddAdUnitFunction };
 function updateStatusAndCallOriginalFunctionDisplay(message, theObject, originalFunction, arg) { // TDD, i/o : done
   util.log(message);
   util.log(arg);
-  refThis.updateStatusAfterRendering(arg[0], false);
+  updateStatusAfterRendering(arg[0], false);
   originalFunction.apply(theObject, arg);
 }
 
@@ -511,7 +511,7 @@ export { updateStatusAndCallOriginalFunctionDisplay };
 function findWinningBidIfRequiredDisplay(key, slot) { // TDD, i/o : done
   const status = slot.getStatus();
   if (status != CONSTANTS.SLOT_STATUS.DISPLAYED && status != CONSTANTS.SLOT_STATUS.TARGETING_ADDED) {
-    refThis.findWinningBidAndApplyTargeting(key);
+    findWinningBidAndApplyTargeting(key);
   }
 }
 
@@ -521,9 +521,9 @@ export { findWinningBidIfRequiredDisplay };
 /* end-test-block */
 
 function processDisplayCalledSlot(theObject, originalFunction, arg) {
-  if (refThis.getStatusOfSlotForDivId(arg[0]) != CONSTANTS.SLOT_STATUS.DISPLAYED) {
-    // refThis.findWinningBidAndApplyTargeting(arg[0]);
-    refThis.updateStatusAndCallOriginalFunctionDisplay(
+  if (getStatusOfSlotForDivId(arg[0]) != CONSTANTS.SLOT_STATUS.DISPLAYED) {
+    // findWinningBidAndApplyTargeting(arg[0]);
+    updateStatusAndCallOriginalFunctionDisplay(
       'Calling original display function after timeout with arguments, ',
       theObject,
       originalFunction,
@@ -568,16 +568,16 @@ function displayFunctionStatusHandler(oldStatus, theObject, originalFunction, ar
     /* istanbul ignore next */
     // eslint-disable-next-line no-fallthrough
     case CONSTANTS.SLOT_STATUS.PARTNERS_CALLED:
-      refThis.executeDisplay(CONFIG.getTimeout(), Object.keys(refThis.slotsMap), () => {
-        util.forEachOnObject(refThis.slotsMap, (key, slot) => {
-          refThis.findWinningBidIfRequiredDisplay(key, slot);
+      executeDisplay(CONFIG.getTimeout(), Object.keys(slotsMap), () => {
+        util.forEachOnObject(slotsMap, (key, slot) => {
+          findWinningBidIfRequiredDisplay(key, slot);
         });
-        refThis.processDisplayCalledSlot(theObject, originalFunction, arg);
+        processDisplayCalledSlot(theObject, originalFunction, arg);
       });
       break;
     // call the original function now
     case CONSTANTS.SLOT_STATUS.TARGETING_ADDED:
-      refThis.updateStatusAndCallOriginalFunctionDisplay(
+      updateStatusAndCallOriginalFunctionDisplay(
         'As DM processing is already done, Calling original display function with arguments',
         theObject,
         originalFunction,
@@ -586,7 +586,7 @@ function displayFunctionStatusHandler(oldStatus, theObject, originalFunction, ar
       break;
 
     case CONSTANTS.SLOT_STATUS.DISPLAYED:
-      refThis.updateStatusAndCallOriginalFunctionDisplay(
+      updateStatusAndCallOriginalFunctionDisplay(
         'As slot is already displayed, Calling original display function with arguments',
         theObject,
         originalFunction,
@@ -603,8 +603,8 @@ export { displayFunctionStatusHandler };
 
 function forQualifyingSlotNamesCallAdapters(qualifyingSlotNames, arg, isRefreshCall) { // TDD, i/o : done
   if (qualifyingSlotNames.length > 0) {
-    refThis.updateStatusOfQualifyingSlotsBeforeCallingAdapters(qualifyingSlotNames, arg, isRefreshCall);
-    const qualifyingSlots = refThis.arrayOfSelectedSlots(qualifyingSlotNames);
+    updateStatusOfQualifyingSlotsBeforeCallingAdapters(qualifyingSlotNames, arg, isRefreshCall);
+    const qualifyingSlots = arrayOfSelectedSlots(qualifyingSlotNames);
     // new approach without adapter-manager
     prebid.fetchBids(qualifyingSlots);
   }
@@ -640,15 +640,15 @@ function newDisplayFunction(theObject, originalFunction) { // TDD, i/o : done
           return originalFunction.apply(theObject, args);
         }
         /* istanbul ignore next */
-        refThis.updateSlotsMapFromGoogleSlots(theObject.pubads().getSlots(), args, true);
+        updateSlotsMapFromGoogleSlots(theObject.pubads().getSlots(), args, true);
 
         /* istanbul ignore next */
-        refThis.displayFunctionStatusHandler(getStatusOfSlotForDivId(args[0]), theObject, originalFunction, args);
+        displayFunctionStatusHandler(getStatusOfSlotForDivId(args[0]), theObject, originalFunction, args);
         const statusObj = {};
         statusObj[CONSTANTS.SLOT_STATUS.CREATED] = '';
         /* istanbul ignore next */
         // Todo: need to add reThis whilwe calling getSlotNamesByStatus
-        refThis.forQualifyingSlotNamesCallAdapters(getSlotNamesByStatus(statusObj), args, false);
+        forQualifyingSlotNamesCallAdapters(getSlotNamesByStatus(statusObj), args, false);
         /* istanbul ignore next */
         const divID = args[0];
         /* istanbul ignore next */
@@ -688,12 +688,12 @@ export { newDisplayFunction };
 */
 
 function newAddHookOnGoogletagDisplay(localGoogletag) { // TDD, i/o : done
-  if (refThis.displayHookIsAdded) {
+  if (displayHookIsAdded) {
     return;
   }
-  refThis.displayHookIsAdded = true;
+  displayHookIsAdded = true;
   util.log('Adding hook on googletag.display.');
-  util.addHookOnFunction(localGoogletag, false, 'display', this.newDisplayFunction);
+  util.addHookOnFunction(localGoogletag, false, 'display', newDisplayFunction);
 }
 
 /* start-test-block */
@@ -702,9 +702,9 @@ export { newAddHookOnGoogletagDisplay };
 /* end-test-block */
 
 function findWinningBidIfRequiredRefresh(slotName, divID, currentFlagValue) { // TDD, i/o : done
-  if (util.isOwnProperty(refThis.slotsMap, slotName) && refThis.slotsMap[slotName].isRefreshFunctionCalled() === true && refThis.slotsMap[slotName].getStatus() !== CONSTANTS.SLOT_STATUS.DISPLAYED) {
-    refThis.findWinningBidAndApplyTargeting(divID);
-    refThis.updateStatusAfterRendering(divID, true);
+  if (util.isOwnProperty(slotsMap, slotName) && slotsMap[slotName].isRefreshFunctionCalled() === true && slotsMap[slotName].getStatus() !== CONSTANTS.SLOT_STATUS.DISPLAYED) {
+    findWinningBidAndApplyTargeting(divID);
+    updateStatusAfterRendering(divID, true);
     return true;
   }
   return currentFlagValue;
@@ -717,7 +717,7 @@ export { findWinningBidIfRequiredRefresh };
 
 function postRederingChores(divID, dmSlot) {
   // googleSlot.getSizes() returns applicable sizes as per sizemapping if we pass current available view-port width and height
-  util.createVLogInfoPanel(divID, refThis.slotsMap[dmSlot].getSizes(window.innerWidth, window.innerHeight));
+  util.createVLogInfoPanel(divID, slotsMap[dmSlot].getSizes(window.innerWidth, window.innerHeight));
   util.realignVLogInfoPanel(divID);
   bidManager.executeAnalyticsPixel();
 }
@@ -732,13 +732,13 @@ function postTimeoutRefreshExecution(qualifyingSlotNames, theObject, originalFun
   util.log(arg);
   let yesCallRefreshFunction = false;
   util.forEachOnArray(qualifyingSlotNames, (index, dmSlot) => {
-    const divID = refThis.slotsMap[dmSlot].getDivID();
-    yesCallRefreshFunction = refThis.findWinningBidIfRequiredRefresh(dmSlot, divID, yesCallRefreshFunction);
+    const divID = slotsMap[dmSlot].getDivID();
+    yesCallRefreshFunction = findWinningBidIfRequiredRefresh(dmSlot, divID, yesCallRefreshFunction);
     window.setTimeout(() => {
-      refThis.postRederingChores(divID, dmSlot);
+      postRederingChores(divID, dmSlot);
     }, 2000);
   });
-  this.callOriginalRefeshFunction(yesCallRefreshFunction, theObject, originalFunction, arg);
+  callOriginalRefeshFunction(yesCallRefreshFunction, theObject, originalFunction, arg);
 }
 
 /* start-test-block */
@@ -766,7 +766,7 @@ function getQualifyingSlotNamesForRefresh(arg, theObject) { // TDD, i/o : done
   // handeling case googletag.pubads().refresh(null, {changeCorrelator: false});
   slotsToConsider = arg.length == 0 || arg[0] == null ? theObject.getSlots() : arg[0];
   util.forEachOnArray(slotsToConsider, (index, slot) => {
-    const slotName = refThis.generateSlotName(slot);
+    const slotName = generateSlotName(slot);
     if (slotName.length > 0) {
       qualifyingSlotNames = qualifyingSlotNames.concat(slotName);
     }
@@ -803,17 +803,17 @@ function newRefreshFuncton(theObject, originalFunction) { // TDD, i/o : done // 
         util.log('In Refresh function');
 
         /* istanbul ignore next */
-        refThis.updateSlotsMapFromGoogleSlots(theObject.getSlots(), args, false);
+        updateSlotsMapFromGoogleSlots(theObject.getSlots(), args, false);
         /* istanbul ignore next */
         const qualifyingSlotNames = getQualifyingSlotNamesForRefresh(args, theObject);
         /* istanbul ignore next */
-        refThis.forQualifyingSlotNamesCallAdapters(qualifyingSlotNames, args, true);
+        forQualifyingSlotNamesCallAdapters(qualifyingSlotNames, args, true);
         /* istanbul ignore next */
         util.log(`Intiating Call to original refresh function with Timeout: ${CONFIG.getTimeout()} ms`);
 
         const arg = args;
-        refThis.executeDisplay(CONFIG.getTimeout(), qualifyingSlotNames, () => {
-          refThis.postTimeoutRefreshExecution(qualifyingSlotNames, theObject, originalFunction, arg);
+        executeDisplay(CONFIG.getTimeout(), qualifyingSlotNames, () => {
+          postTimeoutRefreshExecution(qualifyingSlotNames, theObject, originalFunction, arg);
         });
       };
     }
@@ -838,12 +838,12 @@ function addHooks(win) { // TDD, i/o : done
       return false;
     }
 
-    util.addHookOnFunction(localPubAdsObj, false, 'disableInitialLoad', refThis.newDisableInitialLoadFunction);
-    util.addHookOnFunction(localPubAdsObj, false, 'enableSingleRequest', refThis.newEnableSingleRequestFunction);
-    refThis.newAddHookOnGoogletagDisplay(localGoogletag);
-    util.addHookOnFunction(localPubAdsObj, false, 'refresh', refThis.newRefreshFuncton);
-    util.addHookOnFunction(localPubAdsObj, false, 'setTargeting', refThis.newSetTargetingFunction);
-    util.addHookOnFunction(localGoogletag, false, 'destroySlots', refThis.newDestroySlotsFunction);
+    util.addHookOnFunction(localPubAdsObj, false, 'disableInitialLoad', newDisableInitialLoadFunction);
+    util.addHookOnFunction(localPubAdsObj, false, 'enableSingleRequest', newEnableSingleRequestFunction);
+    newAddHookOnGoogletagDisplay(localGoogletag);
+    util.addHookOnFunction(localPubAdsObj, false, 'refresh', newRefreshFuncton);
+    util.addHookOnFunction(localPubAdsObj, false, 'setTargeting', newSetTargetingFunction);
+    util.addHookOnFunction(localGoogletag, false, 'destroySlots', newDestroySlotsFunction);
     return true;
   } else {
     return false;
@@ -876,12 +876,12 @@ function addHooksIfPossible(win) { // TDD, i/o : done
   }
   if (util.isObject(win.googletag) && !win.googletag.apiReady && util.isArray(win.googletag.cmd) && util.isFunction(win.googletag.cmd.unshift)) {
     util.log('Succeeded to load before GPT');// todo
-    const refThis = this; // TODO : check whether the global refThis works here
+    // const refThis = this; // TODO : check whether the global refThis works here
     win.googletag.cmd.unshift(() => {
       /* istanbul ignore next */
       util.log('OpenWrap initialization started');
       /* istanbul ignore next */
-      refThis.addHooks(win);
+      addHooks(win);
       /* istanbul ignore next */
       util.log('OpenWrap initialization completed');
     });
@@ -912,12 +912,12 @@ export { initSafeFrameListener };
 export function init(win) { // TDD, i/o : done
   CONFIG.initConfig();
   if (util.isObject(win)) {
-    refThis.setWindowReference(win);
-    refThis.initSafeFrameListener(win);
+    setWindowReference(win);
+    initSafeFrameListener(win);
     prebid.initPbjsConfig();
-    refThis.wrapperTargetingKeys = refThis.defineWrapperTargetingKeys(CONSTANTS.WRAPPER_TARGETING_KEYS);
-    refThis.defineGPTVariables(win);
-    refThis.addHooksIfPossible(win);
+    wrapperTargetingKeys = defineWrapperTargetingKeys(CONSTANTS.WRAPPER_TARGETING_KEYS);
+    defineGPTVariables(win);
+    addHooksIfPossible(win);
     IdHub.initIdHub(win);
     return true;
   } else {

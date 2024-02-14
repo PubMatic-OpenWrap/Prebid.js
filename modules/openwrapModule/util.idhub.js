@@ -7,7 +7,7 @@
 import * as CONFIG from './config.idhub.js';
 
 import * as CONSTANTS from './constants.js';
-const debugLogIsEnabled = false;
+var debugLogIsEnabled = false;
 
 /* start-test-block */
 export { debugLogIsEnabled };
@@ -19,9 +19,9 @@ const typeString = 'String';
 const typeFunction = 'Function';
 const typeNumber = 'Number';
 const toString = Object.prototype.toString;
-const refThis = this;
+// const refThis = this;
 const pbNameSpace = CONFIG.isIdentityOnly() ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
-refThis.idsAppendedToAdUnits = false;
+// const idsAppendedToAdUnits = false;
 
 function isA(object, testForType) {
   return toString.call(object) === `[object ${testForType}]`;
@@ -33,19 +33,19 @@ export { isA };
 /* end-test-block */
 
 export function isFunction(object) {
-  return refThis.isA(object, typeFunction);
+  return isA(object, typeFunction);
 }
 
 export function isString(object) {
-  return refThis.isA(object, typeString);
+  return isA(object, typeString);
 }
 
 export function isArray(object) {
-  return refThis.isA(object, typeArray);
+  return isA(object, typeArray);
 }
 
 export function isNumber(object) {
-  return refThis.isA(object, typeNumber);
+  return isA(object, typeNumber);
 }
 
 export function isObject(object) {
@@ -54,7 +54,7 @@ export function isObject(object) {
 
 export function isOwnProperty(theObject, proertyName) {
   /* istanbul ignore else */
-  if (refThis.isObject(theObject) && theObject.hasOwnProperty) {
+  if (isObject(theObject) && theObject.hasOwnProperty) {
     // return theObject.hasOwnProperty(proertyName);
     return Object.prototype.hasOwnProperty.call(theObject, proertyName);
   }
@@ -66,20 +66,20 @@ export function isUndefined(object) {
 }
 
 export function enableDebugLog() {
-  refThis.debugLogIsEnabled = true;
+  debugLogIsEnabled = true;
 }
 
 export function isDebugLogEnabled() {
-  return refThis.debugLogIsEnabled;
+  return debugLogIsEnabled;
 }
 
 export function enableVisualDebugLog() {
-  refThis.debugLogIsEnabled = true;
-  refThis.visualDebugLogIsEnabled = true;
+  debugLogIsEnabled = true;
+  visualDebugLogIsEnabled = true;
 }
 
 export function isEmptyObject(object) {
-  return refThis.isObject(object) && Object.keys(object).length === 0;
+  return isObject(object) && Object.keys(object).length === 0;
 }
 
 // todo: move...
@@ -87,7 +87,7 @@ const constDebugInConsolePrependWith = '[OpenWrap] : ';
 const constErrorInConsolePrependWith = '[OpenWrap] : [Error]';
 
 export function log(data) {
-  if (refThis.debugLogIsEnabled && console && this.isFunction(console.log)) { // eslint-disable-line no-console
+  if (debugLogIsEnabled && console && this.isFunction(console.log)) { // eslint-disable-line no-console
     if (this.isString(data)) {
       console.log(`${(new Date()).getTime()} : ${constDebugInConsolePrependWith}${data}`); // eslint-disable-line no-console
     } else {
@@ -97,7 +97,7 @@ export function log(data) {
 }
 
 export function logError(data) {
-  if (refThis.debugLogIsEnabled && console && this.isFunction(console.log)) { // eslint-disable-line no-console
+  if (debugLogIsEnabled && console && this.isFunction(console.log)) { // eslint-disable-line no-console
     if (this.isString(data)) {
       console.error(`${(new Date()).getTime()} : ${constDebugInConsolePrependWith}${data}`); // eslint-disable-line no-console
     } else {
@@ -107,7 +107,7 @@ export function logError(data) {
 }
 
 export function logWarning(data) {
-  if (refThis.debugLogIsEnabled && console && this.isFunction(console.log)) { // eslint-disable-line no-console
+  if (debugLogIsEnabled && console && this.isFunction(console.log)) { // eslint-disable-line no-console
     if (this.isString(data)) {
       console.warn(`${(new Date()).getTime()} : ${constDebugInConsolePrependWith}${data}`); // eslint-disable-line no-console
     } else {
@@ -122,18 +122,18 @@ export function error(data) {
 
 export function forEachOnObject(theObject, callback) {
   /* istanbul ignore else */
-  if (!refThis.isObject(theObject)) {
+  if (!isObject(theObject)) {
     return;
   }
 
   /* istanbul ignore else */
-  if (!refThis.isFunction(callback)) {
+  if (!isFunction(callback)) {
     return;
   }
 
   for (const key in theObject) {
     /* istanbul ignore else */
-    if (refThis.isOwnProperty(theObject, key)) {
+    if (isOwnProperty(theObject, key)) {
       callback(key, theObject[key]);
     }
   }
@@ -143,7 +143,7 @@ export function getTopFrameOfSameDomain(cWin) {
   try {
     /* istanbul ignore else */
     if (cWin.parent.document != cWin.document) {
-      return refThis.getTopFrameOfSameDomain(cWin.parent);
+      return getTopFrameOfSameDomain(cWin.parent);
     }
   } catch (e) {
     // continue regardless of error
@@ -151,7 +151,7 @@ export function getTopFrameOfSameDomain(cWin) {
   return cWin;
 }
 
-export const metaInfo = {};
+export var metaInfo = {};
 
 export function getMetaInfo(cWin) {
   const obj = {};
@@ -162,10 +162,10 @@ export function getMetaInfo(cWin) {
   obj.refURL = '';
   obj.protocol = 'https://';
   obj.secure = 1;
-  obj.isInIframe = refThis.isIframe(cWin);
+  obj.isInIframe = isIframe(cWin);
 
   try {
-    frame = refThis.getTopFrameOfSameDomain(cWin);
+    frame = getTopFrameOfSameDomain(cWin);
     obj.refURL = (frame.refurl || frame.document.referrer || '').substr(0, MAX_PAGE_URL_LEN);
     obj.pageURL = (frame !== window.top && frame.document.referrer != '' ? frame.document.referrer : frame.location.href).substr(0, MAX_PAGE_URL_LEN);
 
@@ -182,9 +182,9 @@ export function getMetaInfo(cWin) {
     // continue regardless of error
   }
 
-  obj.pageDomain = refThis.getDomainFromURL(obj.pageURL);
+  obj.pageDomain = getDomainFromURL(obj.pageURL);
 
-  refThis.metaInfo = obj;
+  metaInfo = obj;
 
   return obj;
 }
@@ -198,11 +198,11 @@ export function isIframe({ self, top }) {
 }
 
 export function findQueryParamInURL(url, name) {
-  return refThis.isOwnProperty(refThis.parseQueryParams(url), name);
+  return isOwnProperty(parseQueryParams(url), name);
 }
 
 export function parseQueryParams(url) {
-  const parser = refThis.createDocElement(window, 'a');
+  const parser = createDocElement(window, 'a');
   parser.href = url;
   const params = {};
 
@@ -210,7 +210,7 @@ export function parseQueryParams(url) {
   if (parser.search) {
     let queryString = parser.search.replace('?', '');
     queryString = queryString.split('&');
-    refThis.forEachOnArray(queryString, (index, keyValue) => {
+    forEachOnArray(queryString, (index, keyValue) => {
       keyValue = keyValue.split('=');
       const key = keyValue[0] || '';
       const value = keyValue[1] || '';
@@ -229,23 +229,23 @@ export function addHookOnFunction(theObject, useProto, functionName, newFunction
   const callMethodOn = theObject;
   // eslint-disable-next-line no-proto
   theObject = useProto ? theObject.__proto__ : theObject;
-  if (refThis.isObject(theObject) && refThis.isFunction(theObject[functionName])) {
+  if (isObject(theObject) && isFunction(theObject[functionName])) {
     const originalFunction = theObject[functionName];
     theObject[functionName] = newFunction(callMethodOn, originalFunction);
   } else {
-    refThis.logWarning('in assignNewDefination: oldReference is not a function');
+    logWarning('in assignNewDefination: oldReference is not a function');
   }
 }
 
 export function getUserIdConfiguration() {
   const userIdConfs = [];
   window[pbNameSpace].onSSOLogin({});
-  refThis.forEachOnObject(CONFIG.getIdentityPartners(), (parterId, partnerValues) => {
+  forEachOnObject(CONFIG.getIdentityPartners(), (parterId, partnerValues) => {
     if (!CONSTANTS.EXCLUDE_PARTNER_LIST.includes(parterId)) {
-      userIdConfs.push(refThis.getUserIdParams(partnerValues));
+      userIdConfs.push(getUserIdParams(partnerValues));
     }
   });
-  refThis.log(CONSTANTS.MESSAGES.IDENTITY.M4 + JSON.stringify(userIdConfs));
+  log(CONSTANTS.MESSAGES.IDENTITY.M4 + JSON.stringify(userIdConfs));
   return userIdConfs;
 }
 
@@ -256,8 +256,8 @@ export function deleteCustomParams(params) {
 
 export function getUserIdParams(params) {
   let userIdParams = {};
-  refThis.applyDataTypeChangesIfApplicable(params);
-  refThis.applyCustomParamValuesfApplicable(params);
+  applyDataTypeChangesIfApplicable(params);
+  applyCustomParamValuesfApplicable(params);
   for (const key in params) {
     try {
       if (!CONSTANTS.EXCLUDE_IDENTITY_PARAMS.includes(key)) {
@@ -267,32 +267,32 @@ export function getUserIdParams(params) {
         if (CONSTANTS.JSON_VALUE_KEYS.includes(key)) {
           params[key] = JSON.parse(params[key]);
         }
-        userIdParams = refThis.getNestedObjectFromString(userIdParams, '.', key, params[key]);
+        userIdParams = getNestedObjectFromString(userIdParams, '.', key, params[key]);
       }
     } catch (ex) {
-      refThis.logWarning(CONSTANTS.MESSAGES.IDENTITY.M3, ex);
+      logWarning(CONSTANTS.MESSAGES.IDENTITY.M3, ex);
     }
   }
   if (userIdParams && userIdParams.params && userIdParams.params['loadATS'] == 'true') {
-    refThis.initLiveRampAts(userIdParams);
+    initLiveRampAts(userIdParams);
   }
   if (userIdParams && userIdParams.params && userIdParams.params['loadIDP'] == 'true') {
-    refThis.initZeoTapJs(userIdParams);
+    initZeoTapJs(userIdParams);
   }
   if (userIdParams && userIdParams.params && userIdParams.params['loadLauncher'] == 'true') {
-    refThis.initLauncherJs(userIdParams);
+    initLauncherJs(userIdParams);
   }
   if (userIdParams && userIdParams.custom && userIdParams.custom['loadLaunchPad'] == 'true') {
-    refThis.initLiveRampLaunchPad(userIdParams);
+    initLiveRampLaunchPad(userIdParams);
   }
-  return refThis.deleteCustomParams(userIdParams);
+  return deleteCustomParams(userIdParams);
 }
 
 export function getUserIds() {
-  if (refThis.isFunction(window[pbNameSpace].getUserIds)) {
+  if (isFunction(window[pbNameSpace].getUserIds)) {
     return window[pbNameSpace].getUserIds();
   } else {
-    refThis.logWarning(`getUserIds${CONSTANTS.MESSAGES.IDENTITY.M6}`);
+    logWarning(`getUserIds${CONSTANTS.MESSAGES.IDENTITY.M6}`);
   }
 }
 
@@ -304,23 +304,23 @@ export function getDomainFromURL(url) {
 
 export function handleHook(hookName, arrayOfDataToPass) {
   // Adding a hook for publishers to modify the data we have
-  if (refThis.isFunction(window.IHPWT[hookName])) {
-    refThis.log(`For Hook-name: ${hookName}, calling window.IHPWT.${hookName}function.`);
+  if (isFunction(window.IHPWT[hookName])) {
+    log(`For Hook-name: ${hookName}, calling window.IHPWT.${hookName}function.`);
     window.IHPWT[hookName](...arrayOfDataToPass);
   }
   // else {
-  //  refThis.log('Hook-name: '+hookName+', window.IHPWT.'+hookName+' is not a function.' );
+  //  log('Hook-name: '+hookName+', window.IHPWT.'+hookName+' is not a function.' );
   // }
 }
 
 export function forEachOnArray(theArray, callback) {
   /* istanbul ignore else */
-  if (!refThis.isArray(theArray)) {
+  if (!isArray(theArray)) {
     return;
   }
 
   /* istanbul ignore else */
-  if (!refThis.isFunction(callback)) {
+  if (!isFunction(callback)) {
     return;
   }
 
@@ -330,10 +330,10 @@ export function forEachOnArray(theArray, callback) {
 }
 
 export function getUserIdsAsEids() {
-  if (refThis.isFunction(window[pbNameSpace].getUserIdsAsEids)) {
+  if (isFunction(window[pbNameSpace].getUserIdsAsEids)) {
     return window[pbNameSpace].getUserIdsAsEids();
   } else {
-    refThis.logWarning(`getUserIdsAsEids${CONSTANTS.MESSAGES.IDENTITY.M6}`);
+    logWarning(`getUserIdsAsEids${CONSTANTS.MESSAGES.IDENTITY.M6}`);
   }
 }
 
@@ -355,7 +355,7 @@ export function getNestedObjectFromString(sourceObject, separator, key, value) {
   if (splitParams.length == 1) {
     sourceObject[key] = value;
   } else {
-    sourceObject = refThis.getNestedObjectFromArray(sourceObject, splitParams, value);
+    sourceObject = getNestedObjectFromArray(sourceObject, splitParams, value);
   }
   return sourceObject;
 }
@@ -402,7 +402,7 @@ export function getLiverampParams(params) {
       if yes, if sso is enabled and 'direct' is selected as detection mechanism, sso emails will be sent to ats script.
       if sso is disabled, and 'direct' is selected as detection mechanism, we will look for publisher provided email ids, and if available the hashes will be sent to ats script.
       */
-      if (enableCustomId && refThis.isFunction(window[pbNameSpace].getUserIdentities) && window[pbNameSpace].getUserIdentities() !== undefined) {
+      if (enableCustomId && isFunction(window[pbNameSpace].getUserIdentities) && window[pbNameSpace].getUserIdentities() !== undefined) {
         atsObject.customerID = window[pbNameSpace].getUserIdentities().customerID || undefined;
       }
       break;
@@ -413,7 +413,7 @@ export function getLiverampParams(params) {
 export function initLiveRampAts(params) {
   function addATS() {
     const atsScript = document.createElement('script');
-    const atsObject = refThis.getLiverampParams(params);
+    const atsObject = getLiverampParams(params);
     atsScript.onload = () => {
       window.ats && window.ats.start(atsObject);
     };
@@ -434,7 +434,7 @@ export function getEmailHashes() {
   const enableSSO = CONFIG.isSSOEnabled() || false;
   const emailHash = enableSSO && userIdentity.emailHash ? userIdentity.emailHash : userIdentity.pubProvidedEmailHash ? userIdentity.pubProvidedEmailHash : undefined;
   const emailHashArr = [];
-  refThis.forEachOnObject(emailHash, (keyName, keyValue) => {
+  forEachOnObject(emailHash, (keyName, keyValue) => {
     if (keyValue !== undefined) {
       emailHashArr.push(keyValue);
     }
@@ -455,7 +455,7 @@ export function initLiveRampLaunchPad({ custom }) {
           ats.outputCurrentConfiguration()['ENVELOPE_MODULE_INFO']['ENVELOPE_MODULE_CONFIG']['startWithExternalId'];
         if (isDirectMode) { // If direct or detect/direct mode
           if ((window.IHPWT && (window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES && window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES.includes('identityLink'))) || window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES === undefined) {
-            const emailHashes = refThis.getEmailHashes();
+            const emailHashes = getEmailHashes();
             emailHashes && window.ats.setAdditionalData({ 'type': 'emailHashes', 'id': emailHashes });
           }
         }
@@ -471,7 +471,7 @@ export function initLauncherJs(params) {
   window.cnvr_launcher_options = { lid: params.params.launcher_id };
   function loadLauncher() {
     const launchScript = document.createElement('script');
-    const launchObject = refThis.getPublinkLauncherParams(params);
+    const launchObject = getPublinkLauncherParams(params);
     launchScript.onload = () => {
       window.conversant.getLauncherObject = () => {
         return launchObject;
@@ -576,33 +576,33 @@ export function initZeoTapJs({ partnerId }) {
 }
 
 export function updateAdUnits(adUnits) {
-  if (refThis.isArray(adUnits)) {
+  if (isArray(adUnits)) {
     adUnits.forEach(({ bids }) => {
       bids.forEach(bid => {
-        refThis.updateUserIds(bid);
+        updateUserIds(bid);
       });
     });
-  } else if (!refThis.isEmptyObject(adUnits)) {
+  } else if (!isEmptyObject(adUnits)) {
     adUnits.bids.forEach(bid => {
-      refThis.updateUserIds(bid);
+      updateUserIds(bid);
     });
   }
 }
 
 export function updateUserIds(bid) {
-  // refThis.idsAppendedToAdUnits =true;
-  if (refThis.isUndefined(bid.userId)) {
-    bid['userId'] = refThis.getUserIds();
+  // idsAppendedToAdUnits =true;
+  if (isUndefined(bid.userId)) {
+    bid['userId'] = getUserIds();
   } else if (bid.userId) {
     /* istanbul ignore next */
-    bid.userId = Object.assign(bid.userId, refThis.getUserIds());
+    bid.userId = Object.assign(bid.userId, getUserIds());
   }
-  if (refThis.isUndefined(bid.userIdAsEids)) {
-    bid['userIdAsEids'] = refThis.getUserIdsAsEids();
-  } else if (refThis.isArray(bid.userIdAsEids)) {
+  if (isUndefined(bid.userIdAsEids)) {
+    bid['userIdAsEids'] = getUserIdsAsEids();
+  } else if (isArray(bid.userIdAsEids)) {
     const idsPresent = new Set();
-    let ids = bid.userIdAsEids.concat(refThis.getUserIdsAsEids());
-    if (refThis.isArray(ids) && ids.length > 0) {
+    let ids = bid.userIdAsEids.concat(getUserIdsAsEids());
+    if (isArray(ids) && ids.length > 0) {
       ids = ids.filter(({ source }) => {
         if (source) {
           if (idsPresent.has(source)) {
@@ -629,7 +629,7 @@ export function applyDataTypeChangesIfApplicable(params) {
               if (paramValue && typeof paramValue !== 'number') {
                 value = parseInt(paramValue)
                 isNaN(value)
-                  ? refThis.logError(`${partnerName}: Invalid parameter value '${paramValue}' for parameter ${key}`)
+                  ? logError(`${partnerName}: Invalid parameter value '${paramValue}' for parameter ${key}`)
                   : params[key] = value;
               }
               break;
@@ -687,13 +687,13 @@ export function getOWConfig() {
 }
 
 export function deepMerge(target, source, keyName = 'source') {
-  if (refThis.isArray(target) && refThis.isArray(source)) {
+  if (isArray(target) && isArray(source)) {
     const mergedArr = [].concat(target);
     source.forEach(item2 => {
       let found = false;
       mergedArr.forEach((item1, index) => {
         if (item1[keyName] === item2[keyName]) {
-          mergedArr[index] = refThis.deepMerge(item1, item2);
+          mergedArr[index] = deepMerge(item1, item2);
           found = true;
         }
       });
@@ -704,11 +704,11 @@ export function deepMerge(target, source, keyName = 'source') {
     return mergedArr;
   }
 
-  if (refThis.isObject(target) && refThis.isObject(source)) {
+  if (isObject(target) && isObject(source)) {
     const mergedObj = Object.assign({}, target);
     Object.keys(source).forEach(key => {
       if (mergedObj[key] && typeof mergedObj[key] === 'object' && typeof source[key] === 'object') {
-        mergedObj[key] = refThis.deepMerge(mergedObj[key], source[key]);
+        mergedObj[key] = deepMerge(mergedObj[key], source[key]);
       } else {
         mergedObj[key] = source[key];
       }

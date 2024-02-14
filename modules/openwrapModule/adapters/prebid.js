@@ -227,7 +227,7 @@ function pbBidStreamHandler(pbBid) {
   // NEW APPROACH
   // todo: unit-test cases pending
   /* istanbul ignore else */
-  if (util.isOwnProperty(refThis.kgpvMap, responseID)) {
+  if (util.isOwnProperty(kgpvMap, responseID)) {
     if (pbBid.floorData) {
       window.PWT.floorData[window.PWT.bidMap[pbBid.adUnitCode].impressionID]['floorResponseData'] = pbBid.floorData
     }
@@ -239,14 +239,14 @@ function pbBidStreamHandler(pbBid) {
 
     // If Single impression is turned on then check and modify kgpv as per bid response size
     /* istanbul ignore else */
-    if (refThis.isSingleImpressionSettingEnabled) {
+    if (isSingleImpressionSettingEnabled) {
       // Assinging kbpv after modifying and will be used for logger and tracker purposes
       // this field will be replaced everytime a bid is received with single impression feature on
-      const kgpvAndRegexOfBid = refThis.checkAndModifySizeOfKGPVIfRequired(pbBid, refThis.kgpvMap[responseID]);
-      refThis.kgpvMap[responseID].kgpv = kgpvAndRegexOfBid.responseKGPV;
-      refThis.kgpvMap[responseID].regexPattern = kgpvAndRegexOfBid.responseRegex;
+      const kgpvAndRegexOfBid = checkAndModifySizeOfKGPVIfRequired(pbBid, kgpvMap[responseID]);
+      kgpvMap[responseID].kgpv = kgpvAndRegexOfBid.responseKGPV;
+      kgpvMap[responseID].regexPattern = kgpvAndRegexOfBid.responseRegex;
       // : Put a field Regex Pattern in KGPVMAP so that it can be passed on to the bid and to the logger
-      // Something like this refThis.kgpvMap[responseID].regexPattern = pbBid.refThis.kgpvMap[responseID].regexPattern;
+      // Something like this kgpvMap[responseID].regexPattern = pbBid.kgpvMap[responseID].regexPattern;
     }
 
     /*
@@ -265,14 +265,14 @@ function pbBidStreamHandler(pbBid) {
 
     /* istanbul ignore else */
     if (pbBid.bidderCode && CONFIG.isServerSideAdapter(pbBid.bidderCode)) {
-      const divID = refThis.kgpvMap[responseID].divID;
-      if (!refThis.isSingleImpressionSettingEnabled) {
-        const temp1 = refThis.getPBCodeWithWidthAndHeight(divID, pbBid.bidderCode, pbBid.width, pbBid.height);
-        const temp2 = refThis.getPBCodeWithoutWidthAndHeight(divID, pbBid.bidderCode);
+      const divID = kgpvMap[responseID].divID;
+      if (!isSingleImpressionSettingEnabled) {
+        const temp1 = getPBCodeWithWidthAndHeight(divID, pbBid.bidderCode, pbBid.width, pbBid.height);
+        const temp2 = getPBCodeWithoutWidthAndHeight(divID, pbBid.bidderCode);
 
-        if (util.isOwnProperty(refThis.kgpvMap, temp1)) {
+        if (util.isOwnProperty(kgpvMap, temp1)) {
           responseID = temp1;
-        } else if (util.isOwnProperty(refThis.kgpvMap, temp2)) {
+        } else if (util.isOwnProperty(kgpvMap, temp2)) {
           responseID = temp2;
         } else {
           util.logWarning(`Failed to find kgpv details for S2S-adapter:${pbBid.bidderCode}`);
@@ -290,11 +290,11 @@ function pbBidStreamHandler(pbBid) {
       // timeoutForPrebid check is added to avoid Hook call for post-timeout bids
       // Here slotID, adapterID, and latency are read-only and theBid can be modified
       if (pbBid.timeToRespond < (CONFIG.getTimeout() - CONSTANTS.CONFIG.TIMEOUT_ADJUSTMENT)) {
-        util.handleHook(CONSTANTS.HOOKS.BID_RECEIVED, [refThis.kgpvMap[responseID].divID, pbBid]);
+        util.handleHook(CONSTANTS.HOOKS.BID_RECEIVED, [kgpvMap[responseID].divID, pbBid]);
       }
       bidManager.setBidFromBidder(
-        refThis.kgpvMap[responseID].divID,
-        refThis.transformPBBidToOWBid(pbBid, refThis.kgpvMap[responseID].kgpv, refThis.kgpvMap[responseID].regexPattern)
+        kgpvMap[responseID].divID,
+        transformPBBidToOWBid(pbBid, kgpvMap[responseID].kgpv, kgpvMap[responseID].regexPattern)
       );
     }
   } else {
@@ -472,15 +472,15 @@ function generatedKeyCallback(adapterID, adUnits, adapterConfig, impressionID, g
   let mediaTypeConfig;
   let partnerConfig;
 
-  if (!refThis.isSingleImpressionSettingEnabled) {
+  if (!isSingleImpressionSettingEnabled) {
     if (kgpConsistsWidthAndHeight) {
-      code = refThis.getPBCodeWithWidthAndHeight(divID, adapterID, currentWidth, currentHeight);
+      code = getPBCodeWithWidthAndHeight(divID, adapterID, currentWidth, currentHeight);
       sizes = [[currentWidth, currentHeight]];
     } else {
-      code = refThis.getPBCodeWithoutWidthAndHeight(divID, adapterID);
+      code = getPBCodeWithoutWidthAndHeight(divID, adapterID);
       sizes = currentSlot.getSizes();
     }
-    refThis.kgpvMap[ code ] = {
+    kgpvMap[ code ] = {
       kgpv: generatedKey,
       divID,
       regexPattern
@@ -496,8 +496,8 @@ function generatedKeyCallback(adapterID, adUnits, adapterConfig, impressionID, g
     code = currentSlot.getDivID();
     sizes = currentSlot.getSizes();
     let adapterAlreadyExsistsInKGPVS = false;
-    if (refThis.kgpvMap[code] && refThis.kgpvMap[code].kgpvs && refThis.kgpvMap[code].kgpvs.length > 0) {
-      util.forEachOnArray(refThis.kgpvMap[code].kgpvs, (idx, kgpv) => {
+    if (kgpvMap[code] && kgpvMap[code].kgpvs && kgpvMap[code].kgpvs.length > 0) {
+      util.forEachOnArray(kgpvMap[code].kgpvs, (idx, kgpv) => {
         // We want to have one adapter entry for one bidder and one code/adSlot
         /* istanbul ignore else */
         if (kgpv.adapterID == adapterID) {
@@ -509,7 +509,7 @@ function generatedKeyCallback(adapterID, adUnits, adapterConfig, impressionID, g
         return;
       }
     } else {
-      refThis.kgpvMap[code] = {
+      kgpvMap[code] = {
         kgpvs: [],
         divID
       };
@@ -520,7 +520,7 @@ function generatedKeyCallback(adapterID, adUnits, adapterConfig, impressionID, g
         kgpv: generatedKey,
         regexPattern
       };
-      refThis.kgpvMap[code].kgpvs.push(kgpv);
+      kgpvMap[code].kgpvs.push(kgpv);
     }
   }
 
@@ -564,7 +564,7 @@ function generatedKeyCallback(adapterID, adUnits, adapterConfig, impressionID, g
     }
     window.PWT.adUnits = window.PWT.adUnits || {};
     window.PWT.adUnits[code] = adUnits[code];
-  } else if (refThis.isSingleImpressionSettingEnabled) {
+  } else if (isSingleImpressionSettingEnabled) {
     if (isAdUnitsCodeContainBidder(adUnits, code, adapterID)) {
       return;
     }
@@ -714,7 +714,7 @@ function pushAdapterParamsInAdunits(adapterID, generatedKey, impressionID, keyCo
         if (isWiidRequired) {
           slotParams['wiid'] = impressionID;
         }
-        if (!(refThis.isSingleImpressionSettingEnabled && isAdUnitsCodeContainBidder(adUnits, code, adapterID))) {
+        if (!(isSingleImpressionSettingEnabled && isAdUnitsCodeContainBidder(adUnits, code, adapterID))) {
           adUnits[ code ].bids.push({ bidder: adapterID, params: slotParams });
         }
       });
@@ -731,7 +731,7 @@ function pushAdapterParamsInAdunits(adapterID, generatedKey, impressionID, keyCo
         if (isWiidRequired) {
           slotParams['wiid'] = impressionID;
         }
-        if (!(refThis.isSingleImpressionSettingEnabled && isAdUnitsCodeContainBidder(adUnits, code, adapterID))) {
+        if (!(isSingleImpressionSettingEnabled && isAdUnitsCodeContainBidder(adUnits, code, adapterID))) {
           adUnits[ code ].bids.push({ bidder: adapterID, params: slotParams });
         }
       });
@@ -775,8 +775,8 @@ function generatePbConf(adapterID, adapterConfig, activeSlots, adUnits, impressi
     impressionID,
     [],
     activeSlots,
-    isPrebidPubMaticAnalyticsEnabled ? refThis.generatedKeyCallbackForPbAnalytics : refThis.generatedKeyCallback,
-    // refThis.generatedKeyCallback,
+    isPrebidPubMaticAnalyticsEnabled ? generatedKeyCallbackForPbAnalytics : generatedKeyCallback,
+    // generatedKeyCallback,
     // serverSideEabled: do not set default bids as we do not want to throttle them at client-side
     true // !CONFIG.isServerSideAdapter(adapterID)
   );
@@ -933,21 +933,21 @@ function generateAdUnitsArray(activeSlots, impressionID) {
     // Assumption: all partners are running through PreBid,
     //  if we add any new parent-adapter, then code changes will be required
     /* istanbul ignore else */
-    if (adapterID !== refThis.parentAdapterID) {
+    if (adapterID !== parentAdapterID) {
       // If we will be using PrebidServerBidAdapatar then we need to check throttling for
       // serverEnabled partners at client-side
       /* istanbul ignore if */
       if (CONFIG.usePBSAdapter() == true && CONFIG.isServerSideAdapter(adapterID)) {
-        if (refThis.throttleAdapter(randomNumberBelow100, adapterID) == false) {
-          refThis.generateConfig(adapterID, adapterConfig, activeSlots, adUnits, impressionID);
+        if (throttleAdapter(randomNumberBelow100, adapterID) == false) {
+          generateConfig(adapterID, adapterConfig, activeSlots, adUnits, impressionID);
         } else {
           util.log(adapterID + CONSTANTS.MESSAGES.M2);
         }
       } else {
         // serverSideEabled: we do not want to throttle them at client-side
         /* istanbul ignore if */
-        if (CONFIG.isServerSideAdapter(adapterID) || refThis.throttleAdapter(randomNumberBelow100, adapterID) == false) {
-          refThis.generateConfig(adapterID, adapterConfig, activeSlots, adUnits, impressionID);
+        if (CONFIG.isServerSideAdapter(adapterID) || throttleAdapter(randomNumberBelow100, adapterID) == false) {
+          generateConfig(adapterID, adapterConfig, activeSlots, adUnits, impressionID);
         } else {
           util.log(adapterID + CONSTANTS.MESSAGES.M2);
         }
@@ -973,7 +973,7 @@ function generateConfig(adapterID, adapterConfig, activeSlots, adUnits, impressi
   util.forEachOnObject(activeSlots, (j, slot) => {
     bidManager.setCallInitTime(slot.getDivID(), adapterID);
   });
-  refThis.generatePbConf(adapterID, adapterConfig, activeSlots, adUnits, impressionID);
+  generatePbConf(adapterID, adapterConfig, activeSlots, adUnits, impressionID);
 }
 export {generateConfig};
 
@@ -981,7 +981,7 @@ export {generateConfig};
 function addOnBidResponseHandler() {
   if (util.isFunction(window[pbNameSpace].onEvent)) {
     if (!onEventAdded) {
-      window[pbNameSpace].onEvent('bidResponse', refThis.pbBidStreamHandler);
+      window[pbNameSpace].onEvent('bidResponse', pbBidStreamHandler);
       onEventAdded = true;
     }
   } else {
@@ -995,7 +995,7 @@ export {addOnBidResponseHandler};
 function addOnAuctionEndHandler() {
   if (util.isFunction(window[pbNameSpace].onEvent)) {
     if (!onAuctionEndEventAdded) {
-      window[pbNameSpace].onEvent('auctionEnd', refThis.pbAuctionEndHandler);
+      window[pbNameSpace].onEvent('auctionEnd', pbAuctionEndHandler);
       onAuctionEndEventAdded = true;
     }
   } else {
@@ -1008,7 +1008,7 @@ export {addOnAuctionEndHandler};
 // removeIf(removeLegacyAnalyticsRelatedCode)
 function addOnBidRequestHandler() {
   if (util.isFunction(window[pbNameSpace].onEvent)) {
-    window[pbNameSpace].onEvent('bidRequested', refThis.pbBidRequestHandler);
+    window[pbNameSpace].onEvent('bidRequested', pbBidRequestHandler);
   } else {
     util.logWarning('PreBid js onEvent method is not available');
   }
@@ -1044,21 +1044,21 @@ function setPrebidConfig() {
 
     window.PWT.ssoEnabled = CONFIG.isSSOEnabled() || false;
 
-    refThis.getFloorsConfiguration(prebidConfig)
+    getFloorsConfiguration(prebidConfig)
 
-    refThis.assignUserSyncConfig(prebidConfig);
-    refThis.assignGdprConfigIfRequired(prebidConfig);
-    refThis.assignCcpaConfigIfRequired(prebidConfig);
-    refThis.assignCurrencyConfigIfRequired(prebidConfig);
-    refThis.assignSchainConfigIfRequired(prebidConfig);
-    refThis.assignSingleRequestConfigForBidders(prebidConfig);
-    refThis.assignPackagingInventoryConfig(prebidConfig);
+    assignUserSyncConfig(prebidConfig);
+    assignGdprConfigIfRequired(prebidConfig);
+    assignCcpaConfigIfRequired(prebidConfig);
+    assignCurrencyConfigIfRequired(prebidConfig);
+    assignSchainConfigIfRequired(prebidConfig);
+    assignSingleRequestConfigForBidders(prebidConfig);
+    assignPackagingInventoryConfig(prebidConfig);
     // if usePBSAdapter is 1 then add s2sConfig
     if (CONFIG.usePBSAdapter()) {
-      refThis.gets2sConfig(prebidConfig);
+      gets2sConfig(prebidConfig);
     }
     // Check for yahoossp bidder and add property {mode: 'all'} to setConfig
-    refThis.checkForYahooSSPBidder(prebidConfig);
+    checkForYahooSSPBidder(prebidConfig);
     // Adding a hook for publishers to modify the Prebid Config we have generated
     util.handleHook(CONSTANTS.HOOKS.PREBID_SET_CONFIG, [ prebidConfig ]);
     // todo: stop supporting this hook let pubs use pbjs.requestBids hook
@@ -1359,11 +1359,11 @@ function initPbjsConfig() {
     return;
   }
   window[pbNameSpace].logging = util.isDebugLogEnabled();
-  refThis.realignPubmaticAdapters();
-  refThis.setPrebidConfig();
-  refThis.configureBidderAliasesIfAvailable();
-  refThis.enablePrebidPubMaticAnalyticIfRequired();
-  refThis.setPbjsBidderSettingsIfRequired();
+  realignPubmaticAdapters();
+  setPrebidConfig();
+  configureBidderAliasesIfAvailable();
+  enablePrebidPubMaticAnalyticIfRequired();
+  setPbjsBidderSettingsIfRequired();
 }
 export {initPbjsConfig};
 
@@ -1389,7 +1389,7 @@ function fetchBids(activeSlots) {
   });
 
   // todo: this is the function that basically puts bidder params in all adUnits, expose it separately
-  const adUnitsArray = refThis.generateAdUnitsArray(activeSlots, impressionID);
+  const adUnitsArray = generateAdUnitsArray(activeSlots, impressionID);
 
   /* istanbul ignore else */
   if (adUnitsArray.length > 0 && window[pbNameSpace]) {
@@ -1409,9 +1409,9 @@ function fetchBids(activeSlots) {
         // removeIf(removeLegacyAnalyticsRelatedCode)
         if (isPrebidPubMaticAnalyticsEnabled === false) {
           // we do not want this call when we have PrebidAnalytics enabled
-          refThis.addOnBidResponseHandler();
-          refThis.addOnBidRequestHandler();
-          refThis.addOnAuctionEndHandler();
+          addOnBidResponseHandler();
+          addOnBidRequestHandler();
+          addOnAuctionEndHandler();
         }
         // endRemoveIf(removeLegacyAnalyticsRelatedCode)
 
@@ -1419,7 +1419,7 @@ function fetchBids(activeSlots) {
         window[pbNameSpace].addAdUnits(adUnitsArray);
         window[pbNameSpace].requestBids({
           bidsBackHandler(bidResponses) {
-            refThis.pbjsBidsBackHandler(bidResponses, activeSlots);
+            pbjsBidsBackHandler(bidResponses, activeSlots);
           },
           timeout: CONFIG.getTimeout() - CONSTANTS.CONFIG.TIMEOUT_ADJUSTMENT
         });

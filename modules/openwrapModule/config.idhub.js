@@ -1,9 +1,9 @@
-import config from './conf.js';
-import CONSTANTS from './constants.js';
-let refThis = null;
-refThis = this;
-refThis[CONSTANTS.COMMON.OWVERSION] = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
-refThis[CONSTANTS.COMMON.PBVERSION] = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
+import * as config from './conf.js';
+import * as CONSTANTS from './constants.js';
+// let refThis = null;
+// refThis = this;
+CONSTANTS.COMMON.OWVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
+CONSTANTS.COMMON.PBVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
 
 // needed
 export function getGdpr() {

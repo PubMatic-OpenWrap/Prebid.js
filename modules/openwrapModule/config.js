@@ -2,10 +2,10 @@ import * as config from './conf.js';
 import * as CONSTANTS from './constants.js';
 import * as util from './util.js';
 
-let refThis = null;
-refThis = this;
-refThis[CONSTANTS.COMMON.OWVERSION] = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
-refThis[CONSTANTS.COMMON.PBVERSION] = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
+// let refThis = null;
+// refThis = this;
+CONSTANTS.COMMON.OWVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
+CONSTANTS.COMMON.PBVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
 
 export function getPublisherId() {
   return util.trim(config.pwt.pubid) || '0';
@@ -162,8 +162,8 @@ export {addPrebidAdapter};
 /* end-test-block */
 
 export function initConfig() {
-  refThis.updateABTestConfig();
-  refThis.addPrebidAdapter();
+  updateABTestConfig();
+  addPrebidAdapter();
 
   const ignoreAdapterLevelParams = {};
   util.forEachOnObject(CONSTANTS.CONFIG, (key, value) => {
@@ -326,22 +326,22 @@ export function getTestIdentityPartners() {
 }
 
 export function updateABTestConfig() {
-  if (refThis.isAbTestEnabled()) {
+  if (isAbTestEnabled()) {
     const randomNumberBelow100 = util.getRandomNumberBelow100();
-    const testGroupDetails = refThis.getTestGroupDetails();
+    const testGroupDetails = getTestGroupDetails();
     // if Random number is smaller than the test group size then test config will be applied
     if (testGroupDetails && testGroupDetails.testGroupSize && randomNumberBelow100 < testGroupDetails.testGroupSize) {
-      refThis.updatePWTConfig();
-      config.adapters = refThis.updatePartnerConfig(refThis.getTestPartnerConfig(), config.adapters);
-      if (refThis.getTestIdentityPartners() && refThis.getIdentityPartners()) {
-        if (Object.keys(refThis.getTestIdentityPartners()).length > 0 && Object.keys(refThis.getIdentityPartners()).length == 0) {
-          util.log(CONSTANTS.MESSAGES.M31, JSON.stringify(refThis.getTestIdentityPartners()));
-          config.identityPartners = refThis.getTestIdentityPartners();
-        } else if (Object.keys(refThis.getTestIdentityPartners()).length == 0 && Object.keys(refThis.getIdentityPartners()).length > 0) {
+      updatePWTConfig();
+      config.adapters = updatePartnerConfig(getTestPartnerConfig(), config.adapters);
+      if (getTestIdentityPartners() && getIdentityPartners()) {
+        if (Object.keys(getTestIdentityPartners()).length > 0 && Object.keys(getIdentityPartners()).length == 0) {
+          util.log(CONSTANTS.MESSAGES.M31, JSON.stringify(getTestIdentityPartners()));
+          config.identityPartners = getTestIdentityPartners();
+        } else if (Object.keys(getTestIdentityPartners()).length == 0 && Object.keys(getIdentityPartners()).length > 0) {
           util.log(CONSTANTS.MESSAGES.M31, JSON.stringify({}));
           config.identityPartners = {};
         } else {
-          config.identityPartners = refThis.updatePartnerConfig(refThis.getTestIdentityPartners(), refThis.getIdentityPartners());
+          config.identityPartners = updatePartnerConfig(getTestIdentityPartners(), getIdentityPartners());
         }
       }
       window.PWT.testGroupId = 1;
@@ -350,7 +350,7 @@ export function updateABTestConfig() {
 }
 
 export function updatePWTConfig() {
-  const testConfig = refThis.getTestPWTConfig();
+  const testConfig = getTestPWTConfig();
   if (testConfig && Object.keys(testConfig).length > 0) {
     util.log(CONSTANTS.MESSAGES.M30, JSON.stringify(testConfig));
     for (const key in testConfig) {
@@ -371,7 +371,7 @@ export function updatePartnerConfig(testConfig, controlConfig) {
         if (Object.keys(testConfig[key]).length == 0 && controlConfig[key] && Object.keys(controlConfig[key]).length > 0) {
           testConfig[key] = controlConfig[key];
         } else if (Object.keys(testConfig[key]).length > 0 && controlConfig[key] && Object.keys(controlConfig[key]).length > 0) {
-          testConfig[key] = refThis.getMergedConfig(testConfig[key], controlConfig[key]);
+          testConfig[key] = getMergedConfig(testConfig[key], controlConfig[key]);
         }
       }
     }
@@ -452,8 +452,8 @@ export function usePBSAdapter() {
 export function createMacros() {
   return {
     '[PLATFORM]': util.getDevicePlatform().toString(),
-    '[PROFILE_ID]': refThis.getProfileID().toString(),
-    '[PROFILE_VERSION]': refThis.getProfileDisplayVersionID().toString()
+    '[PROFILE_ID]': getProfileID().toString(),
+    '[PROFILE_VERSION]': getProfileDisplayVersionID().toString()
   }
 }
 

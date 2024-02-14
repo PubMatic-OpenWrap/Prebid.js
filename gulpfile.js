@@ -501,7 +501,7 @@ gulp.task(clean);
 gulp.task(escapePostbidConfig);
 
 // gulp.task('build-bundle-dev', gulp.series(makeDevpackPkg, makeDevpackPkgForIh, gulpBundle.bind(null, true)));
-gulp.task('build-bundle-dev', gulp.series(makeDevpackPkg, gulpBundle.bind(null, true)));
+gulp.task('build-bundle-dev', gulp.series(clean, makeDevpackPkg, gulpBundle.bind(null, true)));
 
 // gulp.task('build-bundle-prod', gulp.series(makeWebpackPkg, makeWebpackPkgForIh, gulpBundle.bind(null, false)));
 gulp.task('build-bundle-prod', gulp.series(makeWebpackPkg, gulpBundle.bind(null, false)));

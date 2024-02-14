@@ -186,3 +186,7 @@ window.PWT.versionDetails = util.getOWConfig();
 window.PWT.getAdapterNameForAlias = CONFIG.getAdapterNameForAlias;
 
 window.PWT.browserMapping = bidManager.getBrowser();
+
+export function init() {
+
+}

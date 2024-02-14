@@ -3,17 +3,17 @@
 // tdod: we can still reduce the build size for idhub by,
 //      - create a separate constants.js with limited required functions
 
-import CONFIG from '../config.idhub.js';
+import * as CONFIG from '../config.idhub.js';
 
-import CONSTANTS from '../constants.js';
-import util from '../util.idhub.js';
-import COMMON_CONFIG from '../common.config.js';
-const refThis = this;
+import * as CONSTANTS from '../constants.js';
+import * as util from '../util.idhub.js';
+import * as COMMON_CONFIG from '../common.config.js';
+// const refThis = this;
 const pbNameSpace = CONFIG.isIdentityOnly() ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
 
 const isPubmaticIHAnalyticsEnabled = CONFIG.isPubMaticIHAnalyticsEnabled();
 
-refThis.enablePubMaticIdentityAnalyticsIfRequired = () => {
+let enablePubMaticIdentityAnalyticsIfRequired = () => {
   window.IHPWT.ihAnalyticsAdapterExpiry = CONFIG.getIHAnalyticsAdapterExpiry();
   if (isPubmaticIHAnalyticsEnabled && util.isFunction(window[pbNameSpace].enableAnalytics)) {
     window[pbNameSpace].enableAnalytics({
@@ -29,7 +29,7 @@ refThis.enablePubMaticIdentityAnalyticsIfRequired = () => {
   }
 }
 
-refThis.setConfig = () => {
+let setConfig = () => {
   if (util.isFunction(window[pbNameSpace].setConfig) || typeof window[pbNameSpace].setConfig == 'function') {
     if (CONFIG.isIdentityOnly()) {
       const prebidConfig = {
@@ -75,7 +75,7 @@ refThis.setConfig = () => {
       window[pbNameSpace].setConfig(prebidConfig);
     }
     if (CONFIG.isUserIdModuleEnabled() && CONFIG.isIdentityOnly()) {
-      refThis.enablePubMaticIdentityAnalyticsIfRequired();
+      enablePubMaticIdentityAnalyticsIfRequired();
     }
     util.isFunction(window[pbNameSpace].firePubMaticIHLoggerCall) && window[pbNameSpace].firePubMaticIHLoggerCall();
     window[pbNameSpace].requestBids([]);
@@ -85,7 +85,7 @@ refThis.setConfig = () => {
 export function initIdHub(win) {
   if (CONFIG.isUserIdModuleEnabled()) {
     // TODO : Check for Prebid loaded and debug logs
-    refThis.setConfig();
+    setConfig();
     if (CONFIG.isIdentityOnly()) {
       if (CONFIG.getIdentityConsumers().includes(CONSTANTS.COMMON.PREBID) && !util.isUndefined(win[CONFIG.PBJS_NAMESPACE]) && !util.isUndefined(win[CONFIG.PBJS_NAMESPACE].que)) {
         win[CONFIG.PBJS_NAMESPACE].que.unshift(() => {
@@ -104,7 +104,7 @@ export function initIdHub(win) {
             util.log(`Adding Hook on${win[CONFIG.PBJS_NAMESPACE]}.addAddUnits()`);
             const theObject = win[CONFIG.PBJS_NAMESPACE];
             const functionName = 'addAdUnits';
-            util.addHookOnFunction(theObject, false, functionName, refThis.newAddAdUnitFunction);
+            util.addHookOnFunction(theObject, false, functionName, newAddAdUnitFunction);
           }
         });
         util.log('Identity Only Enabled and setting config');
@@ -117,7 +117,7 @@ export function initIdHub(win) {
 
 export function init(win) {
   if (util.isObject(win)) {
-    refThis.initIdHub(win);
+    initIdHub(win);
     return true;
   } else {
     return false;

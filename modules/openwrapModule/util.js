@@ -11,13 +11,13 @@ import * as conf from './conf.js';
 import * as BID from './bid.js';
 import * as bidManager from './bidManager.js';
 
-const debugLogIsEnabled = false;
+var debugLogIsEnabled = false;
 
 /* start-test-block */
 export { debugLogIsEnabled };
 
 /* end-test-block */
-const visualDebugLogIsEnabled = false;
+var visualDebugLogIsEnabled = false;
 
 /* start-test-block */
 export { visualDebugLogIsEnabled };
@@ -28,9 +28,11 @@ const typeString = 'String';
 const typeFunction = 'Function';
 const typeNumber = 'Number';
 const toString = Object.prototype.toString;
-this.idsAppendedToAdUnits = false;
+// idsAppendedToAdUnits = false;
 const mediaTypeConfigPerSlot = {};
-export { mediaTypeConfigPerSlot as mediaTypeConfig };
+var mediaTypeConfig = mediaTypeConfigPerSlot;
+export { mediaTypeConfig };
+
 const pbNameSpace = parseInt(conf[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.IDENTITY_ONLY] || CONSTANTS.CONFIG.DEFAULT_IDENTITY_ONLY) ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
 export { pbNameSpace };
 function isA(object, testForType) {
@@ -43,19 +45,19 @@ export { isA };
 /* end-test-block */
 
 export function isFunction(object) {
-  return this.isA(object, typeFunction);
+  return isA(object, typeFunction);
 }
 
 export function isString(object) {
-  return this.isA(object, typeString);
+  return isA(object, typeString);
 }
 
 export function isArray(object) {
-  return this.isA(object, typeArray);
+  return isA(object, typeArray);
 }
 
 export function isNumber(object) {
-  return this.isA(object, typeNumber);
+  return isA(object, typeNumber);
 }
 
 export function isObject(object) {
@@ -64,7 +66,7 @@ export function isObject(object) {
 
 export function isOwnProperty(theObject, proertyName) {
   /* istanbul ignore else */
-  if (this.isObject(theObject) && theObject.hasOwnProperty) {
+  if (isObject(theObject) && theObject.hasOwnProperty) {
     return theObject.hasOwnProperty(proertyName);
   }
   return false;
@@ -75,20 +77,20 @@ export function isUndefined(object) {
 }
 
 export function enableDebugLog() {
-  this.debugLogIsEnabled = true;
+  debugLogIsEnabled = true;
 }
 
 export function isDebugLogEnabled() {
-  return this.debugLogIsEnabled;
+  return debugLogIsEnabled;
 }
 
 export function enableVisualDebugLog() {
-  this.debugLogIsEnabled = true;
-  this.visualDebugLogIsEnabled = true;
+  debugLogIsEnabled = true;
+  visualDebugLogIsEnabled = true;
 }
 
 export function isEmptyObject(object) {
-  return this.isObject(object) && Object.keys(object).length === 0;
+  return isObject(object) && Object.keys(object).length === 0;
 }
 
 // todo: move...
@@ -96,8 +98,8 @@ const constDebugInConsolePrependWith = '[OpenWrap] : ';
 const constErrorInConsolePrependWith = '[OpenWrap] : [Error]';
 
 export function log(data) {
-  if (this.debugLogIsEnabled && console && this.isFunction(console.log)) { // eslint-disable-line no-console
-    if (this.isString(data)) {
+  if (debugLogIsEnabled && console && isFunction(console.log)) { // eslint-disable-line no-console
+    if (isString(data)) {
       console.log(`${(new Date()).getTime()} : ${constDebugInConsolePrependWith}${data}`); // eslint-disable-line no-console
     } else {
       console.log(data); // eslint-disable-line no-console
@@ -106,8 +108,8 @@ export function log(data) {
 }
 
 export function logError(data) {
-  if (this.debugLogIsEnabled && console && this.isFunction(console.log)) { // eslint-disable-line no-console
-    if (this.isString(data)) {
+  if (debugLogIsEnabled && console && isFunction(console.log)) { // eslint-disable-line no-console
+    if (isString(data)) {
       console.error(`${(new Date()).getTime()} : ${constDebugInConsolePrependWith}${data}`); // eslint-disable-line no-console
     } else {
       console.error(data); // eslint-disable-line no-console
@@ -116,8 +118,8 @@ export function logError(data) {
 }
 
 export function logWarning(data) {
-  if (this.debugLogIsEnabled && console && this.isFunction(console.log)) { // eslint-disable-line no-console
-    if (this.isString(data)) {
+  if (debugLogIsEnabled && console && isFunction(console.log)) { // eslint-disable-line no-console
+    if (isString(data)) {
       console.warn(`${(new Date()).getTime()} : ${constDebugInConsolePrependWith}${data}`); // eslint-disable-line no-console
     } else {
       console.warn(data); // eslint-disable-line no-console
@@ -159,13 +161,13 @@ export function getUniqueIdentifierStr() {
 // removeIf(removeLegacyAnalyticsRelatedCode)
 export function copyKeyValueObject(copyTo, copyFrom) {
   /* istanbul ignore else */
-  if (this.isObject(copyTo) && this.isObject(copyFrom)) {
+  if (isObject(copyTo) && isObject(copyFrom)) {
     const utilRef = this;
-    this.forEachOnObject(copyFrom, function (key, value) {
+    forEachOnObject(copyFrom, function (key, value) {
       copyFrom[key] = utilRef.isArray(value) ? value : [value];
       if (utilRef.isOwnProperty(copyTo, key)) {
         // copyTo[key].push.apply(copyTo[key], value);
-        if (!this.isArray(copyTo[key])) {
+        if (!isArray(copyTo[key])) {
           const temp = copyTo[key];
           copyTo[key] = [temp];
         }
@@ -189,12 +191,12 @@ export const getIncrementalInteger = (() => {
 
 export function generateUUID() {
   let d = new window.Date().getTime();
-  // todo: this.pageURL ???
+  // todo: pageURL ???
   const url = window.decodeURIComponent(this.pageURL).toLowerCase().replace(/[^a-z,A-Z,0-9]/gi, '');
   const urlLength = url.length;
 
   // todo: uncomment it,  what abt performance
-  // if(win.performance && this.isFunction(win.performance.now)){
+  // if(win.performance && isFunction(win.performance.now)){
   //    d += performance.now();
   // }
 
@@ -235,14 +237,14 @@ export function generateSlotNamesFromPattern(activeSlot, pattern, shouldCheckMap
   let sizeArrayLength;
   let i;
   /* istanbul ignore else */
-  if (this.isObject(activeSlot) && this.isFunction(activeSlot.getSizes)) {
+  if (isObject(activeSlot) && isFunction(activeSlot.getSizes)) {
     sizeArray = activeSlot.getSizes();
-    var divId = this.isFunction(activeSlot.getDivID) ? activeSlot.getDivID() : activeSlot.getSlotId().getDomId();
+    var divId = isFunction(activeSlot.getDivID) ? activeSlot.getDivID() : activeSlot.getSlotId().getDomId();
     if (shouldCheckMappingForVideo) {
       // TODO: remove below line and update above live for assigning sizeArray after remove phantom js and including chromeheadless
       // This adds an size 0x0 to sizes so that multiple kgpvs can be generated
       sizeArray = [].concat(activeSlot.getSizes());
-      const config = this.mediaTypeConfig[divId];
+      const config = mediaTypeConfig[divId];
       if (config && config.video) {
         sizeArray.unshift([0, 0]);
       }
@@ -252,16 +254,16 @@ export function generateSlotNamesFromPattern(activeSlot, pattern, shouldCheckMap
     if (sizeArrayLength > 0) {
       for (i = 0; i < sizeArrayLength; i++) {
         /* istanbul ignore else */
-        if (((sizeArray[i].length == 2 && (sizeArray[i][0] && sizeArray[i][1])) || (sizeArray[i][0] == 0 && sizeArray[i][1] == 0)) || (this.isFunction(sizeArray[i].getWidth) && this.isFunction(sizeArray[i].getHeight))) {
-          const adUnitId = this.isFunction(activeSlot.getAdUnitID) ? activeSlot.getAdUnitID() : activeSlot.getSlotId().getAdUnitPath();
-          divId = this.isFunction(activeSlot.getDivID) ? activeSlot.getDivID() : activeSlot.getSlotId().getDomId();
-          const adUnitIndex = this.isFunction(activeSlot.getAdUnitIndex) ? activeSlot.getAdUnitIndex() : activeSlot.getSlotId().getId().split('_')[1];
+        if (((sizeArray[i].length == 2 && (sizeArray[i][0] && sizeArray[i][1])) || (sizeArray[i][0] == 0 && sizeArray[i][1] == 0)) || (isFunction(sizeArray[i].getWidth) && isFunction(sizeArray[i].getHeight))) {
+          const adUnitId = isFunction(activeSlot.getAdUnitID) ? activeSlot.getAdUnitID() : activeSlot.getSlotId().getAdUnitPath();
+          divId = isFunction(activeSlot.getDivID) ? activeSlot.getDivID() : activeSlot.getSlotId().getDomId();
+          const adUnitIndex = isFunction(activeSlot.getAdUnitIndex) ? activeSlot.getAdUnitIndex() : activeSlot.getSlotId().getId().split('_')[1];
           const width = sizeArray[i][0] == 0 ? 0 : sizeArray[i][0] || sizeArray[i].getWidth();
           const height = sizeArray[i][1] == 0 ? 0 : sizeArray[i][1] || sizeArray[i].getHeight();
           slotName = pattern;
           slotName = slotName.replace(constCommonMacroForAdUnitIDRegExp, adUnitId)
             .replace(constCommonMacroForAdUnitIndexRegExp, adUnitIndex)
-            .replace(constCommonMacroForIntegerRegExp, this.getIncrementalInteger())
+            .replace(constCommonMacroForIntegerRegExp, getIncrementalInteger())
             .replace(constCommonMacroForDivRegExp, divId)
             .replace(constCommonMacroForWidthRegExp, width)
             .replace(constCommonMacroForHeightRegExp, height);
@@ -272,7 +274,7 @@ export function generateSlotNamesFromPattern(activeSlot, pattern, shouldCheckMap
           if (width == 0 && height == 0) {
             videoSlotName[0] = slotName;
             /* istanbul ignore else */
-          } else if (!this.isOwnProperty(slotNamesObj, slotName)) {
+          } else if (!isOwnProperty(slotNamesObj, slotName)) {
             slotNamesObj[slotName] = '';
             slotNames.push(slotName);
           }
@@ -335,12 +337,12 @@ export function forEachGeneratedKey(
   const keyGenerationPattern = adapterConfig[CONSTANTS.CONFIG.KEY_GENERATION_PATTERN] || adapterConfig[CONSTANTS.CONFIG.REGEX_KEY_GENERATION_PATTERN] || '';
   /* istanbul ignore else */
   if (activeSlotsLength > 0 && keyGenerationPattern.length > 3) {
-    this.forEachOnArray(activeSlots, function (i, activeSlot) {
+    forEachOnArray(activeSlots, function (i, activeSlot) {
       const videoSlotName = [];
       // We are passing videoSlotName because we don't want to update the sizes and just check for 0x0 config if video and banner is both enabeld
-      const generatedKeys = this.generateSlotNamesFromPattern(activeSlot, keyGenerationPattern, true, videoSlotName);
+      const generatedKeys = generateSlotNamesFromPattern(activeSlot, keyGenerationPattern, true, videoSlotName);
       if (generatedKeys.length > 0) {
-        this.callHandlerFunctionForMapping(adapterID, adUnits, adapterConfig, impressionID, slotConfigMandatoryParams, generatedKeys, activeSlot, handlerFunction, addZeroBids, keyGenerationPattern, videoSlotName);
+        callHandlerFunctionForMapping(adapterID, adUnits, adapterConfig, impressionID, slotConfigMandatoryParams, generatedKeys, activeSlot, handlerFunction, addZeroBids, keyGenerationPattern, videoSlotName);
       }
     });
   }
@@ -355,7 +357,7 @@ function callHandlerFunctionForMapping(adapterID, adUnits, adapterConfig, impres
   const adapterNameForAlias = CONFIG.getAdapterNameForAlias(adapterID);
   const isPubMaticAlias = CONSTANTS.PUBMATIC_ALIASES.includes(adapterNameForAlias);
   let regExMappingWithNoConfig = false;
-  this.forEachOnArray(generatedKeys, function (j, generatedKey) {
+  forEachOnArray(generatedKeys, function (j, generatedKey) {
     let keyConfig = null;
     let callHandlerFunction = false;
     const sizeArray = activeSlot.getSizes();
@@ -370,10 +372,10 @@ function callHandlerFunctionForMapping(adapterID, adUnits, adapterConfig, impres
     } else {
       if (isRegexMapping) {
         // eslint-disable-next-line no-console
-        this.debugLogIsEnabled && this.log(console.time(`Time for regexMatching for key ${generatedKey}`));
-        const config = this.getConfigFromRegex(keyLookupMap, generatedKey);
+        debugLogIsEnabled && log(console.time(`Time for regexMatching for key ${generatedKey}`));
+        const config = getConfigFromRegex(keyLookupMap, generatedKey);
         // eslint-disable-next-line no-console
-        this.debugLogIsEnabled && this.log(console.timeEnd(`Time for regexMatching for key ${generatedKey}`));
+        debugLogIsEnabled && log(console.timeEnd(`Time for regexMatching for key ${generatedKey}`));
 
         if (config) {
           keyConfig = config.config;
@@ -406,7 +408,7 @@ function callHandlerFunctionForMapping(adapterID, adUnits, adapterConfig, impres
       // regExMappingWithNoConfig will be true only if klm_rx dosen't return config and partner is PubMatic alias then log message to console
       // with "adapterID+": "+generatedKey+ config not found"
       if ((!keyConfig && !isPubMaticAlias) || regExMappingWithNoConfig) {
-        this.log(`${adapterID}: ${generatedKey}${CONSTANTS.MESSAGES.M8}`);
+        log(`${adapterID}: ${generatedKey}${CONSTANTS.MESSAGES.M8}`);
       } else {
         callHandlerFunction = true;
       }
@@ -417,7 +419,7 @@ function callHandlerFunctionForMapping(adapterID, adUnits, adapterConfig, impres
       /* istanbul ignore else */
       if (addZeroBids == true) {
         const bid = BID.createBid(adapterID, generatedKey);
-        bid.setDefaultBidStatus(1).setReceivedTime(this.getCurrentTimestampInMs());
+        bid.setDefaultBidStatus(1).setReceivedTime(getCurrentTimestampInMs());
         bidManager.setBidFromBidder(activeSlot.getDivID(), bid);
         bid.setRegexPattern(regexPattern);
       }
@@ -429,7 +431,7 @@ function callHandlerFunctionForMapping(adapterID, adUnits, adapterConfig, impres
         generatedKey,
         kgpConsistsWidthAndHeight,
         activeSlot,
-        this.getPartnerParams(keyConfig),
+        getPartnerParams(keyConfig),
         sizeArray[j][0],
         sizeArray[j][1],
         regexPattern
@@ -467,7 +469,7 @@ export function resizeWindow({ defaultView }, width, height, divId) {
         }
       });
     } catch (e) {
-      this.logError('Creative-Resize; Error in resizing creative');
+      logError('Creative-Resize; Error in resizing creative');
     } // eslint-disable-line no-empty
   }
 }
@@ -483,21 +485,21 @@ export function writeIframe(theDocument, src, width, height, style) {
 
 // removeIf(removeLegacyAnalyticsRelatedCode)
 export function displayCreative(theDocument, bid) {
-  if (bid && bid.pbbid && bid.pbbid.mediaType == 'video' && bid.renderer && this.isObject(bid.renderer)) {
-    if (this.isFunction(bid.renderer.render)) {
+  if (bid && bid.pbbid && bid.pbbid.mediaType == 'video' && bid.renderer && isObject(bid.renderer)) {
+    if (isFunction(bid.renderer.render)) {
       bid.renderer.render(bid.getPbBid());
     }
   } else {
-    this.resizeWindow(theDocument, bid.width, bid.height);
+    resizeWindow(theDocument, bid.width, bid.height);
     if (bid.adHtml) {
-      bid.adHtml = this.replaceAuctionPrice(bid.adHtml, bid.getGrossEcpm());
+      bid.adHtml = replaceAuctionPrice(bid.adHtml, bid.getGrossEcpm());
       theDocument.write(bid.adHtml);
     } else if (bid.adUrl) {
-      bid.adUrl = this.replaceAuctionPrice(bid.adUrl, bid.getGrossEcpm());
-      this.writeIframe(theDocument, bid.adUrl, bid.width, bid.height, '');
+      bid.adUrl = replaceAuctionPrice(bid.adUrl, bid.getGrossEcpm());
+      writeIframe(theDocument, bid.adUrl, bid.width, bid.height, '');
     } else {
-      this.logError('creative details are not found');
-      this.logError(bid);
+      logError('creative details are not found');
+      logError(bid);
     }
   }
 }
@@ -507,18 +509,18 @@ export function displayCreative(theDocument, bid) {
 // todo: how about accepting array of arguments to be passed to callback function after key, value, arrayOfArguments
 export function forEachOnObject(theObject, callback) {
   /* istanbul ignore else */
-  if (!this.isObject(theObject)) {
+  if (!isObject(theObject)) {
     return;
   }
 
   /* istanbul ignore else */
-  if (!this.isFunction(callback)) {
+  if (!isFunction(callback)) {
     return;
   }
 
   for (const key in theObject) {
     /* istanbul ignore else */
-    if (this.isOwnProperty(theObject, key)) {
+    if (isOwnProperty(theObject, key)) {
       callback(key, theObject[key]);
     }
   }
@@ -526,12 +528,12 @@ export function forEachOnObject(theObject, callback) {
 
 export function forEachOnArray(theArray, callback) {
   /* istanbul ignore else */
-  if (!this.isArray(theArray)) {
+  if (!isArray(theArray)) {
     return;
   }
 
   /* istanbul ignore else */
-  if (!this.isFunction(callback)) {
+  if (!isFunction(callback)) {
     return;
   }
 
@@ -541,7 +543,7 @@ export function forEachOnArray(theArray, callback) {
 }
 
 export function trim(s) {
-  if (!this.isString(s)) {
+  if (!isString(s)) {
     return s;
   } else {
     return s.replace(/^\s+/g, '').replace(/\s+$/g, '');
@@ -552,13 +554,13 @@ export function getTopFrameOfSameDomain(cWin) {
   try {
     /* istanbul ignore else */
     if (cWin.parent.document != cWin.document) {
-      return this.getTopFrameOfSameDomain(cWin.parent);
+      return getTopFrameOfSameDomain(cWin.parent);
     }
   } catch (e) { }
   return cWin;
 }
 
-export const metaInfo = {};
+export var metaInfo = {};
 
 export function getMetaInfo(cWin) {
   const obj = {};
@@ -569,10 +571,10 @@ export function getMetaInfo(cWin) {
   obj.refURL = '';
   obj.protocol = 'https://';
   obj.secure = 1;
-  obj.isInIframe = this.isIframe(cWin);
+  obj.isInIframe = isIframe(cWin);
 
   try {
-    frame = this.getTopFrameOfSameDomain(cWin);
+    frame = getTopFrameOfSameDomain(cWin);
     obj.refURL = (frame.refurl || frame.document.referrer || '').substr(0, MAX_PAGE_URL_LEN);
     obj.pageURL = (frame !== window.top && frame.document.referrer != '' ? frame.document.referrer : frame.location.href).substr(0, MAX_PAGE_URL_LEN);
 
@@ -587,9 +589,9 @@ export function getMetaInfo(cWin) {
     })(frame);
   } catch (e) { }
 
-  obj.pageDomain = this.getDomainFromURL(obj.pageURL);
+  obj.pageDomain = getDomainFromURL(obj.pageURL);
 
-  this.metaInfo = obj;
+  metaInfo = obj;
 
   return obj;
 }
@@ -603,11 +605,11 @@ export function isIframe({ self, top }) {
 }
 
 export function findQueryParamInURL(url, name) {
-  return this.isOwnProperty(this.parseQueryParams(url), name);
+  return isOwnProperty(parseQueryParams(url), name);
 }
 
 export function parseQueryParams(url) {
-  const parser = this.createDocElement(window, 'a');
+  const parser = createDocElement(window, 'a');
   parser.href = url;
   const params = {};
 
@@ -615,7 +617,7 @@ export function parseQueryParams(url) {
   if (parser.search) {
     let queryString = parser.search.replace('?', '');
     queryString = queryString.split('&');
-    this.forEachOnArray(queryString, (index, keyValue) => {
+    forEachOnArray(queryString, (index, keyValue) => {
       keyValue = keyValue.split('=');
       const key = keyValue[0] || '';
       const value = keyValue[1] || '';
@@ -634,11 +636,11 @@ export function addHookOnFunction(theObject, useProto, functionName, newFunction
   const callMethodOn = theObject;
   // eslint-disable-next-line no-proto
   theObject = useProto ? theObject.__proto__ : theObject;
-  if (this.isObject(theObject) && this.isFunction(theObject[functionName])) {
+  if (isObject(theObject) && isFunction(theObject[functionName])) {
     const originalFunction = theObject[functionName];
     theObject[functionName] = newFunction(callMethodOn, originalFunction);
   } else {
-    this.logWarning('in assignNewDefination: oldReference is not a function');
+    logWarning('in assignNewDefination: oldReference is not a function');
   }
 }
 
@@ -652,7 +654,7 @@ export function getBididForPMP(values, priorityArray) {
 
   /* istanbul ignore else */
   if (valuesLength == 0) {
-    this.log('Error: Unable to find bidID as values array is empty.');
+    log('Error: Unable to find bidID as values array is empty.');
     return;
   }
 
@@ -672,9 +674,9 @@ export function getBididForPMP(values, priorityArray) {
 
   if (selectedPMPDeal == '') {
     selectedPMPDeal = values[0];
-    this.log(`No PMP-Deal was found matching PriorityArray, So Selecting first PMP-Deal: ${selectedPMPDeal}`);
+    log(`No PMP-Deal was found matching PriorityArray, So Selecting first PMP-Deal: ${selectedPMPDeal}`);
   } else {
-    this.log(`Selecting PMP-Deal: ${selectedPMPDeal}`);
+    log(`Selecting PMP-Deal: ${selectedPMPDeal}`);
   }
 
   const temp = selectedPMPDeal.split(CONSTANTS.COMMON.DEAL_KEY_VALUE_SEPARATOR);
@@ -685,7 +687,7 @@ export function getBididForPMP(values, priorityArray) {
 
   /* istanbul ignore else */
   if (!bidID) {
-    this.log(`Error: bidID not found in PMP-Deal: ${selectedPMPDeal}`);
+    log(`Error: bidID not found in PMP-Deal: ${selectedPMPDeal}`);
     return;
   }
 
@@ -715,7 +717,7 @@ export function insertHtmlIntoIframe(htmlCode) {
   }
 
   const iframe = document.createElement('iframe');
-  iframe.id = this.getUniqueIdentifierStr();
+  iframe.id = getUniqueIdentifierStr();
   iframe.width = 0;
   iframe.height = 0;
   iframe.hspace = '0';
@@ -738,8 +740,8 @@ export function insertHtmlIntoIframe(htmlCode) {
 
 // removeIf(removeNativeRelatedCode)
 export function createInvisibleIframe() {
-  const f = this.createDocElement(window, 'iframe');
-  f.id = this.getUniqueIdentifierStr();
+  const f = createDocElement(window, 'iframe');
+  f.id = getUniqueIdentifierStr();
   f.height = 0;
   f.width = 0;
   f.border = '0px';
@@ -761,7 +763,7 @@ export function createInvisibleIframe() {
 export function addMessageEventListener(theWindow, eventHandler) {
   /* istanbul ignore else */
   if (typeof eventHandler !== 'function') {
-    this.log('EventHandler should be a function');
+    log('EventHandler should be a function');
     return false;
   }
 
@@ -802,15 +804,15 @@ export function safeFrameCommunicationProtocol(msg) {
             pwt_type: 2,
             pwt_bid: theBid
           };
-          this.vLogInfo(divID, { type: 'disp', adapter: adapterID });
+          vLogInfo(divID, { type: 'disp', adapter: adapterID });
           bidManager.executeMonetizationPixel(divID, theBid);
           // outstream video renderer for safe frame.
-          if (theBid && theBid.pbbid && theBid.pbbid.mediaType == 'video' && theBid.renderer && this.isObject(theBid.renderer)) {
-            if (this.isFunction(theBid.renderer.render)) {
+          if (theBid && theBid.pbbid && theBid.pbbid.mediaType == 'video' && theBid.renderer && isObject(theBid.renderer)) {
+            if (isFunction(theBid.renderer.render)) {
               theBid.renderer.render(theBid.getPbBid());
             }
           } else {
-            this.resizeWindow(window.document, theBid.width, theBid.height, divID);
+            resizeWindow(window.document, theBid.width, theBid.height, divID);
             msg.source.postMessage(window.JSON.stringify(newMsgData), msgData.pwt_origin);
           }
         }
@@ -827,7 +829,7 @@ export function safeFrameCommunicationProtocol(msg) {
           theBid = msgData.pwt_bid;
           if (theBid.adHtml) {
             try {
-              const iframe = this.createInvisibleIframe(window.document);
+              const iframe = createInvisibleIframe(window.document);
               /* istanbul ignore else */
               if (!iframe) {
                 throw { message: 'Failed to create invisible frame.', name: '' };
@@ -860,16 +862,16 @@ export function safeFrameCommunicationProtocol(msg) {
               iframeDoc.write(content);
               iframeDoc.close();
             } catch (e) {
-              this.logError('Error in rendering creative in safe frame.');
-              this.log(e);
-              this.log('Rendering synchronously.');
-              this.displayCreative(window.document, msgData.pwt_bid);
+              logError('Error in rendering creative in safe frame.');
+              log(e);
+              log('Rendering synchronously.');
+              displayCreative(window.document, msgData.pwt_bid);
             }
           } else if (theBid.adUrl) {
-            this.writeIframe(window.document, theBid.adUrl, theBid.width, theBid.height, '');
+            writeIframe(window.document, theBid.adUrl, theBid.width, theBid.height, '');
           } else {
-            this.logWarning('creative details are not found');
-            this.log(theBid);
+            logWarning('creative details are not found');
+            log(theBid);
           }
         }
         break;
@@ -886,7 +888,7 @@ export function safeFrameCommunicationProtocol(msg) {
             theBid = bidDetails.bid;
             adapterID = theBid.getAdapterID();
             divID = bidDetails.slotid;
-            this.vLogInfo(divID, { type: 'disp', adapter: adapterID });
+            vLogInfo(divID, { type: 'disp', adapter: adapterID });
             if (msgData.pwt_action && msgData.pwt_action == 'imptrackers') {
               bidManager.executeMonetizationPixel(divID, theBid);
             }
@@ -911,7 +913,7 @@ export function safeFrameCommunicationProtocol(msg) {
 
 // removeIf(removeLegacyAnalyticsRelatedCode)
 export function addMessageEventListenerForSafeFrame(theWindow) {
-  this.addMessageEventListener(theWindow, this.safeFrameCommunicationProtocol);
+  addMessageEventListener(theWindow, safeFrameCommunicationProtocol);
 }
 
 // endRemoveIf(removeLegacyAnalyticsRelatedCode)
@@ -921,7 +923,7 @@ export function getElementLocation(el) {
   let x = 0;
   let y = 0;
 
-  if (this.isFunction(el.getBoundingClientRect)) {
+  if (isFunction(el.getBoundingClientRect)) {
     rect = el.getBoundingClientRect();
     x = Math.floor(rect.left);
     y = Math.floor(rect.top);
@@ -942,20 +944,20 @@ export function createVLogInfoPanel(divID, dimensionArray) {
   const doc = window.document;
 
   /* istanbul ignore else */
-  if (this.visualDebugLogIsEnabled) {
+  if (visualDebugLogIsEnabled) {
     element = doc.getElementById(divID);
     /* istanbul ignore else */
     if (element && dimensionArray.length && dimensionArray[0][0] && dimensionArray[0][1]) {
       infoPanelElementID = `${divID}-pwtc-info`;
       /* istanbul ignore else */
-      if (!this.isUndefined(doc.getElementById(infoPanelElementID))) {
-        const pos = this.getElementLocation(element);
+      if (!isUndefined(doc.getElementById(infoPanelElementID))) {
+        const pos = getElementLocation(element);
         infoPanelElement = doc.createElement('div');
         infoPanelElement.id = infoPanelElementID;
         infoPanelElement.style = `position: absolute; /*top: ${pos.y}px;*/ left: ${pos.x}px; width: ${dimensionArray[0][0]}px; height: ${dimensionArray[0][1]}px; border: 1px solid rgb(255, 204, 52); padding-left: 11px; background: rgb(247, 248, 224) none repeat scroll 0% 0%; overflow: auto; z-index: 9999997; visibility: hidden;opacity:0.9;font-size:13px;font-family:monospace;`;
 
         const closeImage = doc.createElement('img');
-        closeImage.src = `${this.metaInfo.protocol}ads.pubmatic.com/AdServer/js/pwt/close.png`;
+        closeImage.src = `${metaInfo.protocol}ads.pubmatic.com/AdServer/js/pwt/close.png`;
         closeImage.style = `cursor:pointer; position: absolute; top: 2px; left: ${pos.x + dimensionArray[0][0] - 16 - 15}px; z-index: 9999998;`;
         closeImage.title = 'close';
         closeImage.onclick = () => {
@@ -983,7 +985,7 @@ export function realignVLogInfoPanel(divID) {
   const doc = window.document;
 
   /* istanbul ignore else */
-  if (this.visualDebugLogIsEnabled) {
+  if (visualDebugLogIsEnabled) {
     element = doc.getElementById(divID);
     /* istanbul ignore else */
     if (element) {
@@ -991,7 +993,7 @@ export function realignVLogInfoPanel(divID) {
       infoPanelElement = doc.getElementById(infoPanelElementID);
       /* istanbul ignore else */
       if (infoPanelElement) {
-        const pos = this.getElementLocation(element);
+        const pos = getElementLocation(element);
         infoPanelElement.style.visibility = 'visible';
         infoPanelElement.style.left = `${pos.x}px`;
         infoPanelElement.style.height = `${element.clientHeight}px`;
@@ -1005,7 +1007,7 @@ export function vLogInfo(divID, infoObject) {
   let message;
   const doc = window.document;
   /* istanbul ignore else */
-  if (this.visualDebugLogIsEnabled) {
+  if (visualDebugLogIsEnabled) {
     const infoPanelElementID = `${divID}-pwtc-info`;
     infoPanelElement = doc.getElementById(infoPanelElementID);
     /* istanbul ignore else */
@@ -1070,7 +1072,7 @@ export function vLogInfo(divID, infoObject) {
 
 export function getExternalBidderStatus(divIds) {
   let status = true;
-  this.forEachOnArray(divIds, (key, divId) => {
+  forEachOnArray(divIds, (key, divId) => {
     status = window.OWT.externalBidderStatuses[divId]
       ? status && window.OWT.externalBidderStatuses[divId].status
       : status;
@@ -1079,8 +1081,8 @@ export function getExternalBidderStatus(divIds) {
 }
 
 export function resetExternalBidderStatus(divIds) {
-  this.forEachOnArray(divIds, function (key, divId) {
-    this.log(`resetExternalBidderStatus: ${divId}`);
+  forEachOnArray(divIds, function (key, divId) {
+    log(`resetExternalBidderStatus: ${divId}`);
     window.OWT.externalBidderStatuses[divId] = undefined;
   });
 }
@@ -1099,13 +1101,13 @@ export function ajaxRequest(url, callback, data, options) {
       ajaxSupport = false;
     } else {
       x = new window.XMLHttpRequest();
-      if (this.isUndefined(x.responseType)) {
+      if (isUndefined(x.responseType)) {
         ajaxSupport = false;
       }
     }
 
     if (!ajaxSupport) {
-      this.log('Ajax is not supported');
+      log('Ajax is not supported');
       return;
     }
 
@@ -1128,8 +1130,8 @@ export function ajaxRequest(url, callback, data, options) {
     x.setRequestHeader('Content-Type', options.contentType || 'text/plain');
     x.send(method === 'POST' && data);
   } catch (error) {
-    this.log('Failed in Ajax');
-    this.log(error);
+    log('Failed in Ajax');
+    log(error);
   }
 }
 
@@ -1158,7 +1160,7 @@ export function getAdUnitConfig(sizes, currentSlot) {
           return;
         }
       } catch (ex) {
-        this.log(CONSTANTS.MESSAGES.M32 + JSON.stringify(exp));
+        log(CONSTANTS.MESSAGES.M32 + JSON.stringify(exp));
       }
     })
     if (matchedRegex) {
@@ -1187,30 +1189,30 @@ export function getAdUnitConfig(sizes, currentSlot) {
       let isNative = true;
       let isBanner = true;
       let config;
-      var divId = this.isFunction(currentSlot.getDivID) ? currentSlot.getDivID() : currentSlot.getSlotId().getDomId();
+      var divId = isFunction(currentSlot.getDivID) ? currentSlot.getDivID() : currentSlot.getSlotId().getDomId();
 
       // TODO: Have to write logic if required in near future to support multiple kgpvs, right now
       // as we are only supporting div and ad unit, taking the first slot name.
       // Implemented as per code review and discussion.
 
-      var kgpv = this.generateSlotNamesFromPattern(currentSlot, kgp, false)[0];
+      var kgpv = generateSlotNamesFromPattern(currentSlot, kgp, false)[0];
       // Global Default Enable is false then disable each
-      if (this.isOwnProperty(slotConfig['config'], CONSTANTS.COMMON.DEFAULT)) {
-        if (slotConfig['config'][CONSTANTS.COMMON.DEFAULT].banner && this.isOwnProperty(slotConfig['config'][CONSTANTS.COMMON.DEFAULT].banner, 'enabled') && !slotConfig['config'][CONSTANTS.COMMON.DEFAULT].banner.enabled) {
+      if (isOwnProperty(slotConfig['config'], CONSTANTS.COMMON.DEFAULT)) {
+        if (slotConfig['config'][CONSTANTS.COMMON.DEFAULT].banner && isOwnProperty(slotConfig['config'][CONSTANTS.COMMON.DEFAULT].banner, 'enabled') && !slotConfig['config'][CONSTANTS.COMMON.DEFAULT].banner.enabled) {
           isBanner = false;
         }
-        if (slotConfig['config'][CONSTANTS.COMMON.DEFAULT].native && this.isOwnProperty(slotConfig['config'][CONSTANTS.COMMON.DEFAULT].native, 'enabled') && !slotConfig['config'][CONSTANTS.COMMON.DEFAULT].native.enabled) {
+        if (slotConfig['config'][CONSTANTS.COMMON.DEFAULT].native && isOwnProperty(slotConfig['config'][CONSTANTS.COMMON.DEFAULT].native, 'enabled') && !slotConfig['config'][CONSTANTS.COMMON.DEFAULT].native.enabled) {
           isNative = false;
         }
-        if (slotConfig['config'][CONSTANTS.COMMON.DEFAULT].video && this.isOwnProperty(slotConfig['config'][CONSTANTS.COMMON.DEFAULT].video, 'enabled') && !slotConfig['config'][CONSTANTS.COMMON.DEFAULT].video.enabled) {
+        if (slotConfig['config'][CONSTANTS.COMMON.DEFAULT].video && isOwnProperty(slotConfig['config'][CONSTANTS.COMMON.DEFAULT].video, 'enabled') && !slotConfig['config'][CONSTANTS.COMMON.DEFAULT].video.enabled) {
           isVideo = false;
         }
         config = slotConfig['config'][CONSTANTS.COMMON.DEFAULT];
-        if (config.renderer && !this.isEmptyObject(config.renderer)) {
+        if (config.renderer && !isEmptyObject(config.renderer)) {
           adUnitConfig['renderer'] = config.renderer;
         }
       }
-      if (this.isOwnProperty(slotConfig['config'], kgpv) || iskgpvpresent() || isregexEnabled()) {
+      if (isOwnProperty(slotConfig['config'], kgpv) || iskgpvpresent() || isregexEnabled()) {
         // populating slotlevel config
         const slConfig = selectSlotConfig();
         // if SLConfig present then override default config
@@ -1221,19 +1223,19 @@ export function getAdUnitConfig(sizes, currentSlot) {
         if (!config) {
           config = slotConfig['config'][Object.keys(slotConfig['config']).filter(key => key.toLocaleLowerCase() === kgpv.toLowerCase())]
         }
-        this.log(`Config${JSON.stringify(config)} found for adSlot: ${JSON.stringify(currentSlot)}`);
+        log(`Config${JSON.stringify(config)} found for adSlot: ${JSON.stringify(currentSlot)}`);
       } else {
-        this.log(`Considering Default Config for ${JSON.stringify(currentSlot)}`);
+        log(`Considering Default Config for ${JSON.stringify(currentSlot)}`);
       }
       if (config) {
-        if (isNative && config.native && (!this.isOwnProperty(config.native, 'enabled') || config.native.enabled)) {
+        if (isNative && config.native && (!isOwnProperty(config.native, 'enabled') || config.native.enabled)) {
           if (config.native['config']) {
             mediaTypeObject['native'] = config.native['config'];
           } else {
-            this.logWarning(`Native Config will not be considered as no config has been provided for slot${JSON.stringify(currentSlot)} or there is no configuration defined in default.`);
+            logWarning(`Native Config will not be considered as no config has been provided for slot${JSON.stringify(currentSlot)} or there is no configuration defined in default.`);
           }
         }
-        if (isVideo && config.video && (!this.isOwnProperty(config.video, 'enabled') || config.video.enabled)) {
+        if (isVideo && config.video && (!isOwnProperty(config.video, 'enabled') || config.video.enabled)) {
           if (CONFIG.getAdServer() != CONSTANTS.AD_SERVER.DFP) {
             if (config.video['config']) {
               mediaTypeObject['video'] = config.video['config'];
@@ -1241,31 +1243,31 @@ export function getAdUnitConfig(sizes, currentSlot) {
                 mediaTypeObject['partnerConfig'] = config.video['partnerConfig'];
               }
             } else {
-              this.logWarning(`Video Config will not be considered as no config has been provided for slot${JSON.stringify(currentSlot)} or there is no configuration defined in default.`);
+              logWarning(`Video Config will not be considered as no config has been provided for slot${JSON.stringify(currentSlot)} or there is no configuration defined in default.`);
             }
           } else {
-            this.logWarning('Video Config will not be considered with DFP selected as AdServer.');
+            logWarning('Video Config will not be considered with DFP selected as AdServer.');
           }
         }
-        if (config.renderer && !this.isEmptyObject(config.renderer)) {
+        if (config.renderer && !isEmptyObject(config.renderer)) {
           adUnitConfig['renderer'] = config.renderer;
         }
-        if (!isBanner || (config.banner && (this.isOwnProperty(config.banner, 'enabled') && !config.banner.enabled))) {
-          this.mediaTypeConfig[divId] = mediaTypeObject;
+        if (!isBanner || (config.banner && (isOwnProperty(config.banner, 'enabled') && !config.banner.enabled))) {
+          mediaTypeConfig[divId] = mediaTypeObject;
           adUnitConfig['mediaTypeObject'] = mediaTypeObject
           return adUnitConfig;
         }
       } else {
-        this.log(`Config not found for adSlot: ${JSON.stringify(currentSlot)}`);
+        log(`Config not found for adSlot: ${JSON.stringify(currentSlot)}`);
       }
     } else {
-      this.logWarning('Slot Type not found in config. Please provide slotType in configuration');
+      logWarning('Slot Type not found in config. Please provide slotType in configuration');
     }
   }
   mediaTypeObject['banner'] = {
     sizes
   };
-  this.mediaTypeConfig[divId] = mediaTypeObject;
+  mediaTypeConfig[divId] = mediaTypeObject;
   adUnitConfig['mediaTypeObject'] = mediaTypeObject
   return adUnitConfig;
 }
@@ -1273,10 +1275,10 @@ export function getAdUnitConfig(sizes, currentSlot) {
 // removeIf(removeNativeRelatedCode)
 export function addEventListenerForClass(theWindow, theEvent, theClass, eventHandler) {
   if (typeof eventHandler !== 'function') {
-    this.log('EventHandler should be a function');
+    log('EventHandler should be a function');
     return false;
   }
-  const elems = this.findElementsByClass(theWindow, theClass);
+  const elems = findElementsByClass(theWindow, theClass);
   if (!theWindow.addEventListener) {
     theEvent = `on${theEvent}`;
   }
@@ -1305,7 +1307,7 @@ export function getBidFromEvent(theEvent) {
 // removeIf(removeLegacyAnalyticsRelatedCode)
 export function getAdFormatFromBidAd(ad) {
   let format;
-  if (ad && this.isString(ad)) {
+  if (ad && isString(ad)) {
     // TODO: Uncomment below code once video has been implemented
     try {
       const videoRegex = new RegExp(/VAST\s+version/);
@@ -1330,12 +1332,12 @@ export function getAdFormatFromBidAd(ad) {
 // This common function can be used add hooks for publishers to make changes in flows
 export function handleHook(hookName, arrayOfDataToPass) {
   // Adding a hook for publishers to modify the data we have
-  if (this.isFunction(window.PWT[hookName])) {
-    this.log(`For Hook-name: ${hookName}, calling window.PWT.${hookName}function.`);
+  if (isFunction(window.PWT[hookName])) {
+    log(`For Hook-name: ${hookName}, calling window.PWT.${hookName}function.`);
     window.PWT[hookName](...arrayOfDataToPass);
   }
   // else {
-  //  this.log('Hook-name: '+hookName+', window.PWT.'+hookName+' is not a function.' );
+  //  log('Hook-name: '+hookName+', window.PWT.'+hookName+' is not a function.' );
   // }
 }
 
@@ -1345,7 +1347,7 @@ export function getCurrencyToDisplay() {
     defaultCurrency = 'USD';
   }
   if (CONFIG.getAdServerCurrency()) {
-    if (window[CONSTANTS.COMMON.PREBID_NAMESPACE] && this.isFunction(window[CONSTANTS.COMMON.PREBID_NAMESPACE].getConfig)) {
+    if (window[CONSTANTS.COMMON.PREBID_NAMESPACE] && isFunction(window[CONSTANTS.COMMON.PREBID_NAMESPACE].getConfig)) {
       const pbConf = window[CONSTANTS.COMMON.PREBID_NAMESPACE].getConfig();
       if (pbConf && pbConf.currency && pbConf.currency.adServerCurrency) {
         return pbConf.currency.adServerCurrency;
@@ -1382,10 +1384,10 @@ export function getConfigFromRegex(klmsForPartner, generatedKey) {
           break;
         }
       } catch (ex) {
-        this.logError(CONSTANTS.MESSAGES.M27 + JSON.stringify(rxPattern));
+        logError(CONSTANTS.MESSAGES.M27 + JSON.stringify(rxPattern));
       }
     } else {
-      this.logWarning(CONSTANTS.MESSAGES.M28 + generatedKey);
+      logWarning(CONSTANTS.MESSAGES.M28 + generatedKey);
     }
   }
   return rxConfig;
@@ -1395,12 +1397,12 @@ export function getConfigFromRegex(klmsForPartner, generatedKey) {
 export function getUserIdConfiguration() {
   const userIdConfs = [];
   window[pbNameSpace].onSSOLogin({});
-  this.forEachOnObject(CONFIG.getIdentityPartners(), function (parterId, partnerValues) {
+  forEachOnObject(CONFIG.getIdentityPartners(), function (parterId, partnerValues) {
     if (!CONSTANTS.EXCLUDE_PARTNER_LIST.includes(parterId)) {
-      userIdConfs.push(this.getUserIdParams(partnerValues));
+      userIdConfs.push(getUserIdParams(partnerValues));
     }
   });
-  this.log(CONSTANTS.MESSAGES.IDENTITY.M4 + JSON.stringify(userIdConfs));
+  log(CONSTANTS.MESSAGES.IDENTITY.M4 + JSON.stringify(userIdConfs));
   return userIdConfs;
 }
 
@@ -1408,10 +1410,10 @@ export function getUserIdConfiguration() {
 
 // removeIf(removeUserIdRelatedCode)
 export function getUserIds() {
-  if (this.isFunction(window[CONSTANTS.COMMON.PREBID_NAMESPACE].getUserIds)) {
+  if (isFunction(window[CONSTANTS.COMMON.PREBID_NAMESPACE].getUserIds)) {
     return window[CONSTANTS.COMMON.PREBID_NAMESPACE].getUserIds();
   } else {
-    this.logWarning(`getUserIds${CONSTANTS.MESSAGES.IDENTITY.M6}`);
+    logWarning(`getUserIds${CONSTANTS.MESSAGES.IDENTITY.M6}`);
   };
 }
 
@@ -1419,10 +1421,10 @@ export function getUserIds() {
 
 // removeIf(removeUserIdRelatedCode)
 export function getUserIdsAsEids() {
-  if (this.isFunction(window[CONSTANTS.COMMON.PREBID_NAMESPACE].getUserIdsAsEids)) {
+  if (isFunction(window[CONSTANTS.COMMON.PREBID_NAMESPACE].getUserIdsAsEids)) {
     return window[CONSTANTS.COMMON.PREBID_NAMESPACE].getUserIdsAsEids();
   } else {
-    this.logWarning(`getUserIdsAsEids${CONSTANTS.MESSAGES.IDENTITY.M6}`);
+    logWarning(`getUserIdsAsEids${CONSTANTS.MESSAGES.IDENTITY.M6}`);
   };
 }
 
@@ -1446,7 +1448,7 @@ export function getNestedObjectFromString(sourceObject, separator, key, value) {
   if (splitParams.length == 1) {
     sourceObject[key] = value;
   } else {
-    sourceObject = this.getNestedObjectFromArray(sourceObject, splitParams, value);
+    sourceObject = getNestedObjectFromArray(sourceObject, splitParams, value);
   }
   return sourceObject;
 }
@@ -1458,8 +1460,8 @@ export function deleteCustomParams(params) {
 
 export function getUserIdParams(params) {
   let userIdParams = {};
-  this.applyDataTypeChangesIfApplicable(params);
-  this.applyCustomParamValuesfApplicable(params);
+  applyDataTypeChangesIfApplicable(params);
+  applyCustomParamValuesfApplicable(params);
   for (const key in params) {
     try {
       if (!CONSTANTS.EXCLUDE_IDENTITY_PARAMS.includes(key)) {
@@ -1469,34 +1471,34 @@ export function getUserIdParams(params) {
         if (CONSTANTS.JSON_VALUE_KEYS.includes(key)) {
           params[key] = JSON.parse(params[key]);
         }
-        userIdParams = this.getNestedObjectFromString(userIdParams, '.', key, params[key]);
+        userIdParams = getNestedObjectFromString(userIdParams, '.', key, params[key]);
       }
     } catch (ex) {
-      this.logWarning(CONSTANTS.MESSAGES.IDENTITY.M3, ex);
+      logWarning(CONSTANTS.MESSAGES.IDENTITY.M3, ex);
     }
   }
   if (userIdParams && userIdParams.params && userIdParams.params['loadATS'] == 'true') {
-    this.initLiveRampAts(userIdParams);
+    initLiveRampAts(userIdParams);
   }
   if (userIdParams && userIdParams.params && userIdParams.params['loadIDP'] == 'true') {
-    this.initZeoTapJs(userIdParams);
+    initZeoTapJs(userIdParams);
   }
   if (userIdParams && userIdParams.params && userIdParams.params['loadLauncher'] == 'true') {
-    this.initLauncherJs(userIdParams);
+    initLauncherJs(userIdParams);
   }
   if (userIdParams && userIdParams.custom && userIdParams.custom['loadLaunchPad'] == 'true') {
-    this.initLiveRampLaunchPad(userIdParams);
+    initLiveRampLaunchPad(userIdParams);
   }
-  return this.deleteCustomParams(userIdParams);
+  return deleteCustomParams(userIdParams);
 }
 
 export function getPartnerParams(params) {
   let pparams = {};
   for (const key in params) {
     try {
-      pparams = this.getNestedObjectFromString(pparams, '.', key, params[key]);
+      pparams = getNestedObjectFromString(pparams, '.', key, params[key]);
     } catch (ex) {
-      this.logWarning(CONSTANTS.MESSAGES.M29, ex);
+      logWarning(CONSTANTS.MESSAGES.M29, ex);
     }
   }
   return pparams;
@@ -1512,7 +1514,7 @@ export function getAdDomain({ meta }) {
         const hostname = new URL(adomain);
         return hostname.hostname.replace('www.', '');
       } catch (e) {
-        this.log(`Adomain URL (Not a proper URL):${adomain}`);
+        log(`Adomain URL (Not a proper URL):${adomain}`);
         return adomain.split('/')[0].replace('www.', '');
       }
     }
@@ -1552,10 +1554,10 @@ export function generateMonetizationPixel(slotID, theBid) {
     return;
   }
 
-  if (this.isFunction(theBid.getGrossEcpm)) {
+  if (isFunction(theBid.getGrossEcpm)) {
     grossEcpm = theBid.getGrossEcpm(isAnalytics);
   } else {
-    if (CONFIG.getAdServerCurrency() && this.isFunction(theBid.getCpmInNewCurrency)) {
+    if (CONFIG.getAdServerCurrency() && isFunction(theBid.getCpmInNewCurrency)) {
       grossEcpm = window.parseFloat(theBid.getCpmInNewCurrency(CONSTANTS.COMMON.ANALYTICS_CURRENCY));
     } else {
       if (CONFIG.isPrebidPubMaticAnalyticsEnabled() && theBid.originalCpm) {
@@ -1565,7 +1567,7 @@ export function generateMonetizationPixel(slotID, theBid) {
       }
     }
   }
-  if (this.isFunction(theBid.getAdapterID)) {
+  if (isFunction(theBid.getAdapterID)) {
     adapterId = theBid.getAdapterID()
   } else {
     adapterId = theBid.bidderCode
@@ -1578,14 +1580,14 @@ export function generateMonetizationPixel(slotID, theBid) {
   adapterName = CONFIG.getAdapterNameForAlias(adapterId);
 
   // Do we need all checks or we can just use one check
-  if (this.isFunction(theBid.getNetEcpm)) {
+  if (isFunction(theBid.getNetEcpm)) {
     netEcpm = theBid.getNetEcpm(isAnalytics)
   } else {
     // else would be executed in case this function is called from prebid for vast updation
     netEcpm = window.parseFloat((grossEcpm * CONFIG.getAdapterRevShare(adapterId)).toFixed(CONSTANTS.COMMON.BID_PRECISION))
   }
 
-  if (this.isFunction(theBid.getBidID)) {
+  if (isFunction(theBid.getBidID)) {
     bidId = theBid.getBidID()
   } else {
     if (CONFIG.isPrebidPubMaticAnalyticsEnabled() && theBid.adId) {
@@ -1594,12 +1596,12 @@ export function generateMonetizationPixel(slotID, theBid) {
       bidId = window.PWT.bidMap[slotID].adapters[adapterId].bids[Object.keys(window.PWT.bidMap[slotID].adapters[adapterId].bids)[0]].bidID;
     }
   }
-  if (this.isFunction(theBid.getKGPV)) {
+  if (isFunction(theBid.getKGPV)) {
     kgpv = theBid.getKGPV()
   } else {
     kgpv = window.PWT.bidMap[slotID].adapters[adapterId].bids[Object.keys(window.PWT.bidMap[slotID].adapters[adapterId].bids)[0]].getKGPV(false, theBid.mediaType);
   }
-  if (this.isFunction(theBid.getsspID)) {
+  if (isFunction(theBid.getsspID)) {
     sspID = theBid.getsspID();
   } else {
     sspID = theBid.sspID || '';
@@ -1610,7 +1612,7 @@ export function generateMonetizationPixel(slotID, theBid) {
   const iiid = window.PWT.bidMap[slotID].getImpressionID();
   const isRefreshed = (window.PWT.newAdUnits && window.PWT.newAdUnits[iiid] && window.PWT.newAdUnits[iiid][slotID] && window.PWT.newAdUnits[iiid][slotID]['pubmaticAutoRefresh'] && window.PWT.newAdUnits[iiid][slotID]['pubmaticAutoRefresh']['isRefreshed']) ? 1 : 0;
   // var impressionID = PWT.bidMap[slotID].impressionID;
-  const adv = this.getAdDomain(theBid.pbbid || theBid) || undefined;
+  const adv = getAdDomain(theBid.pbbid || theBid) || undefined;
   const fskp = window.PWT.floorData
     ? (window.PWT.floorData[iiid]
       ? (window.PWT.floorData[iiid].floorRequestData
@@ -1620,8 +1622,8 @@ export function generateMonetizationPixel(slotID, theBid) {
     : undefined;
 
   pixelURL += `pubid=${pubId}`;
-  pixelURL += `&purl=${window.encodeURIComponent(this.metaInfo.pageURL)}`;
-  pixelURL += `&tst=${this.getCurrentTimestamp()}`;
+  pixelURL += `&purl=${window.encodeURIComponent(metaInfo.pageURL)}`;
+  pixelURL += `&tst=${getCurrentTimestamp()}`;
   pixelURL += `&iid=${window.encodeURIComponent(window.PWT.bidMap[slotID].getImpressionID())}`;
   pixelURL += `&bidid=${prebidBidId ? window.encodeURIComponent(prebidBidId) : window.encodeURIComponent(bidId)}`;
   pixelURL += `&origbidid=${window.encodeURIComponent(bidId)}`;
@@ -1637,20 +1639,20 @@ export function generateMonetizationPixel(slotID, theBid) {
   pixelURL += `&piid=${window.encodeURIComponent(sspID)}`;
   pixelURL += `&rf=${window.encodeURIComponent(isRefreshed)}`;
 
-  pixelURL += `&plt=${window.encodeURIComponent(this.getDevicePlatform())}`;
-  pixelURL += (this.isFunction(theBid.getWidth) && this.isFunction(theBid.getHeight))
+  pixelURL += `&plt=${window.encodeURIComponent(getDevicePlatform())}`;
+  pixelURL += (isFunction(theBid.getWidth) && isFunction(theBid.getHeight))
     ? (`&psz=${window.encodeURIComponent(`${theBid.getWidth()}x${theBid.getHeight()}`)}`)
-    : ((this.isFunction(theBid.getSize))
+    : ((isFunction(theBid.getSize))
       ? (`&psz=${window.encodeURIComponent(theBid.getSize())}`)
       : `&psz=${window.encodeURIComponent(`${theBid.width}x${theBid.height}`)}`);
-  pixelURL += `&tgid=${window.encodeURIComponent(this.getTgid())}`;
+  pixelURL += `&tgid=${window.encodeURIComponent(getTgid())}`;
   adv && (pixelURL += `&adv=${window.encodeURIComponent(adv)}`);
-  pixelURL += `&orig=${window.encodeURIComponent((this.metaInfo && this.metaInfo.pageDomain) || '')}`;
-  pixelURL += `&ss=${window.encodeURIComponent(this.isFunction(theBid.getServerSideStatus)
+  pixelURL += `&orig=${window.encodeURIComponent((metaInfo && metaInfo.pageDomain) || '')}`;
+  pixelURL += `&ss=${window.encodeURIComponent(isFunction(theBid.getServerSideStatus)
     ? (theBid.getServerSideStatus() ? 1 : 0)
     : (CONFIG.isServerSideAdapter(adapterId) ? 1 : 0))}`;
   (fskp != undefined) && (pixelURL += `&fskp=${window.encodeURIComponent(fskp)}`);
-  pixelURL += `&af=${window.encodeURIComponent(this.isFunction(theBid.getAdFormat)
+  pixelURL += `&af=${window.encodeURIComponent(isFunction(theBid.getAdFormat)
     ? theBid.getAdFormat() : (theBid.mediaType || undefined))}`;
 
   return CONSTANTS.COMMON.PROTOCOL + pixelURL;
@@ -1664,7 +1666,7 @@ export function UpdateVastWithTracker(bid, vast) {
     const domParser = new DOMParser();
     const parsedVast = domParser.parseFromString(vast, 'application/xml');
     const impEle = parsedVast.createElement('Impression');
-    impEle.innerHTML = CONFIG.isPrebidPubMaticAnalyticsEnabled() ? '' : `<![CDATA[${this.generateMonetizationPixel(bid.adUnitCode, bid)}]]>`;
+    impEle.innerHTML = CONFIG.isPrebidPubMaticAnalyticsEnabled() ? '' : `<![CDATA[${generateMonetizationPixel(bid.adUnitCode, bid)}]]>`;
     if (parsedVast.getElementsByTagName('Wrapper').length == 1) {
       parsedVast.getElementsByTagName('Wrapper')[0].appendChild(impEle);
     } else if (parsedVast.getElementsByTagName('InLine').length == 1) {
@@ -1697,8 +1699,8 @@ export function getCustomParamsForDFPVideo(customParams, bid) {
   const adserverTargeting = (bid && bid.adserverTargeting) || {};
   const targetingKeys = {};
   for (const key in adserverTargeting) {
-    if (this.isOwnProperty(adserverTargeting, key)) {
-      if (this.isArray(adserverTargeting[key])) {
+    if (isOwnProperty(adserverTargeting, key)) {
+      if (isArray(adserverTargeting[key])) {
         targetingKeys[key] = adserverTargeting[key].join();
       } else {
         targetingKeys[key] = adserverTargeting[key];
@@ -1718,7 +1720,7 @@ export function getDevicePlatform() {
   let deviceType = 3;
   try {
     let ua = navigator.userAgent;
-    if (ua && this.isString(ua) && ua.trim() != '') {
+    if (ua && isString(ua) && ua.trim() != '') {
       ua = ua.toLowerCase().trim();
       const isMobileRegExp = new RegExp('(mobi|tablet|ios).*');
       if (ua.match(isMobileRegExp)) {
@@ -1728,7 +1730,7 @@ export function getDevicePlatform() {
       }
     }
   } catch (ex) {
-    this.logError('Unable to get device platform', ex);
+    logError('Unable to get device platform', ex);
   }
   return deviceType;
 }
@@ -1748,15 +1750,15 @@ export function getOWConfig() {
 
 // removeIf(removeIdHubOnlyRelatedCode)
 export function updateAdUnits(adUnits) {
-  if (this.isArray(adUnits)) {
+  if (isArray(adUnits)) {
     adUnits.forEach(({ bids }) => {
       bids.forEach(function (bid) {
-        this.updateUserIds(bid);
+        updateUserIds(bid);
       });
     });
-  } else if (!this.isEmptyObject(adUnits)) {
+  } else if (!isEmptyObject(adUnits)) {
     adUnits.bids.forEach(function (bid) {
-      this.updateUserIds(bid);
+      updateUserIds(bid);
     });
   }
 }
@@ -1765,19 +1767,19 @@ export function updateAdUnits(adUnits) {
 
 // removeIf(removeIdHubOnlyRelatedCode)
 export function updateUserIds(bid) {
-  // this.idsAppendedToAdUnits =true;
-  if (this.isUndefined(bid.userId)) {
-    bid['userId'] = this.getUserIds();
+  // idsAppendedToAdUnits =true;
+  if (isUndefined(bid.userId)) {
+    bid['userId'] = getUserIds();
   } else if (bid.userId) {
     /* istanbul ignore next */
-    bid.userId = Object.assign(bid.userId, this.getUserIds());
+    bid.userId = Object.assign(bid.userId, getUserIds());
   }
-  if (this.isUndefined(bid.userIdAsEids)) {
-    bid['userIdAsEids'] = this.getUserIdsAsEids();
-  } else if (this.isArray(bid.userIdAsEids)) {
+  if (isUndefined(bid.userIdAsEids)) {
+    bid['userIdAsEids'] = getUserIdsAsEids();
+  } else if (isArray(bid.userIdAsEids)) {
     const idsPresent = new Set();
-    let ids = this.getUserIdsAsEids().concat(bid.userIdAsEids);
-    if (this.isArray(ids) && ids.length > 0) {
+    let ids = getUserIdsAsEids().concat(bid.userIdAsEids);
+    if (isArray(ids) && ids.length > 0) {
       ids = ids.filter(({ source }) => {
         if (source) {
           if (idsPresent.has(source)) {
@@ -1835,7 +1837,7 @@ export function getLiverampParams(params) {
       if yes, if sso is enabled and 'direct' is selected as detection mechanism, sso emails will be sent to ats script.
       if sso is disabled, and 'direct' is selected as detection mechanism, we will look for publisher provided email ids, and if available the hashes will be sent to ats script.
       */
-      if (enableCustomId && this.isFunction(window[pbNameSpace].getUserIdentities) && window[pbNameSpace].getUserIdentities() !== undefined) {
+      if (enableCustomId && isFunction(window[pbNameSpace].getUserIdentities) && window[pbNameSpace].getUserIdentities() !== undefined) {
         atsObject.customerID = window[pbNameSpace].getUserIdentities().customerID || undefined;
       }
       break;
@@ -1848,7 +1850,7 @@ export function getEmailHashes() {
   const enableSSO = CONFIG.isSSOEnabled() || false;
   const emailHash = enableSSO && userIdentity.emailHash ? userIdentity.emailHash : userIdentity.pubProvidedEmailHash ? userIdentity.pubProvidedEmailHash : undefined;
   const emailHashArr = [];
-  this.forEachOnObject(emailHash, (keyName, keyValue) => {
+  forEachOnObject(emailHash, (keyName, keyValue) => {
     if (keyValue !== undefined) {
       emailHashArr.push(keyValue);
     }
@@ -1866,7 +1868,7 @@ export function initLiveRampLaunchPad({ custom }) {
           ats.outputCurrentConfiguration()['ENVELOPE_MODULE_INFO']['ENVELOPE_MODULE_CONFIG']['startWithExternalId'];
         if (isDirectMode) { // If direct or detect/direct mode
           if ((window.PWT && (window.PWT.OVERRIDES_SCRIPT_BASED_MODULES && window.PWT.OVERRIDES_SCRIPT_BASED_MODULES.includes('identityLink'))) || window.PWT.OVERRIDES_SCRIPT_BASED_MODULES === undefined) {
-            const emailHashes = this.getEmailHashes();
+            const emailHashes = getEmailHashes();
             emailHashes && window.ats.setAdditionalData({ 'type': 'emailHashes', 'id': emailHashes });
           }
         }
@@ -1914,7 +1916,7 @@ export function getPublinkLauncherParams(params) {
 export function initLiveRampAts(params) {
   function addATS() {
     const atsScript = document.createElement('script');
-    const atsObject = this.getLiverampParams(params);
+    const atsObject = getLiverampParams(params);
     atsScript.onload = () => {
       window.ats && window.ats.start(atsObject);
     };
@@ -1985,7 +1987,7 @@ export function initLauncherJs(params) {
   window.cnvr_launcher_options = { lid: params.params.launcher_id };
   function loadLauncher() {
     const launchScript = document.createElement('script');
-    const launchObject = this.getPublinkLauncherParams(params);
+    const launchObject = getPublinkLauncherParams(params);
     launchScript.onload = () => {
       window.conversant.getLauncherObject = () => {
         return launchObject;
@@ -2039,7 +2041,7 @@ export function applyDataTypeChangesIfApplicable(params) {
               if (paramValue && typeof paramValue !== 'number') {
                 value = parseInt(paramValue)
                 isNaN(value)
-                  ? this.logError(`${partnerName}: Invalid parameter value '${paramValue}' for parameter ${key}`)
+                  ? logError(`${partnerName}: Invalid parameter value '${paramValue}' for parameter ${key}`)
                   : params[key] = value;
               }
               break;
@@ -2090,5 +2092,5 @@ export function getBrowserDetails() {
 }
 
 export function getPltForFloor() {
-  return this.getDevicePlatform().toString();
+  return getDevicePlatform().toString();
 }

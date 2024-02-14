@@ -9,7 +9,7 @@ var isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled()
 var usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
 
 // ToDo: add a functionality / API to remove extra added wrpper keys
-const wrapperTargetingKeys = {}; // key is div id
+var wrapperTargetingKeys = {}; // key is div id
 
 /* start-test-block */
 export { wrapperTargetingKeys };
@@ -25,7 +25,7 @@ export { slotSizeMapping };
 /* end-test-block */
 
 let windowReference = null;
-const refThis = this;
+// const refThis = this;
 
 function setWindowReference(win) {
   if (util.isObject(win)) {
@@ -64,10 +64,10 @@ export { getAdUnitIndex };
 // ToDo: this function may not be needed
 function defineWrapperTargetingKey(key) {
   /* istanbul ignore else */
-  if (!util.isObject(refThis.wrapperTargetingKeys)) {
-    refThis.wrapperTargetingKeys = {};
+  if (!util.isObject(wrapperTargetingKeys)) {
+    wrapperTargetingKeys = {};
   }
-  refThis.wrapperTargetingKeys[key] = '';
+  wrapperTargetingKeys[key] = '';
 }
 
 /* start-test-block */
@@ -211,7 +211,7 @@ function findWinningBidAndGenerateTargeting(divId) {
     if (util.isOwnProperty(ignoreTheseKeys, key) || util.isOwnProperty({ 'pwtpb': 1 }, key) || (winningBid && winningBid.adapterID !== 'pubmatic' && util.isOwnProperty({ 'hb_buyid_pubmatic': 1, 'pwtbuyid_pubmatic': 1 }, key))) {
       delete keyValuePairs[key];
     } else {
-      refThis.defineWrapperTargetingKey(key);
+      defineWrapperTargetingKey(key);
     }
   });
 
@@ -255,7 +255,7 @@ function origCustomServerExposedAPI(arrayOfAdUnits, callbackFunction) {
   const mapOfDivToCode = {};
   const qualifyingSlotDivIds = [];
   util.forEachOnArray(arrayOfAdUnits, (index, anAdUnitObject) => {
-    if (refThis.validateAdUnitObject(anAdUnitObject)) { // returns true for valid adUnit
+    if (validateAdUnitObject(anAdUnitObject)) { // returns true for valid adUnit
       const dmSlotName = anAdUnitObject.code;
       const slot = SLOT.createSlot(dmSlotName);
       window.PWT.adUnits = window.PWT.adUnits || {};
@@ -267,7 +267,7 @@ function origCustomServerExposedAPI(arrayOfAdUnits, callbackFunction) {
       slot.setPubAdServerObject(anAdUnitObject);
       slot.setAdUnitID(anAdUnitObject.adUnitId || '');
       slot.setAdUnitIndex(anAdUnitObject.adUnitIndex || 0);
-      slot.setSizes(refThis.getAdSlotSizesArray(anAdUnitObject));
+      slot.setSizes(getAdSlotSizesArray(anAdUnitObject));
       qualifyingSlots.push(slot);
       mapOfDivToCode[slot.getDivID()] = slot.getName();
       qualifyingSlotDivIds.push(slot.getDivID());
@@ -302,7 +302,7 @@ function origCustomServerExposedAPI(arrayOfAdUnits, callbackFunction) {
       // we should loop on qualifyingSlotDivIds to avoid confusion if two parallel calls are fired to our PWT.requestBids
       util.forEachOnArray(qualifyingSlotDivIds, (index, divId) => {
         const code = mapOfDivToCode[divId];
-        winningBids[code] = refThis.findWinningBidAndGenerateTargeting(divId);
+        winningBids[code] = findWinningBidAndGenerateTargeting(divId);
         // we need to delay the realignment as we need to do it post creative rendering :)
         // delaying by 1000ms as creative rendering may tke time
         setTimeout(util.realignVLogInfoPanel, 1000, divId);
@@ -347,10 +347,10 @@ export { origCustomServerExposedAPI };
 */
 function customServerExposedAPI(arrayOfAdUnits, callbackFunction) {
   if (window.PWT.isSyncAuction) {
-    refThis.origCustomServerExposedAPI(arrayOfAdUnits, callbackFunction);
+    origCustomServerExposedAPI(arrayOfAdUnits, callbackFunction);
   } else {
     setTimeout(() => {
-      refThis.origCustomServerExposedAPI(arrayOfAdUnits, callbackFunction)
+      origCustomServerExposedAPI(arrayOfAdUnits, callbackFunction)
     }, 0);
   }
 }
@@ -389,7 +389,7 @@ function generateConfForGPT(arrayOfGPTSlots) {
 
       if (util.isFunction(googleSlot.getSlotId)) {
         const slotID = googleSlot.getSlotId();
-        adUnitIndex = `${refThis.getAdUnitIndex(googleSlot)}`;
+        adUnitIndex = `${getAdUnitIndex(googleSlot)}`;
 
         // TODO: move to GPT specific code to small functions
         /* istanbul ignore else */
@@ -492,7 +492,7 @@ function removeKeyValuePairsFromGPTSlots(arrayOfGPTSlots) {
     }
     // now set all settings from backup
     util.forEachOnObject(targetingMap, (key, value) => {
-      if (!util.isOwnProperty(refThis.wrapperTargetingKeys, key)) {
+      if (!util.isOwnProperty(wrapperTargetingKeys, key)) {
         if (util.isFunction(currentGoogleSlot.setTargeting)) {
           currentGoogleSlot.setTargeting(key, value);
         }
@@ -509,17 +509,17 @@ export { removeKeyValuePairsFromGPTSlots };
 export function init(win) {
   CONFIG.initConfig();
   if (util.isObject(win)) {
-    refThis.setWindowReference(win);
+    setWindowReference(win);
 
     // removeIf(removeLegacyAnalyticsRelatedCode)
-    refThis.initSafeFrameListener(win);
+    initSafeFrameListener(win);
     // endRemoveIf(removeLegacyAnalyticsRelatedCode)
     prebid.initPbjsConfig();
-    win.PWT.requestBids = refThis.customServerExposedAPI;
-    win.PWT.generateConfForGPT = refThis.generateConfForGPT;
+    win.PWT.requestBids = customServerExposedAPI;
+    win.PWT.generateConfForGPT = generateConfForGPT;
     win.PWT.addKeyValuePairsToGPTSlots = addKeyValuePairsToGPTSlots;
     win.PWT.removeKeyValuePairsFromGPTSlots = removeKeyValuePairsFromGPTSlots;
-    refThis.wrapperTargetingKeys = refThis.defineWrapperTargetingKeys(CONSTANTS.WRAPPER_TARGETING_KEYS);
+    wrapperTargetingKeys = defineWrapperTargetingKeys(CONSTANTS.WRAPPER_TARGETING_KEYS);
     return true;
   } else {
     return false;
