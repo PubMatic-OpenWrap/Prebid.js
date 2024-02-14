@@ -4,7 +4,7 @@ import * as util from './util.js';
 // import * as  GDPR from "./gdpr.js");
 import * as bmEntry from './bmEntry.js';
 
-const refThis = this;
+// const refThis = this;
 let storedObject;
 let frequencyDepth;
 const PREFIX = 'PROFILE_AUCTION_INFO_';
@@ -259,7 +259,7 @@ export { updateNativeTargtingKeys };
 
 // removeIf(removeLegacyAnalyticsRelatedCode)
 function auctionBidsCallBack(adapterID, adapterEntry, keyValuePairs, winningBid) { // TDD, i/o : done
-  const refThis = this;
+  // const refThis = this;
   if (adapterEntry.getLastBidID() != '') {
     util.forEachOnObject(adapterEntry.bids, (bidID, theBid) => {
       // do not consider post-timeout bids
