@@ -104,6 +104,7 @@ module.exports = {
       new TerserPlugin({
         extractComments: false, // do not generate unhelpful LICENSE comment
         terserOptions: {
+		  compress: {},	
           module: true, // do not prepend every module with 'use strict'; allow mangling of top-level locals
         }
       })
