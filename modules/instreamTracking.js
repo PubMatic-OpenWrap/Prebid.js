@@ -7,7 +7,7 @@ import CONSTANTS from '../src/constants.json'
 
 const {CACHE_ID, UUID} = CONSTANTS.TARGETING_KEYS;
 const {BID_WON, AUCTION_END} = CONSTANTS.EVENTS;
-const {RENDERED} = CONSTANTS.BID_STATUS;
+// const {RENDERED} = CONSTANTS.BID_STATUS;
 
 const INSTREAM_TRACKING_DEFAULT_CONFIG = {
   enabled: false,
@@ -88,7 +88,7 @@ export function trackInstreamDeliveredImpressions({adUnits, bidsReceived, bidder
         if (urlPattern && urlPattern instanceof RegExp && !urlPattern.test(url)) {
           return;
         }
-        if (matches && bid.status !== RENDERED) {
+        if (matches && bid.status !== CONSTANTS.BID_STATUS.RENDERED) {
           // video found
           instreamWinningBidsCount++;
           auctionManager.addWinningBid(bid);
