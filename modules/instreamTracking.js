@@ -1,4 +1,4 @@
-import { deepClone, getBidRequest, deepAccess } from '../src/utils.js';
+import { deepClone, getBidRequest, deepAccess, logWarn } from '../src/utils.js';
 import { config } from '../src/config.js';
 import { auctionManager } from '../src/auctionManager.js';
 import { INSTREAM } from '../src/video.js';
@@ -7,7 +7,7 @@ import CONSTANTS from '../src/constants.json'
 
 const {CACHE_ID, UUID} = CONSTANTS.TARGETING_KEYS;
 const {BID_WON, AUCTION_END} = CONSTANTS.EVENTS;
-const {RENDERED} = CONSTANTS.BID_STATUS;
+const {RENDERED, BID_REJECTED} = CONSTANTS.BID_STATUS;
 
 const INSTREAM_TRACKING_DEFAULT_CONFIG = {
   enabled: false,
@@ -42,6 +42,7 @@ const whitelistedResources = /video|fetch|xmlhttprequest|other/;
  * @return {boolean} returns TRUE if tracking started
  */
 export function trackInstreamDeliveredImpressions({adUnits, bidsReceived, bidderRequests}) {
+  logWarn(BID_REJECTED);
   const instreamTrackingConfig = config.getConfig('instreamTracking') || {};
   // check if instreamTracking is enabled and performance api is available
   if (!instreamTrackingConfig.enabled || !window.performance || !window.performance.getEntriesByType) {
