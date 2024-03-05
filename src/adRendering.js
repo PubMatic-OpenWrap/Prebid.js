@@ -50,7 +50,7 @@ export function handleRender(renderFn, {adId, options, bidResponse}) {
     });
     return;
   }
-  if (bidResponse.status === constants.BID_STATUS.RENDERED) {
+  if (bidResponse.status === constants.RENDERED) {
     logWarn(`Ad id ${adId} has been rendered before`);
     events.emit(STALE_RENDER, bidResponse);
     if (deepAccess(config.getConfig('auctionOptions'), 'suppressStaleRender')) {

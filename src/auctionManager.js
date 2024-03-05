@@ -74,7 +74,7 @@ export function newAuctionManager() {
     metrics.timeBetween('requestBids', 'bidWon', 'render.e2e');
     const auction = getAuction(bid.auctionId);
     if (auction) {
-      bid.status = CONSTANTS.BID_STATUS.RENDERED;
+      bid.status = CONSTANTS.RENDERED;
       auction.addWinningBid(bid);
     } else {
       logWarn(`Auction not found when adding winning bid`);

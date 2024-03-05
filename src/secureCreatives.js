@@ -115,7 +115,7 @@ function handleEventRequest(reply, data, adObject) {
     logError(`Cannot find ad '${data.adId}' for x-origin event request`);
     return;
   }
-  if (adObject.status !== constants.BID_STATUS.RENDERED) {
+  if (adObject.status !== constants.RENDERED) {
     logWarn(`Received x-origin event request without corresponding render request for ad '${data.adId}'`);
     return;
   }

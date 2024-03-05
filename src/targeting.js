@@ -41,7 +41,7 @@ export const TARGETING_KEYS = Object.keys(CONSTANTS.TARGETING_KEYS).map(
 const isBidNotExpired = (bid) => (bid.responseTimestamp + getTTL(bid) * 1000) > timestamp();
 
 // return bids whose status is not set. Winning bids can only have a status of `rendered`.
-const isUnusedBid = (bid) => bid && ((bid.status && !includes([CONSTANTS.BID_STATUS.RENDERED], bid.status)) || !bid.status);
+const isUnusedBid = (bid) => bid && ((bid.status && !includes([CONSTANTS.RENDERED], bid.status)) || !bid.status);
 
 export let filters = {
   isActualBid(bid) {

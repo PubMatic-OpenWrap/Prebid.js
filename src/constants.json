@@ -93,7 +93,6 @@
   },
   "BID_STATUS": {
     "BID_TARGETING_SET": "targetingSet",
-    "RENDERED": "rendered",
     "BID_REJECTED": "bidRejected"
   },
   "REFRESH_IDMODULES_LIST": {
@@ -169,5 +168,6 @@
 	"SUCCESS": "success",
 	"ERROR": "error",
 	"TIMEOUT": "timeout"
-  }
+  },
+  "RENDERED": "rendered"
 }

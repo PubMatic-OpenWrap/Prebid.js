@@ -198,7 +198,7 @@ describe('secureCreatives', () => {
         sinon.assert.calledWith(stubEmit, CONSTANTS.EVENTS.BID_WON, adResponse);
         sinon.assert.neverCalledWith(stubEmit, CONSTANTS.EVENTS.STALE_RENDER);
 
-        expect(adResponse).to.have.property('status', CONSTANTS.BID_STATUS.RENDERED);
+        expect(adResponse).to.have.property('status', CONSTANTS.RENDERED);
       });
 
       it('should allow stale rendering without config', function () {
@@ -225,7 +225,7 @@ describe('secureCreatives', () => {
         sinon.assert.calledWith(stubEmit, CONSTANTS.EVENTS.BID_WON, adResponse);
         sinon.assert.neverCalledWith(stubEmit, CONSTANTS.EVENTS.STALE_RENDER);
 
-        expect(adResponse).to.have.property('status', CONSTANTS.BID_STATUS.RENDERED);
+        expect(adResponse).to.have.property('status', CONSTANTS.RENDERED);
 
         resetHistories(adResponse.renderer.render);
 
@@ -266,7 +266,7 @@ describe('secureCreatives', () => {
         sinon.assert.calledWith(stubEmit, CONSTANTS.EVENTS.BID_WON, adResponse);
         sinon.assert.neverCalledWith(stubEmit, CONSTANTS.EVENTS.STALE_RENDER);
 
-        expect(adResponse).to.have.property('status', CONSTANTS.BID_STATUS.RENDERED);
+        expect(adResponse).to.have.property('status', CONSTANTS.RENDERED);
 
         resetHistories(adResponse.renderer.render);
 
@@ -409,14 +409,14 @@ describe('secureCreatives', () => {
         sinon.assert.neverCalledWith(stubEmit, CONSTANTS.EVENTS.BID_WON);
         sinon.assert.notCalled(spyAddWinningBid);
 
-        expect(adResponse).to.have.property('status', CONSTANTS.BID_STATUS.RENDERED);
+        expect(adResponse).to.have.property('status', CONSTANTS.RENDERED);
       });
     });
 
     describe('Prebid Event', () => {
       Object.entries({
         'unrendered': [false, (bid) => { delete bid.status; }],
-        'rendered': [true, (bid) => { bid.status = CONSTANTS.BID_STATUS.RENDERED }]
+        'rendered': [true, (bid) => { bid.status = CONSTANTS.RENDERED }]
       }).forEach(([test, [shouldEmit, prepBid]]) => {
         describe(`for ${test} bids`, () => {
           beforeEach(() => {

@@ -1394,7 +1394,7 @@ describe('Unit: Prebid Module', function () {
 
       sinon.assert.calledWith(onWonEvent, adResponse);
       sinon.assert.notCalled(onStaleEvent);
-      expect(adResponse).to.have.property('status', CONSTANTS.BID_STATUS.RENDERED);
+      expect(adResponse).to.have.property('status', CONSTANTS.RENDERED);
 
       // Reset call history for spies and stubs
       spyLogMessage.resetHistory();
@@ -1442,7 +1442,7 @@ describe('Unit: Prebid Module', function () {
 
       sinon.assert.calledOnce(spyAddWinningBid);
       sinon.assert.calledWith(spyAddWinningBid, adResponse);
-      expect(adResponse).to.have.property('status', CONSTANTS.BID_STATUS.RENDERED);
+      expect(adResponse).to.have.property('status', CONSTANTS.RENDERED);
 
       sinon.assert.calledWith(onWonEvent, adResponse);
       sinon.assert.notCalled(onStaleEvent);
@@ -3281,7 +3281,7 @@ describe('Unit: Prebid Module', function () {
       auction.getBidsReceived = function() { return _bidsReceived };
       const highestBid1 = $$PREBID_GLOBAL$$.getHighestUnusedBidResponseForAdUnitCode('/19968336/header-bid-tag-0');
       expect(highestBid1).to.deep.equal(_bidsReceived[1])
-      _bidsReceived[1].status = CONSTANTS.BID_STATUS.RENDERED
+      _bidsReceived[1].status = CONSTANTS.RENDERED
       const highestBid2 = $$PREBID_GLOBAL$$.getHighestUnusedBidResponseForAdUnitCode('/19968336/header-bid-tag-0');
       expect(highestBid2).to.deep.equal(_bidsReceived[2])
     })
@@ -3375,7 +3375,7 @@ describe('Unit: Prebid Module', function () {
         const markedBid = find($$PREBID_GLOBAL$$.getBidResponsesForAdUnitCode(adUnitCode).bids,
           bid => bid.adId === winningBid.adId);
 
-        expect(markedBid.status).to.equal(CONSTANTS.BID_STATUS.RENDERED);
+        expect(markedBid.status).to.equal(CONSTANTS.RENDERED);
       });
 
       it('try and mark the bid object, but fail because we supplied the wrong adId', function () {
@@ -3383,7 +3383,7 @@ describe('Unit: Prebid Module', function () {
         const markedBid = find($$PREBID_GLOBAL$$.getBidResponsesForAdUnitCode(adUnitCode).bids,
           bid => bid.adId === winningBid.adId);
 
-        expect(markedBid.status).to.not.equal(CONSTANTS.BID_STATUS.RENDERED);
+        expect(markedBid.status).to.not.equal(CONSTANTS.RENDERED);
       });
 
       it('marks the winning bid object as used for the given adUnitCode', function () {
@@ -3392,7 +3392,7 @@ describe('Unit: Prebid Module', function () {
         const markedBid = find($$PREBID_GLOBAL$$.getBidResponsesForAdUnitCode(adUnitCode).bids,
           bid => bid.adId === winningBid.adId);
 
-        expect(markedBid.status).to.equal(CONSTANTS.BID_STATUS.RENDERED);
+        expect(markedBid.status).to.equal(CONSTANTS.RENDERED);
       });
 
       it('marks a bid object as used for the given adId', function () {
@@ -3401,7 +3401,7 @@ describe('Unit: Prebid Module', function () {
         const markedBid = find($$PREBID_GLOBAL$$.getBidResponsesForAdUnitCode(adUnitCode).bids,
           bid => bid.adId === winningBid.adId);
 
-        expect(markedBid.status).to.equal(CONSTANTS.BID_STATUS.RENDERED);
+        expect(markedBid.status).to.equal(CONSTANTS.RENDERED);
       });
     });
   }
