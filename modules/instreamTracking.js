@@ -5,9 +5,9 @@ import { INSTREAM } from '../src/video.js';
 import * as events from '../src/events.js';
 import CONSTANTS from '../src/constants.json'
 
+const {RENDERED, BID_REJECTED} = CONSTANTS.BID_STATUS;
 const {CACHE_ID, UUID} = CONSTANTS.TARGETING_KEYS;
 const {BID_WON, AUCTION_END} = CONSTANTS.EVENTS;
-const {RENDERED, BID_REJECTED} = CONSTANTS.BID_STATUS;
 
 const INSTREAM_TRACKING_DEFAULT_CONFIG = {
   enabled: false,
