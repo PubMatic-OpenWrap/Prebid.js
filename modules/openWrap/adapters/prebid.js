@@ -28,7 +28,7 @@ export {kgpvMap};
 
 /* end-test-block */
 
-const refThis = this;
+// const refThis = this;
 let onEventAdded = false;
 let onAuctionEndEventAdded = false;
 const isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();

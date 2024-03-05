@@ -5,7 +5,7 @@ import * as util from '../util.js';
 import * as bidManager from '../bidManager.js';
 import * as SLOT from '../slot.js';
 import * as prebid from '../adapters/prebid.js';
-import * as IdHub from '../controllers/idhub.js';
+import * as IdHub from './idhub.js';
 var usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
 var isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
 

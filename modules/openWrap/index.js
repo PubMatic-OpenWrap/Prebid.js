@@ -168,3 +168,26 @@
 // window.PWT.browserMapping = bidManager.getBrowser();
 
 // controller.init(window);
+
+
+import * as owt from './owt.js';
+import * as config from './conf.js';
+
+var controller = null;
+switch (config.pwt.adserver) {
+  case "DFP":
+    controller = require('./controllers/gpt.js');
+    break;
+  case "CUSTOM":
+    controller = require('./controllers/custom.js');
+    break;
+  case "IDHUB":
+    controller = require('./controllers/idhub.js');
+    break;
+  default:
+      console.log("Please provide the AdServer values one of (DFP, CUSTOM, IDHUB)");
+    break;
+}
+
+owt.init();
+controller.init(window);
