@@ -89,6 +89,11 @@
     "videoModule": [
       "jwplayerVideoProvider",
       "videojsVideoProvider"
+    ],
+    "openWrap": [
+      "dfpOwModule",
+      "customOwModule",
+      "idhubOwModule"
     ]
   }
 }

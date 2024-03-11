@@ -21,6 +21,8 @@
 // // usingDifferentProfileVersion
 // window.PWT.udpv = window.PWT.udpv || util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtv');
 
+import { module } from "../../src/hook";
+
 // util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtc') && util.enableDebugLog();
 // util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtvc') && util.enableVisualDebugLog();
 
@@ -170,24 +172,52 @@
 // controller.init(window);
 
 
+// import * as owt from './owt.js';
+// import * as config from './conf.js';
+
+// var controller = null;
+// switch (config.pwt.adserver) {
+//   case "DFP":
+//     controller = require('./controllers/gpt.js');
+//     break;
+//   case "CUSTOM":
+//     controller = require('./controllers/custom.js');
+//     break;
+//   case "IDHUB":
+//     controller = require('./controllers/idhub.js');
+//     break;
+//   default:
+//       console.log("Please provide the AdServer values one of (DFP, CUSTOM, IDHUB)");
+//     break;
+// }
+
+// owt.init();
+// controller.init(window);
+
 import * as owt from './owt.js';
-import * as config from './conf.js';
+import * as gptController from './controllers/gpt.js';
+import * as customController from './controllers/custom.js';
+import * as idHubController from './controllers/idhub.js';
 
-var controller = null;
-switch (config.pwt.adserver) {
-  case "DFP":
-    controller = require('./controllers/gpt.js');
-    break;
-  case "CUSTOM":
-    controller = require('./controllers/custom.js');
-    break;
-  case "IDHUB":
-    controller = require('./controllers/idhub.js');
-    break;
-  default:
-      console.log("Please provide the AdServer values one of (DFP, CUSTOM, IDHUB)");
-    break;
+import { isPlainObject, logError } from '../../src/utils.js';
+
+const sharedMethods = {
+  "owtInit": owt.init,
+  "gptInit": gptController.init,
+  "customInit": customController.init,
+  "idhubInit": idHubController.init
 }
+Object.freeze(sharedMethods);
 
-owt.init();
-controller.init(window);
+module('openWrap', function shareOwUtilities(...args) {
+  if (!isPlainObject(args[0])) {
+    logError('OW module needs plain object to share methods with submodule');
+    return;
+  }
+  function addMethods(object, func) {
+    for (let name in func) {
+      object[name] = func[name];
+    }
+  }
+  addMethods(args[0], sharedMethods);
+});
