@@ -1,23 +1,12 @@
-import { hook, getHook, submodule, wrapHook, ready } from '../../src/hook.js';
+import { submodule, ready } from '../../src/hook.js';
+import { initializeModule } from './custom.js';
 
 export const customUtils = {};
 
 submodule('openWrap', customUtils);
 ready.then(function(){
   customUtils.owtInit();
-  start(customutils.Config);
-  customUtils.customInit(window);
+  initializeModule(customUtils);
 });
 
-// function initSubModule(){
-//   submodule('openWrap', gptUtils);
-//   ready.then(function(){
-//     gptUtils.owtInit();
-//     gptUtils.gptInit(window);
-//   });
-// }
-
-// let hooked = hook("async", initSubModule);
-
-// hooked();
 

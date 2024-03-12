@@ -1,13 +1,37 @@
 /* eslint-disable prebid/validate-imports */
-import * as CONFIG from '../config.js';
-import * as CONSTANTS from '../constants.js';
-import * as util from '../util.js';
-import * as bidManager from '../bidManager.js';
-import * as SLOT from '../slot.js';
-import * as prebid from '../adapters/prebid.js';
-import * as IdHub from './idhub.js';
-var usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
-var isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
+// import * as CONFIG from '../config.js';
+// import * as CONSTANTS from '../constants.js';
+// import * as util from '../util.js';
+// import * as bidManager from '../bidManager.js';
+// import * as SLOT from '../slot.js';
+// import * as prebid from '../adapters/prebid.js';
+// import * as IdHub from './idhub.js';
+
+let CONFIG = {};
+let CONSTANTS = {};
+let util = {};
+let bidManager = {};
+let SLOT = {};
+let prebid = {};
+let IdHub = {};
+var usePrebidKeys = {};
+var isPrebidPubMaticAnalyticsEnabled = {};
+
+export function initializeModule(gptUtils){
+  CONFIG = gptUtils.CONFIG;
+  CONSTANTS = gptUtils.CONSTANTS;
+  util = gptUtils.util;
+  bidManager = gptUtils.bidManager;
+  SLOT = gptUtils.SLOT;
+  prebid = gptUtils.prebid;
+  IdHub = gptUtils.IdHub;
+
+  usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
+  isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
+  init(window);
+}
+
+
 
 var displayHookIsAdded = false;
 

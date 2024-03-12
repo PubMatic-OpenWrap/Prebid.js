@@ -195,18 +195,28 @@ import { module } from "../../src/hook";
 // controller.init(window);
 
 import * as owt from './owt.js';
-import * as gptController from './controllers/gpt.js';
-import * as customController from './controllers/custom.js';
-import * as idHubController from './controllers/idhub.js';
+
+import * as CONFIG from './config.js';
+import * as CONSTANTS from './constants.js';
+import * as util from './util.js';
+import * as bidManager from './bidManager.js';
+import * as SLOT from './slot.js';
+import * as prebid from './adapters/prebid.js';
+import * as IdHub from './controllers/idhub.js';
 
 import { isPlainObject, logError } from '../../src/utils.js';
 
 const sharedMethods = {
   "owtInit": owt.init,
-  "gptInit": gptController.init,
-  "customInit": customController.init,
-  "idhubInit": idHubController.init
+  "CONFIG": CONFIG,
+  "CONSTANTS": CONSTANTS,
+  "util": util,
+  "bidManager": bidManager,
+  "SLOT": SLOT,
+  "prebid": prebid,
+  "IdHub": IdHub
 }
+
 Object.freeze(sharedMethods);
 
 module('openWrap', function shareOwUtilities(...args) {
