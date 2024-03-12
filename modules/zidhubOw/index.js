@@ -1,6 +1,6 @@
 import { submodule, ready, module } from '../../src/hook.js';
-import * as controllerIdHub from './controller.idhub.js';
-import * as IdHub from './idhub.js';
+import { initializeModule } from './idhub.js';
+import * as idhub from './idhub.js';
 import { isPlainObject, logError } from '../../src/utils.js';
 
 // const idHubSharedMethods = {
@@ -30,12 +30,18 @@ import { isPlainObject, logError } from '../../src/utils.js';
 
 // IdHub.init();
 //IdHubIndex.init(window);
+export const idhubUtils = {};
+
+submodule('openWrap', idhubUtils);
+ready.then(function(){
+  idhubUtils.IDHUB.idhubInit();
+  initializeModule(idhubUtils);
+});
 
 const idHubSharedMethods = {
-    "IdHub": controllerIdHub
-  };
-  Object.freeze(idHubSharedMethods);
-
+  "idhub": idhub
+};
+Object.freeze(idHubSharedMethods);
 module('zidhubOW', function shareIdhubUtilities(...args) {
   if (!isPlainObject(args[0])) {
     logError('IDHUB OW module needs plain object to share methods with submodule');
@@ -48,10 +54,3 @@ module('zidhubOW', function shareIdhubUtilities(...args) {
   }
   addMethods(args[0], idHubSharedMethods);
 });
-
-IdHub.init();
-controllerIdHub.init(window);
-
-
-
-

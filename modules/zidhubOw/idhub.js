@@ -1,34 +1,142 @@
-//import controller from './idhub-index.js';
-import * as util from './util.idhub.js';
+/* eslint-disable prebid/validate-imports */
+// removeIf(removeIdHubOnlyRelatedCode)
+// tdod: we can still reduce the build size for idhub by,
+//      - create a separate constants.js with limited required functions
 
-const metaInfo = util.getMetaInfo(window);
-window.IHPWT = window.IHPWT || {};
-window.IHPWT.bidMap = window.IHPWT.bidMap || {};
-window.IHPWT.bidIdMap = window.IHPWT.bidIdMap || {};
-window.IHPWT.isIframe = window.IHPWT.isIframe || metaInfo.isInIframe;
-window.IHPWT.protocol = window.IHPWT.protocol || metaInfo.protocol;
-window.IHPWT.secure = window.IHPWT.secure || metaInfo.secure;
-window.IHPWT.pageURL = window.IHPWT.pageURL || metaInfo.pageURL;
-window.IHPWT.refURL = window.IHPWT.refURL || metaInfo.refURL;
-window.IHPWT.isSafeFrame = window.IHPWT.isSafeFrame || false;
-window.IHPWT.safeFrameMessageListenerAdded = window.IHPWT.safeFrameMessageListenerAdded || false;
-// usingDifferentProfileVersion
-window.IHPWT.udpv = window.IHPWT.udpv || util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtv');
+// import * as CONFIG from './config.idhub.js';
+// import * as CONSTANTS from './constants.js';
+// import * as util from './util.idhub.js';
+// import * as COMMON_CONFIG from './common.config.js';
 
-util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtc') && util.enableDebugLog();
-util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtvc') && util.enableVisualDebugLog();
+// eslint-disable-next-line no-undef
+// const refThis = this;
 
-window.IHPWT.getUserIds = () => {
-  return util.getUserIds();
-};
+let CONFIG = {};
+let CONSTANTS = {};
+let util = {};
+let COMMON_CONFIG = {};
+let pbNameSpace = {}
+let isPubmaticIHAnalyticsEnabled = {}
 
-window.IHPWT.deepMerge = (target, source, key) => {
-  return util.deepMerge(target, source, key);
-};
+export function initializeModule(idhubUtils){
+  CONFIG = idhubUtils.IDHUB.CONFIG;
+  CONSTANTS = idhubUtils.IDHUB.CONSTANTS;
+  util = idhubUtils.IDHUB.util;
+  COMMON_CONFIG = idhubUtils.IDHUB.COMMON_CONFIG;
 
-window.IHPWT.versionDetails = util.getOWConfig();
-
-//controller.init(window);
-export function init(){
-
+  pbNameSpace = CONFIG.isIdentityOnly() ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
+  isPubmaticIHAnalyticsEnabled = CONFIG.isPubMaticIHAnalyticsEnabled();
+  init(window);
 }
+
+let enablePubMaticIdentityAnalyticsIfRequired = () => {
+  window.IHPWT.ihAnalyticsAdapterExpiry = CONFIG.getIHAnalyticsAdapterExpiry();
+  if (isPubmaticIHAnalyticsEnabled && util.isFunction(window[pbNameSpace].enableAnalytics)) {
+    window[pbNameSpace].enableAnalytics({
+      provider: 'pubmaticIH',
+      options: {
+        publisherId: CONFIG.getPublisherId(),
+        profileId: CONFIG.getProfileID(),
+        profileVersionId: CONFIG.getProfileDisplayVersionID(),
+        identityOnly: CONFIG.isUserIdModuleEnabled() ? CONFIG.isIdentityOnly() ? 2 : 1 : 0,
+        domain: util.getDomainFromURL()
+      }
+    });
+  }
+}
+
+let setConfig = () => {
+  if (util.isFunction(window[pbNameSpace].setConfig) || typeof window[pbNameSpace].setConfig == 'function') {
+    if (CONFIG.isIdentityOnly()) {
+      const prebidConfig = {
+        debug: util.isDebugLogEnabled(),
+        userSync: {
+          syncDelay: 2000,
+          auctionDelay: 1,
+        }
+      };
+
+      if (CONFIG.getGdpr()) {
+        if (!prebidConfig['consentManagement']) {
+          prebidConfig['consentManagement'] = {};
+        }
+        prebidConfig['consentManagement']['gdpr'] = {
+          cmpApi: CONFIG.getCmpApi(),
+          timeout: CONFIG.getGdprTimeout(),
+          allowAuctionWithoutConsent: CONFIG.getAwc(),
+          defaultGdprScope: true
+        };
+        const gdprActionTimeout = COMMON_CONFIG.getGdprActionTimeout();
+        if (gdprActionTimeout) {
+          util.log(`GDPR IS ENABLED, TIMEOUT: ${prebidConfig['consentManagement']['gdpr']['timeout']}, ACTION TIMEOUT: ${gdprActionTimeout}`);
+          prebidConfig['consentManagement']['gdpr']['actionTimeout'] = gdprActionTimeout;
+        }
+      }
+
+      if (CONFIG.getCCPA()) {
+        if (!prebidConfig['consentManagement']) {
+          prebidConfig['consentManagement'] = {};
+        }
+        prebidConfig['consentManagement']['usp'] = {
+          cmpApi: CONFIG.getCCPACmpApi(),
+          timeout: CONFIG.getCCPATimeout(),
+        };
+      }
+      window.IHPWT.ssoEnabled = CONFIG.isSSOEnabled() || false;
+      if (CONFIG.isUserIdModuleEnabled()) {
+        prebidConfig['userSync']['userIds'] = util.getUserIdConfiguration();
+      }
+      // Adding a hook for publishers to modify the Prebid Config we have generated
+      util.handleHook(CONSTANTS.HOOKS.PREBID_SET_CONFIG, [ prebidConfig ]);
+      window[pbNameSpace].setConfig(prebidConfig);
+    }
+    if (CONFIG.isUserIdModuleEnabled() && CONFIG.isIdentityOnly()) {
+      enablePubMaticIdentityAnalyticsIfRequired();
+    }
+    util.isFunction(window[pbNameSpace].firePubMaticIHLoggerCall) && window[pbNameSpace].firePubMaticIHLoggerCall();
+    window[pbNameSpace].requestBids([]);
+  }
+};
+
+export function initIdHub(win) {
+  if (CONFIG.isUserIdModuleEnabled()) {
+    // TODO : Check for Prebid loaded and debug logs
+    setConfig();
+    if (CONFIG.isIdentityOnly()) {
+      if (CONFIG.getIdentityConsumers().includes(CONSTANTS.COMMON.PREBID) && !util.isUndefined(win[CONFIG.PBJS_NAMESPACE]) && !util.isUndefined(win[CONFIG.PBJS_NAMESPACE].que)) {
+        win[CONFIG.PBJS_NAMESPACE].que.unshift(() => {
+          const vdetails = win[CONFIG.PBJS_NAMESPACE].version.split('.');
+          // todo: check the oldest pbjs version in use, do we still need this check?
+          if (vdetails.length === 3 && (+vdetails[0].split('v')[1] > 3 || (vdetails[0] === 'v3' && +vdetails[1] >= 3))) {
+            util.log(`Adding On Event ${win[CONFIG.PBJS_NAMESPACE]}.addAddUnits()`);
+            win[CONFIG.PBJS_NAMESPACE].onEvent('addAdUnits', () => {
+              util.updateAdUnits(win[CONFIG.PBJS_NAMESPACE]['adUnits']);
+            });
+            win[CONFIG.PBJS_NAMESPACE].onEvent('beforeRequestBids', adUnits => {
+              util.updateAdUnits(adUnits);
+            });
+          } else {
+            // todo: check the oldest pbjs version in use, do we still need this check?
+            util.log(`Adding Hook on${win[CONFIG.PBJS_NAMESPACE]}.addAddUnits()`);
+            const theObject = win[CONFIG.PBJS_NAMESPACE];
+            const functionName = 'addAdUnits';
+            util.addHookOnFunction(theObject, false, functionName, newAddAdUnitFunction);
+          }
+        });
+        util.log('Identity Only Enabled and setting config');
+      } else {
+        util.logWarning('window.pbjs is undefined');
+      }
+    }
+  }
+}
+
+export function init(win) {
+  if (util.isObject(win)) {
+    initIdHub(win);
+    return true;
+  } else {
+    return false;
+  }
+}
+// endRemoveIf(removeIdHubOnlyRelatedCode)

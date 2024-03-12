@@ -91,9 +91,12 @@
       "videojsVideoProvider"
     ],
     "openWrap": [
-      "dfpOwModule",
-      "customOwModule",
-      "idhubOwModule"
+      "dfpOw",
+      "customOw",
+      "zidhubOw"
+    ],
+    "zidhubOw": [
+      "dfpOw"
     ]
   }
 }

@@ -1,5 +1,6 @@
-import controller from './controllers/idhub.js';
-import util from './util.idhub.js';
+// import controller from './controllers/idhub.js';
+import * as util from './util.idhub.js';
+
 const metaInfo = util.getMetaInfo(window);
 window.IHPWT = window.IHPWT || {};
 window.IHPWT.bidMap = window.IHPWT.bidMap || {};
@@ -27,4 +28,7 @@ window.IHPWT.deepMerge = (target, source, key) => {
 
 window.IHPWT.versionDetails = util.getOWConfig();
 
-controller.init(window);
+// controller.init(window);
+export function init(){
+
+}

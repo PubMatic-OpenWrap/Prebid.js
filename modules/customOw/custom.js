@@ -17,12 +17,12 @@ var usePrebidKeys = {};
 var isPrebidPubMaticAnalyticsEnabled = {};
 
 export function initializeModule(customUtils){
-  CONFIG = customUtils.CONFIG;
-  CONSTANTS = customUtils.CONSTANTS;
-  util = customUtils.util;
-  bidManager = customUtils.bidManager;
-  SLOT = customUtils.SLOT;
-  prebid = customUtils.prebid;
+  CONFIG = customUtils.OW.CONFIG;
+  CONSTANTS = customUtils.OW.CONSTANTS;
+  util = customUtils.OW.util;
+  bidManager = customUtils.OW.bidManager;
+  SLOT = customUtils.OW.SLOT;
+  prebid = customUtils.OW.prebid;
 
   usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
   isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();

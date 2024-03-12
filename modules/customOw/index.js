@@ -5,7 +5,7 @@ export const customUtils = {};
 
 submodule('openWrap', customUtils);
 ready.then(function(){
-  customUtils.owtInit();
+  customUtils.OW.owtInit();
   initializeModule(customUtils);
 });
 

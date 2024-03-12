@@ -27,7 +27,7 @@ export const COMMON = {
   'OPENWRAP_NAMESPACE': 'PWT',
   'IH_OW_NAMESPACE': 'IHPWT',
   'PREBID_NAMESPACE': 'owpbjs',
-  'IH_NAMESPACE': 'ihowpbjs',
+  'IH_NAMESPACE': 'owpbjs',
   'ENABLE_USER_ID': 'identityEnabled',
   'IDENTITY_PARTNERS': 'identityPartners',
   'IDENTITY_CONSUMERS': 'identityConsumers',

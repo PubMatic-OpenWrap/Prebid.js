@@ -87,8 +87,8 @@ const constDebugInConsolePrependWith = '[OpenWrap] : ';
 const constErrorInConsolePrependWith = '[OpenWrap] : [Error]';
 
 export function log(data) {
-  if (debugLogIsEnabled && console && this.isFunction(console.log)) { // eslint-disable-line no-console
-    if (this.isString(data)) {
+  if (debugLogIsEnabled && console && isFunction(console.log)) { // eslint-disable-line no-console
+    if (isString(data)) {
       console.log(`${(new Date()).getTime()} : ${constDebugInConsolePrependWith}${data}`); // eslint-disable-line no-console
     } else {
       console.log(data); // eslint-disable-line no-console
@@ -97,8 +97,8 @@ export function log(data) {
 }
 
 export function logError(data) {
-  if (debugLogIsEnabled && console && this.isFunction(console.log)) { // eslint-disable-line no-console
-    if (this.isString(data)) {
+  if (debugLogIsEnabled && console && isFunction(console.log)) { // eslint-disable-line no-console
+    if (isString(data)) {
       console.error(`${(new Date()).getTime()} : ${constDebugInConsolePrependWith}${data}`); // eslint-disable-line no-console
     } else {
       console.error(data); // eslint-disable-line no-console
@@ -107,8 +107,8 @@ export function logError(data) {
 }
 
 export function logWarning(data) {
-  if (debugLogIsEnabled && console && this.isFunction(console.log)) { // eslint-disable-line no-console
-    if (this.isString(data)) {
+  if (debugLogIsEnabled && console && isFunction(console.log)) { // eslint-disable-line no-console
+    if (isString(data)) {
       console.warn(`${(new Date()).getTime()} : ${constDebugInConsolePrependWith}${data}`); // eslint-disable-line no-console
     } else {
       console.warn(data); // eslint-disable-line no-console

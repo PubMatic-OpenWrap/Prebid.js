@@ -17,14 +17,14 @@ let IdHub = {};
 var usePrebidKeys = {};
 var isPrebidPubMaticAnalyticsEnabled = {};
 
-export function initializeModule(gptUtils){
-  CONFIG = gptUtils.CONFIG;
-  CONSTANTS = gptUtils.CONSTANTS;
-  util = gptUtils.util;
-  bidManager = gptUtils.bidManager;
-  SLOT = gptUtils.SLOT;
-  prebid = gptUtils.prebid;
-  IdHub = gptUtils.IdHub;
+export function initializeModule(gptUtils, idhubUtils){
+  CONFIG = gptUtils.OW.CONFIG;
+  CONSTANTS = gptUtils.OW.CONSTANTS;
+  util = gptUtils.OW.util;
+  bidManager = gptUtils.OW.bidManager;
+  SLOT = gptUtils.OW.SLOT;
+  prebid = gptUtils.OW.prebid;
+  IdHub = idhubUtils.IdHub;
 
   usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
   isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();

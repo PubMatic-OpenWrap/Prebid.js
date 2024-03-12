@@ -21,7 +21,6 @@
 // // usingDifferentProfileVersion
 // window.PWT.udpv = window.PWT.udpv || util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtv');
 
-import { module } from "../../src/hook";
 
 // util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtc') && util.enableDebugLog();
 // util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtvc') && util.enableVisualDebugLog();
@@ -194,17 +193,24 @@ import { module } from "../../src/hook";
 // owt.init();
 // controller.init(window);
 
-import * as owt from './owt.js';
+import { module } from "../../src/hook";
 
+import * as owt from './owt.js';
 import * as CONFIG from './config.js';
 import * as CONSTANTS from './constants.js';
 import * as util from './util.js';
 import * as bidManager from './bidManager.js';
 import * as SLOT from './slot.js';
 import * as prebid from './adapters/prebid.js';
-import * as IdHub from './controllers/idhub.js';
 
 import { isPlainObject, logError } from '../../src/utils.js';
+
+
+import * as CONFIG_IDHUB from './config.idhub.js';
+// import * as CONSTANTS from './constants.js';
+import * as util_idhub from './util.idhub.js';
+import * as COMMON_CONFIG from './common.config.js';
+import * as idhubInit from './idhub.js';
 
 const sharedMethods = {
   "owtInit": owt.init,
@@ -213,21 +219,30 @@ const sharedMethods = {
   "util": util,
   "bidManager": bidManager,
   "SLOT": SLOT,
-  "prebid": prebid,
-  "IdHub": IdHub
+  "prebid": prebid
 }
-
 Object.freeze(sharedMethods);
+
+const idhubSharedMethods = {
+  "idhubInit": idhubInit.init,
+  "CONFIG": CONFIG_IDHUB,
+  "CONSTANTS": CONSTANTS,
+  "util": util_idhub,
+  "COMMON_CONFIG": COMMON_CONFIG
+}
+Object.freeze(idhubSharedMethods);
 
 module('openWrap', function shareOwUtilities(...args) {
   if (!isPlainObject(args[0])) {
     logError('OW module needs plain object to share methods with submodule');
     return;
   }
-  function addMethods(object, func) {
+  function addMethods(object, func, key) {
+    object[key] = {};
     for (let name in func) {
-      object[name] = func[name];
+      object[key][name] = func[name];
     }
   }
-  addMethods(args[0], sharedMethods);
+  addMethods(args[0], sharedMethods, "OW");
+  addMethods(args[0], idhubSharedMethods, "IDHUB");
 });
