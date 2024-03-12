@@ -1,6 +1,6 @@
 import { submodule, ready, module } from '../../src/hook.js';
 import { initializeModule } from './idhub.js';
-import * as idhub from './idhub.js';
+import * as IdHub from './idhub.js';
 import { isPlainObject, logError } from '../../src/utils.js';
 
 // const idHubSharedMethods = {
@@ -39,7 +39,7 @@ ready.then(function(){
 });
 
 const idHubSharedMethods = {
-  "idhub": idhub
+  "IdHub": IdHub
 };
 Object.freeze(idHubSharedMethods);
 module('zidhubOW', function shareIdhubUtilities(...args) {

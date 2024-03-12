@@ -1,59 +1,68 @@
 export const pwt = {
-  "identityOnly": "1",
-  "pid": "9354",
-  "gcv": "195",
-  "pdvid": "1",
-  "pubid": "5890",
-  "dataURL": "t.pubmatic.com/wl?",
-  "winURL": "t.pubmatic.com/wt?",
-  "owv": "v25.3.0",
-  "pbv": "v7.25.0",
-  "usePBSAdapter": "0",
-  "reduceCodeSize": "1",
-  "metaDataPattern": "_PC_:_BC_::_P_-_W_x_H_-_NE_(_GE_)||",
-  "sendAllBids": "0",
-  "adserver": "IDHUB",
-  "gdpr": "1",
-  "cmp": 'iab',
-  "gdprTimeout": 1000,
-  "awc": 0,
-  "platform": "display",
-  "refreshInterval": 0,
-  "priceGranularity": 0,
-  "adServerCurrency": 0,
-  "singleImpression": "0",
-  "identityEnabled": "1",
-  "identityConsumers": "Prebid",
-  "ccpa": "0",
-  "ccpaCmpApi": 0,
-  "ccpaTimeout": 0,
-  "sChain": "0",
-  "sChainObj": 0,
-  "auTimeout": "1000",
-  "t": "1000",
-  "ssTimeout": 0,
-  "prebidObjName": "pbjs",
-  "pubAnalyticsAdapter": "0",
-  "usePBJSKeys": "0",
-  "abTestEnabled": "0",
-  "testGroupSize": 0,
-  "testType": 0,
-  "granularityMultiplier": 0,
-  "floorPriceModuleEnabled": "0",
-  "floorSource": 0,
-  "floorAuctionDelay": 0,
-  "jsonUrl": 0,
-  "ssoEnabled": "0",
-  "autoRefreshAdslots": 0,
-  "videoLengths": 0,
-  "videoLengthMatching": 0,
-  "adPodsEnabled": 0,
-  "customPriceGranularityConfig": 0,
-  "pbGlobalVarNamespace": "ihowpbjs",
-  "owGlobalVarNamespace": "IHPWT",
-  gpp: "1",
-  gppCmpApi: "iab",
-  gppTimeout: "1000"
+  pid: '66622',
+  gcv: '209',
+  pdvid: '1',
+  pubid: '5890',
+  dataURL: 't.pubmatic.com/wl?',
+  winURL: 't.pubmatic.com/wt?',
+  owv: 'v26.10.0',
+  pbv: 'v7.39.0',
+  usePBSAdapter: '0',
+  reduceCodeSize: '1',
+  metaDataPattern: 0,
+  sendAllBids: '0',
+  adserver: 'DFP',
+  gdpr: '0',
+  cmp: 0,
+  gdprTimeout: 0,
+  awc: 0,
+  platform: 'display',
+  refreshInterval: 0,
+  priceGranularity: 0,
+  adServerCurrency: 0,
+  singleImpression: '1',
+  identityEnabled: 0,
+  identityConsumers: 0,
+  ccpa: '0',
+  ccpaCmpApi: 0,
+  ccpaTimeout: 0,
+  sChain: '0',
+  sChainObj: 0,
+  auTimeout: '1000',
+  t: '1000',
+  ssTimeout: 0,
+  prebidObjName: 0,
+  pubAnalyticsAdapter: '0',
+  usePBJSKeys: '0',
+  abTestEnabled: '0',
+  testGroupSize: 0,
+  testType: 0,
+  granularityMultiplier: 0,
+  floorPriceModuleEnabled: '0',
+  floorSource: 0,
+  floorAuctionDelay: 0,
+  jsonUrl: 0,
+  ssoEnabled: 0,
+  autoRefreshAdslots: '0',
+  videoAdDuration: 0,
+  videoAdDurationMatching: 0,
+  adPodConfiguration: 0,
+  customPriceGranularityConfig: 0,
+  marketplaceBidders: 0,
+  owRedirectURL: 0,
+  topicsFPDModule: 0,
+  enableVastUnwrapper: 0,
+  floorType: 0,
+  pubId: 0,
+  zone: 0,
+  pbGlobalVarNamespace: 'owpbjs',
+  owGlobalVarNamespace: 'PWT',
+  gpp: '0',
+  gppCmpApi: 0,
+  gppTimeout: 0,
+  globalNamespaceType: 'Default',
+  gdprActionTimeout: 0,
+  localStorageAccess: '1'
 };
 
 // singleImpression is used to enable feature of sending single impression for multiple size ad slot earlier there were multiple impression for multiple sizes
@@ -200,53 +209,53 @@ export const identityPartners = {
 // 5. DIV1 -> Apply based on condtions (enabled,)
 // 6. DIV5 -> It will increase Latency
 
-// export const slotConfig = {
-//   'configPattern': '_DIV_',
-//   'config': {
-//     'Div1': {
-//       'banner': {
-//         'enabled': true
-//       },
-//       'native': {
-//         'enabled': true,
-//         'config': {
-//           'image': {
-//             'required': true,
-//             'sizes': [150, 50]
-//           },
-//           'title': {
-//             'required': true,
-//             'len': 80
-//           },
-//           'sponsoredBy': {
-//             'required': true
-//           },
-//           'body': {
-//             'required': true
-//           }
-//         }
-//       },
-//       'video': {
-//         'enabled': true,
-//         'config': {
-//           'context': 'instream',
-//           'connectiontype': [1, 2, 6],
-//           'minduration': 10,
-//           'maxduration': 50,
-//           'battr': [6, 7],
-//           'skip': 1,
-//           'skipmin': 10,
-//           'skipafter': 15
-//         },
-//         'partnerConfig': {
-//           'pubmatic': {
-//             'outstreamAU': 'pubmatic-test'
-//           }
-//         }
-//       }
-//     },
-//     'AU2': {
-//       'banner': {}
-//     }
-//   }
-// };
+export const slotConfig = {
+  'configPattern': '_DIV_',
+  'config': {
+    'Div1': {
+      'banner': {
+        'enabled': true
+      },
+      'native': {
+        'enabled': true,
+        'config': {
+          'image': {
+            'required': true,
+            'sizes': [150, 50]
+          },
+          'title': {
+            'required': true,
+            'len': 80
+          },
+          'sponsoredBy': {
+            'required': true
+          },
+          'body': {
+            'required': true
+          }
+        }
+      },
+      'video': {
+        'enabled': true,
+        'config': {
+          'context': 'instream',
+          'connectiontype': [1, 2, 6],
+          'minduration': 10,
+          'maxduration': 50,
+          'battr': [6, 7],
+          'skip': 1,
+          'skipmin': 10,
+          'skipafter': 15
+        },
+        'partnerConfig': {
+          'pubmatic': {
+            'outstreamAU': 'pubmatic-test'
+          }
+        }
+      }
+    },
+    'AU2': {
+      'banner': {}
+    }
+  }
+};
