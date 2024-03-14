@@ -1,16 +1,3 @@
-/* eslint-disable prebid/validate-imports */
-// removeIf(removeIdHubOnlyRelatedCode)
-// tdod: we can still reduce the build size for idhub by,
-//      - create a separate constants.js with limited required functions
-
-// import * as CONFIG from './config.idhub.js';
-// import * as CONSTANTS from './constants.js';
-// import * as util from './util.idhub.js';
-// import * as COMMON_CONFIG from './common.config.js';
-
-// eslint-disable-next-line no-undef
-// const refThis = this;
-
 let CONFIG = {};
 let CONSTANTS = {};
 let util = {};

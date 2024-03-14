@@ -91,12 +91,12 @@
       "videojsVideoProvider"
     ],
     "openWrap": [
-      "dfpOw",
-      "customOw",
-      "zidhubOw"
+      "dfpOpenWrap",
+      "customOpenWrap",
+      "zidhubOpenWrap"
     ],
-    "zidhubOw": [
-      "dfpOw"
+    "zidhubOpenWrap": [
+      "dfpOpenWrap"
     ]
   }
 }

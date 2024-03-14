@@ -1,12 +1,3 @@
-/* eslint-disable prebid/validate-imports */
-// import * as CONFIG from '../config.js';
-// import * as CONSTANTS from '../constants.js';
-// import * as util from '../util.js';
-// import * as bidManager from '../bidManager.js';
-// import * as SLOT from '../slot.js';
-// import * as prebid from '../adapters/prebid.js';
-// import * as IdHub from './idhub.js';
-
 let CONFIG = {};
 let CONSTANTS = {};
 let util = {};
