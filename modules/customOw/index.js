@@ -3,9 +3,9 @@ import { initializeModule } from './custom.js';
 
 export const customUtils = {};
 
-submodule('openWrap', customUtils);
+submodule('openWrap', customUtils, "OW");
 ready.then(function(){
-  customUtils.OW.owtInit();
+  customUtils.owtInit();
   initializeModule(customUtils);
 });
 

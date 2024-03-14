@@ -32,25 +32,25 @@ import { isPlainObject, logError } from '../../src/utils.js';
 //IdHubIndex.init(window);
 export const idhubUtils = {};
 
-submodule('openWrap', idhubUtils);
+submodule('openWrap', idhubUtils, "IDHUB");
 ready.then(function(){
-  idhubUtils.IDHUB.idhubInit();
+  idhubUtils.idhubInit();
   initializeModule(idhubUtils);
 });
 
-const idHubSharedMethods = {
-  "IdHub": IdHub
-};
-Object.freeze(idHubSharedMethods);
-module('zidhubOW', function shareIdhubUtilities(...args) {
-  if (!isPlainObject(args[0])) {
-    logError('IDHUB OW module needs plain object to share methods with submodule');
-    return;
-  }
-  function addMethods(object, func) {
-    for (let name in func) {
-      object[name] = func[name];
-    }
-  }
-  addMethods(args[0], idHubSharedMethods);
-});
+// const idHubSharedMethods = {
+//   "IdHub": IdHub
+// };
+// Object.freeze(idHubSharedMethods);
+// module('zidhubOW', function shareIdhubUtilities(...args) {
+//   if (!isPlainObject(args[0])) {
+//     logError('IDHUB OW module needs plain object to share methods with submodule');
+//     return;
+//   }
+//   function addMethods(object, func) {
+//     for (let name in func) {
+//       object[name] = func[name];
+//     }
+//   }
+//   addMethods(args[0], idHubSharedMethods);
+// });

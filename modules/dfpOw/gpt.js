@@ -13,18 +13,18 @@ let util = {};
 let bidManager = {};
 let SLOT = {};
 let prebid = {};
-let IdHub = {};
+// let IdHub = {};
 var usePrebidKeys = {};
 var isPrebidPubMaticAnalyticsEnabled = {};
 
-export function initializeModule(gptUtils, idhubUtils){
-  CONFIG = gptUtils.OW.CONFIG;
-  CONSTANTS = gptUtils.OW.CONSTANTS;
-  util = gptUtils.OW.util;
-  bidManager = gptUtils.OW.bidManager;
-  SLOT = gptUtils.OW.SLOT;
-  prebid = gptUtils.OW.prebid;
-  IdHub = idhubUtils.IdHub;
+export function initializeModule(gptUtils){
+  CONFIG = gptUtils.CONFIG;
+  CONSTANTS = gptUtils.CONSTANTS;
+  util = gptUtils.util;
+  bidManager = gptUtils.bidManager;
+  SLOT = gptUtils.SLOT;
+  prebid = gptUtils.prebid;
+  // IdHub = idhubUtils.IdHub;
 
   usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
   isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
@@ -942,7 +942,7 @@ export function init(win) { // TDD, i/o : done
     wrapperTargetingKeys = defineWrapperTargetingKeys(CONSTANTS.WRAPPER_TARGETING_KEYS);
     defineGPTVariables(win);
     addHooksIfPossible(win);
-    IdHub.initIdHub(win);
+    // IdHub.initIdHub(win);
     return true;
   } else {
     return false;

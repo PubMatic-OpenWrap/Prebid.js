@@ -19,10 +19,10 @@ let pbNameSpace = {}
 let isPubmaticIHAnalyticsEnabled = {}
 
 export function initializeModule(idhubUtils){
-  CONFIG = idhubUtils.IDHUB.CONFIG;
-  CONSTANTS = idhubUtils.IDHUB.CONSTANTS;
-  util = idhubUtils.IDHUB.util;
-  COMMON_CONFIG = idhubUtils.IDHUB.COMMON_CONFIG;
+  CONFIG = idhubUtils.CONFIG;
+  CONSTANTS = idhubUtils.CONSTANTS;
+  util = idhubUtils.util;
+  COMMON_CONFIG = idhubUtils.COMMON_CONFIG;
 
   pbNameSpace = CONFIG.isIdentityOnly() ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
   isPubmaticIHAnalyticsEnabled = CONFIG.isPubMaticIHAnalyticsEnabled();
