@@ -1846,6 +1846,15 @@ describe('PubMatic adapter', function () {
           expect(data.badv).to.deep.equal(['example.com']);
         });
 
+        it('ortb2.badv should be merged in the request', function() {
+          const ortb2 = {
+            badv: ['example.com']
+          };
+          const request = spec.buildRequests(bidRequests, {ortb2});
+          let data = JSON.parse(request.data);
+          expect(data.badv).to.deep.equal(['example.com']);
+        });
+
         describe('ortb2Imp', function() {
           describe('ortb2Imp.ext.gpid', function() {
             beforeEach(function () {
