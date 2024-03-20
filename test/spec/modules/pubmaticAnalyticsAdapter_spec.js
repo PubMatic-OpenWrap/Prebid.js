@@ -1020,12 +1020,16 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].mt[0]).to.equal(0);
       expect(data.s[1].mt[1]).to.equal(1);
       expect(data.s[1].fskp).to.equal(0);
+      expect(data.s[1].sid).not.to.be.undefined;
+      expect(data.s[1].ffs).to.equal(1);
+      expect(data.s[1].fsrc).to.equal(2);
       expect(data.s[1].fp).to.equal('pubmatic');
       expect(data.s[1].sz).to.deep.equal(['1000x300', '970x250', '728x90']);
+      expect(data.s[1].fskp).to.equal(0);
       expect(data.s[1].ffs).to.equal(1);
       expect(data.s[1].fsrc).to.equal(2);
 	    expect(data.s[1].sid).not.to.be.undefined;
-
+      expect(data.s[1].fp).to.equal('pubmatic');
       expect(data.s[1].ps).to.be.an('array');
       expect(data.s[1].ps.length).to.equal(1);
       expect(data.s[1].ps[0].pn).to.equal('pubmatic');
@@ -1627,11 +1631,6 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].mt[0]).to.equal(0);
       expect(data.s[1].mt[1]).to.equal(1);
       expect(data.s[1].sz).to.deep.equal(['1000x300', '970x250', '728x90']);
-      expect(data.s[1].fskp).to.equal(0);
-      expect(data.s[1].ffs).to.equal(1);
-      expect(data.s[1].fsrc).to.equal(2);
-  	  expect(data.s[1].sid).not.to.be.undefined;
-      expect(data.s[1].fp).to.equal('pubmatic');
       expect(data.s[1].fskp).to.equal(0);
       expect(data.s[1].ffs).to.equal(1);
       expect(data.s[1].fsrc).to.equal(2);
