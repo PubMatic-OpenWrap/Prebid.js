@@ -21,8 +21,6 @@ var gutil = require('gulp-util');
 var fs = require('fs');
 var footer = require('gulp-footer');
 var sourcemaps = require('gulp-sourcemaps');
-const {minify} = require('terser');
-const Vinyl = require('vinyl');
 const wrap = require('gulp-wrap');
 const rename = require('gulp-rename');
 
