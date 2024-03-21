@@ -492,6 +492,54 @@ function startFakeServer() {
   });
 }
 
+// START: OW Custom tasks
+function addPattern(patterns, match, replacement) {
+  if (replacement) {
+      patterns.push({
+          match: match,
+          replacement: replacement
+      });
+  }
+}
+
+function getOverrideNamespace(namespace, defaultName, returnValueInCaseMissingNamespace) {
+  if (namespace) {
+    return namespace === defaultName ? returnValueInCaseMissingNamespace : namespace;
+  } else {
+    return returnValueInCaseMissingNamespace;
+  }
+}
+
+function getPatternsToReplace() {
+  var isIdentityOnly = argv.isIdentityOnly || 0;
+  var pbNamespace = argv.pbNamespace || '';
+  var owNamespace = argv.owNamespace || '';
+  var patterns = [];
+  if (isIdentityOnly) {
+      addPattern(patterns, /ihowpbjs|owpbjs/g, getOverrideNamespace(pbNamespace,  'ihowpbjs', 'ihowpbjs'));
+      addPattern(patterns, /IHPWT/g, getOverrideNamespace(owNamespace, 'IHPWT', 'IHPWT'));
+  } else {
+      // Passing null as we don't want to replace the used value(i.e. PWT) with default value(i.e. PWT) as both are same,
+      addPattern(patterns, /owpbjs/g, getOverrideNamespace(pbNamespace, 'owpbjs', null));
+      addPattern(patterns, /PWT/g, getOverrideNamespace(owNamespace, 'PWT', null));
+  }
+  return patterns;
+}
+
+gulp.task('update-namespace', async function () { 
+  console.log("Executing update-namespace - START => ");
+  var patternsToReplace = getPatternsToReplace();
+  var replaceFileName = argv.bundleName ? argv.bundleName : 'prebid.js';
+  console.log("Patterns to replace => ", patternsToReplace);
+  if(patternsToReplace.length > 0){
+    return gulp.src(['build/*/'+ replaceFileName])
+    .pipe(replace(patternsToReplace[0].match, patternsToReplace[0].replacement))
+    .pipe(replace(patternsToReplace[1].match, patternsToReplace[1].replacement))
+    .pipe(gulp.dest('build/'));
+  }
+});
+// END: OW Custom tasks
+
 // support tasks
 gulp.task(lint);
 gulp.task(watch);
