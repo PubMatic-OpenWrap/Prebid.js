@@ -159,6 +159,7 @@ describe('PubMatic adapter', function () {
       params: {
         publisherId: '5890',
         adSlot: 'Div1@640x480', // ad_id or tagid
+        wiid: '1234567890',
         video: {
           mimes: ['video/mp4', 'video/x-flv'],
           skippable: true,
@@ -210,6 +211,7 @@ describe('PubMatic adapter', function () {
       params: {
         publisherId: '5670',
         adSlot: '/43743431/NativeAutomationPrebid@1x1',
+        wiid: 'new-unique-wiid'
       },
       bidId: '2a5571261281d4',
       requestId: 'B68287E1-DC39-4B38-9790-FE4F179739D6',
@@ -259,6 +261,7 @@ describe('PubMatic adapter', function () {
       params: {
         publisherId: '5670',
         adSlot: '/43743431/NativeAutomationPrebid@1x1',
+        wiid: 'new-unique-wiid'
       },
       bidId: '2a5571261281d4',
       requestId: 'B68287E1-DC39-4B38-9790-FE4F179739D6',
@@ -285,6 +288,7 @@ describe('PubMatic adapter', function () {
       params: {
         publisherId: '5670',
         adSlot: '/43743431/NativeAutomationPrebid@1x1',
+        wiid: 'new-unique-wiid'
       }
     }];
 
@@ -317,6 +321,7 @@ describe('PubMatic adapter', function () {
       params: {
         publisherId: '5670',
         adSlot: '/43743431/NativeAutomationPrebid@1x1',
+        wiid: 'new-unique-wiid'
       }
     }];
 
@@ -459,6 +464,7 @@ describe('PubMatic adapter', function () {
         params: {
           publisherId: '5670',
           adSlot: '/15671365/DMDemo@300x250:0',
+          wiid: 'new-unique-wiid',
           video: {
             mimes: ['video/mp4', 'video/x-flv'],
             skippable: true,
@@ -521,6 +527,7 @@ describe('PubMatic adapter', function () {
         params: {
           publisherId: '5670',
           adSlot: '/15671365/DMDemo@300x250:0',
+          wiid: 'new-unique-wiid',
           video: {
             mimes: ['video/mp4', 'video/x-flv'],
             skippable: true,
@@ -1062,7 +1069,7 @@ describe('PubMatic adapter', function () {
   		  let request = spec.buildRequests(bidRequests, {
           auctionId: 'new-auction-id'
         });
-        const regExp = new RegExp('https://hbopenbid.pubmatic.com/translator\\?source=ow-client\&correlator=');
+        const regExp = new RegExp('https://hbopenbid.pubmatic.com/translator\\?source=ow-client');
         expect(request.url).to.match(regExp);
         expect(request.method).to.equal('POST');
       });
@@ -1830,9 +1837,44 @@ describe('PubMatic adapter', function () {
           let data = JSON.parse(request.data);
           expect(data.user.yob).to.equal(1985);
         });
+        it('ortb2.badv should be merged in the request', function() {
+          const ortb2 = {
+			  badv: ['example.com']
+          };
+          const request = spec.buildRequests(bidRequests, {ortb2});
+          let data = JSON.parse(request.data);
+          expect(data.badv).to.deep.equal(['example.com']);
+        });
 
         describe('ortb2Imp', function() {
           describe('ortb2Imp.ext.gpid', function() {
+            beforeEach(function () {
+              if (bidRequests[0].hasOwnProperty('ortb2Imp')) {
+                delete bidRequests[0].ortb2Imp;
+              }
+            });
+
+            it('should send gpid if imp[].ext.gpid is specified', function() {
+              bidRequests[0].ortb2Imp = {
+                ext: {
+                  gpid: 'ortb2Imp.ext.gpid'
+                }
+              };
+              const request = spec.buildRequests(bidRequests, {});
+              let data = JSON.parse(request.data);
+              expect(data.imp[0].ext).to.have.property('gpid');
+              expect(data.imp[0].ext.gpid).to.equal('ortb2Imp.ext.gpid');
+            });
+
+            it('should not send if imp[].ext.gpid is not specified', function() {
+              bidRequests[0].ortb2Imp = { ext: { } };
+              const request = spec.buildRequests(bidRequests, {});
+              let data = JSON.parse(request.data);
+              expect(data.imp[0].ext).to.not.have.property('gpid');
+            });
+          });
+
+          describe('ortb2Imp.ext.data.pbadslot', function() {
             beforeEach(function () {
               if (bidRequests[0].hasOwnProperty('ortb2Imp')) {
                 delete bidRequests[0].ortb2Imp;
@@ -2834,6 +2876,23 @@ describe('PubMatic adapter', function () {
       firstBid.params.sizes = [];
       let request = spec.buildRequests([]);
       expect(request).to.equal(undefined);
+    });
+
+    it('should pass device.ext.cdep if present in bidderRequest fpd ortb2 object', function () {
+      const cdepObj = {
+        cdep: 'example_label_1'
+      };
+      let request = spec.buildRequests(multipleMediaRequests, {
+        auctionId: 'new-auction-id',
+        ortb2: {
+          device: {
+            ext: cdepObj
+          }
+        }
+      });
+      let data = JSON.parse(request.data);
+      expect(data.device.ext.cdep).to.exist.and.to.be.an('string');
+      expect(data.device.ext).to.deep.equal(cdepObj);
     });
 
     it('Request params should have valid native bid request for all valid params', function () {

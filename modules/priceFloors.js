@@ -347,7 +347,7 @@ export function updateAdUnitsForAuction(adUnits, floorData, auctionId) {
       bid.auctionId = auctionId;
       bid.floorData = {
         skipped: floorData.skipped,
-        skipRate: floorData.skipRate,
+        skipRate: deepAccess(floorData, 'data.skipRate') ?? floorData.skipRate,
         floorMin: floorData.floorMin,
         modelVersion: deepAccess(floorData, 'data.modelVersion'),
         modelWeight: deepAccess(floorData, 'data.modelWeight'),
@@ -372,11 +372,20 @@ export function pickRandomModel(modelGroups, weightSum) {
   }
 };
 
+export function getFloorSourceType(resolvedFloorsData) {
+  if (resolvedFloorsData?.data && resolvedFloorsData.data.hasOwnProperty('usefetchdatarate')) {
+    const { usefetchdatarate } = resolvedFloorsData.data;
+    return !(Math.random() * 100 > parseFloat(usefetchdatarate));
+  }
+  return true;
+}
+
 /**
  * @summary Updates the adUnits accordingly and returns the necessary floorsData for the current auction
  */
 export function createFloorsDataForAuction(adUnits, auctionId) {
   let resolvedFloorsData = deepClone(_floorsConfig);
+  let useResolvedFloorsData = getFloorSourceType(resolvedFloorsData);
   // if using schema 2 pick a model here:
   if (deepAccess(resolvedFloorsData, 'data.floorsSchemaVersion') === 2) {
     // merge the models specific stuff into the top level data settings (now it looks like floorsSchemaVersion 1!)
@@ -386,8 +395,10 @@ export function createFloorsDataForAuction(adUnits, auctionId) {
 
   // if we do not have a floors data set, we will try to use data set on adUnits
   let useAdUnitData = Object.keys(deepAccess(resolvedFloorsData, 'data.values') || {}).length === 0;
-  if (useAdUnitData) {
+  if (useAdUnitData || !useResolvedFloorsData) {
     resolvedFloorsData.data = getFloorDataFromAdUnits(adUnits);
+    resolvedFloorsData.skipRate = resolvedFloorsData.data.skipRate || 0;
+    resolvedFloorsData.floorProvider = resolvedFloorsData.data.floorProvider;
   } else {
     resolvedFloorsData.data = getFloorsDataForAuction(resolvedFloorsData.data);
   }
@@ -396,7 +407,7 @@ export function createFloorsDataForAuction(adUnits, auctionId) {
     resolvedFloorsData.skipped = true;
   } else {
     // determine the skip rate now
-    const auctionSkipRate = getParameterByName('pbjs_skipRate') || resolvedFloorsData.skipRate;
+    const auctionSkipRate = getParameterByName('pbjs_skipRate') || (deepAccess(resolvedFloorsData, 'data.skipRate') ?? resolvedFloorsData.skipRate);
     const isSkipped = Math.random() * 100 < parseFloat(auctionSkipRate);
     resolvedFloorsData.skipped = isSkipped;
   }
@@ -431,7 +442,7 @@ function validateSchemaFields(fields) {
   if (Array.isArray(fields) && fields.length > 0 && fields.every(field => allowedFields.indexOf(field) !== -1)) {
     return true;
   }
-  logError(`${MODULE_NAME}: Fields recieved do not match allowed fields`);
+  logError(`${MODULE_NAME}: Fields received do not match allowed fields`);
   return false;
 }
 
@@ -616,7 +627,7 @@ function handleFetchError(status) {
 }
 
 /**
- * This function handles sending and recieving the AJAX call for a floors fetch
+ * This function handles sending and receiving the AJAX call for a floors fetch
  * @param {object} floorsConfig the floors config coming from setConfig
  */
 export function generateAndHandleFetch(floorEndpoint) {
@@ -748,7 +759,7 @@ export const addBidResponseHook = timedBidResponseHook('priceFloors', function a
   let floorInfo = getFirstMatchingFloor(floorData.data, matchingBidRequest, {...bid, size: [bid.width, bid.height]});
 
   if (!floorInfo.matchingFloor) {
-    logWarn(`${MODULE_NAME}: unable to determine a matching price floor for bidResponse`, bid);
+    if (floorInfo.matchingFloor !== 0) logWarn(`${MODULE_NAME}: unable to determine a matching price floor for bidResponse`, bid);
     return fn.call(this, adUnitCode, bid, reject);
   }
 

@@ -1,15 +1,13 @@
-import { getBidRequest, logWarn, isBoolean, isStr, isArray, inIframe, mergeDeep, deepAccess, isNumber, deepSetValue, logInfo, logError, deepClone, uniques, isPlainObject, isInteger, parseQueryStringParameters } from '../src/utils.js';
+import { getBidRequest, logWarn, isBoolean, isStr, isArray, inIframe, mergeDeep, deepAccess, isNumber, deepSetValue, logInfo, logError, deepClone, uniques, isPlainObject, isInteger, parseQueryStringParameters, generateUUID } from '../src/utils.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
 import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
-import { getStorageManager } from '../src/storageManager.js'
 import CONSTANTS from '../src/constants.json';
 import {convertTypes} from '../libraries/transformParamsUtils/convertTypes.js';
 
 const BIDDER_CODE = 'pubmatic';
-const storage = getStorageManager({bidderCode: BIDDER_CODE});
 const LOG_WARN_PREFIX = 'PubMatic: ';
 const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator';
 const USER_SYNC_URL_IFRAME = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=';
@@ -137,17 +135,7 @@ const MEDIATYPE = [
 let publisherId = 0;
 let isInvalidNativeRequest = false;
 let biddersList = ['pubmatic'];
-let viewData;
 const allBiddersList = ['all'];
-
-const removeViewTimeForZeroValue = obj => {
-  // Deleteing this field as it is only required to calculate totalViewtime and no need to send it to translator.
-  delete obj.lastViewStarted;
-  // Deleteing totalTimeView incase value is less than 1 sec.
-  if (obj.totalViewTime == 0) {
-    delete obj.totalViewTime;
-  }
-};
 
 export function _getDomainFromURL(url) {
   let anchor = document.createElement('a');
@@ -616,12 +604,6 @@ function _addPMPDealsInImpression(impObj, bid) {
   }
 }
 
-function _addBidViewabilityData(impObj, bid) {
-  if (bid.bidViewability) {
-    impObj.ext.bidViewability = bid.bidViewability;
-  }
-}
-
 function _addDealCustomTargetings(imp, bid) {
   var dctr = '';
   var dctrLen;
@@ -689,7 +671,6 @@ function _createImpressionObject(bid, bidderRequest) {
   _addPMPDealsInImpression(impObj, bid);
   _addDealCustomTargetings(impObj, bid);
   _addJWPlayerSegmentData(impObj, bid);
-  _addBidViewabilityData(impObj, bid);
 
   if (bid.hasOwnProperty('mediaTypes')) {
     for (mediaTypes in bid.mediaTypes) {
@@ -1057,9 +1038,9 @@ function hasGetRequestEnabled() {
   return randomValue100 <= testGroupPercentage;
 }
 
-function getUniqueNumber(rangeEnd) {
-  return Math.floor(Math.random() * rangeEnd) + 1;
-}
+// function getUniqueNumber(rangeEnd) {
+//   return Math.floor(Math.random() * rangeEnd) + 1;
+// }
 
 export const spec = {
   code: BIDDER_CODE,
@@ -1137,8 +1118,10 @@ export const spec = {
     var bid;
     var blockedIabCategories = [];
     var allowedIabCategories = [];
+    var wiid = generateUUID();
 
     validBidRequests.forEach(originalBid => {
+      originalBid.params.wiid = originalBid.params.wiid || bidderRequest.auctionId || wiid;
       bid = deepClone(originalBid);
       bid.params.adSlot = bid.params.adSlot || '';
       _parseAdSlot(bid);
@@ -1207,16 +1190,6 @@ export const spec = {
       payload.ext.marketplace.allowedbidders = biddersList.filter(uniques);
     }
 
-    try {
-      viewData = storage && !!storage.getDataFromLocalStorage('viewability-data') ? JSON.parse(storage.getDataFromLocalStorage('viewability-data')) : {};
-      if (Object.keys(viewData).length && bid.bidViewability) {
-        removeViewTimeForZeroValue(viewData[_getDomainFromURL(payload.site.page)]);
-        payload.ext.bidViewability = {
-          adDomain: viewData[_getDomainFromURL(payload.site.page)]
-        }
-      }
-    } catch (e) {}
-
     payload.user.gender = (conf.gender ? conf.gender.trim() : UNDEFINED);
     payload.user.geo = {};
     // TODO: fix lat and long to only come from request object, not params
@@ -1281,7 +1254,7 @@ export const spec = {
 
     // First Party Data
     const commonFpd = (bidderRequest && bidderRequest.ortb2) || {};
-    const { user, device, site, bcat } = commonFpd;
+    const { user, device, site, bcat, badv } = commonFpd;
     if (site) {
       const { page, domain, ref } = payload.site;
       mergeDeep(payload, {site: site});
@@ -1292,12 +1265,19 @@ export const spec = {
     if (user) {
       mergeDeep(payload, {user: user});
     }
+    if (badv) {
+      mergeDeep(payload, {badv: badv});
+    }
     if (bcat) {
       blockedIabCategories = blockedIabCategories.concat(bcat);
     }
     // check if fpd ortb2 contains device property with sua object
     if (device?.sua) {
       payload.device.sua = device?.sua;
+    }
+
+    if (device?.ext?.cdep) {
+      deepSetValue(payload, 'device.ext.cdep', device.ext.cdep);
     }
 
     if (user?.geo && device?.geo) {
@@ -1344,35 +1324,36 @@ export const spec = {
       delete payload.site;
     }
 
-    const correlator = getUniqueNumber(1000);
-    let url = ENDPOINT + '?source=ow-client&correlator=' + correlator;
+    // const correlator = getUniqueNumber(1000);
+    // let url = ENDPOINT + '?source=ow-client&correlator=' + correlator;
 
     let serverRequest = {
       method: 'POST',
-      url: url,
+      url: ENDPOINT + '?source=ow-client',
       data: JSON.stringify(payload),
       bidderRequest: bidderRequest
     };
 
     // Allow translator request to execute it as GET Methoid if flag is set.
     if (hasGetRequestEnabled()) {
-      // For Auction End Handler
-      if (bidderRequest) {
-        bidderRequest = bidderRequest || {};
-        bidderRequest.nwMonitor = {};
-        bidderRequest.nwMonitor.reqMethod = 'POST';
-        bidderRequest.nwMonitor.correlator = correlator;
-        bidderRequest.nwMonitor.requestUrlPayloadLength = url.length + JSON.stringify(payload).length;
-        // For Timeout handler
-        if (bidderRequest?.bids?.length && isArray(bidderRequest?.bids)) {
-          bidderRequest.bids.forEach(bid => bid.correlator = correlator);
-        }
-      }
+      // // nwMonitor object is used to identify the network latency, it is being no longer used.
+      // // For Auction End Handler
+      // if (bidderRequest) {
+      //   bidderRequest = bidderRequest || {};
+      //   bidderRequest.nwMonitor = {};
+      //   bidderRequest.nwMonitor.reqMethod = 'POST';
+      //   bidderRequest.nwMonitor.correlator = correlator;
+      //   bidderRequest.nwMonitor.requestUrlPayloadLength = url.length + JSON.stringify(payload).length;
+      //   // For Timeout handler
+      //   if (bidderRequest?.bids?.length && isArray(bidderRequest?.bids)) {
+      //     bidderRequest.bids.forEach(bid => bid.correlator = correlator);
+      //   }
+      // }
 
       const maxUrlLength = config.getConfig('translatorGetRequest.maxUrlLength') || 63000;
       const configuredEndPoint = config.getConfig('translatorGetRequest.endPoint') || ENDPOINT;
       const urlEncodedPayloadStr = parseQueryStringParameters({
-        'source': 'ow-client', 'payload': JSON.stringify(payload), 'correlator': correlator});
+        'source': 'ow-client', 'payload': JSON.stringify(payload)});
       if ((configuredEndPoint + '?' + urlEncodedPayloadStr)?.length <= maxUrlLength) {
         serverRequest = {
           method: 'GET',
@@ -1381,8 +1362,9 @@ export const spec = {
           bidderRequest: bidderRequest,
           payloadStr: JSON.stringify(payload)
         };
-        bidderRequest.nwMonitor.reqMethod = 'GET';
-        bidderRequest.nwMonitor.requestUrlPayloadLength = configuredEndPoint.length + '?'.length + urlEncodedPayloadStr.length;
+
+        // bidderRequest.nwMonitor.reqMethod = 'GET';
+        // bidderRequest.nwMonitor.requestUrlPayloadLength = configuredEndPoint.length + '?'.length + urlEncodedPayloadStr.length;
       }
     }
 
