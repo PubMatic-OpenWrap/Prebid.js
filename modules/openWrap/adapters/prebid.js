@@ -31,7 +31,7 @@ export {kgpvMap};
 // const refThis = this;
 let onEventAdded = false;
 let onAuctionEndEventAdded = false;
-const isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
+//const isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
 const isSingleImpressionSettingEnabled = CONFIG.isSingleImpressionSettingEnabled();
 const defaultAliases = CONSTANTS.DEFAULT_ALIASES;
 
@@ -239,7 +239,7 @@ function pbBidStreamHandler(pbBid) {
 
     // If Single impression is turned on then check and modify kgpv as per bid response size
     /* istanbul ignore else */
-    if (isSingleImpressionSettingEnabled) {
+    if (CONFIG.isSingleImpressionSettingEnabled()) {
       // Assinging kbpv after modifying and will be used for logger and tracker purposes
       // this field will be replaced everytime a bid is received with single impression feature on
       const kgpvAndRegexOfBid = checkAndModifySizeOfKGPVIfRequired(pbBid, kgpvMap[responseID]);
@@ -266,7 +266,7 @@ function pbBidStreamHandler(pbBid) {
     /* istanbul ignore else */
     if (pbBid.bidderCode && CONFIG.isServerSideAdapter(pbBid.bidderCode)) {
       const divID = kgpvMap[responseID].divID;
-      if (!isSingleImpressionSettingEnabled) {
+      if (!CONFIG.isSingleImpressionSettingEnabled()) {
         const temp1 = getPBCodeWithWidthAndHeight(divID, pbBid.bidderCode, pbBid.width, pbBid.height);
         const temp2 = getPBCodeWithoutWidthAndHeight(divID, pbBid.bidderCode);
 
@@ -472,7 +472,7 @@ function generatedKeyCallback(adapterID, adUnits, adapterConfig, impressionID, g
   let mediaTypeConfig;
   let partnerConfig;
 
-  if (!isSingleImpressionSettingEnabled) {
+  if (!CONFIG.isSingleImpressionSettingEnabled()) {
     if (kgpConsistsWidthAndHeight) {
       code = getPBCodeWithWidthAndHeight(divID, adapterID, currentWidth, currentHeight);
       sizes = [[currentWidth, currentHeight]];
@@ -564,7 +564,7 @@ function generatedKeyCallback(adapterID, adUnits, adapterConfig, impressionID, g
     }
     window.PWT.adUnits = window.PWT.adUnits || {};
     window.PWT.adUnits[code] = adUnits[code];
-  } else if (isSingleImpressionSettingEnabled) {
+  } else if (CONFIG.isSingleImpressionSettingEnabled()) {
     if (isAdUnitsCodeContainBidder(adUnits, code, adapterID)) {
       return;
     }
@@ -598,7 +598,7 @@ function pushAdapterParamsInAdunits(adapterID, generatedKey, impressionID, keyCo
     slotParams[key] = value;
   });
 
-  if (isPrebidPubMaticAnalyticsEnabled) {
+  if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
     slotParams['kgpv'] = generatedKey; // TODO : Update this in case of video, change the size to 0x0
     slotParams['regexPattern'] = regexPattern;
   }
@@ -629,7 +629,7 @@ function pushAdapterParamsInAdunits(adapterID, generatedKey, impressionID, keyCo
   }
   // for pubmaticServer partner we used to pass wiid when isPrebidPubMaticAnalyticsEnabled is false but now we do not
   // get pubmaticServer partner when usePBSAdapter flag is true so we will be adding wiid conditionally.
-  if (isPrebidPubMaticAnalyticsEnabled === false && CONFIG.usePBSAdapter()) {
+  if (CONFIG.isPrebidPubMaticAnalyticsEnabled() === false && CONFIG.usePBSAdapter()) {
     slotParams['wiid'] = impressionID;
     isWiidRequired = true;
   }
@@ -645,7 +645,7 @@ function pushAdapterParamsInAdunits(adapterID, generatedKey, impressionID, keyCo
       slotParams['adUnitId'] = currentSlot.getAdUnitID();
       slotParams['divId'] = currentSlot.getDivID();
       slotParams['adSlot'] = generatedKey;
-      if (isPrebidPubMaticAnalyticsEnabled === false) {
+      if (CONFIG.isPrebidPubMaticAnalyticsEnabled() === false) {
         slotParams['wiid'] = impressionID;
       }
       slotParams['profId'] = CONFIG.getProfileID();
@@ -660,7 +660,7 @@ function pushAdapterParamsInAdunits(adapterID, generatedKey, impressionID, keyCo
     case 'pubmatic2':
       slotParams['publisherId'] = adapterConfig['publisherId'];
       slotParams['adSlot'] = slotParams['slotName'] || generatedKey;
-      if (isPrebidPubMaticAnalyticsEnabled === false) {
+      if (CONFIG.isPrebidPubMaticAnalyticsEnabled() === false) {
         slotParams['wiid'] = impressionID;
       }
       slotParams['profId'] = (adapterID == 'pubmatic2') || (adapterName == 'pubmatic2') ? adapterConfig['profileId'] : CONFIG.getProfileID();
@@ -714,7 +714,7 @@ function pushAdapterParamsInAdunits(adapterID, generatedKey, impressionID, keyCo
         if (isWiidRequired) {
           slotParams['wiid'] = impressionID;
         }
-        if (!(isSingleImpressionSettingEnabled && isAdUnitsCodeContainBidder(adUnits, code, adapterID))) {
+        if (!(CONFIG.isSingleImpressionSettingEnabled() && isAdUnitsCodeContainBidder(adUnits, code, adapterID))) {
           adUnits[ code ].bids.push({ bidder: adapterID, params: slotParams });
         }
       });
@@ -731,7 +731,7 @@ function pushAdapterParamsInAdunits(adapterID, generatedKey, impressionID, keyCo
         if (isWiidRequired) {
           slotParams['wiid'] = impressionID;
         }
-        if (!(isSingleImpressionSettingEnabled && isAdUnitsCodeContainBidder(adUnits, code, adapterID))) {
+        if (!(CONFIG.isSingleImpressionSettingEnabled() && isAdUnitsCodeContainBidder(adUnits, code, adapterID))) {
           adUnits[ code ].bids.push({ bidder: adapterID, params: slotParams });
         }
       });
@@ -775,7 +775,7 @@ function generatePbConf(adapterID, adapterConfig, activeSlots, adUnits, impressi
     impressionID,
     [],
     activeSlots,
-    isPrebidPubMaticAnalyticsEnabled ? generatedKeyCallbackForPbAnalytics : generatedKeyCallback,
+    CONFIG.isPrebidPubMaticAnalyticsEnabled() ? generatedKeyCallbackForPbAnalytics : generatedKeyCallback,
     // generatedKeyCallback,
     // serverSideEabled: do not set default bids as we do not want to throttle them at client-side
     true // !CONFIG.isServerSideAdapter(adapterID)
@@ -904,7 +904,7 @@ function configureBidderAliasesIfAvailable() {
 
 export {configureBidderAliasesIfAvailable};
 function enablePrebidPubMaticAnalyticIfRequired() {
-  if (isPrebidPubMaticAnalyticsEnabled && util.isFunction(window[pbNameSpace].enableAnalytics)) {
+  if (CONFIG.isPrebidPubMaticAnalyticsEnabled() && util.isFunction(window[pbNameSpace].enableAnalytics)) {
     window[pbNameSpace].enableAnalytics({
       provider: 'pubmatic',
       options: {
@@ -1036,7 +1036,7 @@ function setPrebidConfig() {
       prebidConfig['priceGranularity'] = CONFIG.getPriceGranularity();
     }
 
-    if (isPrebidPubMaticAnalyticsEnabled === true) {
+    if (CONFIG.isPrebidPubMaticAnalyticsEnabled() === true) {
       prebidConfig['instreamTracking'] = {
         enabled: true
       }
@@ -1294,7 +1294,7 @@ function getPbjsAdServerTargetingConfig() {
 export {getPbjsAdServerTargetingConfig};
 
 function setPbjsBidderSettingsIfRequired() {
-  if (isPrebidPubMaticAnalyticsEnabled === false) {
+  if (CONFIG.isPrebidPubMaticAnalyticsEnabled() === false) {
     return;
   }
 
@@ -1407,7 +1407,7 @@ function fetchBids(activeSlots) {
         util.handleHook(CONSTANTS.HOOKS.PREBID_REQUEST_BIDS, [ adUnitsArray ]);
 
         // removeIf(removeLegacyAnalyticsRelatedCode)
-        if (isPrebidPubMaticAnalyticsEnabled === false) {
+        if (CONFIG.isPrebidPubMaticAnalyticsEnabled() === false) {
           // we do not want this call when we have PrebidAnalytics enabled
           addOnBidResponseHandler();
           addOnBidRequestHandler();
@@ -1453,7 +1453,7 @@ function getBid(divID) {
     wb,
     kvp: window[pbNameSpace].getAdserverTargetingForAdUnitCode([divID]) || null
   };
-  if (isPrebidPubMaticAnalyticsEnabled && outputObj.kvp['pwtdeal']) {
+  if (CONFIG.isPrebidPubMaticAnalyticsEnabled() && outputObj.kvp['pwtdeal']) {
     delete outputObj.kvp['pwtdeal'];// Check for null object && usePrebidAnalyticsAdapter
   }
   return outputObj;

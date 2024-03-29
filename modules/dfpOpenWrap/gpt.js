@@ -5,8 +5,8 @@ let bidManager = {};
 let SLOT = {};
 let prebid = {};
 // let IdHub = {};
-var usePrebidKeys = {};
-var isPrebidPubMaticAnalyticsEnabled = {};
+//var usePrebidKeys = {};
+//var isPrebidPubMaticAnalyticsEnabled = {};
 
 export function initializeModule(gptUtils){
   CONFIG = gptUtils.CONFIG;
@@ -17,8 +17,8 @@ export function initializeModule(gptUtils){
   prebid = gptUtils.prebid;
   // IdHub = idhubUtils.IdHub;
 
-  usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
-  isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
+  //usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
+  //isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
   init(window);
 }
 
@@ -323,7 +323,7 @@ export { defineWrapperTargetingKeys };
 
 function findWinningBidAndApplyTargeting(divID) { // TDD, i/o : done
   let data;
-  if (isPrebidPubMaticAnalyticsEnabled) {
+  if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
     data = prebid.getBid(divID);
   } else {
     data = bidManager.getBid(divID);
@@ -331,13 +331,13 @@ function findWinningBidAndApplyTargeting(divID) { // TDD, i/o : done
   const winningBid = data.wb || null;
   const keyValuePairs = data.kvp || {};
   const googleDefinedSlot = slotsMap[divID].getPubAdServerObject();
-  const ignoreTheseKeys = !usePrebidKeys ? CONSTANTS.IGNORE_PREBID_KEYS : {};
+  const ignoreTheseKeys = !CONFIG.isUsePrebidKeysEnabled() ? CONSTANTS.IGNORE_PREBID_KEYS : {};
 
   util.log(`DIV: ${divID} winningBid: `);
   util.log(winningBid);
 
   /* istanbul ignore else */
-  if (isPrebidPubMaticAnalyticsEnabled === false && winningBid && winningBid.getNetEcpm() > 0) {
+  if (CONFIG.isPrebidPubMaticAnalyticsEnabled() === false && winningBid && winningBid.getNetEcpm() > 0) {
     slotsMap[divID].setStatus(CONSTANTS.SLOT_STATUS.TARGETING_ADDED);
     bidManager.setStandardKeys(winningBid, keyValuePairs);
   };

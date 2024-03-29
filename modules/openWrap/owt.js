@@ -24,11 +24,11 @@ window.PWT.udpv = window.PWT.udpv || util.findQueryParamInURL(metaInfo.isIframe 
 util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtc') && util.enableDebugLog();
 util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtvc') && util.enableVisualDebugLog();
 
-var isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
+//var isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
 
 window.PWT.displayCreative = function(theDocument, bidID) {
   util.log('In displayCreative for: ' + bidID);
-  if (isPrebidPubMaticAnalyticsEnabled) {
+  if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
     window[CONSTANTS.COMMON.PREBID_NAMESPACE].renderAd(theDocument, bidID);
   } else {
     // removeIf(removeLegacyAnalyticsRelatedCode)
@@ -41,7 +41,7 @@ window.PWT.displayPMPCreative = function(theDocument, values, priorityArray) {
   util.log('In displayPMPCreative for: ' + values);
   var bidID = util.getBididForPMP(values, priorityArray);
   if (bidID) {
-    if (isPrebidPubMaticAnalyticsEnabled) {
+    if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
       window[CONSTANTS.COMMON.PREBID_NAMESPACE].renderAd(theDocument, bidID);
     } else {
       // removeIf(removeLegacyAnalyticsRelatedCode)
@@ -56,7 +56,7 @@ window.PWT.sfDisplayCreative = function(theDocument, bidID) {
   var ucTag = window.ucTag || {};
   this.isSafeFrame = true;
   ucTag = window.ucTag || {};
-  if (isPrebidPubMaticAnalyticsEnabled) {
+  if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
     ucTag.renderAd(theDocument, {adId: bidID, pubUrl: document.referrer});
   } else {
     window.parent.postMessage(
