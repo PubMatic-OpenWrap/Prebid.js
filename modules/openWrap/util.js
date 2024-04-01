@@ -162,10 +162,10 @@ export function getUniqueIdentifierStr() {
 export function copyKeyValueObject(copyTo, copyFrom) {
   /* istanbul ignore else */
   if (isObject(copyTo) && isObject(copyFrom)) {
-    const utilRef = this;
+    // const utilRef = this;
     forEachOnObject(copyFrom, function (key, value) {
-      copyFrom[key] = utilRef.isArray(value) ? value : [value];
-      if (utilRef.isOwnProperty(copyTo, key)) {
+      copyFrom[key] = isArray(value) ? value : [value];
+      if (isOwnProperty(copyTo, key)) {
         // copyTo[key].push.apply(copyTo[key], value);
         if (!isArray(copyTo[key])) {
           const temp = copyTo[key];
@@ -1740,8 +1740,8 @@ export function getDevicePlatform() {
 export function getOWConfig() {
   const obj = {
     'timeout': CONFIG.getTimeout(),
-    'openwrap_version': CONFIG[CONSTANTS.COMMON.OWVERSION],
-    'prebid_version': CONFIG[CONSTANTS.COMMON.PBVERSION],
+    'openwrap_version': CONFIG.getOWVersion(),
+    'prebid_version': CONFIG.getPrebidVersion(),
     'profileId': CONFIG.getProfileID(),
     'profileVersionId': CONFIG.getProfileDisplayVersionID()
   };

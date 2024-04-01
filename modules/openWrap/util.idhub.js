@@ -678,8 +678,8 @@ export function applyCustomParamValuesfApplicable(params) {
 
 export function getOWConfig() {
   const obj = {
-    'openwrap_version': CONFIG[CONSTANTS.COMMON.OWVERSION],
-    'prebid_version': CONFIG[CONSTANTS.COMMON.PBVERSION],
+    'openwrap_version': CONFIG.getOwVersion(),
+    'prebid_version': CONFIG.getPrebidVersion(),
     'profileId': CONFIG.getProfileID(),
     'profileVersionId': CONFIG.getProfileDisplayVersionID()
   };

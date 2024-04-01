@@ -1,86 +1,74 @@
 import { getGlobal } from "../../src/prebidGlobal";
 
-let pwt = {
-  pid: '66622',
-  gcv: '209',
-  pdvid: '1',
-  pubid: '5890',
-  dataURL: 't.pubmatic.com/wl?',
-  winURL: 't.pubmatic.com/wt?',
-  owv: 'v26.10.0',
-  pbv: 'v7.39.0',
-  usePBSAdapter: '0',
-  reduceCodeSize: '1',
+var pwt = {
+  pid: "42461",
+  gcv: "172",
+  pdvid: "1",
+  pubid: "5890",
+  dataURL: "t.pubmatic.com/wl?",
+  winURL: "t.pubmatic.com/wt?",
+  owv: "parmodule_1",
+  pbv: "v4.43.0",
+  reduceCodeSize: "1",
   metaDataPattern: 0,
-  sendAllBids: '0',
-  adserver: 'DFP',
-  gdpr: '0',
+  sendAllBids: "0",
+  adserver: "CUSTOM",
+  gdpr: "0",
   cmp: 0,
   gdprTimeout: 0,
   awc: 0,
-  platform: 'display',
+  platform: "display",
   refreshInterval: 0,
   priceGranularity: 0,
   adServerCurrency: 0,
-  singleImpression: '1',
-  identityEnabled: 0,
+  singleImpression: "1",
+  identityEnabled: "0",
   identityConsumers: 0,
-  ccpa: '0',
+  ccpa: "0",
   ccpaCmpApi: 0,
   ccpaTimeout: 0,
-  sChain: '0',
+  sChain: "0",
   sChainObj: 0,
-  auTimeout: '1000',
-  t: '1000',
+  auTimeout: "5000",
+  t: "5000",
   ssTimeout: 0,
   prebidObjName: 0,
-  pubAnalyticsAdapter: '0',
-  usePBJSKeys: '0',
-  abTestEnabled: '0',
+  pubAnalyticsAdapter: "1",
+  usePBJSKeys: "0",
+  abTestEnabled: "0",
   testGroupSize: 0,
   testType: 0,
   granularityMultiplier: 0,
-  floorPriceModuleEnabled: '0',
+  floorPriceModuleEnabled: "0",
   floorSource: 0,
   floorAuctionDelay: 0,
   jsonUrl: 0,
-  ssoEnabled: 0,
-  autoRefreshAdslots: '0',
-  videoAdDuration: 0,
-  videoAdDurationMatching: 0,
-  adPodConfiguration: 0,
-  customPriceGranularityConfig: 0,
-  marketplaceBidders: 0,
-  owRedirectURL: 0,
-  topicsFPDModule: 0,
-  enableVastUnwrapper: 0,
-  floorType: 0,
-  pubId: 0,
-  zone: 0,
-  pbGlobalVarNamespace: 'owpbjs',
-  owGlobalVarNamespace: 'PWT',
-  gpp: '0',
-  gppCmpApi: 0,
-  gppTimeout: 0,
-  globalNamespaceType: 'Default',
-  gdprActionTimeout: 0,
-  localStorageAccess: '1'
+  rev_share: 0,
+  timeout: 0,
+  throttle: 0,
+  serverSideEnabled: 0,
+  video: 0,
+  "in-app": 0,
+  autoRefreshAdslots: 0,
+  adPodsEnabled: 0,
+  videoLengths: 0,
+  videoLengthMatching: 0,
+  ssoEnabled: "0"
 };
 
 // singleImpression is used to enable feature of sending single impression for multiple size ad slot earlier there were multiple impression for multiple sizes
 
 // below is the config for test purpose only
-let testConfigDetails = {
+var testConfigDetails = {
   'testGroupSize': 99
 };
 
 // below is the config for test purpose only
 // eslint-disable-next-line camelcase
-let test_pwt = {
+var test_pwt = {
   't': 5000
 };
-
-let adapters = {
+var adapters = {
   pubmatic: {
     rev_share: '0.0',
     throttle: '100',
@@ -167,8 +155,7 @@ let adapters = {
     }]
   }
 };
-
-let identityPartners = {
+var identityPartners = {
   pubCommonId: {
     name: 'pubCommonId',
     'storage.type': 'cookie',
@@ -211,56 +198,35 @@ let identityPartners = {
 // 5. DIV1 -> Apply based on condtions (enabled,)
 // 6. DIV5 -> It will increase Latency
 
-let slotConfig = {
-  'configPattern': '_DIV_',
-  'config': {
-    'Div1': {
-      'banner': {
-        'enabled': true
+var slotConfig = {
+  configPattern: "_AU_",
+  config: {
+    "/43743431/QAVideo": {
+      banner: {
+        enabled: !1
       },
-      'native': {
-        'enabled': true,
-        'config': {
-          'image': {
-            'required': true,
-            'sizes': [150, 50]
-          },
-          'title': {
-            'required': true,
-            'len': 80
-          },
-          'sponsoredBy': {
-            'required': true
-          },
-          'body': {
-            'required': true
-          }
-        }
-      },
-      'video': {
-        'enabled': true,
-        'config': {
-          'context': 'instream',
-          'connectiontype': [1, 2, 6],
-          'minduration': 10,
-          'maxduration': 50,
-          'battr': [6, 7],
-          'skip': 1,
-          'skipmin': 10,
-          'skipafter': 15
+      video: {
+        config: {
+          battr: [6, 7],
+          skipafter: 15,
+          maxduration: 50,
+          context: "instream",
+          //instream
+          playerSize: [640, 480],
+          skip: 1,
+          connectiontype: [1, 2, 6],
+          skipmin: 10,
+          minduration: 10,
+          mimes: ["video/mp4", "video/x-flv"],
+          durationRangeSec: [10, 20, 100]
         },
-        'partnerConfig': {
-          'pubmatic': {
-            'outstreamAU': 'pubmatic-test'
-          }
-        }
+        enabled: !0
       }
-    },
-    'AU2': {
-      'banner': {}
     }
   }
 };
 
-getGlobal().setOwConfig({pwt, testConfigDetails, test_pwt, adapters, identityPartners, slotConfig});
+getGlobal().setConfig({
+  openWrap: {pwt, testConfigDetails, test_pwt, adapters, identityPartners, slotConfig}
+});
 

@@ -4,8 +4,8 @@ import * as util from './util.js';
 
 // let refThis = null;
 // refThis = this;
-CONSTANTS.COMMON.OWVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
-CONSTANTS.COMMON.PBVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
+// CONSTANTS.COMMON.OWVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
+// CONSTANTS.COMMON.PBVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
 
 export function getPublisherId() {
   return util.trim(config.pwt.pubid) || '0';
@@ -459,4 +459,12 @@ export function createMacros() {
 
 export function getMarketplaceBidders() {
   return config.pwt.marketplaceBidders ? config.pwt.marketplaceBidders.split(',') : false;
+}
+
+export function getOWVersion() {
+  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
+}
+
+export function getPrebidVersion() {
+  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
 }

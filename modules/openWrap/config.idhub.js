@@ -2,8 +2,8 @@ import * as config from './conf.js';
 import * as CONSTANTS from './constants.js';
 // let refThis = null;
 // refThis = this;
-CONSTANTS.COMMON.OWVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
-CONSTANTS.COMMON.PBVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
+// CONSTANTS.COMMON.OWVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
+// CONSTANTS.COMMON.PBVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
 
 // needed
 export function getGdpr() {
@@ -91,3 +91,11 @@ export function getIHAnalyticsAdapterExpiry() {
 }
 
 export const PBJS_NAMESPACE = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBJS_NAMESPACE] || 'pbjs';
+
+export function getOwVersion() {
+  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
+}
+
+export function getPrebidVersion() {
+  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
+}

@@ -491,6 +491,8 @@ gulp.task('update-namespace', async function () {
     .pipe(gulp.dest('build/'));
   }
 });
+
+gulp.task('ow-tasks', gulp.series('update-namespace'));
 // END: OW Custom tasks
 
 // support tasks
@@ -502,10 +504,10 @@ gulp.task(clean);
 gulp.task(escapePostbidConfig);
 
 // gulp.task('build-bundle-dev', gulp.series(makeDevpackPkg, makeDevpackPkgForIh, gulpBundle.bind(null, true)));
-gulp.task('build-bundle-dev', gulp.series(clean, makeDevpackPkg, gulpBundle.bind(null, true)));
+gulp.task('build-bundle-dev', gulp.series(clean, makeDevpackPkg, gulpBundle.bind(null, true), 'ow-tasks'));
 
 // gulp.task('build-bundle-prod', gulp.series(makeWebpackPkg, makeWebpackPkgForIh, gulpBundle.bind(null, false)));
-gulp.task('build-bundle-prod', gulp.series(makeWebpackPkg, gulpBundle.bind(null, false)));
+gulp.task('build-bundle-prod', gulp.series(makeWebpackPkg, gulpBundle.bind(null, false), 'ow-tasks'));
 gulp.task('build-creative', gulp.series(buildCreative, updateCreativeExample));
 // public tasks (dependencies are needed for each task since they can be ran on their own)
 gulp.task('test-only', test);
@@ -530,7 +532,7 @@ gulp.task('default', gulp.series(clean, makeWebpackPkg));
 gulp.task('e2e-test', gulp.series(clean, setupE2e, gulp.parallel('build-bundle-prod', watch), injectFakeServerEndpoint, test));
 // other tasks
 gulp.task(bundleToStdout);
-gulp.task('bundle', gulpBundle.bind(null, false)); // used for just concatenating pre-built files with no build step
+gulp.task('bundle', gulp.series(gulpBundle.bind(null, false), 'ow-tasks')); // used for just concatenating pre-built files with no build step
 
 // build task for reviewers, runs test-coverage, serves, without watching
 gulp.task(viewReview);
