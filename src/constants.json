@@ -101,7 +101,7 @@
     "BID_REJECTED": "bidRejected"
   },
   "REFRESH_IDMODULES_LIST": {
-    "PRIMARY_MODULES": ["id5Id","publinkId","connectId"],
+    "PRIMARY_MODULES": ["id5Id","publinkId","connectId","liveIntentId"],
     "SCRIPT_BASED_MODULES": ["zeotapIdPlus", "identityLink", "publinkId"]
   },
   "MODULE_PARAM_TO_UPDATE_FOR_SSO": {
@@ -114,6 +114,10 @@
     }],
     "connectId": [{
       "key": "he",
+      "hashType": "SHA256"
+    }],
+    "liveIntentId": [{
+      "key": "emailHash",
       "hashType": "SHA256"
     }]
   },
