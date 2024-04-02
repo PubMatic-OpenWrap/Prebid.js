@@ -109,7 +109,8 @@
       "zidhubOpenWrap"
     ],
     "zidhubOpenWrap": [
-      "dfpOpenWrap"
+      "dfpOpenWrap",
+      "customOpenWrap"
     ]
   }
 }

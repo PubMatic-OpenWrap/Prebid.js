@@ -446,6 +446,10 @@ const watch = watchTaskMaker({alsoWatch: ['test/**/*.js'], task: () => gulp.seri
 const watchFast = watchTaskMaker({livereload: false, task: () => gulp.parallel('build-bundle-dev', buildCreative)});
 
 // START: OW Custom tasks
+function getBundleName() {
+  return argv.bundleName ? argv.bundleName : 'prebid.js';
+}
+
 function addPattern(patterns, match, replacement) {
   if (replacement) {
       patterns.push({
@@ -479,20 +483,32 @@ function getPatternsToReplace() {
   return patterns;
 }
 
+function getFooterContent() {
+  var isIdentityOnly = argv.isIdentityOnly || 0;
+  return isIdentityOnly 
+    ? `\nif (typeof window.IHPWT === 'object' && typeof window.IHPWT.jsLoaded === 'function') {\n window.IHPWT.jsLoaded();\n}`
+    : `\nif (typeof window.PWT === 'object' && typeof window.PWT.jsLoaded === 'function') {\n window.PWT.jsLoaded();\n}`;
+}
+
+gulp.task('append-footer', function () { 
+  return gulp.src(['build/*/'+ getBundleName()])
+  .pipe(footer(getFooterContent()))
+  .pipe(gulp.dest('build/'));
+});
+
 gulp.task('update-namespace', async function () { 
-  console.log("Executing update-namespace - START => ");
   var patternsToReplace = getPatternsToReplace();
-  var replaceFileName = argv.bundleName ? argv.bundleName : 'prebid.js';
   console.log("Patterns to replace => ", patternsToReplace);
   if(patternsToReplace.length > 0){
-    return gulp.src(['build/*/'+ replaceFileName])
+    return gulp.src(['build/*/'+ getBundleName()])
     .pipe(replace(patternsToReplace[0].match, patternsToReplace[0].replacement))
     .pipe(replace(patternsToReplace[1].match, patternsToReplace[1].replacement))
     .pipe(gulp.dest('build/'));
   }
 });
 
-gulp.task('ow-tasks', gulp.series('update-namespace'));
+gulp.task('ow-tasks', gulp.series('append-footer','update-namespace'));
+
 // END: OW Custom tasks
 
 // support tasks
