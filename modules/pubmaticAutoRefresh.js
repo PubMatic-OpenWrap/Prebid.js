@@ -124,7 +124,7 @@ let openWrapSetup = {
 };
 
 let DEFAULT_CONFIG = {
-  enabled: false,
+  enabled: true,
   // how many times we should refresh the ad-gptSlot after it is rendered
   maximumRefreshCount: 999,
   // delay in ms after which the gptSlot to refresh
