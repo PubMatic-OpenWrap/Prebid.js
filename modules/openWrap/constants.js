@@ -159,6 +159,9 @@ export const WRAPPER_TARGETING_KEYS = {
   'CACHE_ID': 'pwtcid',
   'CACHE_URL': 'pwtcurl',
   'CACHE_PATH': 'pwtcpath',
+	"ACAT": "pwtacat",
+	"CRID": "pwtcrid",
+	"DSP": "pwtdsp"
 };
 
 export const IGNORE_PREBID_KEYS = {
@@ -266,7 +269,9 @@ export const SPECIAL_CASE_ID_PARTNERS = {
     'params.syncTime': 'number'
   },
   'id5Id': {
-    'params.partner': 'number'
+    'params.partner': 'number',
+		"storage.refreshInSeconds": "number",
+		"storage.expires": "number"
   },
   'parrableId': {
     'params.timezoneFilter.allowedZones': 'array'

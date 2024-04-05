@@ -1137,6 +1137,12 @@ export function ajaxRequest(url, callback, data, options) {
 
 // endRemoveIf(removeLegacyAnalyticsRelatedCode)
 
+export function addFloorConfigIfPresent(config, adUnitConfig, defaultFloor) {
+	if(config.floors || defaultFloor){
+		adUnitConfig["floors"] = config.floors || defaultFloor;
+	}	
+}
+
 // Returns mediaTypes for adUnits which are sent to prebid
 export function getAdUnitConfig(sizes, currentSlot) {
   function iskgpvpresent() {
@@ -1189,6 +1195,7 @@ export function getAdUnitConfig(sizes, currentSlot) {
       let isNative = true;
       let isBanner = true;
       let config;
+			var defaultFloor = undefined;
       var divId = isFunction(currentSlot.getDivID) ? currentSlot.getDivID() : currentSlot.getSlotId().getDomId();
 
       // TODO: Have to write logic if required in near future to support multiple kgpvs, right now
@@ -1208,6 +1215,7 @@ export function getAdUnitConfig(sizes, currentSlot) {
           isVideo = false;
         }
         config = slotConfig['config'][CONSTANTS.COMMON.DEFAULT];
+				defaultFloor = config && config["floors"];
         if (config.renderer && !isEmptyObject(config.renderer)) {
           adUnitConfig['renderer'] = config.renderer;
         }
@@ -1252,11 +1260,16 @@ export function getAdUnitConfig(sizes, currentSlot) {
         if (config.renderer && !isEmptyObject(config.renderer)) {
           adUnitConfig['renderer'] = config.renderer;
         }
+				if(config.ortb2Imp && !refThis.isEmptyObject(config.ortb2Imp)){
+					adUnitConfig['ortb2Imp'] = config.ortb2Imp;
+				}
         if (!isBanner || (config.banner && (isOwnProperty(config.banner, 'enabled') && !config.banner.enabled))) {
           mediaTypeConfig[divId] = mediaTypeObject;
           adUnitConfig['mediaTypeObject'] = mediaTypeObject
+					addFloorConfigIfPresent(config, adUnitConfig, defaultFloor);
           return adUnitConfig;
         }
+				addFloorConfigIfPresent(config, adUnitConfig, defaultFloor);
       } else {
         log(`Config not found for adSlot: ${JSON.stringify(currentSlot)}`);
       }
@@ -1638,6 +1651,7 @@ export function generateMonetizationPixel(slotID, theBid) {
   pixelURL += `&kgpv=${window.encodeURIComponent(kgpv)}`;
   pixelURL += `&piid=${window.encodeURIComponent(sspID)}`;
   pixelURL += `&rf=${window.encodeURIComponent(isRefreshed)}`;
+	pixelURL += "&di=" + window.encodeURIComponent(theBid.getDealID() || "-1");
 
   pixelURL += `&plt=${window.encodeURIComponent(getDevicePlatform())}`;
   pixelURL += (isFunction(theBid.getWidth) && isFunction(theBid.getHeight))
@@ -2062,7 +2076,11 @@ export function applyDataTypeChangesIfApplicable(params) {
             case 'customObject':
               if (paramValue) {
                 if (key === 'params.requestedAttributesOverrides') {
-                  params[key] = { 'uid2': (paramValue === 'true' || paramValue === '1') }
+									try {
+										params[key] = JSON.parse(paramValue);
+									} catch (e) {
+										refThis.logError("Error parsing requestedAttributesOverrides for partner ", partnerName);
+									}
                 }
               }
               break;
@@ -2093,4 +2111,36 @@ export function getBrowserDetails() {
 
 export function getPltForFloor() {
   return getDevicePlatform().toString();
+}
+
+export function getGeoInfo() {
+	let PREFIX = 'UINFO';
+	let LOCATION_INFO_VALIDITY =  172800000; // 2 * 24 * 60 * 60 * 1000 - 2 days
+	let geoDetectionURL = 'https://ut.pubmatic.com/geo?pubid=' +
+		conf[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.PUBLISHER_ID];
+
+	let info = window[pbNameSpace].getDataFromLocalStorage(PREFIX, LOCATION_INFO_VALIDITY);
+	if(info && JSON.parse(info).cc) {	// Got valid data
+		window.PWT.CC = JSON.parse(info);
+	} else {
+		window[pbNameSpace].detectLocation(geoDetectionURL,
+		function(loc) {
+			window[pbNameSpace].setAndStringifyToLocalStorage(PREFIX, loc);
+			window.PWT.CC = loc;
+		});
+	}
+}
+
+export function getCDSTargetingData(obj) {
+	obj = obj || {};
+	let cdsData = window[CONSTANTS.COMMON.PREBID_NAMESPACE].getConfig('cds');
+    cdsData && Object.keys(cdsData).map(function(key) {
+      if((cdsData[key].sendtoGAM !== false)) {
+        let val = cdsData[key].value;
+        val = (!Array.isArray(val) && typeof val !== 'object' &&
+            typeof val !== 'function' && typeof val !== 'undefined') ? val : '';
+        obj[key] = val;
+      }
+    });
+	return obj;
 }

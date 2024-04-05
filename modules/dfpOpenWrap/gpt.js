@@ -321,7 +321,7 @@ export { defineWrapperTargetingKeys };
 
 /* end-test-block */
 
-function findWinningBidAndApplyTargeting(divID) { // TDD, i/o : done
+function findWinningBidAndApplyTargeting(divID, parentArgs) { // TDD, i/o : done
   let data;
   if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
     data = prebid.getBid(divID);
@@ -344,7 +344,9 @@ function findWinningBidAndApplyTargeting(divID) { // TDD, i/o : done
 
   // Hook to modify key-value-pairs generated, google-slot object is passed so that consumer can get details about the AdSlot
   // this hook is not needed in custom controller
-  util.handleHook(CONSTANTS.HOOKS.POST_AUCTION_KEY_VALUES, [keyValuePairs, googleDefinedSlot]);
+  if(!parentArgs || (parentArgs && parentArgs[0] == divID)) {
+    util.handleHook(CONSTANTS.HOOKS.POST_AUCTION_KEY_VALUES, [keyValuePairs, googleDefinedSlot]);
+  }
   // attaching keyValuePairs from adapters
   util.forEachOnObject(keyValuePairs, (key, value) => {
     if (!CONFIG.getSendAllBidsStatus() && winningBid && winningBid.adapterID !== 'pubmatic' && util.isOwnProperty({ 'hb_buyid_pubmatic': 1, 'pwtbuyid_pubmatic': 1 }, key)) {
@@ -357,6 +359,10 @@ function findWinningBidAndApplyTargeting(divID) { // TDD, i/o : done
       // adding key in wrapperTargetingKeys as every key added by OpenWrap should be removed before calling refresh on slot
       defineWrapperTargetingKey(key);
     }
+  });
+  util.forEachOnObject(util.getCDSTargetingData(), function(key, value) {
+      window.googletag &&
+      window.googletag.pubads().setTargeting(key, value);
   });
 }
 
@@ -523,10 +529,10 @@ export { updateStatusAndCallOriginalFunctionDisplay };
 
 /* end-test-block */
 
-function findWinningBidIfRequiredDisplay(key, slot) { // TDD, i/o : done
+function findWinningBidIfRequiredDisplay(key, slot, parentArgs) { // TDD, i/o : done
   const status = slot.getStatus();
   if (status != CONSTANTS.SLOT_STATUS.DISPLAYED && status != CONSTANTS.SLOT_STATUS.TARGETING_ADDED) {
-    findWinningBidAndApplyTargeting(key);
+    findWinningBidAndApplyTargeting(key, parentArgs);
   }
 }
 
@@ -585,7 +591,7 @@ function displayFunctionStatusHandler(oldStatus, theObject, originalFunction, ar
     case CONSTANTS.SLOT_STATUS.PARTNERS_CALLED:
       executeDisplay(CONFIG.getTimeout(), Object.keys(slotsMap), () => {
         util.forEachOnObject(slotsMap, (key, slot) => {
-          findWinningBidIfRequiredDisplay(key, slot);
+          findWinningBidIfRequiredDisplay(key, slot, arg);
         });
         processDisplayCalledSlot(theObject, originalFunction, arg);
       });
@@ -732,7 +738,11 @@ export { findWinningBidIfRequiredRefresh };
 
 function postRederingChores(divID, dmSlot) {
   // googleSlot.getSizes() returns applicable sizes as per sizemapping if we pass current available view-port width and height
-  util.createVLogInfoPanel(divID, slotsMap[dmSlot].getSizes(window.innerWidth, window.innerHeight));
+  if(slotsMap[dmSlot]) {
+    util.createVLogInfoPanel(divID, slotsMap[dmSlot].getSizes(window.innerWidth, window.innerHeight));
+  } else {
+      util.log("Could not find slot in postRederingChores");
+  }
   util.realignVLogInfoPanel(divID);
   bidManager.executeAnalyticsPixel();
 }
@@ -747,11 +757,15 @@ function postTimeoutRefreshExecution(qualifyingSlotNames, theObject, originalFun
   util.log(arg);
   let yesCallRefreshFunction = false;
   util.forEachOnArray(qualifyingSlotNames, (index, dmSlot) => {
-    const divID = slotsMap[dmSlot].getDivID();
-    yesCallRefreshFunction = findWinningBidIfRequiredRefresh(dmSlot, divID, yesCallRefreshFunction);
-    window.setTimeout(() => {
-      postRederingChores(divID, dmSlot);
-    }, 2000);
+    const divID = slotsMap[dmSlot] && slotsMap[dmSlot].getDivID();
+    if(divID) {
+      yesCallRefreshFunction = findWinningBidIfRequiredRefresh(dmSlot, divID, yesCallRefreshFunction);
+      window.setTimeout(() => {
+        postRederingChores(divID, dmSlot);
+      }, 2000);
+    } else {
+        util.log("Could not find divID");
+    }
   });
   callOriginalRefeshFunction(yesCallRefreshFunction, theObject, originalFunction, arg);
 }

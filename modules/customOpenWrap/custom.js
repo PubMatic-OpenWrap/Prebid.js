@@ -437,6 +437,10 @@ function generateConfForGPT(arrayOfGPTSlots) {
       mediaTypes: util.getAdUnitConfig(sizes, googleSlot).mediaTypeObject,
       sizes
     });
+		let floorConfig = util.getAdUnitConfig(sizes, googleSlot).floors;
+		if(floorConfig) {
+			gptConfArray[gptConfArray.length - 1]["floors"] = floorConfig;
+		}
   });
 
   return gptConfArray;
@@ -478,6 +482,10 @@ function addKeyValuePairsToGPTSlots(arrayOfAdUnits) {
         util.forEachOnObject(adUnit.bidData.kvp, (key, value) => {
           googleSlot.setTargeting(key, [value]);
         });
+				util.forEachOnObject(util.getCDSTargetingData(), (key, value) => {
+					window.googletag &&
+					window.googletag.pubads().setTargeting(key, value);
+				});
       }
     } else {
       util.error(`GPT-Slot not found for divId: ${adUnit.divId}`);
@@ -501,7 +509,7 @@ function removeKeyValuePairsFromGPTSlots(arrayOfGPTSlots) {
       });
     }
     // now clear all targetings
-    if (util.isFunction(currentGoogleSlot.clearTargeting)) {
+		if(util.isFunction(currentGoogleSlot.clearTargeting) && CONFIG.shouldClearTargeting()){
       currentGoogleSlot.clearTargeting();
     }
     // now set all settings from backup

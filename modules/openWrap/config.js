@@ -403,7 +403,7 @@ export function forEachBidderAlias(callback) {
 
 export function getAdapterNameForAlias(aliasName) {
   if (config.alias && config.alias[aliasName]) {
-    return config.alias[aliasName];
+    return config.alias[aliasName] && config.alias[aliasName].name ? config.alias[aliasName].name : config.alias[aliasName];
   }
   return aliasName;
 }
@@ -434,10 +434,10 @@ export function getTimeoutForPBSRequest() {
 }
 
 export function getPubMaticAndAlias(s2sBidders) {
-  const pubMaticaliases = s2sBidders.filter(adapter => {
-    if ((config.alias && config.alias[adapter] && config.alias[adapter].includes('pubmatic')) || adapter.includes('pubmatic')) {
-      return adapter;
-    }
+  const pubMaticaliases = s2sBidders.filter(adapter => {		
+    if(config.alias && config.alias[adapter] && ( config.alias[adapter].name ? config.alias[adapter].name.includes("pubmatic") : config.alias[adapter].includes("pubmatic") )|| adapter.includes("pubmatic")) {
+			return adapter;
+		}
   });
   return pubMaticaliases;
 }
@@ -468,3 +468,7 @@ export function getOWVersion() {
 export function getPrebidVersion() {
   return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
 }
+
+export function shouldClearTargeting() {
+	return window.PWT.shouldClearTargeting !== undefined ? Boolean(window.PWT.shouldClearTargeting) : true;
+};
