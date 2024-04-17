@@ -29,19 +29,15 @@ const {minify} = require('terser');
 const Vinyl = require('vinyl');
 const wrap = require('gulp-wrap');
 const rename = require('gulp-rename');
+
 var prebid = require('./package.json');
-var dateString = 'Updated : ' + (new Date()).toISOString().substring(0, 10);
-var banner = '/* <%= prebid.name %> v<%= prebid.version %>\n' + dateString + '*/\n';
 var port = 9999;
 const INTEG_SERVER_HOST = argv.host ? argv.host : 'localhost';
 const INTEG_SERVER_PORT = 4444;
 const { spawn, fork } = require('child_process');
 const TerserPlugin = require('terser-webpack-plugin');
-var header = require('gulp-header');
-var footer = require('gulp-footer');
 console.timeEnd('Loading Plugins in Prebid');
 
-prebid.profile = argv.profile;
 // these modules must be explicitly listed in --modules to be included in the build, won't be part of "all" modules
 var explicitModules = [
   'pre1api'
@@ -134,12 +130,6 @@ function viewReview(done) {
 
 viewReview.displayName = 'view-review';
 
-function makeModuleList(modules) {
-  return modules.map(module => {
-    return '"' + module + '"'
-  });
-}
-
 function makeDevpackPkg() {
   var cloned = _.cloneDeep(webpackConfig);
   Object.assign(cloned, {
@@ -147,10 +137,7 @@ function makeDevpackPkg() {
     mode: 'development'
   })
 
-  const babelConfig = require('./babelConfig.js')({
-    disableFeatures: helpers.getDisabledFeatures(),
-    prebidDistUrlBase: argv.distUrlBase || '/build/dev/'
-  });
+  const babelConfig = require('./babelConfig.js')({disableFeatures: helpers.getDisabledFeatures(), prebidDistUrlBase: argv.distUrlBase || '/build/dev/'});
 
   // update babel config to set local dist url
   cloned.module.rules
@@ -166,7 +153,6 @@ function makeDevpackPkg() {
   return gulp.src([].concat(moduleSources, analyticsSources, 'src/prebid.js'))
     .pipe(helpers.nameModules(externalModules))
     .pipe(webpackStream(cloned, webpack))
-    .pipe(replace(/('|")v\$prebid\.modulesList\$('|")/g, makeModuleList(externalModules)))
     .pipe(gulp.dest('build/dev'))
     .pipe(connect.reload());
 }
@@ -176,16 +162,17 @@ function makeWebpackPkg(extraConfig = {}) {
   if (!argv.sourceMaps) {
     delete cloned.devtool;
   }
+
   return function buildBundle() {
     var externalModules = helpers.getArgModules();
+
     const analyticsSources = helpers.getAnalyticsSources();
     const moduleSources = helpers.getModulePaths(externalModules);
+
     return gulp.src([].concat(moduleSources, analyticsSources, 'src/prebid.js'))
-    .pipe(helpers.nameModules(externalModules))
-    .pipe(webpackStream(cloned, webpack))
-    .pipe(replace(/('|")v\$prebid\.modulesList\$('|")/g, makeModuleList(externalModules)))
-    .pipe(gulpif(file => file.basename === 'prebid-core.js', header(banner, { prebid: prebid })))
-    .pipe(gulp.dest('build/dist'));
+      .pipe(helpers.nameModules(externalModules))
+      .pipe(webpackStream(cloned, webpack))
+      .pipe(gulp.dest('build/dist'));
   }
 }
 
@@ -291,6 +278,8 @@ function wrapWithHeaderAndFooter(dev, modules) {
 function bundle(dev, moduleArr) {
   var modules = moduleArr || helpers.getArgModules();
   var allModules = helpers.getModuleNames(modules);
+  const sm = dev || argv.sourceMaps;
+
   if (modules.length === 0) {
     modules = allModules.filter(module => explicitModules.indexOf(module) === -1);
   } else {
@@ -318,21 +307,15 @@ function bundle(dev, moduleArr) {
     outputFileName = outputFileName.replace(/\.js$/, `.${argv.tag}.js`);
   }
 
-  // gutil.log('Concatenating files:\n', entries);
-  // gutil.log('Appending ' + prebid.globalVarName + '.processQueue();');
-  // gutil.log('Generating bundle:', outputFileName);
+  gutil.log('Concatenating files:\n', entries);
+  gutil.log('Appending ' + prebid.globalVarName + '.processQueue();');
+  gutil.log('Generating bundle:', outputFileName);
 
-  var globalVarName = prebid.globalVarName;
-  return gulp.src(entries, { allowEmpty: true })
-  // Need to uodate the "Modules: ..." section in comment with the current modules list
-    .pipe(replace(/(Modules: )(.*?)(\*\/)/, ('$1' + getModulesListToAddInBanner(helpers.getArgModules()) + ' $3')))
-    .pipe(gulpif(dev, sourcemaps.init({ loadMaps: true })))
+  const wrap = wrapWithHeaderAndFooter(dev, modules);
+  return wrap(gulp.src(entries))
+    .pipe(gulpif(sm, sourcemaps.init({ loadMaps: true })))
     .pipe(concat(outputFileName))
-    .pipe(gulpif(!argv.manualEnable, footer('\n<%= global %>.processQueue();', {
-      global: globalVarName
-    }
-    )))
-    .pipe(gulpif(dev, sourcemaps.write('.')));
+    .pipe(gulpif(sm, sourcemaps.write('.')));
 }
 
 // Run the unit tests.
