@@ -58,13 +58,6 @@ const GRANULARITY_OPTIONS = {
 
 const ALL_TOPICS = '*';
 
-/**
- * @typedef {object} PrebidConfig
- *
- * @property {string} cache.url Set a url if we should use prebid-cache to store video bids before adding
- *   bids to the auction. **NOTE** This must be set if you want to use the dfpAdServerVideo module.
- */
-
 export function newConfig() {
   let listeners = [];
   let defaults;
@@ -550,4 +543,8 @@ export function newConfig() {
   };
 }
 
+/**
+ * Set a `cache.url` if we should use prebid-cache to store video bids before adding bids to the auction.
+ * This must be set if you want to use the dfpAdServerVideo module.
+ */
 export const config = newConfig();
