@@ -12,7 +12,7 @@ import {
   isFloorsDataValid,
   addBidResponseHook,
   fieldMatchingFunctions,
-  allowedFields, parseFloorData, normalizeDefault, getFloorDataFromAdUnits, updateAdUnitsForAuction, createFloorsDataForAuction
+  allowedFields, parseFloorData, normalizeDefault, getFloorDataFromAdUnits, getFloorSourceType, updateAdUnitsForAuction, createFloorsDataForAuction
 } from 'modules/priceFloors.js';
 import * as events from 'src/events.js';
 import * as mockGpt from '../integration/faker/googletag.js';
@@ -2189,7 +2189,7 @@ describe('the price floors module', function () {
   });
   describe('bidResponseHook tests', function () {
     const AUCTION_ID = '123456';
-    let returnedBidResponse, indexStub, reject;
+    let returnedBidResponse, indexStub, reject, s2sBid;
     let adUnit = {
       transactionId: 'au',
       code: 'test_div_1'
@@ -2333,6 +2333,21 @@ describe('the price floors module', function () {
       });
       expect(returnedBidResponse.cpm).to.equal(7.5);
     });
+    it('should update bid with floor data even for s2s partners', function() {
+      s2sBid = utils.deepClone(basicBidResponse);
+      s2sBid.source = 's2s'
+      _floorDataForAuction[AUCTION_ID] = utils.deepClone(basicFloorConfig);
+      _floorDataForAuction[AUCTION_ID].data.values = { 'banner': 1.0 };
+      runBidResponse(s2sBid);
+      expect(reject.calledOnce).to.be.true;
+      expect(returnedBidResponse.status).to.equal('rejected');
+	  });
+	  it('should add floor data to s2s bid response', function () {
+		  _floorDataForAuction[AUCTION_ID] = utils.deepClone(basicFloorConfig);
+		  _floorDataForAuction[AUCTION_ID].data.values = { 'banner': 0.3 };
+		  runBidResponse(s2sBid);
+		  expect(returnedBidResponse).to.haveOwnProperty('floorData');
+	  });
   });
 
   describe('Post Auction Tests', function () {
@@ -2398,5 +2413,49 @@ describe('the price floors module', function () {
         })
       });
     })
+  });
+
+  describe('getFloorSourceType', () => {
+    it('should return true when resolvedFloorsData is undefined', () => {
+      const result = getFloorSourceType(undefined);
+      expect(result).to.be.true;
+    });
+
+    it('should return true when resolvedFloorsData.data is undefined', () => {
+      const result = getFloorSourceType({});
+      expect(result).to.be.true;
+    });
+
+    it('should return true when usefetchdatarate is undefined', () => {
+      const resolvedFloorsData = {
+        data: {}
+      };
+      const result = getFloorSourceType(resolvedFloorsData);
+      expect(result).to.be.true;
+    });
+
+    it('should return true when Math.random() * 100 is greater than parseFloat(usefetchdatarate)', () => {
+      const resolvedFloorsData = {
+        data: {
+          usefetchdatarate: 50
+        }
+      };
+      const randomStub = sinon.stub(Math, 'random').returns(0.6);
+      const result = getFloorSourceType(resolvedFloorsData);
+      expect(result).to.be.false;
+      randomStub.restore();
+    });
+
+    it('should return false when Math.random() * 100 is less than or equal to parseFloat(usefetchdatarate)', () => {
+      const resolvedFloorsData = {
+        data: {
+          usefetchdatarate: 50
+        }
+      };
+      const randomStub = sinon.stub(Math, 'random').returns(0.4);
+      const result = getFloorSourceType(resolvedFloorsData);
+      expect(result).to.be.true;
+      randomStub.restore();
+    });
   });
 });

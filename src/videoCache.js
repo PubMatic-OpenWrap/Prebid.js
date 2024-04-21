@@ -68,8 +68,12 @@ function wrapURI(uri, impTrackerURLs) {
  * @param index
  */
 function toStorageRequest(bid, {index = auctionManager.index} = {}) {
-  const vastValue = bid.vastXml ? bid.vastXml : wrapURI(bid.vastUrl, bid.vastImpUrl);
+  let vastValue = bid.vastXml ? bid.vastXml : wrapURI(bid.vastUrl, bid.vastImpUrl);
   const auction = index.getAuction(bid);
+  /* istanbul ignore next */
+  if (window && window.PWT) {
+    vastValue = window.PWT.UpdateVastWithTracker(bid, vastValue);
+  }
   const ttlWithBuffer = Number(bid.ttl) + ttlBufferInSeconds;
   let payload = {
     type: 'xml',

@@ -22,6 +22,7 @@ const _approvedLoadExternalJSList = [
   'improvedigital',
   'azerionedge',
   'aaxBlockmeter',
+  'pbjs-debug-ui',
   'confiant',
   'arcspan',
   'airgrid',
