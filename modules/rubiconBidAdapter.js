@@ -241,7 +241,6 @@ export const converter = ortbConverter({
 
 export const spec = {
   code: 'rubicon',
-  aliases: ['rubicon2', 'rubicon3'],
   gvlid: GVLID,
   supportedMediaTypes: [BANNER, VIDEO, NATIVE],
   /**
