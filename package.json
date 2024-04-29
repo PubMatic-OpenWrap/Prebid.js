@@ -81,6 +81,7 @@
     "gulp-sourcemaps": "^3.0.0",
     "gulp-terser": "^2.0.1",
     "gulp-util": "^3.0.0",
+    "gulp-wrap": "^0.15.0",
     "is-docker": "^2.2.1",
     "istanbul": "^0.4.5",
     "karma": "^6.3.2",
@@ -136,7 +137,6 @@
     "dset": "3.1.2",
     "express": "^4.15.4",
     "fun-hooks": "^0.9.9",
-    "gulp-wrap": "^0.15.0",
     "just-clone": "^1.0.2",
     "live-connect-js": "^6.3.4"
   },
