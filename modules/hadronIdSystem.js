@@ -19,7 +19,6 @@ const MODULE_NAME = 'hadronId';
 const AU_GVLID = 561;
 const DEFAULT_HADRON_URL_ENDPOINT = 'https://id.hadron.ad.gt/api/v1/pbhid';
 
-
 export const storage = getStorageManager({moduleType: MODULE_TYPE_UID, moduleName: MODULE_NAME});
 
 /**
