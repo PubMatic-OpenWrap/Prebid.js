@@ -356,7 +356,7 @@ function isS2SBidder(bidder) {
 
 function isOWPubmaticBid(adapterName) {
   let s2sConf = config.getConfig('s2sConfig');
-  let s2sConfArray = isArray(s2sConf) ? s2sConf : [s2sConf];
+  let s2sConfArray = s2sConf ? (isArray(s2sConf) ? s2sConf : [s2sConf]) : [];
   return s2sConfArray.some(conf => {
     if (adapterName === ADAPTER_CODE && conf.defaultVendor === VENDOR_OPENWRAP &&
       conf.bidders.indexOf(ADAPTER_CODE) > -1) {
