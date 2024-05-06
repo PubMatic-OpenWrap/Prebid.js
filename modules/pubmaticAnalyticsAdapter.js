@@ -600,6 +600,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
     winningBid = winningBids.filter(bid => bid.adId === cache.auctions[auctionId].adUnitCodes[adUnitId].bidWonAdId)[0];
   }
   const adapterName = getAdapterNameForAlias(winningBid.adapterCode || winningBid.bidder);
+  const generatedBidId = winningBid.bidResponse && winningBid.bidResponse.prebidBidId;
   if (isOWPubmaticBid(adapterName) && isS2SBidder(winningBid.bidder)) {
     return;
   }
