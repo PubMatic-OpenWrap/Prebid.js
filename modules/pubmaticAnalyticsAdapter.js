@@ -662,8 +662,8 @@ function auctionInitHandler(args) {
   s2sBidders = (function () {
     let s2sConf = config.getConfig('s2sConfig');
     let s2sBidders = [];
-    (s2sConf || []) &&
-      isArray(s2sConf) ? s2sConf.map(conf => s2sBidders.push(...conf.bidders)) : s2sBidders.push(...s2sConf.bidders);
+    s2sConf &&
+      (isArray(s2sConf) ? s2sConf.map(conf => s2sBidders.push(...conf.bidders)) : s2sBidders.push(...s2sConf.bidders));
     return s2sBidders || [];
   }());
   let cacheEntry = pick(args, [
