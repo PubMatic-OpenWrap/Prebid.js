@@ -378,8 +378,8 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid) {
       partnerBids.push({
         'pn': adapterName,
         'bc': bid.bidderCode || bid.bidder,
-        'bidid': prebidBidId || bid.bidId,
-        'origbidid': bid.bidId,
+        'bidid': bid.bidId || bidId,
+        'origbidid': bid?.bidResponse?.partnerImpId || prebidBidId || bid.bidId || bidId,
         'db': bid.bidResponse ? 0 : 1,
         'kgpv': getValueForKgpv(bid, adUnitId),
         'kgpsv': bid.params && bid.params.kgpv ? getUpdatedKGPVForVideo(bid.params.kgpv, bid.bidResponse) : adUnitId,
@@ -399,7 +399,6 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid) {
         'af': bid.bidResponse ? (bid.bidResponse.mediaType || undefined) : undefined,
         'ocpm': bid.bidResponse ? (bid.bidResponse.originalCpm || 0) : 0,
         'ocry': bid.bidResponse ? (bid.bidResponse.originalCurrency || CURRENCY_USD) : CURRENCY_USD,
-        'piid': bid.bidResponse ? (bid.bidResponse.partnerImpId || EMPTY_STRING) : EMPTY_STRING,
         'frv': bid.bidResponse ? bid.bidResponse.floorData?.floorRuleValue : undefined,
         'md': bid.bidResponse ? getMetadata(bid.bidResponse.meta) : undefined,
         'pb': pg || undefined
@@ -631,8 +630,8 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   pixelURL += '&en=' + enc(winningBid.bidResponse.bidPriceUSD);
   pixelURL += '&eg=' + enc(winningBid.bidResponse.bidGrossCpmUSD);
   pixelURL += '&kgpv=' + enc(getValueForKgpv(winningBid, adUnitId));
-  pixelURL += '&piid=' + enc(winningBid.bidResponse.partnerImpId || EMPTY_STRING);
   pixelURL += '&rf=' + enc(origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0);
+  pixelURL += '&origbidid=' + enc(winningBid?.bidResponse?.partnerImpId || winningBid?.bidResponse?.prebidBidId || winningBid.bidId);
   pixelURL += '&di=' + enc(winningBid?.bidResponse?.dealId || OPEN_AUCTION_DEAL_ID);
   pixelURL += '&pb=' + enc(pg);
 

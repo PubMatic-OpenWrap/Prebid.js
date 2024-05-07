@@ -645,9 +645,8 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[0].ps.length).to.equal(1);
       expect(data.s[0].ps[0].pn).to.equal('pubmatic');
       expect(data.s[0].ps[0].bc).to.equal('pubmatic');
-      expect(data.s[1].ps[0].bidid).to.equal('792d8d2135d28b');
-      expect(data.s[1].ps[0].origbidid).to.equal('3bd4ebb1c900e2');
-      expect(data.s[0].ps[0].piid).to.equal('partnerImpressionID-1');
+      expect(data.s[0].ps[0].bidid).to.equal('2ecff0db240757');
+      expect(data.s[0].ps[0].origbidid).to.equal('partnerImpressionID-1');
       expect(data.s[0].ps[0].db).to.equal(0);
       expect(data.s[0].ps[0].kgpv).to.equal('/19968336/header-bid-tag-0');
       expect(data.s[0].ps[0].kgpsv).to.equal('/19968336/header-bid-tag-0');
@@ -688,9 +687,8 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].fp).to.equal('pubmatic');
       expect(data.s[1].ps[0].pn).to.equal('pubmatic');
       expect(data.s[1].ps[0].bc).to.equal('pubmatic');
-      expect(data.s[1].ps[0].bidid).to.equal('792d8d2135d28b');
-	    expect(data.s[1].ps[0].origbidid).to.equal('3bd4ebb1c900e2');
-      expect(data.s[1].ps[0].piid).to.equal('partnerImpressionID-2');
+      expect(data.s[1].ps[0].bidid).to.equal('3bd4ebb1c900e2');
+      expect(data.s[1].ps[0].origbidid).to.equal('partnerImpressionID-2');
       expect(data.s[1].ps[0].db).to.equal(0);
       expect(data.s[1].ps[0].kgpv).to.equal('this-is-a-kgpv');
       expect(data.s[1].ps[0].kgpsv).to.equal('this-is-a-kgpv');
@@ -732,7 +730,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.bc).to.equal('pubmatic');
       expect(data.eg).to.equal('1.23');
       expect(data.en).to.equal('1.23');
-      expect(data.piid).to.equal('partnerImpressionID-1');
+      expect(data.origbidid).to.equal('partnerImpressionID-1');
       expect(data.plt).to.equal('1');
       expect(data.psz).to.equal('640x480');
       expect(data.tgid).to.equal('15');
@@ -1523,8 +1521,8 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps.length).to.equal(1);
       expect(data.s[1].ps[0].pn).to.equal('pubmatic');
       expect(data.s[0].ps[0].bc).to.equal('pubmatic');
-      expect(data.s[1].ps[0].bidid).to.equal('792d8d2135d28b');
-      expect(data.s[1].ps[0].piid).to.equal('partnerImpressionID-2');
+      expect(data.s[1].ps[0].bidid).to.equal('3bd4ebb1c900e2');
+      expect(data.s[1].ps[0].origbidid).to.equal('partnerImpressionID-2');
       expect(data.s[1].ps[0].db).to.equal(0);
       expect(data.s[1].ps[0].kgpv).to.equal('this-is-a-kgpv');
       expect(data.s[1].ps[0].kgpsv).to.equal('this-is-a-kgpv');
@@ -1610,9 +1608,8 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[0].ps.length).to.equal(1);
       expect(data.s[0].ps[0].pn).to.equal('pubmatic');
       expect(data.s[0].ps[0].bc).to.equal('pubmatic_alias');
-      expect(data.s[0].ps[0].bidid).to.equal('792d8d2135d28b');
-	    expect(data.s[0].ps[0].origbidid).to.equal('2ecff0db240757');
-      expect(data.s[0].ps[0].piid).to.equal('partnerImpressionID-1');
+      expect(data.s[0].ps[0].bidid).to.equal('2ecff0db240757');
+      expect(data.s[0].ps[0].origbidid).to.equal('partnerImpressionID-1');
       expect(data.s[0].ps[0].db).to.equal(0);
       expect(data.s[0].ps[0].kgpv).to.equal('/19968336/header-bid-tag-0');
       expect(data.s[0].ps[0].kgpsv).to.equal('/19968336/header-bid-tag-0');
@@ -1649,9 +1646,8 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps.length).to.equal(1);
       expect(data.s[1].ps[0].pn).to.equal('pubmatic');
       expect(data.s[1].ps[0].bc).to.equal('pubmatic');
-      expect(data.s[1].ps[0].bidid).to.equal('792d8d2135d28b');
-  	  expect(data.s[1].ps[0].origbidid).to.equal('3bd4ebb1c900e2');
-      expect(data.s[1].ps[0].piid).to.equal('partnerImpressionID-2');
+      expect(data.s[1].ps[0].bidid).to.equal('3bd4ebb1c900e2');
+      expect(data.s[1].ps[0].origbidid).to.equal('partnerImpressionID-2');
       expect(data.s[1].ps[0].db).to.equal(0);
       expect(data.s[1].ps[0].kgpv).to.equal('this-is-a-kgpv');
       expect(data.s[1].ps[0].kgpsv).to.equal('this-is-a-kgpv');
@@ -1693,7 +1689,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.bc).to.equal('pubmatic_alias');
       expect(data.eg).to.equal('1.23');
       expect(data.en).to.equal('1.23');
-      expect(data.piid).to.equal('partnerImpressionID-1');
+      expect(data.origbidid).to.equal('partnerImpressionID-1');
     });
 
     it('Logger: best case + win tracker in case of GroupM as alternate bidder', function() {
@@ -1757,8 +1753,8 @@ describe('pubmatic analytics adapter', function () {
 	    expect(data.s[0].ps[0].origbidid).to.equal('2ecff0db240757');
       expect(data.s[0].ps[0].pn).to.equal('pubmatic');
       expect(data.s[0].ps[0].bc).to.equal('groupm');
-      expect(data.s[0].ps[0].bidid).to.equal('792d8d2135d28b');
-      expect(data.s[0].ps[0].piid).to.equal('partnerImpressionID-1');
+      expect(data.s[0].ps[0].bidid).to.equal('2ecff0db240757');
+      expect(data.s[0].ps[0].origbidid).to.equal('partnerImpressionID-1');
       expect(data.s[0].ps[0].db).to.equal(0);
       expect(data.s[0].ps[0].kgpv).to.equal('/19968336/header-bid-tag-0');
       expect(data.s[0].ps[0].kgpsv).to.equal('/19968336/header-bid-tag-0');
@@ -1787,8 +1783,8 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[1].ps.length).to.equal(1);
       expect(data.s[1].ps[0].pn).to.equal('pubmatic');
       expect(data.s[1].ps[0].bc).to.equal('pubmatic');
-      expect(data.s[1].ps[0].bidid).to.equal('792d8d2135d28b');
-      expect(data.s[1].ps[0].piid).to.equal('partnerImpressionID-2');
+      expect(data.s[1].ps[0].bidid).to.equal('3bd4ebb1c900e2');
+      expect(data.s[1].ps[0].origbidid).to.equal('partnerImpressionID-2');
       expect(data.s[1].ps[0].db).to.equal(0);
       expect(data.s[1].ps[0].kgpv).to.equal('this-is-a-kgpv');
       expect(data.s[1].ps[0].kgpsv).to.equal('this-is-a-kgpv');
@@ -1828,7 +1824,53 @@ describe('pubmatic analytics adapter', function () {
       expect(data.bc).to.equal('groupm');
       expect(data.eg).to.equal('1.23');
       expect(data.en).to.equal('1.23');
-      expect(data.piid).to.equal('partnerImpressionID-1');
+      expect(data.origbidid).to.equal('partnerImpressionID-1');
+    });
+
+    it('Logger: best case + win tracker. Log bidId when partnerimpressionid is missing', function() {
+      delete MOCK.BID_RESPONSE[1]['partnerImpId'];
+      MOCK.BID_RESPONSE[1]['prebidBidId'] = 'Prebid-bid-id-1';
+      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+        return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
+      });
+
+      config.setConfig({
+        testGroupId: 15
+      });
+
+      events.emit(AUCTION_INIT, MOCK.AUCTION_INIT);
+      events.emit(BID_REQUESTED, MOCK.BID_REQUESTED);
+      events.emit(BID_RESPONSE, MOCK.BID_RESPONSE[0]);
+      events.emit(BID_RESPONSE, MOCK.BID_RESPONSE[1]);
+      events.emit(BIDDER_DONE, MOCK.BIDDER_DONE);
+      events.emit(AUCTION_END, MOCK.AUCTION_END);
+      events.emit(SET_TARGETING, MOCK.SET_TARGETING);
+      events.emit(BID_WON, MOCK.BID_WON[0]);
+      events.emit(BID_WON, MOCK.BID_WON[1]);
+
+      clock.tick(2000 + 1000);
+      expect(requests.length).to.equal(3); // 1 logger and 2 win-tracker
+      let request = requests[2]; // logger is executed late, trackers execute first
+      expect(request.url).to.equal('https://t.pubmatic.com/wl?pubid=9999');
+      let data = getLoggerJsonFromRequest(request.requestBody);
+      expect(data.s).to.be.an('array');
+      expect(data.s.length).to.equal(2);
+
+      // slot 1
+      expect(data.s[0].ps[0].bidid).to.equal('2ecff0db240757');
+      expect(data.s[0].ps[0].origbidid).to.equal('partnerImpressionID-1');
+
+      // slot 2
+      expect(data.s[1].ps[0].bidid).to.equal('3bd4ebb1c900e2');
+      expect(data.s[1].ps[0].origbidid).to.equal('3bd4ebb1c900e2');
+
+      // tracker slot1
+      let firstTracker = requests[0].url;
+      expect(firstTracker.split('?')[0]).to.equal('https://t.pubmatic.com/wt');
+      data = {};
+      firstTracker.split('?')[1].split('&').map(e => e.split('=')).forEach(e => data[e[0]] = e[1]);
+      expect(data.bidid).to.equal('2ecff0db240757');
+      expect(data.origbidid).to.equal('partnerImpressionID-1');
     });
 
     it('Logger: pass floors additional data points', function() {
