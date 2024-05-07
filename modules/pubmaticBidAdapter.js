@@ -271,6 +271,25 @@ function _handleCustomParams(params, conf) {
   return conf;
 }
 
+export function getDeviceConnectionType() {
+  let connection = window.navigator && (window.navigator.connection || window.navigator.mozConnection || window.navigator.webkitConnection);
+  switch (connection?.effectiveType) {
+    case 'ethernet':
+      return 1;
+    case 'wifi':
+      return 2;
+    case 'slow-2g':
+    case '2g':
+      return 4;
+    case '3g':
+      return 5;
+    case '4g':
+      return 6;
+    default:
+      return 0;
+  }
+}
+
 function _createOrtbTemplate(conf) {
   return {
     id: '' + new Date().getTime(),
@@ -288,7 +307,8 @@ function _createOrtbTemplate(conf) {
       dnt: (navigator.doNotTrack == 'yes' || navigator.doNotTrack == '1' || navigator.msDoNotTrack == '1') ? 1 : 0,
       h: screen.height,
       w: screen.width,
-      language: navigator.language
+      language: navigator.language,
+      connectiontype: getDeviceConnectionType()
     },
     user: {},
     ext: {}
@@ -1564,20 +1584,6 @@ export const spec = {
         url: USER_SYNC_URL_IMAGE + syncurl
       }];
     }
-  },
-
-  /**
-   * Covert bid param types for S2S
-   * @param {Object} params bid params
-   * @param {Boolean} isOpenRtb boolean to check openrtb2 protocol
-   * @return {Object} params bid params
-   */
-
-  transformBidParams: function (params, isOpenRtb, adUnit, bidRequests) {
-    return convertTypes({
-      'publisherId': 'string',
-      'adSlot': 'string'
-    }, params);
   }
 };
 

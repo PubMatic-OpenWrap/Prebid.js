@@ -359,7 +359,7 @@ export const liveIntentIdSubmodule = {
     },
     // NOTE: need to keep source as ow.pubmatic.com in our fork. DO NOT CHANGE TO pubmatic.com
     'pubmatic': {
-      source: 'ow.pubmatic.com', 
+      source: 'ow.pubmatic.com',
       atype: 3,
       getValue: function(data) {
         return data.id;
