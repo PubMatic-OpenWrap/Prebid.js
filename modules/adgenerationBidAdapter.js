@@ -18,7 +18,7 @@ const ADG_BIDDER_CODE = 'adgeneration';
 
 export const spec = {
   code: ADG_BIDDER_CODE,
-  aliases: ['adg', 'adg2'], // short code
+  aliases: ['adg'], // short code
   supportedMediaTypes: [BANNER, NATIVE],
   /**
    * Determines whether or not the given bid request is valid.
