@@ -127,12 +127,12 @@ export function auctionInitHandler (args) {
     }
 
     args.adUnits.forEach((adUnit) => {
-      frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId] = {
-        slotCnt: (frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId]?.slotCnt || 0) + 1,
-        bidServed: (frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId]?.bidServed || 0) + 0,
-        impressionServed: (frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId]?.impressionServed || 0) + 0,
+      frequencyDepth.slotLevelFrquencyDepth[adUnit.owAdUnitId] = {
+        slotCnt: (frequencyDepth.slotLevelFrquencyDepth[adUnit.owAdUnitId]?.slotCnt || 0) + 1,
+        bidServed: (frequencyDepth.slotLevelFrquencyDepth[adUnit.owAdUnitId]?.bidServed || 0) + 0,
+        impressionServed: (frequencyDepth.slotLevelFrquencyDepth[adUnit.owAdUnitId]?.impressionServed || 0) + 0,
       };
-      codeAdUnitMap[adUnit.code] = adUnit.adUnitId;
+      codeAdUnitMap[adUnit.code] = adUnit.owAdUnitId;
     })
     frequencyDepth.codeAdUnitMap = codeAdUnitMap;
   }
