@@ -373,7 +373,7 @@ function setDefaultSlotConfig() {
 }
 
 function markRefreshedAdUnit(adUnit) {
-  let slot = getGptSlotForAdUnitCode(adUnit.adUnitId || adUnit.code);
+  let slot = getGptSlotForAdUnitCode(adUnit.owAdUnitId || adUnit.code);
   if (slot) {
     let slotRefreshKey = slot.getTargeting(DEFAULT_CONFIG.kvKeyForRefresh);
     let slotRefreshCountKey = slot.getTargeting(DEFAULT_CONFIG.kvKeyForRefreshCount);
