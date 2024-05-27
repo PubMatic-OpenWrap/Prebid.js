@@ -91,7 +91,7 @@ const MEDIATYPE = {
   1: VIDEO,
   2: NATIVE
 }
-
+// test komal git
 // check if title, image can be added with mandatory field default values
 const NATIVE_MINIMUM_REQUIRED_IMAGE_ASSETS = [
   {
