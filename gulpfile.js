@@ -446,6 +446,7 @@ const watch = watchTaskMaker({alsoWatch: ['test/**/*.js'], task: () => gulp.seri
 const watchFast = watchTaskMaker({livereload: false, task: () => gulp.parallel('build-bundle-dev', buildCreative)});
 
 // START: OW Custom tasks
+
 function getBundleName() {
   return argv.bundleName ? argv.bundleName : 'prebid.js';
 }
@@ -538,8 +539,25 @@ gulp.task('bundle-native-keys', function() {
   }
 });
 
+// Run below task to create owt.js for creative
+gulp.task('webpack-creative', gulp.series(clean, function() {
+  var owWebpackConfig = require('./ow-webpack.config.js');
+  webpackConfig.devtool = false;
+  return gulp.src('src/owCreativeRenderer/index.js')
+      .pipe(webpackStream(owWebpackConfig, webpack))
+      .pipe(gulp.dest('build/dist'));
+}));
+
+gulp.task('bundle-creative', function () {
+  console.log("Executing creative-build");
+  return gulp.src(['./build/dist/*.js'])
+      .pipe(concat('owt.min.js'))
+      .pipe(gulp.dest('build'));
+});
+
 gulp.task('ow-tasks', gulp.series('append-footer','update-namespace', 'bundle-pwt-keys', 'bundle-native-keys'));
 
+gulp.task('ow-creative-renderer', gulp.series('webpack-creative','bundle-creative'));
 // END: OW Custom tasks
 
 // support tasks
