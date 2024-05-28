@@ -539,11 +539,11 @@ gulp.task('bundle-native-keys', function() {
   }
 });
 
-// Run below task to create owt.js for creative
+// Run below task to create owt.js for creative use in case of AMP
 gulp.task('webpack-creative', gulp.series(clean, function() {
   var owWebpackConfig = require('./ow-webpack.config.js');
   webpackConfig.devtool = false;
-  return gulp.src('src/owCreativeRenderer/index.js')
+  return gulp.src('modules/owCreativeRenderer/index.js')
       .pipe(webpackStream(owWebpackConfig, webpack))
       .pipe(gulp.dest('build/dist'));
 }));
@@ -556,8 +556,8 @@ gulp.task('bundle-creative', function () {
 });
 
 gulp.task('ow-tasks', gulp.series('append-footer','update-namespace', 'bundle-pwt-keys', 'bundle-native-keys'));
-
 gulp.task('ow-creative-renderer', gulp.series('webpack-creative','bundle-creative'));
+
 // END: OW Custom tasks
 
 // support tasks

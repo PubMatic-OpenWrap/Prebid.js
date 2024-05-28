@@ -1,3 +1,5 @@
+// INFO: This file is used only in case when OpenWrap AMP profile needs to work.
+
 var path = require('path');
 
 module.exports = {
