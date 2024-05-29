@@ -4,11 +4,11 @@ var path = require('path');
 
 module.exports = {
     output: {
-        filename: 'owt.js'
+        filename: 'prebid.js'
     },
     devtool: 'source-map',
     resolve: {
-				modules: [path.resolve('./node_modules'), path.resolve('./modules')]
+				modules: [path.resolve('./node_modules'), path.resolve('./src')]
     },
     module: {
       rules: [

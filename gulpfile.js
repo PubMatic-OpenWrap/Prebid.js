@@ -543,15 +543,16 @@ gulp.task('bundle-native-keys', function() {
 gulp.task('webpack-creative', gulp.series(clean, function() {
   var owWebpackConfig = require('./ow-webpack.config.js');
   webpackConfig.devtool = false;
-  return gulp.src('modules/owCreativeRenderer/index.js')
+  return gulp.src('src/owCreativeRenderer/index.js')
       .pipe(webpackStream(owWebpackConfig, webpack))
       .pipe(gulp.dest('build/dist'));
 }));
 
 gulp.task('bundle-creative', function () {
+
   console.log("Executing creative-build");
   return gulp.src(['./build/dist/*.js'])
-      .pipe(concat('owt.min.js'))
+      .pipe(concat(getBundleName()))
       .pipe(gulp.dest('build'));
 });
 
