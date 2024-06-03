@@ -61,6 +61,16 @@
             "module": "medianetRtdProvider"
         },
         {
+            "name": "raynRtdProvider",
+            "path": "/modules/raynRtdProvider.js",
+            "module": "raynRtdProvider"
+        },
+        {
+            "name": "azerionedgeRtdProvider",
+            "path": "/modules/azerionedgeRtdProvider.js",
+            "module": "azerionedgeRtdProvider"
+        },
+        {
             "name": "geolocationRtdProvider",
             "path": "/modules/geolocationRtdProvider.js",
             "module": "geolocationRtdProvider"
@@ -196,6 +206,11 @@
             "module": "hadronRtdProvider"
         },
         {
+            "name": "contxtfulRtdProvider",
+            "path": "/modules/contxtfulRtdProvider.js",
+            "module": "contxtfulRtdProvider"
+        },
+        {
             "name": "akamaiDapRtdProvider",
             "path": "/modules/akamaiDapRtdProvider.js",
             "module": "akamaiDapRtdProvider"
@@ -316,6 +331,11 @@
             "name": "fintezaAnalyticsAdapter",
             "path": "/modules/fintezaAnalyticsAdapter.js",
             "module": "fintezaAnalyticsAdapter"
+        },
+        {
+            "name": "yandexAnalyticsAdapter",
+            "path": "/modules/yandexAnalyticsAdapter.js",
+            "module": "yandexAnalyticsAdapter"
         },
         {
             "name": "33acrossAnalyticsAdapter",
@@ -620,6 +640,11 @@
             "module": "sizeMappingV2"
         },
         {
+            "name": "dsaControl",
+            "path": "/modules/dsaControl.js",
+            "module": "dsaControl"
+        },
+        {
             "name": "consentManagementGpp",
             "path": "/modules/consentManagementGpp.js",
             "module": "consentManagementGpp"
@@ -640,6 +665,11 @@
             "module": "fledgeForGpt"
         },
         {
+            "name": "paapi",
+            "path": "/modules/paapi.js",
+            "module": "paapi"
+        },
+        {
             "name": "gppControl_usnat",
             "path": "/modules/gppControl_usnat.js",
             "module": "gppControl_usnat"
@@ -650,9 +680,9 @@
             "module": "bidViewabilityIO"
         },
         {
-            "name": "gppControl_usstates",
-            "path": "/modules/gppControl_usstates.js",
-            "module": "gppControl_usstates"
+            "name": "nativeRendering",
+            "path": "/modules/nativeRendering.js",
+            "module": "nativeRendering"
         },
         {
             "name": "geoDetection",
@@ -673,7 +703,7 @@
             "name": "topicsFpdModule",
             "path": "/modules/topicsFpdModule.js",
             "module": "topicsFpdModule"
-        }
+        }   
     ],
     "AD Pod": [
         {

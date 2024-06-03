@@ -6,11 +6,19 @@ import {convertOrtbRequestToProprietaryNative} from '../src/native.js';
 import {tryAppendQueryString} from '../libraries/urlUtils/urlUtils.js';
 import {escapeUnsafeChars} from '../libraries/htmlEscape/htmlEscape.js';
 
+/**
+ * @typedef {import('../src/adapters/bidderFactory.js').BidRequest} BidRequest
+ * @typedef {import('../src/adapters/bidderFactory.js').Bid} Bid
+ * @typedef {import('../src/adapters/bidderFactory.js').ServerResponse} ServerResponse
+ * @typedef {import('../src/adapters/bidderFactory.js').SyncOptions} SyncOptions
+ * @typedef {import('../src/adapters/bidderFactory.js').UserSync} UserSync
+ */
+
 const ADG_BIDDER_CODE = 'adgeneration';
 
 export const spec = {
   code: ADG_BIDDER_CODE,
-  aliases: ['adg', 'adg2'], // short code
+  aliases: ['adg'], // short code
   supportedMediaTypes: [BANNER, NATIVE],
   /**
    * Determines whether or not the given bid request is valid.
