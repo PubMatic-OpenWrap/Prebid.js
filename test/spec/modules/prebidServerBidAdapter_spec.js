@@ -37,6 +37,7 @@ import {syncAddFPDToBidderRequest} from '../../helpers/fpd.js';
 import {deepSetValue} from '../../../src/utils.js';
 import {ACTIVITY_TRANSMIT_UFPD} from '../../../src/activities/activities.js';
 import {MODULE_TYPE_PREBID} from '../../../src/activities/modules.js';
+import {getDeviceConnectionType} from '../../../libraries/pbsExtensions/processors/custom.js';
 
 let CONFIG = {
   accountId: '1',
@@ -996,6 +997,21 @@ describe('S2S Adapter', function () {
       adapter.callBids(badCfgRequest, BID_REQUESTS, addBidResponse, done, ajax);
 
       expect(server.requests.length).to.equal(0);
+    });
+
+    describe('getDeviceConnectionType', function() {
+      it('is a function', function(done) {
+        getDeviceConnectionType.should.be.a('function');
+        done();
+      });
+
+      it('should return matched value if navigator.connection is present', function(done) {
+        const connectionValue = getDeviceConnectionType();
+        if (window?.navigator?.connection) {
+          expect(connectionValue).to.be.a('number');
+        }
+        done();
+      });
     });
 
     if (FEATURES.VIDEO) {

@@ -25,6 +25,25 @@ function hasQueryParam(paramName, values) {
   return values?.some(value => value?.toString()?.toLowerCase() == paramValue?.toString()?.toLowerCase());
 }
 
+export function getDeviceConnectionType() {
+  let connection = window.navigator && (window.navigator.connection || window.navigator.mozConnection || window.navigator.webkitConnection);
+  switch (connection?.effectiveType) {
+    case 'ethernet':
+      return 1;
+    case 'wifi':
+      return 2;
+    case 'slow-2g':
+    case '2g':
+      return 4;
+    case '3g':
+      return 5;
+    case '4g':
+      return 6;
+    default:
+      return 0;
+  }
+}
+
 export function setReqParams(ortbRequest, bidderRequest, context, {am = adapterManager} = {}) {
   if (!(bidderRequest?.src === 's2s')) return;
   let { s2sConfig } = context.s2sBidRequest;
@@ -98,6 +117,9 @@ export function setReqParams(ortbRequest, bidderRequest, context, {am = adapterM
       }
     }
   });
+
+  //  add connectiontype to device object
+  if (ortbRequest.device) ortbRequest.device.connectiontype = getDeviceConnectionType();
 
   //  TEST BID: Check if location URL has a query param pubmaticTest=true then set test=1
   //  else we don't need to send test: 0 to request payload.
