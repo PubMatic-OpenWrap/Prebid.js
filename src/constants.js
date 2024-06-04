@@ -9,10 +9,24 @@ export const JSON_MAPPING = {
   BD_SETTING_STANDARD: 'standard'
 };
 
+export const FLOOR_SKIPPED_REASON = {
+  NOT_FOUND: 'not_found',
+  RANDOM: 'random'
+};
+
 export const DEBUG_MODE = 'pbjs_debug';
 
 export const STATUS = {
   GOOD: 1
+};
+
+export const CB = {
+  TYPE: {
+    ALL_BIDS_BACK: 'allRequestedBidsBack',
+    AD_UNIT_BIDS_BACK: 'adUnitBidsBack',
+    BID_WON: 'bidWon',
+    REQUEST_BIDS: 'requestBids'
+  }
 };
 
 export const EVENTS = {
@@ -41,6 +55,7 @@ export const EVENTS = {
   BID_VIEWABLE: 'bidViewable',
   STALE_RENDER: 'staleRender',
   BILLABLE_EVENT: 'billableEvent',
+  IH_INIT: 'initIdentityHub',
   BID_ACCEPTED: 'bidAccepted'
 };
 
@@ -64,8 +79,9 @@ export const GRANULARITY_OPTIONS = {
   DENSE: 'dense',
   CUSTOM: 'custom'
 };
+export const TARGETING_KEYS = '%%TG_KEYS%%';
 
-export const TARGETING_KEYS = {
+export const DEFAULT_TARGETING_KEYS = {
   BIDDER: 'hb_bidder',
   AD_ID: 'hb_adid',
   PRICE_BUCKET: 'hb_pb',
@@ -81,40 +97,7 @@ export const TARGETING_KEYS = {
   CRID: 'hb_crid',
   DSP: 'hb_dsp'
 };
-
-export const DEFAULT_TARGETING_KEYS = {
-  BIDDER: 'hb_bidder',
-  AD_ID: 'hb_adid',
-  PRICE_BUCKET: 'hb_pb',
-  SIZE: 'hb_size',
-  DEAL: 'hb_deal',
-  FORMAT: 'hb_format',
-  UUID: 'hb_uuid',
-  CACHE_HOST: 'hb_cache_host'
-};
-
-export const NATIVE_KEYS = {
-  title: 'hb_native_title',
-  body: 'hb_native_body',
-  body2: 'hb_native_body2',
-  privacyLink: 'hb_native_privacy',
-  privacyIcon: 'hb_native_privicon',
-  sponsoredBy: 'hb_native_brand',
-  image: 'hb_native_image',
-  icon: 'hb_native_icon',
-  clickUrl: 'hb_native_linkurl',
-  displayUrl: 'hb_native_displayurl',
-  cta: 'hb_native_cta',
-  rating: 'hb_native_rating',
-  address: 'hb_native_address',
-  downloads: 'hb_native_downloads',
-  likes: 'hb_native_likes',
-  phone: 'hb_native_phone',
-  price: 'hb_native_price',
-  salePrice: 'hb_native_saleprice',
-  rendererUrl: 'hb_renderer_url',
-  adTemplate: 'hb_adTemplate'
-};
+export const NATIVE_KEYS = '%%TG_NATIVE_KEYS%%';
 
 export const S2S = {
   SRC: 's2s',
@@ -126,6 +109,46 @@ export const BID_STATUS = {
   BID_TARGETING_SET: 'targetingSet',
   RENDERED: 'rendered',
   BID_REJECTED: 'bidRejected'
+};
+
+export const REFRESH_IDMODULES_LIST = {
+  PRIMARY_MODULES: [
+    'id5Id',
+    'publinkId',
+    'connectId',
+    'liveIntentId'
+  ],
+  SCRIPT_BASED_MODULES: [
+    'zeotapIdPlus',
+    'identityLink',
+    'publinkId'
+  ]
+};
+
+export const MODULE_PARAM_TO_UPDATE_FOR_SSO = {
+  id5Id: [
+    {
+      key: 'pd'
+    }
+  ],
+  publinkId: [
+    {
+      key: 'e',
+      hashType: 'MD5'
+    }
+  ],
+  connectId: [
+    {
+      key: 'he',
+      hashType: 'SHA256'
+    }
+  ],
+  liveIntentId: [
+    {
+      key: 'emailHash',
+      hashType: 'SHA256'
+    }
+  ]
 };
 
 export const REJECTION_REASON = {
@@ -181,6 +204,17 @@ export const NATIVE_KEYS_THAT_ARE_NOT_ASSETS = [
   'rendererUrl',
   'type'
 ];
+
+export const IH_LOGGER_STORAGE_KEY = 'IH_LGCL_TS';
+export const FLOOR_VALUES = {
+  NO_DATA: 'noData',
+  AD_UNIT: 'adUnit',
+  SET_CONFIG: 'setConfig',
+  FETCH: 'fetch',
+  SUCCESS: 'success',
+  ERROR: 'error',
+  TIMEOUT: 'timeout'
+};
 
 export const MESSAGES = {
   REQUEST: 'Prebid Request',
