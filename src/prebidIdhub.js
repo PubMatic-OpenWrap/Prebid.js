@@ -10,7 +10,7 @@ import { config } from './config.js';
 import { hook } from './hook.js';
 import { sessionLoader } from './debugging.js';
 import { storageCallbacks } from './storageManager.js';
-import CONSTANTS from './constants.json';
+import { CONSTANTS } from './constants.js';
 import * as events from './events.js'
 
 const $$PREBID_GLOBAL$$ = getGlobal();

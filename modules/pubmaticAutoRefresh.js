@@ -16,7 +16,7 @@
 
 import { config } from '../src/config.js';
 import * as events from '../src/events.js';
-import { EVENTS } from '../src/constants.json';
+import { EVENTS } from '../src/constants.js';
 import { mergeDeep, logMessage, logWarn, pick, timestamp, isFn, isArray } from '../src/utils.js';
 import { getGlobal } from '../src/prebidGlobal.js';
 import { find } from '../src/polyfill.js';
