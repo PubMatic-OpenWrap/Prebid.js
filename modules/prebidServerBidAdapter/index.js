@@ -859,6 +859,11 @@ const OPEN_RTB_PROTOCOL = {
     [['errors', 'serverErrors'], ['responsetimemillis', 'serverResponseTimeMs']]
       .forEach(info => getPbsResponseData(bidderRequests, response, info[0], info[1]))
 
+    // Get matchedimpression from ext.matchedimpression and store in object to get mi values.
+    // Also get responsetimemillis value to calculate serverSideResponseTime.
+    const miObj = (response.ext && response.ext.matchedimpression) || {};
+    const partnerResponseTimeObj = (response.ext && response.ext.responsetimemillis) || {};
+
     if (response.seatbid) {
       // a seatbid object contains a `bid` array and a `seat` string
       response.seatbid.forEach(seatbid => {
@@ -910,7 +915,18 @@ const OPEN_RTB_PROTOCOL = {
               extPrebidTargeting = getDefinedParams(extPrebidTargeting, Object.keys(extPrebidTargeting)
                 .filter(i => (i.indexOf('hb_winurl') === -1 && i.indexOf('hb_bidid') === -1)));
             }
-            bidObject.adserverTargeting = extPrebidTargeting;
+            // We will be coverting only hb_pb key to pwtpb key and adding it to bidObject.adserverTargeting
+            // Also we will be checking for hb_buyid_pubmatic key and if it present we are converting to pwtbuyid_pubmatic before
+            // adding to pwtbuyid_pubmatic
+            bidObject.adserverTargeting = {};
+            if (extPrebidTargeting.hasOwnProperty('hb_pb')) {
+              bidObject.adserverTargeting['pwtpb'] = extPrebidTargeting['hb_pb'];
+            }
+            if (extPrebidTargeting.hasOwnProperty('hb_buyid_pubmatic')) {
+              bidObject.adserverTargeting['pwtbuyid_pubmatic'] = extPrebidTargeting['hb_buyid_pubmatic'];
+            }
+            // We will not copy all ext.prebid.targeting keys to bidObject.adserverTargeting so commenting below line
+            // bidObject.adserverTargeting = extPrebidTargeting;
           }
 
           bidObject.seatBidId = bid.id;
@@ -1017,6 +1033,20 @@ const OPEN_RTB_PROTOCOL = {
           bidObject.ttl = (bid.exp) ? bid.exp : configTtl;
           bidObject.netRevenue = (bid.netRevenue) ? bid.netRevenue : DEFAULT_S2S_NETREVENUE;
 
+          // Add mi value to bidObject as it will be required in wrapper logger call
+          // Also we need to get serverSideResponseTime as it required to calculate l1 for wrapper logger call
+          bidObject.mi = miObj.hasOwnProperty(seatbid.seat) ? miObj[seatbid.seat] : undefined;
+          bidObject.serverSideResponseTime = partnerResponseTimeObj.hasOwnProperty(seatbid.seat) ? partnerResponseTimeObj[seatbid.seat] : 0;
+
+          // We need to add originalCpm & originalCurrency to bidObject as these are required for wrapper logger and tracker calls
+          // to calculates values for properties like ocpm, ocry & eg respectively.
+          bidObject.originalCpm = bidObject.cpm;
+          bidObject.originalCurrency = bidObject.currency;
+
+          // Need to add sspID conditionally to bidObject with reference to pubmaticServerBidAdapter
+          if (seatbid.seat == 'pubmatic') {
+            bidObject.sspID = bid.id || '';
+          }
           bids.push({ adUnit: bidRequest.adUnitCode, bid: bidObject });
         });
       });

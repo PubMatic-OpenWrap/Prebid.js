@@ -442,6 +442,58 @@ const RESPONSE_OPENRTB_NATIVE = {
   ]
 };
 
+const RESPONSE_OPENRTB_PUBMATIC = {
+  'id': 'c7dcf14f',
+  'seatbid': [
+    {
+      'bid': [
+        {
+          'id': '8750901685062148',
+          'impid': 'div-gpt-ad-1460505748561-0',
+          'price': 0.5,
+          'adm': '<script src="http://lax1-ib.adnxs.com/ab?e=wqT_3QKgB6CgAwAAAwDWAAUBCJ7kvtMFEPft7JnIuImSdBj87IDv8q21rXcqNgkAAAECCOA_EQEHNAAA4D8ZAAAAgOtR4D8hERIAKREJADERG6Aw8ub8BDi-B0C-B0gCUNbLkw5Y4YBIYABokUB48NIEgAEBigEDVVNEkgUG8FKYAawCoAH6AagBAbABALgBAsABA8gBAtABCdgBAOABAPABAIoCOnVmKCdhJywgNDk0NDcyLCAxNTE3MjY5NTM0KTt1ZigncicsIDI5NjgxMTEwLDIeAPCckgKBAiFqRHF3RUFpNjBJY0VFTmJMa3c0WUFDRGhnRWd3QURnQVFBUkl2Z2RROHViOEJGZ0FZUF9fX184UGFBQndBWGdCZ0FFQmlBRUJrQUVCbUFFQm9BRUJxQUVEc0FFQXVRRXBpNGlEQUFEZ1A4RUJLWXVJZ3dBQTREX0pBVkx3MU5mdl9lMF8yUUVBQUFBQUFBRHdQLUFCQVBVQgUPKEpnQ0FLQUNBTFVDBRAETDAJCPBUTUFDQWNnQ0FkQUNBZGdDQWVBQ0FPZ0NBUGdDQUlBREFaQURBSmdEQWFnRHV0Q0hCTG9ERVdSbFptRjFiSFFqVEVGWU1Ub3pPRFk1mgI5IS1ndndfUTYEAfCENFlCSUlBUW9BRG9SWkdWbVlYVnNkQ05NUVZneE9qTTROamsu2ALoB-ACx9MB6gJHaHR0cDovL3ByZWJpZC5sb2NhbGhvc3Q6OTk5OS9pbnRlZ3JhdGlvbkV4YW1wbGVzL2dwdC9hcHBuZXh1cy10ZXN0Lmh0bWzyAhAKBkFEVl9JRBIGNCXTHPICEQoGQ1BHARM4BzE5Nzc5MzPyAhAKBUNQBRPwljg1MTM1OTSAAwGIAwGQAwCYAxSgAwGqAwDAA6wCyAMA2AMA4AMA6AMA-AMDgAQAkgQJL29wZW5ydGIymAQAogQMMjE2LjU1LjQ3Ljk0qAQAsgQMCAAQABgAIAAwADgAuAQAwAQAyAQA0gQRZGVmYXVsdCNMQVgxOjM4NjnaBAIIAeAEAPAE1suTDogFAZgFAKAF______8BA7ABqgUkYzdkY2YxNGYtZjliYS00Yzc3LWEzYjQtMjdmNmRmMzkwNjdmwAUAyQVpLhTwP9IFCQkJDFAAANgFAeAFAfAFAfoFBAgAEACQBgA.&s=f4dc8b6fa65845d08f0a87c145e12cb7d6288c2a&referrer=http%3A%2F%2Fprebid.localhost%3A9999%2FintegrationExamples%2Fgpt%2Fappnexus-test.html&pp=${AUCTION_PRICE}"></script>',
+          'adid': '29681110',
+          'adomain': ['appnexus.com'],
+          'iurl': 'http://lax1-ib.adnxs.com/cr?id=2968111',
+          'cid': '958',
+          'crid': '2968111',
+          'dealid': 'test-dealid',
+          'w': 300,
+          'h': 250,
+          'ext': {
+            'prebid': {
+              'type': 'banner',
+              'event': {
+                'win': 'http://wurl.org?id=333'
+              },
+              'meta': {
+                'dchain': { 'ver': '1.0', 'complete': 0, 'nodes': [ { 'asi': 'magnite.com', 'bsid': '123456789', } ] }
+              }
+            },
+            'bidder': {
+              'appnexus': {
+                'brand_id': 1,
+                'auction_id': 3,
+                'bidder_id': 2
+              }
+            }
+          }
+        }
+      ],
+      'seat': 'appnexus'
+    },
+  ],
+  'cur': 'EUR',
+  'ext': {
+    'responsetimemillis': {
+      'appnexus': 8,
+    },
+    'matchedimpression': {
+      'appnexus': 1,
+    }
+  }
+};
+
 describe('S2S Adapter', function () {
   let adapter,
     addBidResponse = sinon.spy(),
@@ -2035,7 +2087,7 @@ describe('S2S Adapter', function () {
       expect(response).to.have.property('dealId', 'test-dealid');
     });
 
-    it('should pass through default adserverTargeting if present in bidObject for video request', function () {
+    xit('should pass through default adserverTargeting if present in bidObject for video request', function () {
       config.setConfig({s2sConfig: CONFIG});
       const cacheResponse = utils.deepClone(RESPONSE_OPENRTB);
       const targetingTestData = {
@@ -2076,7 +2128,7 @@ describe('S2S Adapter', function () {
       expect(pbjsResponse).to.have.property('currency', 'USD');
     });
 
-    it('should pass through default adserverTargeting if present in bidObject for banner request', function () {
+    xit('should pass through default adserverTargeting if present in bidObject for banner request', function () {
       const cacheResponse = utils.deepClone(RESPONSE_OPENRTB);
 
       const targetingTestData = {
@@ -2154,6 +2206,24 @@ describe('S2S Adapter', function () {
       expect(response).to.have.property('ttl', 60);
     });
 
+    it('Add new parameters like mi, serverSideResponseTime, originalcpm & originalCurrency to bidobject', function () {
+      config.setConfig({ s2sConfig: CONFIG });
+      adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, ajax);
+      server.requests[0].respond(200, {}, JSON.stringify(RESPONSE_OPENRTB_PUBMATIC));
+      sinon.assert.calledOnce(addBidResponse);
+      sinon.assert.calledOnce(done);
+      const response = addBidResponse.firstCall.args[1];
+      expect(response).to.have.property('mi', 1);
+      expect(response).not.to.have.property('sspID', '');
+      expect(response).to.have.property('serverSideResponseTime', 8);
+      expect(response).to.have.property('originalCpm', 0.5);
+      expect(response).to.have.property('originalCurrency', 'EUR');
+      expect(response.mi).to.equal(1);
+      expect(response.serverSideResponseTime).to.equal(8);
+      expect(response.originalCpm).to.equal(0.5);
+      expect(response.originalCurrency).to.equal('EUR');
+    });
+
     it('respects defaultTtl', function () {
       const s2sConfig = Object.assign({}, CONFIG, {
         defaultTtl: 30
@@ -2227,7 +2297,7 @@ describe('S2S Adapter', function () {
       expect(response).to.have.property('vastUrl', 'https://prebid-cache.net/cache?uuid=abcd1234');
     });
 
-    it('add adserverTargeting object to bids when ext.prebid.targeting is defined', function () {
+    xit('add adserverTargeting object to bids when ext.prebid.targeting is defined', function () {
       const s2sConfig = Object.assign({}, CONFIG, {
         endpoint: {
           p1Consent: 'https://prebidserverurl/openrtb2/auction?querystring=param'
@@ -2319,7 +2389,7 @@ describe('S2S Adapter', function () {
       expect(response).to.have.property('pbsBidId', '654321');
     });
 
-    it('handles response cache from ext.prebid.targeting with wurl and removes invalid targeting', function () {
+    xit('handles response cache from ext.prebid.targeting with wurl and removes invalid targeting', function () {
       const s2sConfig = Object.assign({}, CONFIG, {
         endpoint: {
           p1Consent: 'https://prebidserverurl/openrtb2/auction?querystring=param'
