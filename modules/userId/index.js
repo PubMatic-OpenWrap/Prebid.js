@@ -191,7 +191,7 @@ export let syncDelay;
 export let auctionDelay;
 
 /** @type {(Object|undefined)} */
-let userIdentity;
+let userIdentity = {};
 /** @param {Submodule[]} submodules */
 export function setSubmoduleRegistry(submodules) {
   submoduleRegistry = submodules;
@@ -657,7 +657,14 @@ function refreshUserIds(options, callback, moduleUpdated) {
 }
 
 function setUserIdentities(userIdentityData) {
-  userIdentity = userIdentityData;
+  var pubProvidedEmailHash = {};
+  if (userIdentityData.pubProvidedEmail) {
+    generateEmailHash(userIdentityData.pubProvidedEmail, pubProvidedEmailHash);
+    userIdentityData.pubProvidedEmailHash = pubProvidedEmailHash;
+    delete userIdentityData.pubProvidedEmail;
+  }
+  Object.assign(userIdentity, userIdentityData);
+  //userIdentity = userIdentityData;
 };
 
 function getUserIdentities() {
