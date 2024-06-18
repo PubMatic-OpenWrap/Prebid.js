@@ -12,7 +12,7 @@ import {deepAccess, deepClone, mergeDeep} from 'src/utils.js';
 import {ajax} from 'src/ajax.js';
 import {config} from 'src/config.js';
 import * as events from 'src/events.js';
-import CONSTANTS from 'src/constants.json';
+import { EVENTS } from 'src/constants.js';
 import {server} from 'test/mocks/xhr.js';
 import 'modules/appnexusBidAdapter.js'; // appnexus alias test
 import 'modules/rubiconBidAdapter.js'; // rubicon alias test
@@ -37,6 +37,7 @@ import {syncAddFPDToBidderRequest} from '../../helpers/fpd.js';
 import {deepSetValue} from '../../../src/utils.js';
 import {ACTIVITY_TRANSMIT_UFPD} from '../../../src/activities/activities.js';
 import {MODULE_TYPE_PREBID} from '../../../src/activities/modules.js';
+import {getDeviceConnectionType} from '../../../libraries/pbsExtensions/processors/custom.js';
 
 let CONFIG = {
   accountId: '1',
@@ -996,6 +997,21 @@ describe('S2S Adapter', function () {
       adapter.callBids(badCfgRequest, BID_REQUESTS, addBidResponse, done, ajax);
 
       expect(server.requests.length).to.equal(0);
+    });
+
+    describe('getDeviceConnectionType', function() {
+      it('is a function', function(done) {
+        getDeviceConnectionType.should.be.a('function');
+        done();
+      });
+
+      it('should return matched value if navigator.connection is present', function(done) {
+        const connectionValue = getDeviceConnectionType();
+        if (window?.navigator?.connection) {
+          expect(connectionValue).to.be.a('number');
+        }
+        done();
+      });
     });
 
     if (FEATURES.VIDEO) {
@@ -3161,7 +3177,7 @@ describe('S2S Adapter', function () {
       adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, ajax);
       server.requests[0].respond(400, {}, {});
       BID_REQUESTS.forEach(bidderRequest => {
-        sinon.assert.calledWith(events.emit, CONSTANTS.EVENTS.BIDDER_ERROR, sinon.match({bidderRequest}))
+        sinon.assert.calledWith(events.emit, EVENTS.BIDDER_ERROR, sinon.match({ bidderRequest }))
       })
     })
 
@@ -3374,7 +3390,7 @@ describe('S2S Adapter', function () {
 
       sinon.assert.calledOnce(events.emit);
       const event = events.emit.firstCall.args;
-      expect(event[0]).to.equal(CONSTANTS.EVENTS.BIDDER_DONE);
+      expect(event[0]).to.equal(EVENTS.BIDDER_DONE);
       expect(event[1].bids[0]).to.have.property('serverResponseTimeMs', 8);
 
       sinon.assert.calledOnce(addBidResponse);
@@ -3405,7 +3421,7 @@ describe('S2S Adapter', function () {
       Object.assign(responding.ext.seatnonbid, [{auctionId: 2}])
       server.requests[0].respond(200, {}, JSON.stringify(responding));
       const event = events.emit.secondCall.args;
-      expect(event[0]).to.equal(CONSTANTS.EVENTS.SEAT_NON_BID);
+      expect(event[0]).to.equal(EVENTS.SEAT_NON_BID);
       expect(event[1].seatnonbid[0]).to.have.property('auctionId', 2);
       expect(event[1].requestedBidders).to.deep.equal(['appnexus']);
       expect(event[1].response).to.deep.equal(responding);
@@ -3898,7 +3914,7 @@ describe('S2S Adapter', function () {
       adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, ajax);
       server.requests[0].respond(200, {}, JSON.stringify(clonedResponse));
 
-      events.emit(CONSTANTS.EVENTS.BID_WON, {
+      events.emit(EVENTS.BID_WON, {
         auctionId: '173afb6d132ba3',
         adId: '1000'
       });
@@ -3917,7 +3933,7 @@ describe('S2S Adapter', function () {
       adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, ajax);
       server.requests[0].respond(200, {}, JSON.stringify(clonedResponse));
 
-      events.emit(CONSTANTS.EVENTS.BID_WON, {
+      events.emit(EVENTS.BID_WON, {
         auctionId: '173afb6d132ba3',
         adId: 'missingAdId'
       });
@@ -3933,7 +3949,7 @@ describe('S2S Adapter', function () {
       adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, ajax);
       server.requests[0].respond(200, {}, JSON.stringify(clonedResponse));
 
-      events.emit(CONSTANTS.EVENTS.BID_WON, {
+      events.emit(EVENTS.BID_WON, {
         auctionId: '173afb6d132ba3',
         adId: '1060'
       });

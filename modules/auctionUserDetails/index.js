@@ -1,5 +1,5 @@
 import * as events from '../../src/events.js';
-import CONSTANTS from '../../src/constants.json';
+import { EVENTS } from '../../src/constants.js';
 import { getStorageManager } from '../../src/storageManager.js';
 
 const BIDDER_CODE = 'pubmatic';
@@ -147,19 +147,19 @@ export let init = () => {
       impressionViewableHandler(event.slot);
     });
   });
-  events.on(CONSTANTS.EVENTS.AUCTION_INIT, (args) => {
+  events.on(EVENTS.AUCTION_INIT, (args) => {
     frequencyDepth = auctionInitHandler(args);
   });
 
-  events.on(CONSTANTS.EVENTS.AUCTION_END, () => {
+  events.on(EVENTS.AUCTION_END, () => {
     frequencyDepth = auctionEndHandler();
   });
 
-  events.on(CONSTANTS.EVENTS.BID_RESPONSE, (bid) => {
+  events.on(EVENTS.BID_RESPONSE, (bid) => {
     frequencyDepth = auctionBidResponseHandler(bid);
   });
 
-  events.on(CONSTANTS.EVENTS.BID_WON, (bid) => {
+  events.on(EVENTS.BID_WON, (bid) => {
     frequencyDepth = auctionBidWonHandler(bid);
   });
 }

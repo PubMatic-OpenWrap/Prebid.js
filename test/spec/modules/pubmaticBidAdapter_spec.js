@@ -4,7 +4,7 @@ import * as utils from 'src/utils.js';
 import { config } from 'src/config.js';
 import { createEidsArray } from 'modules/userId/eids.js';
 import { bidderSettings } from 'src/bidderSettings.js';
-const constants = require('src/constants.json');
+const constants = require('src/constants.js');
 
 describe('PubMatic adapter', function () {
   let firstBid, secoundBid, bidRequests;
@@ -1155,6 +1155,8 @@ describe('PubMatic adapter', function () {
         expect(data.imp[0].bidfloorcur).to.equal(bidRequests[0].params.currency);
         expect(data.source.ext.schain).to.deep.equal(bidRequests[0].schain);
         expect(data.ext.epoch).to.exist;
+        expect(data.imp[0].displaymanager).to.equal('Prebid.js');
+        expect(data.imp[0].displaymanagerver).to.equal('$prebid.version$');
   		});
 
 		  it('Set tmax from global config if not set by requestBids method', function() {
@@ -3505,6 +3507,14 @@ describe('PubMatic adapter', function () {
         const req = spec.buildRequests(bidRequest, { ...bidRequest, fledgeEnabled: true });
         let data = JSON.parse(req.data);
         expect(data.imp[0].ext.ae).to.equal(1);
+      });
+
+      it('should send connectiontype parameter if browser contains navigator.connection property', function () {
+        const bidRequest = spec.buildRequests(bidRequests);
+        let data = JSON.parse(bidRequest.data);
+        if (window.navigator && window.navigator.connection) {
+          expect(data.device).to.include.any.keys('connectiontype');
+        }
       });
   	});
 

@@ -31,6 +31,11 @@
             "module": "qortexRtdProvider"
         },
         {
+            "name": "51DegreesRtdProvider",
+            "path": "/modules/51DegreesRtdProvider.js",
+            "module": "51DegreesRtdProvider"
+        },
+        {
             "name": "cleanioRtdProvider",
             "path": "/modules/cleanioRtdProvider.js",
             "module": "cleanioRtdProvider"
@@ -81,6 +86,11 @@
             "module": "growthCodeRtdProvider"
         },
         {
+            "name": "pubxaiRtdProvider",
+            "path": "/modules/pubxaiRtdProvider.js",
+            "module": "pubxaiRtdProvider"
+        },
+        {
             "name": "oxxionRtdProvider",
             "path": "/modules/oxxionRtdProvider.js",
             "module": "oxxionRtdProvider"
@@ -114,6 +124,11 @@
             "name": "blueconicRtdProvider",
             "path": "/modules/blueconicRtdProvider.js",
             "module": "blueconicRtdProvider"
+        },
+        {
+            "name": "anonymisedRtdProvider",
+            "path": "/modules/anonymisedRtdProvider.js",
+            "module": "anonymisedRtdProvider"
         },
         {
             "name": "intersectionRtdProvider",
@@ -488,6 +503,11 @@
             "module": "growthCodeAnalyticsAdapter"
         },
         {
+            "name": "eightPodAnalyticsAdapter",
+            "path": "/modules/eightPodAnalyticsAdapter.js",
+            "module": "eightPodAnalyticsAdapter"
+        },
+        {
             "name": "magniteAnalyticsAdapter",
             "path": "/modules/magniteAnalyticsAdapter.js",
             "module": "magniteAnalyticsAdapter"
@@ -680,6 +700,11 @@
             "module": "bidViewabilityIO"
         },
         {
+            "name": "gppControl_usstates",
+            "path": "/modules/gppControl_usstates.js",
+            "module": "gppControl_usstates"
+        },
+        {
             "name": "nativeRendering",
             "path": "/modules/nativeRendering.js",
             "module": "nativeRendering"
@@ -703,7 +728,7 @@
             "name": "topicsFpdModule",
             "path": "/modules/topicsFpdModule.js",
             "module": "topicsFpdModule"
-        }   
+        }
     ],
     "AD Pod": [
         {

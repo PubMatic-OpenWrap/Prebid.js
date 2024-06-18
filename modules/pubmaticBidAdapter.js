@@ -4,8 +4,7 @@ import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
 import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
-import CONSTANTS from '../src/constants.json';
-import {convertTypes} from '../libraries/transformParamsUtils/convertTypes.js';
+import { NATIVE_IMAGE_TYPES, NATIVE_KEYS_THAT_ARE_NOT_ASSETS, NATIVE_KEYS, NATIVE_ASSET_TYPES } from '../src/constants.js';
 
 /**
  * @typedef {import('../src/adapters/bidderFactory.js').BidRequest} BidRequest
@@ -359,7 +358,6 @@ const PREBID_NATIVE_DATA_KEYS_TO_ORTB = {
   'displayurl': 'displayurl'
 };
 
-const { NATIVE_IMAGE_TYPES, NATIVE_KEYS_THAT_ARE_NOT_ASSETS, NATIVE_KEYS, NATIVE_ASSET_TYPES } = CONSTANTS;
 const PREBID_NATIVE_DATA_KEY_VALUES = Object.values(PREBID_NATIVE_DATA_KEYS_TO_ORTB);
 
 // TODO remove this function when the support for 1.1 is removed
@@ -691,7 +689,9 @@ function _createImpressionObject(bid, bidderRequest) {
     ext: {
       pmZoneId: _parseSlotParam('pmzoneid', bid.params.pmzoneid)
     },
-    bidfloorcur: bid.params.currency ? _parseSlotParam('currency', bid.params.currency) : DEFAULT_CURRENCY
+    bidfloorcur: bid.params.currency ? _parseSlotParam('currency', bid.params.currency) : DEFAULT_CURRENCY,
+    displaymanager: 'Prebid.js',
+    displaymanagerver: '$prebid.version$' // prebid version
   };
 
   _addPMPDealsInImpression(impObj, bid);
