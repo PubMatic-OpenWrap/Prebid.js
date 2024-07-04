@@ -299,8 +299,6 @@ function bundle(dev, moduleArr) {
   var allModules = helpers.getModuleNames(modules);
   const sm = dev || argv.sourceMaps;
 
-  console.log("STARTING BUNDLE-----------");
-  console.log("---------- modules ", modules);
   if (modules.length === 0) {
     modules = allModules.filter(module => explicitModules.indexOf(module) === -1);
   } else {
@@ -313,20 +311,15 @@ function bundle(dev, moduleArr) {
     }
   }
   const coreFile = helpers.getBuiltPrebidCoreFile(dev);
-  console.log("---------- coreFile ", coreFile);
   const moduleFiles = helpers.getBuiltModules(dev, modules);
-  console.log("---------- moduleFiles ", moduleFiles);
   const depGraph = require(helpers.getBuiltPath(dev, 'dependencies.json'));
-  console.log("---------- depGraph ", depGraph);
   const dependencies = new Set();
   [coreFile].concat(moduleFiles).map(name => path.basename(name)).forEach((file) => {
     (depGraph[file] || []).forEach((dep) => dependencies.add(helpers.getBuiltPath(dev, dep)));
   });
   const entries = _.uniq([coreFile].concat(Array.from(dependencies), moduleFiles));
-  console.log("---------- entries ", entries);
 
   var outputFileName = argv.bundleName ? argv.bundleName : 'prebid.js';
-  console.log("---------- outputFileName ", outputFileName);
 
   // change output filename if argument --tag given
   if (argv.tag && argv.tag.length) {
