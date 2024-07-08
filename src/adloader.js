@@ -26,6 +26,7 @@ const _approvedLoadExternalJSList = [
   'mediafilter',
   'medianet',
   'azerionedge',
+  'pbjs-debug-ui',
   'a1Media',
   'geoedge',
   'qortex',
