@@ -4,7 +4,7 @@ import {userSync} from '../src/userSync.js';
 import { config } from '../src/config.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO } from '../src/mediaTypes.js';
-import constants from '../src/constants.js';
+// import constants from '../src/constants.js';
 const LOG_WARN_PREFIX = 'PubMatic: ';
 
 const BIDDER_CODE = 'pubmaticServer';
@@ -546,7 +546,7 @@ export const spec = {
       sumry_disable: 0,
       ssauction: 0,
       wp: 'pbjs',
-      wv: constants.REPO_AND_VERSION,
+      // wv: constants.REPO_AND_VERSION,
       // transactionId: conf.transactionId,
       wiid: conf.wiid || bidderRequest.auctionId
     };
