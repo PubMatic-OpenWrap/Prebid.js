@@ -510,8 +510,7 @@ gulp.task('update-namespace', async function () {
 
 gulp.task('bundle-pwt-keys', function() {
   var usePBJSKeysEnabled = argv.usePBJSKeys || false;
-  var pubAnalyticsAdapterEnabled = argv.pubAnalyticsAdapter || false;
-  if(!usePBJSKeysEnabled && pubAnalyticsAdapterEnabled){
+  if(!usePBJSKeysEnabled){
       console.log("We need to use PWT keys, so changing targeting keys in PrebidJS config");
       return gulp.src('build/*/'+ getBundleName(), { "allowEmpty": true })
           .pipe(replace(/"%%TG_KEYS%%"/g,'{"STATUS":"pwtbst","BIDDER":"pwtpid","AD_ID":"pwtsid","PRICE_BUCKET":"pwtecp","SIZE":"pwtsz","DEAL":"pwtdeal","DEAL_ID":"pwtdid","SOURCE":"","FORMAT":"pwtplt","UUID":"pwtuuid","CACHE_ID":"pwtcid","CACHE_HOST":"pwtcurl","ADOMAIN":"pwtadomain"}'))

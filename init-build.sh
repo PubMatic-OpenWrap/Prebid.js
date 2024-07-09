@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # ./init-build.sh -p /tmp/test_cerebro/test4/v8.19.0/65916/Prebid.js -m build -t display -w wrapper -x OW
-# gulp bundle --modules=modules.json --isIdentityOnly=<IDENTITY_FLAG> --pbNamespace=<PREBID_NAMESPACE> --owNamespace=<OW_NAMESPACE> --bundleName=pwt.js --usePBJSKeys=<USE_PBJS_KEYS> --pubAnalyticsAdapter=<PUB_ANALYTICS_ADAPTER>
-# ./init-build.sh -m bundle -t display -i 1 -p owpbjs -o PWT -b pwt.js -k 1 -r 1
+# gulp bundle --modules=modules.json --isIdentityOnly=<IDENTITY_FLAG> --pbNamespace=<PREBID_NAMESPACE> --owNamespace=<OW_NAMESPACE> --bundleName=pwt.js --usePBJSKeys=<USE_PBJS_KEYS>
+# ./init-build.sh -m bundle -t display -i 1 -p owpbjs -o PWT -b pwt.js -k 1
 # Steps
 # run sym links for node_modules folder
 # run npm install in Prebid.js repo ( accept path for the same ? )
@@ -18,15 +18,14 @@ if [ $# -eq 0 ]
     echo " Provide OpenWrap namespace using -o flag"
     echo " Provide bundle name using -b flag" 
     echo " Provide use PBJS keys using -k flag"
-    echo " Provide pub analytics adapter using -r flag"
-    echo " Example: ./init-build.sh -m bundle -t display -i 1 -p owpbjs -o PWT -b pwt.js -k 1 -r 1"
+    echo " Example: ./init-build.sh -m bundle -t display -i 1 -p owpbjs -o PWT -b pwt.js -k 1"
     exit 1
 fi
 
 PLATFORM_DISPLAY="display"
 PLATFORM_AMP="amp"
 echo "$(date) This is Reading Params"
-while getopts ":m:t:i:p:o:b:k:r:" opt; do
+while getopts ":m:t:i:p:o:b:k:" opt; do
   case $opt in
     m) mode="$OPTARG"
     ;;
@@ -41,8 +40,6 @@ while getopts ":m:t:i:p:o:b:k:r:" opt; do
     b) bundleName="$OPTARG"
     ;;
     k) usePBJSKeys="$OPTARG"
-    ;;
-    r) pubAnalyticsAdapter="$OPTARG"
     ;;
     \?) echo "Invalid option -$OPTARG" >&2
     ;;
@@ -99,7 +96,7 @@ if [ "$platform" = "$PLATFORM_DISPLAY" ] || [ -z $platform ]
           echo "Please provide appropriate isIdentityOnly argument "
           exit 1
     fi
-    time ./build.sh --mode=$mode --platform=$platform --isIdentityOnly=$isIdentityOnly --pbNamespace=$pbNamespace --owNamespace=$owNamespace --bundleName=$bundleName --usePBJSKeys=$usePBJSKeys --pubAnalyticsAdapter=$pubAnalyticsAdapter
+    time ./build.sh --mode=$mode --platform=$platform --isIdentityOnly=$isIdentityOnly --pbNamespace=$pbNamespace --owNamespace=$owNamespace --bundleName=$bundleName --usePBJSKeys=$usePBJSKeys
 
 elif [ "$platform" = "$PLATFORM_AMP" ]
    then

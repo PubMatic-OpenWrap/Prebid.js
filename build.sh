@@ -24,7 +24,6 @@ if (platform == "amp") {
 	if(argv.pbNamespace) gulpTaskName += ` --pbNamespace=${argv.pbNamespace}`; 
 	if(argv.owNamespace) gulpTaskName += ` --owNamespace=${argv.owNamespace}`;
 	if(argv.usePBJSKeys) gulpTaskName += ` --usePBJSKeys=${argv.usePBJSKeys}`;
-	if(argv.pubAnalyticsAdapter) gulpTaskName += ` --pubAnalyticsAdapter=${argv.pubAnalyticsAdapter}`; 
 
 	if (argv.mode){
 		switch (argv.mode) {
