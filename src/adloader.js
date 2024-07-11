@@ -34,7 +34,6 @@ const _approvedLoadExternalJSList = [
   'dynamicAdBoost',
   'contxtful',
   'id5',
-  'lucead',
   '51Degrees',
 ];
 
