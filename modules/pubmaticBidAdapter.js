@@ -5,12 +5,31 @@ import { config } from '../src/config.js';
 import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
 import { NATIVE_IMAGE_TYPES, NATIVE_KEYS_THAT_ARE_NOT_ASSETS, NATIVE_KEYS, NATIVE_ASSET_TYPES } from '../src/constants.js';
+import {ortbConverter} from '../libraries/ortbConverter/converter.js';
 
 /**
  * @typedef {import('../src/adapters/bidderFactory.js').BidRequest} BidRequest
  * @typedef {import('../src/adapters/bidderFactory.js').Bid} Bid
  * @typedef {import('../src/adapters/bidderFactory.js').validBidRequests} validBidRequests
  */
+
+const converter = ortbConverter({     
+    context: {
+        // `netRevenue` and `ttl` are required properties of bid responses - provide a default for them 
+        netRevenue: true,    // or false if your adapter should set bidResponse.netRevenue = false
+        ttl: 300              // default bidResponse.ttl (when not specified in ORTB response.seatbid[].bid[].exp)  
+    },
+	imp(buildImp, bidRequest, context) {
+		const imp = buildImp(bidRequest, context);
+		imp.tagid = deepAccess(bidRequest, 'ortb2Imp.ext.gpid') || bidRequest.adUnitCode || 'DMDemo';
+		return imp;
+	  },
+});
+
+
+
+
+
 
 const BIDDER_CODE = 'pubmatic';
 const LOG_WARN_PREFIX = 'PubMatic: ';
@@ -1135,273 +1154,17 @@ export const spec = {
    * @return ServerRequest Info describing the request to the server.
    */
   buildRequests: (validBidRequests, bidderRequest) => {
+
+	const data = converter.toORTB({ validBidRequests, bidderRequest });
     // convert Native ORTB definition to old-style prebid native definition
     // validBidRequests = convertOrtbRequestToProprietaryNative(validBidRequests);
-    var refererInfo;
-    if (bidderRequest && bidderRequest.refererInfo) {
-      refererInfo = bidderRequest.refererInfo;
-    }
-    var conf = _initConf(refererInfo);
-    var payload = _createOrtbTemplate(conf);
-    var bidCurrency = '';
-    var dctrArr = [];
-    var bid;
-    var blockedIabCategories = [];
-    var allowedIabCategories = [];
-    var wiid = generateUUID();
-
-    validBidRequests.forEach(originalBid => {
-      originalBid.params.wiid = originalBid.params.wiid || bidderRequest.auctionId || wiid;
-      bid = deepClone(originalBid);
-      bid.params.adSlot = bid.params.adSlot || '';
-      _parseAdSlot(bid);
-      if ((bid.mediaTypes && bid.mediaTypes.hasOwnProperty('video')) || bid.params.hasOwnProperty('video')) {
-        // Nothing to do
-      } else {
-        // If we have a native mediaType configured alongside banner, its ok if the banner size is not set in width and height
-        // The corresponding banner imp object will not be generated, but we still want the native object to be sent, hence the following check
-        if (!(bid.hasOwnProperty('mediaTypes') && bid.mediaTypes.hasOwnProperty(NATIVE)) && bid.params.width === 0 && bid.params.height === 0) {
-          logWarn(LOG_WARN_PREFIX + 'Skipping the non-standard adslot: ', bid.params.adSlot, JSON.stringify(bid));
-          return;
-        }
-      }
-      conf.pubId = conf.pubId || bid.params.publisherId;
-      conf = _handleCustomParams(bid.params, conf);
-      conf.transactionId = bid.ortb2Imp?.ext?.tid;
-      if (bidCurrency === '') {
-        bidCurrency = bid.params.currency || UNDEFINED;
-      } else if (bid.params.hasOwnProperty('currency') && bidCurrency !== bid.params.currency) {
-        logWarn(LOG_WARN_PREFIX + 'Currency specifier ignored. Only one currency permitted.');
-      }
-      bid.params.currency = bidCurrency;
-      // check if dctr is added to more than 1 adunit
-      if (bid.params.hasOwnProperty('dctr') && isStr(bid.params.dctr)) {
-        dctrArr.push(bid.params.dctr);
-      }
-      if (bid.params.hasOwnProperty('bcat') && isArray(bid.params.bcat)) {
-        blockedIabCategories = blockedIabCategories.concat(bid.params.bcat);
-      }
-      if (bid.params.hasOwnProperty('acat') && isArray(bid.params.acat)) {
-        allowedIabCategories = allowedIabCategories.concat(bid.params.acat);
-      }
-      var impObj = _createImpressionObject(bid, bidderRequest);
-      if (impObj) {
-        payload.imp.push(impObj);
-      }
-    });
-
-    if (payload.imp.length == 0) {
-      return;
-    }
-
-    payload.site.publisher.id = conf.pubId.trim();
-    publisherId = conf.pubId.trim();
-    payload.ext.wrapper = {};
-    payload.ext.wrapper.profile = parseInt(conf.profId) || UNDEFINED;
-    payload.ext.wrapper.version = parseInt(conf.verId) || UNDEFINED;
-    // TODO: fix auctionId leak: https://github.com/prebid/Prebid.js/issues/9781
-    payload.ext.wrapper.wiid = conf.wiid || bidderRequest.auctionId;
-    // eslint-disable-next-line no-undef
-    payload.ext.wrapper.wv = $$REPO_AND_VERSION$$;
-    payload.ext.wrapper.transactionId = conf.transactionId;
-    payload.ext.wrapper.wp = 'pbjs';
-    const allowAlternateBidder = bidderRequest ? bidderSettings.get(bidderRequest.bidderCode, 'allowAlternateBidderCodes') : undefined;
-    if (allowAlternateBidder !== undefined) {
-      payload.ext.marketplace = {};
-      if (bidderRequest && allowAlternateBidder == true) {
-        let allowedBiddersList = bidderSettings.get(bidderRequest.bidderCode, 'allowedAlternateBidderCodes');
-        if (isArray(allowedBiddersList)) {
-          allowedBiddersList = allowedBiddersList.map(val => val.trim().toLowerCase()).filter(val => !!val).filter(uniques);
-          biddersList = allowedBiddersList.includes('*') ? allBiddersList : [...biddersList, ...allowedBiddersList];
-        } else {
-          biddersList = allBiddersList;
-        }
-      }
-      payload.ext.marketplace.allowedbidders = biddersList.filter(uniques);
-    }
-
-    payload.user.gender = (conf.gender ? conf.gender.trim() : UNDEFINED);
-    payload.user.geo = {};
-    // TODO: fix lat and long to only come from request object, not params
-    payload.user.yob = _parseSlotParam('yob', conf.yob);
-    payload.site.page = conf.kadpageurl.trim() || payload.site.page.trim();
-    payload.site.domain = _getDomainFromURL(payload.site.page);
-
-    // add the content object from config in request
-    if (typeof config.getConfig('content') === 'object') {
-      payload.site.content = config.getConfig('content');
-    }
-
-    // merge the device from config.getConfig('device')
-    if (typeof config.getConfig('device') === 'object') {
-      payload.device = Object.assign(payload.device, config.getConfig('device'));
-    }
-
-    // update device.language to ISO-639-1-alpha-2 (2 character language)
-    payload.device.language = payload.device.language && payload.device.language.split('-')[0];
-
-    // passing transactionId in source.tid if present
-    if (bidderRequest?.ortb2?.source?.tid) {
-      deepSetValue(payload, 'source.tid', bidderRequest?.ortb2?.source?.tid);
-    }
-
-    // test bids
-    if (window.location.href.indexOf('pubmaticTest=true') !== -1) {
-      payload.test = 1;
-    }
-
-    // adding schain object
-    if (validBidRequests[0].schain) {
-      deepSetValue(payload, 'source.ext.schain', validBidRequests[0].schain);
-    }
-
-    // Attaching GDPR Consent Params
-    if (bidderRequest && bidderRequest.gdprConsent) {
-      deepSetValue(payload, 'user.ext.consent', bidderRequest.gdprConsent.consentString);
-      deepSetValue(payload, 'regs.ext.gdpr', (bidderRequest.gdprConsent.gdprApplies ? 1 : 0));
-    }
-
-    // CCPA
-    if (bidderRequest && bidderRequest.uspConsent) {
-      deepSetValue(payload, 'regs.ext.us_privacy', bidderRequest.uspConsent);
-    }
-
-    // Attaching GPP Consent Params
-    if (bidderRequest?.gppConsent?.gppString) {
-      deepSetValue(payload, 'regs.gpp', bidderRequest.gppConsent.gppString);
-      deepSetValue(payload, 'regs.gpp_sid', bidderRequest.gppConsent.applicableSections);
-    } else if (bidderRequest?.ortb2?.regs?.gpp) {
-      deepSetValue(payload, 'regs.gpp', bidderRequest.ortb2.regs.gpp);
-      deepSetValue(payload, 'regs.gpp_sid', bidderRequest.ortb2.regs.gpp_sid);
-    }
-
-    // coppa compliance
-    if (config.getConfig('coppa') === true) {
-      deepSetValue(payload, 'regs.coppa', 1);
-    }
-
-    // dsa
-    if (bidderRequest?.ortb2?.regs?.ext?.dsa) {
-      deepSetValue(payload, 'regs.ext.dsa', bidderRequest.ortb2.regs.ext.dsa);
-    }
-
-    _handleEids(payload, validBidRequests);
-
-    // First Party Data
-    const commonFpd = (bidderRequest && bidderRequest.ortb2) || {};
-    const { user, device, site, bcat, badv } = commonFpd;
-    if (site) {
-      const { page, domain, ref } = payload.site;
-      mergeDeep(payload, {site: site});
-      payload.site.page = page;
-      payload.site.domain = domain;
-      payload.site.ref = ref;
-    }
-    if (user) {
-      mergeDeep(payload, {user: user});
-    }
-    if (badv) {
-      mergeDeep(payload, {badv: badv});
-    }
-    if (bcat) {
-      blockedIabCategories = blockedIabCategories.concat(bcat);
-    }
-    // check if fpd ortb2 contains device property with sua object
-    if (device?.sua) {
-      payload.device.sua = device?.sua;
-    }
-
-    if (device?.ext?.cdep) {
-      deepSetValue(payload, 'device.ext.cdep', device.ext.cdep);
-    }
-
-    if (user?.geo && device?.geo) {
-      payload.device.geo = { ...payload.device.geo, ...device.geo };
-      payload.user.geo = { ...payload.user.geo, ...user.geo };
-    } else {
-      if (user?.geo || device?.geo) {
-        payload.user.geo = payload.device.geo = (user?.geo ? { ...payload.user.geo, ...user.geo } : { ...payload.user.geo, ...device.geo });
-      }
-    }
-
-    if (commonFpd.ext?.prebid?.bidderparams?.[bidderRequest.bidderCode]?.acat) {
-      const acatParams = commonFpd.ext.prebid.bidderparams[bidderRequest.bidderCode].acat;
-      _allowedIabCategoriesValidation(payload, acatParams);
-    } else if (allowedIabCategories.length) {
-      _allowedIabCategoriesValidation(payload, allowedIabCategories);
-    }
-    _blockedIabCategoriesValidation(payload, blockedIabCategories);
-
-    // Check if bidderRequest has timeout property if present send timeout as tmax value to translator request
-    // bidderRequest has timeout property if publisher sets during calling requestBids function from page
-    // if not bidderRequest contains global value set by Prebid
-    if (bidderRequest?.timeout) {
-      payload.tmax = bidderRequest.timeout;
-    } else {
-      payload.tmax = window?.PWT?.versionDetails?.timeout;
-    }
-
-    // Sending epoch timestamp in request.ext object
-    payload.ext.epoch = new Date().getTime();
-
-    // Note: Do not move this block up
-    // if site object is set in Prebid config then we need to copy required fields from site into app and unset the site object
-    if (typeof config.getConfig('app') === 'object') {
-      payload.app = config.getConfig('app');
-      // not copying domain from site as it is a derived value from page
-      payload.app.publisher = payload.site.publisher;
-      payload.app.ext = payload.site.ext || UNDEFINED;
-      // We will also need to pass content object in app.content if app object is also set into the config;
-      // BUT do not use content object from config if content object is present in app as app.content
-      if (typeof payload.app.content !== 'object') {
-        payload.app.content = payload.site.content || UNDEFINED;
-      }
-      delete payload.site;
-    }
-
-    // const correlator = getUniqueNumber(1000);
-    // let url = ENDPOINT + '?source=ow-client&correlator=' + correlator;
 
     let serverRequest = {
       method: 'POST',
       url: ENDPOINT + '?source=ow-client',
-      data: JSON.stringify(payload),
+      data: JSON.stringify(data),
       bidderRequest: bidderRequest
     };
-
-    // Allow translator request to execute it as GET Methoid if flag is set.
-    if (hasGetRequestEnabled()) {
-      // // nwMonitor object is used to identify the network latency, it is being no longer used.
-      // // For Auction End Handler
-      // if (bidderRequest) {
-      //   bidderRequest = bidderRequest || {};
-      //   bidderRequest.nwMonitor = {};
-      //   bidderRequest.nwMonitor.reqMethod = 'POST';
-      //   bidderRequest.nwMonitor.correlator = correlator;
-      //   bidderRequest.nwMonitor.requestUrlPayloadLength = url.length + JSON.stringify(payload).length;
-      //   // For Timeout handler
-      //   if (bidderRequest?.bids?.length && isArray(bidderRequest?.bids)) {
-      //     bidderRequest.bids.forEach(bid => bid.correlator = correlator);
-      //   }
-      // }
-
-      const maxUrlLength = config.getConfig('translatorGetRequest.maxUrlLength') || 63000;
-      const configuredEndPoint = config.getConfig('translatorGetRequest.endPoint') || ENDPOINT;
-      const urlEncodedPayloadStr = parseQueryStringParameters({
-        'source': 'ow-client', 'payload': JSON.stringify(payload)});
-      if ((configuredEndPoint + '?' + urlEncodedPayloadStr)?.length <= maxUrlLength) {
-        serverRequest = {
-          method: 'GET',
-          url: configuredEndPoint,
-          data: urlEncodedPayloadStr,
-          bidderRequest: bidderRequest,
-          payloadStr: JSON.stringify(payload)
-        };
-
-        // bidderRequest.nwMonitor.reqMethod = 'GET';
-        // bidderRequest.nwMonitor.requestUrlPayloadLength = configuredEndPoint.length + '?'.length + urlEncodedPayloadStr.length;
-      }
-    }
 
     return serverRequest;
   },
