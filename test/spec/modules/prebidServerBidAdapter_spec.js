@@ -1055,6 +1055,31 @@ describe('S2S Adapter', function () {
         expect(requestBid.imp[0].video.context).to.be.undefined;
       });
 
+	  it('should set UNIX_TIMESTAMP for video request', function () {
+        let videoBid = utils.deepClone(VIDEO_REQUEST);
+        videoBid.ad_units[0].mediaTypes.video.context = 'instream';
+        adapter.callBids(videoBid, BID_REQUESTS, addBidResponse, done, ajax);
+
+        const requestBid = JSON.parse(server.requests[0].requestBody);
+        expect(requestBid.imp[0].video).to.exist;
+        expect(requestBid.imp[0].video.placement).to.equal(1);
+        expect(requestBid.ext.prebid.macros).to.exist;
+        expect(requestBid.ext.prebid.macros).to.have.property('UNIX_TIMESTAMP');
+      });
+
+	  it('should set UNIX_TIMESTAMP in seconds and a string for video request', function () {
+        let videoBid = utils.deepClone(VIDEO_REQUEST);
+        videoBid.ad_units[0].mediaTypes.video.context = 'instream';
+        adapter.callBids(videoBid, BID_REQUESTS, addBidResponse, done, ajax);
+        const requestBid = JSON.parse(server.requests[0].requestBody);
+        expect(requestBid.imp[0].video).to.exist;
+        expect(requestBid.imp[0].video.placement).to.equal(1);
+        expect(requestBid.ext.prebid.macros).to.exist;
+        expect(requestBid.ext.prebid.macros.UNIX_TIMESTAMP).to.be.a('string');
+        expect(requestBid.ext.prebid.macros).to.have.property('UNIX_TIMESTAMP');
+        expect(requestBid.ext.prebid.macros).to.have.lengthOf(10);
+      });
+
       it('converts video mediaType properties into openRTB format', function () {
         let ortb2Config = utils.deepClone(CONFIG);
         ortb2Config.endpoint.p1Consent = 'https://prebid.adnxs.com/pbs/v1/openrtb2/auction';

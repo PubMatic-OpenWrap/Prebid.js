@@ -112,7 +112,7 @@ export function setReqParams(ortbRequest, bidderRequest, context, {am = adapterM
     if (!isEmpty(videoParams)) {
       // adding [UNIX_TIMESTAMP] & [WRAPPER_IMPRESSION_ID] in macros as it is required for tracking events.
       if (ortbRequest?.ext?.prebid && ortbRequest?.ext?.prebid.macros) {
-        ortbRequest.ext.prebid.macros['[UNIX_TIMESTAMP]'] = timestamp().toString();
+        ortbRequest.ext.prebid.macros['[UNIX_TIMESTAMP]'] = Math.round(timestamp() / 1000).toString();
         ortbRequest.ext.prebid.macros['[WRAPPER_IMPRESSION_ID]'] = iidValue.toString();
       }
     }
