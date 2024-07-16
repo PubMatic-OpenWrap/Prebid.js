@@ -820,12 +820,6 @@ function setUserIdentities(userIdentityData) {
     userIdentity = {};
     return;
   }
-  var pubProvidedEmailHash = {};
-  if (userIdentityData.pubProvidedEmail) {
-    generateEmailHash(userIdentityData.pubProvidedEmail, pubProvidedEmailHash);
-    userIdentityData.pubProvidedEmailHash = pubProvidedEmailHash;
-    delete userIdentityData.pubProvidedEmail;
-  }
   Object.assign(userIdentity, userIdentityData);
   if ((window.IHPWT && window.IHPWT.loginEvent) || (window.PWT && window.PWT.loginEvent)) {
     reTriggerPartnerCallsWithEmailHashes();
@@ -917,80 +911,6 @@ export function reTriggerScriptBasedAPICalls(modulesToRefresh) {
 
 function getUserIdentities() {
   return userIdentity;
-}
-
-function processFBLoginData(refThis, response) {
-  let emailHash = {};
-  if (response.status === 'connected') {
-    // window.IHPWT = window.IHPWT || {};
-    window.FB && window.FB.api('/me?fields=email&access_token=' + response.authResponse.accessToken, function (response) {
-      logInfo('SSO - Data received from FB API');
-      if (response.error) {
-        logInfo('SSO - User information could not be retrieved by facebook api [', response.error.message, ']');
-        return;
-      }
-      logInfo('SSO - Information successfully retrieved by Facebook API.');
-      generateEmailHash(response.email || undefined, emailHash);
-      refThis.setUserIdentities({
-        emailHash: emailHash
-      });
-    });
-  } else {
-    logInfo('SSO - Error fetching login information from facebook');
-  }
-}
-
-/**
- * This function is used to read sso information from facebook and google apis.
- * @param {String} provider SSO provider for which the api call is to be made
- * @param {Object} userObject Google's user object, passed from google's callback function
- */
-function onSSOLogin(data) {
-  let refThis = this;
-  let email;
-  let emailHash = {};
-  if ((window.IHPWT && !window.IHPWT.ssoEnabled) || (window.PWT && !window.PWT.ssoEnabled)) return;
-
-  switch (data.provider) {
-    case undefined:
-    case 'facebook':
-      if (data.provider === 'facebook') {
-        window.FB && window.FB.getLoginStatus(function (response) {
-          processFBLoginData(refThis, response);
-        }, true);
-      } else {
-        window.FB && window.FB.Event.subscribe('auth.statusChange', function (response) {
-          processFBLoginData(refThis, response);
-        });
-      }
-      break;
-    case 'google':
-      var profile = data.googleUserObject.getBasicProfile();
-      email = profile.getEmail() || undefined;
-      logInfo('SSO - Information successfully retrieved by Google API');
-      generateEmailHash(email, emailHash);
-      refThis.setUserIdentities({
-        emailHash: emailHash
-      });
-      break;
-  }
-}
-
-/**
- * This function is used to clear user login information once user logs out.
- */
-function onSSOLogout() {
-  this.setUserIdentities({});
-}
-
-function generateEmailHash(email, emailHash) {
-  email = email !== undefined ? email.trim().toLowerCase() : '';
-  let regex = new RegExp(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
-  if (regex.test(email)) {
-    emailHash.MD5 = MD5(email).toString();
-    emailHash.SHA1 = SHA1(email).toString();
-    emailHash.SHA256 = SHA256(email).toString();
-  }
 }
 
 export function getConsentHash() {
@@ -1387,8 +1307,6 @@ export function init(config, {delay = GreedyPromise.timeout} = {}) {
   (getGlobal()).getUserIdsAsEidBySource = getUserIdsAsEidBySource;
   (getGlobal()).setUserIdentities = setUserIdentities;
   (getGlobal()).getUserIdentities = getUserIdentities;
-  (getGlobal()).onSSOLogin = onSSOLogin;
-  (getGlobal()).onSSOLogout = onSSOLogout;
 }
 
 // init config update listener to start the application
