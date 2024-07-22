@@ -110,6 +110,15 @@
     ],
     "paapi": [
       "fledgeForGpt"
+    ],
+    "openWrap": [
+      "dfpOpenWrap",
+      "customOpenWrap",
+      "zidhubOpenWrap"
+    ],
+    "zidhubOpenWrap": [
+      "dfpOpenWrap",
+      "customOpenWrap"
     ]
   }
 }

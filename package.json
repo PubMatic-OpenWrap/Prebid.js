@@ -122,7 +122,8 @@
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-manifest-plugin": "^5.0.0",
     "webpack-stream": "^7.0.0",
-    "yargs": "^1.3.1"
+    "yargs": "^1.3.1",
+    "shelljs": "^0.7.7"
   },
   "dependencies": {
     "@babel/core": "^7.16.7",
@@ -139,7 +140,8 @@
     "fun-hooks": "^0.9.9",
     "gulp-wrap": "^0.15.0",
     "klona": "^2.0.6",
-    "live-connect-js": "^6.7.3"
+    "live-connect-js": "^6.7.3",
+    "prebid-universal-creative": "1.13.0"
   },
   "optionalDependencies": {
     "fsevents": "^2.3.2"

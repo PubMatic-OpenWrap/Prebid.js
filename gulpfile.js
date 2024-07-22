@@ -509,6 +509,121 @@ function watchTaskMaker(options = {}) {
 const watch = watchTaskMaker({alsoWatch: ['test/**/*.js'], task: () => gulp.series(clean, gulp.parallel(lint, 'build-bundle-dev', test))});
 const watchFast = watchTaskMaker({livereload: false, task: () => gulp.series('build-bundle-dev')});
 
+// START: OW Custom tasks
+
+function getBundleName() {
+  return argv.bundleName ? argv.bundleName : 'prebid.js';
+}
+
+function addPattern(patterns, match, replacement) {
+  if (replacement) {
+      patterns.push({
+          match: match,
+          replacement: replacement
+      });
+  }
+}
+
+function getOverrideNamespace(namespace, defaultName, returnValueInCaseMissingNamespace) {
+  if (namespace) {
+    return namespace === defaultName ? returnValueInCaseMissingNamespace : namespace;
+  } else {
+    return returnValueInCaseMissingNamespace;
+  }
+}
+
+function getPatternsToReplace() {
+  var isIdentityOnly = argv.isIdentityOnly || 0;
+  var pbNamespace = argv.pbNamespace || '';
+  var owNamespace = argv.owNamespace || '';
+  var patterns = [];
+  if (isIdentityOnly) {
+      addPattern(patterns, /ihowpbjs|owpbjs/g, getOverrideNamespace(pbNamespace,  'ihowpbjs', 'ihowpbjs'));
+      addPattern(patterns, /IHPWT/g, getOverrideNamespace(owNamespace, 'IHPWT', 'IHPWT'));
+  } else {
+      // Passing null as we don't want to replace the used value(i.e. PWT) with default value(i.e. PWT) as both are same,
+      addPattern(patterns, /owpbjs/g, getOverrideNamespace(pbNamespace, 'owpbjs', null));
+      addPattern(patterns, /PWT/g, getOverrideNamespace(owNamespace, 'PWT', null));
+  }
+  return patterns;
+}
+
+function getFooterContent() {
+  var isIdentityOnly = argv.isIdentityOnly || 0;
+  return isIdentityOnly 
+    ? `\nif (typeof window.IHPWT === 'object' && typeof window.IHPWT.jsLoaded === 'function') {\n window.IHPWT.jsLoaded();\n}`
+    : `\nif (typeof window.PWT === 'object' && typeof window.PWT.jsLoaded === 'function') {\n window.PWT.jsLoaded();\n}`;
+}
+
+gulp.task('append-footer', function () { 
+  return gulp.src(['build/*/'+ getBundleName()])
+  .pipe(footer(getFooterContent()))
+  .pipe(gulp.dest('build/'));
+});
+
+gulp.task('update-namespace', async function () { 
+  var patternsToReplace = getPatternsToReplace();
+  console.log("Patterns to replace => ", patternsToReplace);
+  if(patternsToReplace.length > 0){
+    return gulp.src(['build/*/'+ getBundleName()])
+    .pipe(replace(patternsToReplace[0].match, patternsToReplace[0].replacement))
+    .pipe(replace(patternsToReplace[1].match, patternsToReplace[1].replacement))
+    .pipe(gulp.dest('build/'));
+  }
+});
+
+gulp.task('bundle-pwt-keys', function() {
+  var usePBJSKeysEnabled = argv.usePBJSKeys || false;
+  if(!usePBJSKeysEnabled){
+      console.log("We need to use PWT keys, so changing targeting keys in PrebidJS config");
+      return gulp.src('build/*/'+ getBundleName(), { "allowEmpty": true })
+          .pipe(replace(/"%%TG_KEYS%%"/g,'{"STATUS":"pwtbst","BIDDER":"pwtpid","AD_ID":"pwtsid","PRICE_BUCKET":"pwtecp","SIZE":"pwtsz","DEAL":"pwtdeal","DEAL_ID":"pwtdid","SOURCE":"","FORMAT":"pwtplt","UUID":"pwtuuid","CACHE_ID":"pwtcid","CACHE_HOST":"pwtcurl","ADOMAIN":"pwtadomain"}'))
+          .pipe(gulp.dest('build/'));        
+  } else {
+      console.log("We need to use Prebid keys, so changing targeting keys in PrebidJS config");
+      return gulp.src('build/*/'+ getBundleName(), { "allowEmpty": true })
+          .pipe(replace(/"%%TG_KEYS%%"/g,'{"BIDDER":"hb_bidder","AD_ID":"hb_adid","PRICE_BUCKET":"hb_pb","SIZE":"hb_size","DEAL":"hb_deal","SOURCE":"hb_source","FORMAT":"hb_format","UUID":"hb_uuid","CACHE_ID":"hb_cache_id","CACHE_HOST":"hb_cache_host","ADOMAIN":"hb_adomain","ACAT":"hb_acat","CRID":"hb_crid","DSP":"hb_dsp"}'))
+          .pipe(gulp.dest('build/'));
+  }
+});
+
+gulp.task('bundle-native-keys', function() {
+  var usePBJSKeysEnabled = argv.usePBJSKeys || false;
+  if(usePBJSKeysEnabled) {
+      console.log("We need to use Prebid keys for Native, so changing targeting keys in PrebidJS config");
+      return gulp.src('build/*/'+ getBundleName(), { "allowEmpty": true })
+      .pipe(replace(/"%%TG_NATIVE_KEYS%%"/g,'{"title":"hb_native_title","body":"hb_native_body","body2":"hb_native_body2","privacyLink":"hb_native_privacy","privacyIcon":"hb_native_privicon","sponsoredBy":"hb_native_brand","image":"hb_native_image","icon":"hb_native_icon","clickUrl":"hb_native_linkurl","displayUrl":"hb_native_displayurl","cta":"hb_native_cta","rating":"hb_native_rating","address":"hb_native_address","downloads":"hb_native_downloads","likes":"hb_native_likes","phone":"hb_native_phone","price":"hb_native_price","salePrice":"hb_native_saleprice","rendererUrl":"hb_renderer_url","adTemplate":"hb_adTemplate"}'))
+      .pipe(gulp.dest('build/'));
+  } else {
+      console.log("We need to use PWT keys for Native, so changing targeting keys in PrebidJS config");
+      return gulp.src('build/*/'+ getBundleName(), { "allowEmpty": true })
+      .pipe(replace(/"%%TG_NATIVE_KEYS%%"/g,'{"title":"pwt_native_title","body":"pwt_native_body","body2":"pwt_native_body2","privacyLink":"pwt_native_privacy","sponsoredBy":"pwt_native_brand","image":"pwt_native_image","icon":"pwt_native_icon","clickUrl":"pwt_native_linkurl","displayUrl":"pwt_native_displayurl","cta":"pwt_native_cta","rating":"pwt_native_rating","address":"pwt_native_address","downloads":"pwt_native_downloads","likes":"pwt_native_likes","phone":"pwt_native_phone","price":"pwt_native_price","salePrice":"pwt_native_saleprice"}'))
+      .pipe(gulp.dest('build/'));
+  }
+});
+
+// Run below task to create owt.js for creative use in case of AMP
+gulp.task('webpack-creative', gulp.series(clean, function() {
+  var owWebpackConfig = require('./ow-webpack.config.js');
+  webpackConfig.devtool = false;
+  return gulp.src('src/owCreativeRenderer/index.js')
+      .pipe(webpackStream(owWebpackConfig, webpack))
+      .pipe(gulp.dest('build/dist'));
+}));
+
+gulp.task('bundle-creative', function () {
+
+  console.log("Executing creative-build");
+  return gulp.src(['./build/dist/*.js'])
+      .pipe(concat(getBundleName()))
+      .pipe(gulp.dest('build'));
+});
+
+gulp.task('ow-tasks', gulp.series('append-footer','update-namespace', 'bundle-pwt-keys', 'bundle-native-keys'));
+gulp.task('ow-creative-renderer', gulp.series('webpack-creative','bundle-creative'));
+
+// END: OW Custom tasks
+
 // support tasks
 gulp.task(lint);
 gulp.task(watch);
@@ -553,7 +668,7 @@ gulp.task('e2e-test', gulp.series(requireNodeVersion(16), clean, 'build-bundle-p
 
 // other tasks
 gulp.task(bundleToStdout);
-gulp.task('bundle', gulpBundle.bind(null, false)); // used for just concatenating pre-built files with no build step
+gulp.task('bundle', gulp.series(gulpBundle.bind(null, false), 'ow-tasks')); // used for just concatenating pre-built files with no build step
 
 // build task for reviewers, runs test-coverage, serves, without watching
 gulp.task(viewReview);
