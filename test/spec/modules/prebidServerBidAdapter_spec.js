@@ -12,7 +12,7 @@ import {deepAccess, deepClone, mergeDeep} from 'src/utils.js';
 import {ajax} from 'src/ajax.js';
 import {config} from 'src/config.js';
 import * as events from 'src/events.js';
-import CONSTANTS from 'src/constants.json';
+import { EVENTS } from 'src/constants.js';
 import {server} from 'test/mocks/xhr.js';
 import 'modules/appnexusBidAdapter.js'; // appnexus alias test
 import 'modules/rubiconBidAdapter.js'; // rubicon alias test
@@ -37,6 +37,7 @@ import {syncAddFPDToBidderRequest} from '../../helpers/fpd.js';
 import {deepSetValue} from '../../../src/utils.js';
 import {ACTIVITY_TRANSMIT_UFPD} from '../../../src/activities/activities.js';
 import {MODULE_TYPE_PREBID} from '../../../src/activities/modules.js';
+import {getDeviceConnectionType} from '../../../libraries/pbsExtensions/processors/custom.js';
 
 let CONFIG = {
   accountId: '1',
@@ -91,6 +92,7 @@ const REQUEST = {
         }
       },
       'transactionId': '4ef956ad-fd83-406d-bd35-e4bb786ab86c',
+      'adUnitId': 'au-id-1',
       'bids': [
         {
           'bid_id': '123',
@@ -997,6 +999,21 @@ describe('S2S Adapter', function () {
       expect(server.requests.length).to.equal(0);
     });
 
+    describe('getDeviceConnectionType', function() {
+      it('is a function', function(done) {
+        getDeviceConnectionType.should.be.a('function');
+        done();
+      });
+
+      it('should return matched value if navigator.connection is present', function(done) {
+        const connectionValue = getDeviceConnectionType();
+        if (window?.navigator?.connection) {
+          expect(connectionValue).to.be.a('number');
+        }
+        done();
+      });
+    });
+
     if (FEATURES.VIDEO) {
       it('should add outstream bc renderer exists on mediatype', function () {
         config.setConfig({ s2sConfig: CONFIG });
@@ -1036,6 +1053,31 @@ describe('S2S Adapter', function () {
         expect(requestBid.imp[0].video.h).to.equal(480);
         expect(requestBid.imp[0].video.playerSize).to.be.undefined;
         expect(requestBid.imp[0].video.context).to.be.undefined;
+      });
+
+	  it('should set UNIX_TIMESTAMP for video request', function () {
+        let videoBid = utils.deepClone(VIDEO_REQUEST);
+        videoBid.ad_units[0].mediaTypes.video.context = 'instream';
+        adapter.callBids(videoBid, BID_REQUESTS, addBidResponse, done, ajax);
+
+        const requestBid = JSON.parse(server.requests[0].requestBody);
+        expect(requestBid.imp[0].video).to.exist;
+        expect(requestBid.imp[0].video.placement).to.equal(1);
+        expect(requestBid.ext.prebid.macros).to.exist;
+        expect(requestBid.ext.prebid.macros).to.have.property('UNIX_TIMESTAMP');
+      });
+
+	  it('should set UNIX_TIMESTAMP in seconds and a string for video request', function () {
+        let videoBid = utils.deepClone(VIDEO_REQUEST);
+        videoBid.ad_units[0].mediaTypes.video.context = 'instream';
+        adapter.callBids(videoBid, BID_REQUESTS, addBidResponse, done, ajax);
+        const requestBid = JSON.parse(server.requests[0].requestBody);
+        expect(requestBid.imp[0].video).to.exist;
+        expect(requestBid.imp[0].video.placement).to.equal(1);
+        expect(requestBid.ext.prebid.macros).to.exist;
+        expect(requestBid.ext.prebid.macros.UNIX_TIMESTAMP).to.be.a('string');
+        expect(requestBid.ext.prebid.macros).to.have.property('UNIX_TIMESTAMP');
+        expect(requestBid.ext.prebid.macros).to.have.lengthOf(10);
       });
 
       it('converts video mediaType properties into openRTB format', function () {
@@ -3160,7 +3202,33 @@ describe('S2S Adapter', function () {
       adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, ajax);
       server.requests[0].respond(400, {}, {});
       BID_REQUESTS.forEach(bidderRequest => {
-        sinon.assert.calledWith(events.emit, CONSTANTS.EVENTS.BIDDER_ERROR, sinon.match({bidderRequest}))
+        sinon.assert.calledWith(events.emit, EVENTS.BIDDER_ERROR, sinon.match({ bidderRequest }))
+      })
+    })
+
+    describe('calls done', () => {
+      let success, error;
+      beforeEach(() => {
+        const mockAjax = function (_, callback) {
+          ({success, error} = callback);
+        }
+        config.setConfig({ s2sConfig: CONFIG });
+        adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, mockAjax);
+      })
+
+      it('passing timedOut = false on succcess', () => {
+        success({});
+        sinon.assert.calledWith(done, false);
+      });
+
+      Object.entries({
+        'timeouts': true,
+        'other errors': false
+      }).forEach(([t, timedOut]) => {
+        it(`passing timedOut = ${timedOut} on ${t}`, () => {
+          error('', {timedOut});
+          sinon.assert.calledWith(done, timedOut);
+        })
       })
     })
 
@@ -3347,7 +3415,7 @@ describe('S2S Adapter', function () {
 
       sinon.assert.calledOnce(events.emit);
       const event = events.emit.firstCall.args;
-      expect(event[0]).to.equal(CONSTANTS.EVENTS.BIDDER_DONE);
+      expect(event[0]).to.equal(EVENTS.BIDDER_DONE);
       expect(event[1].bids[0]).to.have.property('serverResponseTimeMs', 8);
 
       sinon.assert.calledOnce(addBidResponse);
@@ -3378,7 +3446,7 @@ describe('S2S Adapter', function () {
       Object.assign(responding.ext.seatnonbid, [{auctionId: 2}])
       server.requests[0].respond(200, {}, JSON.stringify(responding));
       const event = events.emit.secondCall.args;
-      expect(event[0]).to.equal(CONSTANTS.EVENTS.SEAT_NON_BID);
+      expect(event[0]).to.equal(EVENTS.SEAT_NON_BID);
       expect(event[1].seatnonbid[0]).to.have.property('auctionId', 2);
       expect(event[1].requestedBidders).to.deep.equal(['appnexus']);
       expect(event[1].response).to.deep.equal(responding);
@@ -3871,7 +3939,7 @@ describe('S2S Adapter', function () {
       adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, ajax);
       server.requests[0].respond(200, {}, JSON.stringify(clonedResponse));
 
-      events.emit(CONSTANTS.EVENTS.BID_WON, {
+      events.emit(EVENTS.BID_WON, {
         auctionId: '173afb6d132ba3',
         adId: '1000'
       });
@@ -3890,7 +3958,7 @@ describe('S2S Adapter', function () {
       adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, ajax);
       server.requests[0].respond(200, {}, JSON.stringify(clonedResponse));
 
-      events.emit(CONSTANTS.EVENTS.BID_WON, {
+      events.emit(EVENTS.BID_WON, {
         auctionId: '173afb6d132ba3',
         adId: 'missingAdId'
       });
@@ -3906,7 +3974,7 @@ describe('S2S Adapter', function () {
       adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, ajax);
       server.requests[0].respond(200, {}, JSON.stringify(clonedResponse));
 
-      events.emit(CONSTANTS.EVENTS.BID_WON, {
+      events.emit(EVENTS.BID_WON, {
         auctionId: '173afb6d132ba3',
         adId: '1060'
       });

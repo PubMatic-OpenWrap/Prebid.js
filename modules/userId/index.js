@@ -136,7 +136,7 @@ import {config} from '../../src/config.js';
 import * as events from '../../src/events.js';
 import {getGlobal} from '../../src/prebidGlobal.js';
 import adapterManager, {gdprDataHandler} from '../../src/adapterManager.js';
-import CONSTANTS from '../../src/constants.json';
+import { EVENTS, MODULE_PARAM_TO_UPDATE_FOR_SSO, REFRESH_IDMODULES_LIST } from '../../src/constants.js';
 import {module, ready as hooksReady} from '../../src/hook.js';
 import {buildEidPermissions, createEidsArray, EID_CONFIG} from './eids.js';
 import {
@@ -556,8 +556,8 @@ function idSystemInitializer({delay = GreedyPromise.timeout} = {}) {
       if (auctionDelay > 0) {
         startCallbacks.resolve();
       } else {
-        events.on(CONSTANTS.EVENTS.AUCTION_END, function auctionEndHandler() {
-          events.off(CONSTANTS.EVENTS.AUCTION_END, auctionEndHandler);
+        events.on(EVENTS.AUCTION_END, function auctionEndHandler() {
+          events.off(EVENTS.AUCTION_END, auctionEndHandler);
           delay(syncDelay).then(startCallbacks.resolve);
         });
       }
@@ -692,8 +692,8 @@ function encryptSignals(signals, version = 1) {
 }
 
 /**
-* This function will be exposed in the global-name-space so that publisher can register the signals-ESP.
-*/
+ * This function will be exposed in the global-name-space so that publisher can register the signals-ESP.
+ */
 function registerSignalSources() {
   if (!isGptPubadsDefined()) {
     return;
@@ -804,7 +804,7 @@ export function getRawPDString(emailHashes, userID) {
 };
 
 export function updateModuleParams(moduleToUpdate) {
-  let params = CONSTANTS.MODULE_PARAM_TO_UPDATE_FOR_SSO[moduleToUpdate.name];
+  let params = MODULE_PARAM_TO_UPDATE_FOR_SSO[moduleToUpdate.name];
   if (!params) return;
 
   let userIdentity = getUserIdentities() || {};
@@ -816,8 +816,8 @@ export function updateModuleParams(moduleToUpdate) {
 }
 
 function generateModuleLists() {
-  let primaryModulesList = (window.IHPWT && window.IHPWT.OVERRIDES_PRIMARY_MODULES) || (window.PWT && window.PWT.OVERRIDES_PRIMARY_MODULES) || CONSTANTS.REFRESH_IDMODULES_LIST.PRIMARY_MODULES;
-  let scriptBasedModulesList = (window.IHPWT && window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES) || (window.PWT && window.PWT.OVERRIDES_SCRIPT_BASED_MODULES) || CONSTANTS.REFRESH_IDMODULES_LIST.SCRIPT_BASED_MODULES;
+  let primaryModulesList = (window.IHPWT && window.IHPWT.OVERRIDES_PRIMARY_MODULES) || (window.PWT && window.PWT.OVERRIDES_PRIMARY_MODULES) || REFRESH_IDMODULES_LIST.PRIMARY_MODULES;
+  let scriptBasedModulesList = (window.IHPWT && window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES) || (window.PWT && window.PWT.OVERRIDES_SCRIPT_BASED_MODULES) || REFRESH_IDMODULES_LIST.SCRIPT_BASED_MODULES;
   for (let index in configRegistry) {
     let moduleName = configRegistry[index].name;
     if (primaryModulesList.indexOf(moduleName) >= 0) {
@@ -1091,14 +1091,12 @@ function updateInitializedSubmodules(dest, submodule) {
 
 /**
  * list of submodule configurations with valid 'storage' or 'value' obj definitions
- * * storage config: contains values for storing/retrieving User ID data in browser storage
- * * value config: object properties that are copied to bids (without saving to storage)
+ * storage config: contains values for storing/retrieving User ID data in browser storage
+ * value config: object properties that are copied to bids (without saving to storage)
  * @param {SubmoduleConfig[]} configRegistry
- * @param {Submodule[]} submoduleRegistry
- * @param {string[]} activeStorageTypes
  * @returns {SubmoduleConfig[]}
  */
-function getValidSubmoduleConfigs(configRegistry, submoduleRegistry) {
+function getValidSubmoduleConfigs(configRegistry) {
   if (!Array.isArray(configRegistry)) {
     return [];
   }
@@ -1163,7 +1161,7 @@ function updateEIDConfig(submodules) {
  */
 function updateSubmodules() {
   updateEIDConfig(submoduleRegistry);
-  const configs = getValidSubmoduleConfigs(configRegistry, submoduleRegistry);
+  const configs = getValidSubmoduleConfigs(configRegistry);
   if (!configs.length) {
     return;
   }
@@ -1310,7 +1308,7 @@ export function init(config, {delay = GreedyPromise.timeout} = {}) {
 // init config update listener to start the application
 init(config);
 
-module('userId', attachIdSystem);
+module('userId', attachIdSystem, { postInstallAllowed: true });
 
 export function setOrtbUserExtEids(ortbRequest, bidderRequest, context) {
   const eids = deepAccess(context, 'bidRequests.0.userIdAsEids');
