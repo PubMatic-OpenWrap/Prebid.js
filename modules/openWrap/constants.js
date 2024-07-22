@@ -330,8 +330,6 @@ export const TIMEOUT_CONFIG = {
 
 export const DEFAULT_ALIASES = {
   adg: 'adgeneration',
-  districtm: 'appnexus',
-  districtmDMX: 'dmx',
   pubmatic2: 'pubmatic'
 };
 
