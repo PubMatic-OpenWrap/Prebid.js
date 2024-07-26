@@ -1,6 +1,6 @@
 import { config } from '../src/config.js';
 import * as events from '../src/events.js';
-import { EVENTS } from '../src/constants.json';
+import { EVENTS } from '../src/constants.js';
 import {isPlainObject, isArray} from '../src/utils.js';
 import { loadExternalScript } from '../src/adloader.js'
 import {getGlobal} from '../src/prebidGlobal.js';

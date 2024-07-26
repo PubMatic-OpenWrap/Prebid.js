@@ -1,5 +1,5 @@
 import * as events from '../../src/events.js';
-import CONSTANTS from '../../src/constants.json';
+import { EVENTS } from '../../src/constants.js';
 import { getStorageManager } from '../../src/storageManager.js';
 
 const BIDDER_CODE = 'pubmatic';
@@ -127,12 +127,12 @@ export function auctionInitHandler (args) {
     }
 
     args.adUnits.forEach((adUnit) => {
-      frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId] = {
-        slotCnt: (frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId]?.slotCnt || 0) + 1,
-        bidServed: (frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId]?.bidServed || 0) + 0,
-        impressionServed: (frequencyDepth.slotLevelFrquencyDepth[adUnit.adUnitId]?.impressionServed || 0) + 0,
+      frequencyDepth.slotLevelFrquencyDepth[adUnit.owAdUnitId] = {
+        slotCnt: (frequencyDepth.slotLevelFrquencyDepth[adUnit.owAdUnitId]?.slotCnt || 0) + 1,
+        bidServed: (frequencyDepth.slotLevelFrquencyDepth[adUnit.owAdUnitId]?.bidServed || 0) + 0,
+        impressionServed: (frequencyDepth.slotLevelFrquencyDepth[adUnit.owAdUnitId]?.impressionServed || 0) + 0,
       };
-      codeAdUnitMap[adUnit.code] = adUnit.adUnitId;
+      codeAdUnitMap[adUnit.code] = adUnit.owAdUnitId;
     })
     frequencyDepth.codeAdUnitMap = codeAdUnitMap;
   }
@@ -147,19 +147,19 @@ export let init = () => {
       impressionViewableHandler(event.slot);
     });
   });
-  events.on(CONSTANTS.EVENTS.AUCTION_INIT, (args) => {
+  events.on(EVENTS.AUCTION_INIT, (args) => {
     frequencyDepth = auctionInitHandler(args);
   });
 
-  events.on(CONSTANTS.EVENTS.AUCTION_END, () => {
+  events.on(EVENTS.AUCTION_END, () => {
     frequencyDepth = auctionEndHandler();
   });
 
-  events.on(CONSTANTS.EVENTS.BID_RESPONSE, (bid) => {
+  events.on(EVENTS.BID_RESPONSE, (bid) => {
     frequencyDepth = auctionBidResponseHandler(bid);
   });
 
-  events.on(CONSTANTS.EVENTS.BID_WON, (bid) => {
+  events.on(EVENTS.BID_WON, (bid) => {
     frequencyDepth = auctionBidWonHandler(bid);
   });
 }

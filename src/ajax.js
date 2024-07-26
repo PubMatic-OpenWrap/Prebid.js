@@ -52,6 +52,9 @@ export function toFetchRequest(url, data, options = {}) {
     // but we're not in a secure context
     rqOpts.browsingTopics = true;
   }
+  if (options.keepalive) {
+    rqOpts.keepalive = true;
+  }
   return dep.makeRequest(url, rqOpts);
 }
 
@@ -114,7 +117,8 @@ function toXHR({status, statusText = '', headers, url}, responseText) {
     getResponseHeader: (header) => headers?.has(header) ? headers.get(header) : null,
     toJSON() {
       return Object.assign({responseXML: getXML()}, this)
-    }
+    },
+    timedOut: false
   }
 }
 
@@ -126,11 +130,14 @@ export function attachCallbacks(fetchPm, callback) {
     success: typeof callback === 'function' ? callback : () => null,
     error: (e, x) => logError('Network error', e, x)
   };
-  fetchPm.then(response => response.text().then((responseText) => [response, responseText]))
+  return fetchPm.then(response => response.text().then((responseText) => [response, responseText]))
     .then(([response, responseText]) => {
       const xhr = toXHR(response, responseText);
       response.ok || response.status === 304 ? success(responseText, xhr) : error(response.statusText, xhr);
-    }, () => error('', toXHR({status: 0}, '')));
+    }, (reason) => error('', Object.assign(
+      toXHR({status: 0}, ''),
+      {reason, timedOut: reason?.name === 'AbortError'}))
+    );
 }
 
 export function ajaxBuilder(timeout = 3000, {request, done} = {}) {

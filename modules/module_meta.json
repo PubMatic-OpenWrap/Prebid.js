@@ -31,6 +31,11 @@
             "module": "qortexRtdProvider"
         },
         {
+            "name": "51DegreesRtdProvider",
+            "path": "/modules/51DegreesRtdProvider.js",
+            "module": "51DegreesRtdProvider"
+        },
+        {
             "name": "cleanioRtdProvider",
             "path": "/modules/cleanioRtdProvider.js",
             "module": "cleanioRtdProvider"
@@ -61,6 +66,16 @@
             "module": "medianetRtdProvider"
         },
         {
+            "name": "raynRtdProvider",
+            "path": "/modules/raynRtdProvider.js",
+            "module": "raynRtdProvider"
+        },
+        {
+            "name": "azerionedgeRtdProvider",
+            "path": "/modules/azerionedgeRtdProvider.js",
+            "module": "azerionedgeRtdProvider"
+        },
+        {
             "name": "geolocationRtdProvider",
             "path": "/modules/geolocationRtdProvider.js",
             "module": "geolocationRtdProvider"
@@ -69,6 +84,11 @@
             "name": "growthCodeRtdProvider",
             "path": "/modules/growthCodeRtdProvider.js",
             "module": "growthCodeRtdProvider"
+        },
+        {
+            "name": "pubxaiRtdProvider",
+            "path": "/modules/pubxaiRtdProvider.js",
+            "module": "pubxaiRtdProvider"
         },
         {
             "name": "oxxionRtdProvider",
@@ -104,6 +124,11 @@
             "name": "blueconicRtdProvider",
             "path": "/modules/blueconicRtdProvider.js",
             "module": "blueconicRtdProvider"
+        },
+        {
+            "name": "anonymisedRtdProvider",
+            "path": "/modules/anonymisedRtdProvider.js",
+            "module": "anonymisedRtdProvider"
         },
         {
             "name": "intersectionRtdProvider",
@@ -194,6 +219,11 @@
             "name": "hadronRtdProvider",
             "path": "/modules/hadronRtdProvider.js",
             "module": "hadronRtdProvider"
+        },
+        {
+            "name": "contxtfulRtdProvider",
+            "path": "/modules/contxtfulRtdProvider.js",
+            "module": "contxtfulRtdProvider"
         },
         {
             "name": "akamaiDapRtdProvider",
@@ -316,6 +346,11 @@
             "name": "fintezaAnalyticsAdapter",
             "path": "/modules/fintezaAnalyticsAdapter.js",
             "module": "fintezaAnalyticsAdapter"
+        },
+        {
+            "name": "yandexAnalyticsAdapter",
+            "path": "/modules/yandexAnalyticsAdapter.js",
+            "module": "yandexAnalyticsAdapter"
         },
         {
             "name": "33acrossAnalyticsAdapter",
@@ -466,6 +501,11 @@
             "name": "growthCodeAnalyticsAdapter",
             "path": "/modules/growthCodeAnalyticsAdapter.js",
             "module": "growthCodeAnalyticsAdapter"
+        },
+        {
+            "name": "eightPodAnalyticsAdapter",
+            "path": "/modules/eightPodAnalyticsAdapter.js",
+            "module": "eightPodAnalyticsAdapter"
         },
         {
             "name": "magniteAnalyticsAdapter",
@@ -620,6 +660,11 @@
             "module": "sizeMappingV2"
         },
         {
+            "name": "dsaControl",
+            "path": "/modules/dsaControl.js",
+            "module": "dsaControl"
+        },
+        {
             "name": "consentManagementGpp",
             "path": "/modules/consentManagementGpp.js",
             "module": "consentManagementGpp"
@@ -640,6 +685,11 @@
             "module": "fledgeForGpt"
         },
         {
+            "name": "paapi",
+            "path": "/modules/paapi.js",
+            "module": "paapi"
+        },
+        {
             "name": "gppControl_usnat",
             "path": "/modules/gppControl_usnat.js",
             "module": "gppControl_usnat"
@@ -653,6 +703,11 @@
             "name": "gppControl_usstates",
             "path": "/modules/gppControl_usstates.js",
             "module": "gppControl_usstates"
+        },
+        {
+            "name": "nativeRendering",
+            "path": "/modules/nativeRendering.js",
+            "module": "nativeRendering"
         },
         {
             "name": "geoDetection",
