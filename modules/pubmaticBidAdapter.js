@@ -6,6 +6,7 @@ import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
 import { NATIVE_IMAGE_TYPES, NATIVE_KEYS_THAT_ARE_NOT_ASSETS, NATIVE_KEYS, NATIVE_ASSET_TYPES } from '../src/constants.js';
 import { ortbConverter } from '../libraries/ortbConverter/converter.js';
+import { createItemFromDescriptor } from '@babel/core/lib/config/item.js';
 
 /**
  * @typedef {import('../src/adapters/bidderFactory.js').BidRequest} BidRequest
@@ -14,7 +15,7 @@ import { ortbConverter } from '../libraries/ortbConverter/converter.js';
  */
 
 let conf = {};
-let blockedIabCategories = [];
+let blockedIabCategories = allowedIabCategories = [];
 
 const converter = ortbConverter({
 	context: {
@@ -22,11 +23,11 @@ const converter = ortbConverter({
         ttl: 300
     },
 	imp(buildImp, bidRequest, context) {
-		const { kadfloor, currency, adSlot } = bidRequest.params;
+		const { kadfloor, currency, adSlot, deals, dctr } = bidRequest.params;
 		const imp = buildImp(bidRequest, context);
-		if (imp.hasOwnProperty('banner')) {
-			updateBannerImp(imp.banner);
-		}	
+		if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner);
+		if (deals) addPMPDeals(imp, deals);
+		if (dctr) addDealCustomTargetings(imp, dctr);
 		setImpTagId(imp, adSlot);
 		imp.bidfloor = _parseSlotParam('kadfloor', kadfloor),
 		imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY,
@@ -40,12 +41,54 @@ const converter = ortbConverter({
 		if (blockedIabCategories.length || request.bcat) {
 			request.bcat = validateBlockedCategories([...blockedIabCategories, ...request.bcat]);
 		}
+		if (allowedIabCategories.length || request.acat) {
+			request.bcat = validateAllowedCategories([...allowedIabCategories, ...request.acat]);
+		}
 		reqLevelParams(request);
 		updateUserSiteDevice(request);
 		addExtenstionParams(request);
 		return request;
 	},
 });
+
+const addDealCustomTargetings = (imp, dctr) => {
+	if (isStr(dctr) && dctr.length > 0) {
+		const arr = dctr.split('|').filter(val => val.trim().length > 0);
+		dctr = arr.map(val => val.trim()).join('|');
+		imp.ext['key_val'] = dctr;
+	} else {
+      logWarn(LOG_WARN_PREFIX + 'Ignoring param : dctr with value : ' + dctr + ', expects string-value, found empty or non-string value');
+    }
+}
+
+const addPMPDeals = (imp, deals) => {
+	if (!isArray(deals)) {
+		logWarn(`${LOG_WARN_PREFIX}Error: bid.params.deals should be an array of strings.`);
+		return;
+	}
+	deals.forEach(deal => {
+		if (typeof deal === 'string' && deal.length > 3) {
+		  if (!imp.pmp) {
+			imp.pmp = { private_auction: 0, deals: [] };
+		  }
+		  imp.pmp.deals.push({ id: deal });
+		} else {
+		  logWarn(`${LOG_WARN_PREFIX}Error: deal-id present in array bid.params.deals should be a string with more than 3 characters length, deal-id ignored: ${dealId}`);
+		}
+	});
+}
+
+const validateAllowedCategories = (acat) => {
+	return acat
+    .filter(item => {
+		if (typeof item === 'string') {
+			return true;
+		} else {
+			logWarn(LOG_WARN_PREFIX + 'acat: Each category should be a string, ignoring category: ' + item);
+		}
+	})
+    .map(item => item.trim());
+}
 
 const validateBlockedCategories = (bcats) => {
   const droppedCategories = bcats.filter(item => typeof item !== 'string' || item.length < 3);
@@ -114,7 +157,7 @@ const getConnectionType = () => {
 	  default:
 		return 0;
 	}
-  }
+}
 
 const BIDDER_CODE = 'pubmatic';
 const LOG_WARN_PREFIX = 'PubMatic: ';
@@ -682,48 +725,6 @@ function _createVideoRequest(bid) {
   return videoObj;
 }
 
-// support for PMP deals
-function _addPMPDealsInImpression(impObj, bid) {
-  if (bid.params.deals) {
-    if (isArray(bid.params.deals)) {
-      bid.params.deals.forEach(function(dealId) {
-        if (isStr(dealId) && dealId.length > 3) {
-          if (!impObj.pmp) {
-            impObj.pmp = { private_auction: 0, deals: [] };
-          }
-          impObj.pmp.deals.push({ id: dealId });
-        } else {
-          logWarn(LOG_WARN_PREFIX + 'Error: deal-id present in array bid.params.deals should be a strings with more than 3 charaters length, deal-id ignored: ' + dealId);
-        }
-      });
-    } else {
-      logWarn(LOG_WARN_PREFIX + 'Error: bid.params.deals should be an array of strings.');
-    }
-  }
-}
-
-function _addDealCustomTargetings(imp, bid) {
-  var dctr = '';
-  var dctrLen;
-  if (bid.params.dctr) {
-    dctr = bid.params.dctr;
-    if (isStr(dctr) && dctr.length > 0) {
-      var arr = dctr.split('|');
-      dctr = '';
-      arr.forEach(val => {
-        dctr += (val.length > 0) ? (val.trim() + '|') : '';
-      });
-      dctrLen = dctr.length;
-      if (dctr.substring(dctrLen, dctrLen - 1) === '|') {
-        dctr = dctr.substring(0, dctrLen - 1);
-      }
-      imp.ext['key_val'] = dctr.trim();
-    } else {
-      logWarn(LOG_WARN_PREFIX + 'Ignoring param : dctr with value : ' + dctr + ', expects string-value, found empty or non-string value');
-    }
-  }
-}
-
 function _addJWPlayerSegmentData(imp, bid) {
   var jwSegData = (bid.rtd && bid.rtd.jwplayer && bid.rtd.jwplayer.targeting) || undefined;
   var jwPlayerData = '';
@@ -768,8 +769,6 @@ function _createImpressionObject(bid, bidderRequest) {
     displaymanagerver: '$prebid.version$' // prebid version
   };
 
-  _addPMPDealsInImpression(impObj, bid);
-  _addDealCustomTargetings(impObj, bid);
   _addJWPlayerSegmentData(impObj, bid);
 
   if (bid.hasOwnProperty('mediaTypes')) {
@@ -988,49 +987,6 @@ function _parseNativeResponse(bid, newBid) {
   }
 }
 
-function _blockedIabCategoriesValidation(payload, blockedIabCategories) {
-  blockedIabCategories = blockedIabCategories
-    .filter(function(category) {
-      if (typeof category === 'string') { // only strings
-        return true;
-      } else {
-        logWarn(LOG_WARN_PREFIX + 'bcat: Each category should be a string, ignoring category: ' + category);
-        return false;
-      }
-    })
-    .map(category => category.trim()) // trim all
-    .filter(function(category, index, arr) { // more than 3 charaters length
-      if (category.length > 3) {
-        return arr.indexOf(category) === index; // unique value only
-      } else {
-        logWarn(LOG_WARN_PREFIX + 'bcat: Each category should have a value of a length of more than 3 characters, ignoring category: ' + category)
-      }
-    });
-  if (blockedIabCategories.length > 0) {
-    logWarn(LOG_WARN_PREFIX + 'bcat: Selected: ', blockedIabCategories);
-    payload.bcat = blockedIabCategories;
-  }
-}
-
-function _allowedIabCategoriesValidation(payload, allowedIabCategories) {
-  allowedIabCategories = allowedIabCategories
-    .filter(function(category) {
-      if (typeof category === 'string') { // returns only strings
-        return true;
-      } else {
-        logWarn(LOG_WARN_PREFIX + 'acat: Each category should be a string, ignoring category: ' + category);
-        return false;
-      }
-    })
-    .map(category => category.trim()) // trim all categories
-    .filter((category, index, arr) => arr.indexOf(category) === index); // return unique values only
-
-  if (allowedIabCategories.length > 0) {
-    logWarn(LOG_WARN_PREFIX + 'acat: Selected: ', allowedIabCategories);
-    payload.ext.acat = allowedIabCategories;
-  }
-}
-
 function _assignRenderer(newBid, request) {
   let bidParams, context, adUnitCode;
   if (request.bidderRequest && request.bidderRequest.bids) {
@@ -1227,6 +1183,7 @@ export const spec = {
 		_handleCustomParams(bid.params, conf);
 		conf.transactionId = bid.ortb2Imp?.ext?.tid;
 		blockedIabCategories = blockedIabCategories.concat(bid.params.bcat);
+		allowedIabCategories = allowedIabCategories.concat(bid.params.acat);
 	})
 	const data = converter.toORTB({ validBidRequests, bidderRequest });
 
