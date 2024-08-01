@@ -6,7 +6,6 @@ import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
 import { NATIVE_IMAGE_TYPES, NATIVE_KEYS_THAT_ARE_NOT_ASSETS, NATIVE_KEYS, NATIVE_ASSET_TYPES } from '../src/constants.js';
 import { ortbConverter } from '../libraries/ortbConverter/converter.js';
-import { createItemFromDescriptor } from '@babel/core/lib/config/item.js';
 
 /**
  * @typedef {import('../src/adapters/bidderFactory.js').BidRequest} BidRequest
@@ -1182,8 +1181,13 @@ export const spec = {
 		bid = deepClone(originalBid);
 		_handleCustomParams(bid.params, conf);
 		conf.transactionId = bid.ortb2Imp?.ext?.tid;
-		blockedIabCategories = blockedIabCategories.concat(bid.params.bcat);
-		allowedIabCategories = allowedIabCategories.concat(bid.params.acat);
+		const { bcat, acat } = bid.params;
+		if(bcat) {
+			blockedIabCategories = blockedIabCategories.concat(bcat);
+		}
+		if(acat) {
+			allowedIabCategories = allowedIabCategories.concat(acat);
+		}
 	})
 	const data = converter.toORTB({ validBidRequests, bidderRequest });
 
