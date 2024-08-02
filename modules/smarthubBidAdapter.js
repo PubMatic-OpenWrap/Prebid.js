@@ -5,10 +5,16 @@ import {config} from '../src/config.js';
 import {convertOrtbRequestToProprietaryNative} from '../src/native.js';
 
 const BIDDER_CODE = 'smarthub';
-const ALIASES = [{code: 'markapp', skipPbsAliasing: true}];
+const ALIASES = [
+  {code: 'markapp', skipPbsAliasing: true},
+  {code: 'jdpmedia', skipPbsAliasing: true},
+  {code: 'tredio', skipPbsAliasing: true},
+];
 const BASE_URLS = {
   smarthub: 'https://prebid.smart-hub.io/pbjs',
-  markapp: 'https://markapp-prebid.smart-hub.io/pbjs'
+  markapp: 'https://markapp-prebid.smart-hub.io/pbjs',
+  jdpmedia: 'https://jdpmedia-prebid.smart-hub.io/pbjs',
+  tredio: 'https://tredio-prebid.smart-hub.io/pbjs'
 };
 
 function getUrl(partnerName) {
@@ -42,7 +48,7 @@ function getPlacementReqData(bid) {
   const { partnerName, seat, token, iabCat, minBidfloor, pos } = params;
   const bidfloor = getBidFloor(bid);
 
-  const placement = {
+  const plcmt = {
     partnerName: String(partnerName || bidder).toLowerCase(),
     seat,
     token,
@@ -55,31 +61,32 @@ function getPlacementReqData(bid) {
   };
 
   if (mediaTypes && mediaTypes[BANNER]) {
-    placement.adFormat = BANNER;
-    placement.sizes = mediaTypes[BANNER].sizes;
+    plcmt.adFormat = BANNER;
+    plcmt.sizes = mediaTypes[BANNER].sizes;
   } else if (mediaTypes && mediaTypes[VIDEO]) {
-    placement.adFormat = VIDEO;
-    placement.playerSize = mediaTypes[VIDEO].playerSize;
-    placement.minduration = mediaTypes[VIDEO].minduration;
-    placement.maxduration = mediaTypes[VIDEO].maxduration;
-    placement.mimes = mediaTypes[VIDEO].mimes;
-    placement.protocols = mediaTypes[VIDEO].protocols;
-    placement.startdelay = mediaTypes[VIDEO].startdelay;
-    placement.placement = mediaTypes[VIDEO].placement;
-    placement.skip = mediaTypes[VIDEO].skip;
-    placement.skipafter = mediaTypes[VIDEO].skipafter;
-    placement.minbitrate = mediaTypes[VIDEO].minbitrate;
-    placement.maxbitrate = mediaTypes[VIDEO].maxbitrate;
-    placement.delivery = mediaTypes[VIDEO].delivery;
-    placement.playbackmethod = mediaTypes[VIDEO].playbackmethod;
-    placement.api = mediaTypes[VIDEO].api;
-    placement.linearity = mediaTypes[VIDEO].linearity;
+    plcmt.adFormat = VIDEO;
+    plcmt.playerSize = mediaTypes[VIDEO].playerSize;
+    plcmt.minduration = mediaTypes[VIDEO].minduration;
+    plcmt.maxduration = mediaTypes[VIDEO].maxduration;
+    plcmt.mimes = mediaTypes[VIDEO].mimes;
+    plcmt.protocols = mediaTypes[VIDEO].protocols;
+    plcmt.startdelay = mediaTypes[VIDEO].startdelay;
+    plcmt.placement = mediaTypes[VIDEO].plcmt;
+    plcmt.plcmt = mediaTypes[VIDEO].plcmt; // https://github.com/prebid/Prebid.js/issues/10452
+    plcmt.skip = mediaTypes[VIDEO].skip;
+    plcmt.skipafter = mediaTypes[VIDEO].skipafter;
+    plcmt.minbitrate = mediaTypes[VIDEO].minbitrate;
+    plcmt.maxbitrate = mediaTypes[VIDEO].maxbitrate;
+    plcmt.delivery = mediaTypes[VIDEO].delivery;
+    plcmt.playbackmethod = mediaTypes[VIDEO].playbackmethod;
+    plcmt.api = mediaTypes[VIDEO].api;
+    plcmt.linearity = mediaTypes[VIDEO].linearity;
   } else if (mediaTypes && mediaTypes[NATIVE]) {
-    placement.native = mediaTypes[NATIVE];
-    placement.adFormat = NATIVE;
+    plcmt.native = mediaTypes[NATIVE];
+    plcmt.adFormat = NATIVE;
   }
 
-  return placement;
+  return plcmt;
 }
 
 function getBidFloor(bid) {
