@@ -555,10 +555,9 @@ function getFooterContent() {
     : `\nif (typeof window.PWT === 'object' && typeof window.PWT.jsLoaded === 'function') {\n window.PWT.jsLoaded();\n}`;
 }
 
-gulp.task('append-footer', function () { 
-  return gulp.src(['build/*/'+ getBundleName()])
-  .pipe(footer(getFooterContent()))
-  .pipe(gulp.dest('build/'));
+gulp.task('append-footer', function () {
+  return gulp.src(['build/*/' + getBundleName(), getFooterContent()], {allowEmpty: true})
+    .pipe(gulp.dest('build/'));
 });
 
 gulp.task('update-namespace', async function () { 
