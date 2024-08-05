@@ -2096,7 +2096,6 @@ describe('User ID', function () {
           done();
         }, {adUnits});
       });
-
       it('should add new id system ', function (done) {
         coreStorage.setCookie('pubcid', 'testpubcid', (new Date(Date.now() + 5000).toUTCString()));
 

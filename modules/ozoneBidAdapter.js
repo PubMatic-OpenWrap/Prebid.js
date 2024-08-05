@@ -1,4 +1,5 @@
 import {
+  deepClone,
   logInfo,
   logError,
   deepAccess,
@@ -42,7 +43,7 @@ export const spec = {
   },
   loadWhitelabelData(bid) {
     if (this.propertyBag.whitelabel) { return; }
-    this.propertyBag.whitelabel = JSON.parse(JSON.stringify(this.whitelabel_defaults));
+    this.propertyBag.whitelabel = deepClone(this.whitelabel_defaults);
     let bidder = bid.bidder || 'ozone'; // eg. ozone
     this.propertyBag.whitelabel.logId = bidder.toUpperCase();
     this.propertyBag.whitelabel.bidder = bidder;
