@@ -6,7 +6,6 @@
       "adtelligentIdSystem",
       "adqueryIdSystem",
       "amxIdSystem",
-      "britepoolIdSystem",
       "connectIdSystem",
       "czechAdIdSystem",
       "criteoIdSystem",
@@ -37,7 +36,6 @@
       "novatiqIdSystem",
       "oneKeyIdSystem",
       "operaadsIdSystem",
-      "parrableIdSystem",
       "pubProvidedIdSystem",
       "publinkIdSystem",
       "quantcastIdSystem",
@@ -45,7 +43,7 @@
       "tapadIdSystem",
       "teadsIdSystem",
       "tncIdSystem",
-      "utiqSystem",
+      "utiqIdSystem",
       "utiqMtpIdSystem",
       "uid2IdSystem",
       "euidIdSystem",
@@ -56,12 +54,13 @@
     ],
     "adpod": [
       "freeWheelAdserverVideo",
-      "dfpAdServerVideo"
+      "dfpAdpod"
     ],
     "rtdModule": [
       "1plusXRtdProvider",
       "a1MediaRtdProvider",
       "aaxBlockmeterRtdProvider",
+      "adagioRtdProvider",
       "adlooxRtdProvider",
       "adnuntiusRtdProvider",
       "airgridRtdProvider",
@@ -98,6 +97,7 @@
       "reconciliationRtdProvider",
       "relevadRtdProvider",
       "sirdataRtdProvider",
+      "symitriDapRtdProvider",
       "timeoutRtdProvider",
       "weboramaRtdProvider"
     ],
@@ -110,7 +110,8 @@
       "videojsVideoProvider"
     ],
     "paapi": [
-      "fledgeForGpt"
+      "paapiForGpt",
+      "topLevelPaapi"
     ]
   }
 }
