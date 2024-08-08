@@ -728,6 +728,11 @@
             "name": "topicsFpdModule",
             "path": "/modules/topicsFpdModule.js",
             "module": "topicsFpdModule"
+        },
+        {
+            "name": "multibid",
+            "path": "/modules/multibid/index.js",
+            "module": "multibid"
         }
     ],
     "AD Pod": [
