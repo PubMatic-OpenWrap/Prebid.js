@@ -375,6 +375,34 @@ function isOWPubmaticBid(adapterName) {
   })
 }
 
+function getFloorsCommonField (floorData) {
+  const { location, fetchStatus, floorProvider, modelVersion } = floorData;
+  return {
+	  ffs: {
+      [FLOOR_VALUES.SUCCESS]: 1,
+      [FLOOR_VALUES.ERROR]: 2,
+      [FLOOR_VALUES.TIMEOUT]: 4,
+      undefined: 0
+    }[fetchStatus],
+    fsrc: {
+      [FLOOR_VALUES.FETCH]: 2,
+      [FLOOR_VALUES.NO_DATA]: 0,
+      [FLOOR_VALUES.AD_UNIT]: 1,
+      [FLOOR_VALUES.SET_CONFIG]: 1
+    }[location],
+    fp: floorProvider,
+    mv: modelVersion
+  }
+}
+
+function getFloorRule(floorResponseData) {
+  return floorResponseData ? floorResponseData.floorRuleValue : undefined;
+}
+
+function getFloorType(floorResponseData) {
+  return floorResponseData ? (floorResponseData.enforcements.enforceJS == false ? 0 : 1) : undefined;
+}
+
 function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid, e) {
   highestBid = (highestBid && highestBid.length > 0) ? highestBid[0] : null;
   return Object.keys(adUnit.bids).reduce(function (partnerBids, bidId) {
@@ -548,8 +576,13 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['pbv'] = '$prebid.version$' || '-1';
 
   if (floorData && floorFetchStatus) {
-    outputObj['fmv'] = floorData.floorRequestData ? floorData.floorRequestData.modelVersion || undefined : undefined;
-    outputObj['ft'] = floorData.floorResponseData ? (floorData.floorResponseData.enforcements.enforceJS == false ? 0 : 1) : undefined;
+    const floorRootValues = getFloorsCommonField(floorData.floorRequestData);
+    const { ffs, fsrc, fp, mv } = floorRootValues;
+    outputObj['ffs'] = ffs;
+    outputObj['fsrc'] = fsrc;
+    outputObj['fp'] = fp;
+    outputObj['fmv'] = mv || undefined;
+    outputObj['ft'] = getFloorType(floorData.floorResponseData);
   }
 
   window.PWT?.CC?.cc && (outputObj.ctr = window.PWT.CC.cc);
@@ -571,22 +604,6 @@ function executeBidsLoggerCall(e, highestCpmBids) {
       'fskp': floorData && floorFetchStatus ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined,
       'sid': generateUUID()
     };
-    if (floorData?.floorRequestData) {
-      const { location, fetchStatus, floorProvider } = floorData?.floorRequestData;
-      slotObject.ffs = {
-        [FLOOR_VALUES.SUCCESS]: 1,
-        [FLOOR_VALUES.ERROR]: 2,
-        [FLOOR_VALUES.TIMEOUT]: 4,
-        undefined: 0
-      }[fetchStatus];
-      slotObject.fsrc = {
-        [FLOOR_VALUES.FETCH]: 2,
-        [FLOOR_VALUES.NO_DATA]: 0,
-        [FLOOR_VALUES.AD_UNIT]: 1,
-        [FLOOR_VALUES.SET_CONFIG]: 1
-      }[location];
-      slotObject.fp = floorProvider;
-    }
     slotsArray.push(slotObject);
     return slotsArray;
   }, []);
@@ -663,6 +680,15 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   pixelURL += '&orig=' + enc(getDomainFromUrl(referrer));
   pixelURL += '&ss=' + enc(isS2SBidder(winningBid.bidder));
   (fskp != undefined) && (pixelURL += '&fskp=' + enc(fskp));
+  if (floorData && floorFetchStatus) {
+    const floorRootValues = getFloorsCommonField(floorData.floorRequestData);
+    const { fsrc, fp, mv } = floorRootValues;
+  	pixelURL += '&fsrc=' + enc(fsrc);
+  	pixelURL += '&fp=' + enc(fp);
+    pixelURL += '&fmv=' + enc(mv);
+    pixelURL += '&ft=' + enc(getFloorType(floorData.floorResponseData));
+    pixelURL += '&frv=' + enc(getFloorRule(floorData.floorResponseData));
+  }
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
   pixelURL += '&cds=' + getCDSDataLoggerStr(); // encoded string is returned from function
 
