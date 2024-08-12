@@ -28,8 +28,9 @@ const converter = ortbConverter({
 		if (deals) addPMPDeals(imp, deals);
 		if (dctr) addDealCustomTargetings(imp, dctr);
 		setImpTagId(imp, adSlot);
-		imp.bidfloor = _parseSlotParam('kadfloor', kadfloor),
-		imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY,
+		setImpDefaultParams(imp);
+		// imp.bidfloor = _parseSlotParam('kadfloor', kadfloor),
+		// imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY,
 		imp.secure = 1;
 		imp.displaymanager = 'Prebid.js',
     	imp.displaymanagerver = '$prebid.version$'
@@ -141,21 +142,8 @@ const addExtenstionParams = (req) => {
 
 const getConnectionType = () => {
 	let connection = window.navigator && (window.navigator.connection || window.navigator.mozConnection || window.navigator.webkitConnection);
-	switch (connection?.effectiveType) {
-	  case 'ethernet':
-		return 1;
-	  case 'wifi':
-		return 2;
-	  case 'slow-2g':
-	  case '2g':
-		return 4;
-	  case '3g':
-		return 5;
-	  case '4g':
-		return 6;
-	  default:
-		return 0;
-	}
+	const types = { ethernet: 1, wifi: 2, 'slow-2g': 4, '2g': 4, '3g': 5, '4g': 6 };
+  	return types[connection?.effectiveType] || 0;
 }
 
 const BIDDER_CODE = 'pubmatic';
@@ -383,26 +371,6 @@ function _initConf(refererInfo) {
     pageURL: refererInfo?.page || window.location.href,
     refURL: refererInfo?.ref || window.document.referrer
   };
-}
-
-
-export function getDeviceConnectionType() {
-  let connection = window.navigator && (window.navigator.connection || window.navigator.mozConnection || window.navigator.webkitConnection);
-  switch (connection?.effectiveType) {
-    case 'ethernet':
-      return 1;
-    case 'wifi':
-      return 2;
-    case 'slow-2g':
-    case '2g':
-      return 4;
-    case '3g':
-      return 5;
-    case '4g':
-      return 6;
-    default:
-      return 0;
-  }
 }
 
 function _createOrtbTemplate(conf) {
