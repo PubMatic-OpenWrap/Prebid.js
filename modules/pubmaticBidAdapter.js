@@ -28,10 +28,11 @@ const converter = ortbConverter({
 		if (deals) addPMPDeals(imp, deals);
 		if (dctr) addDealCustomTargetings(imp, dctr);
 		setImpTagId(imp, adSlot);
-		setImpDefaultParams(imp);
+		// setImpDefaultParams(imp);
 		// imp.bidfloor = _parseSlotParam('kadfloor', kadfloor),
 		// imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY,
 		imp.secure = 1;
+		imp.pos = 0;
 		imp.displaymanager = 'Prebid.js',
     	imp.displaymanagerver = '$prebid.version$'
 		return imp;
@@ -49,6 +50,11 @@ const converter = ortbConverter({
 		addExtenstionParams(request);
 		return request;
 	},
+	bidResponse(buildBidResponse, bid, context) {
+		const bidResponse = buildBidResponse(bid, context);
+		updateResponseWithCustomFields(bidResponse, bid, context);
+		return bidResponse;
+	}
 });
 
 const addDealCustomTargetings = (imp, dctr) => {
@@ -123,6 +129,55 @@ const updateUserSiteDevice = (req) => {
 		yob: _parseSlotParam('yob', yob),
 	}
 	req.site.publisher.id = pubId;
+}
+
+const updateResponseWithCustomFields = (res, bid, ctx) => {
+	const { ortbRequest, seatbid } = ctx;
+	res.referrer = ortbRequest.site.ref || "";
+	res.sspID = res.partnerImpId = bid.id || "";
+	res.ad = bid.adm;
+	res.pm_dspid = bid.ext?.dspid ? bid.ext.dspid : null;
+	res.pm_seat = seatbid.seat;
+	if (bid.dealid) {
+		res.dealChannel = bid.ext?.deal_channel ? dealChannel[bid.ext.deal_channel] || null : 'PMP';
+	}
+
+	if (seatbid.ext?.buyid) {
+		res.adserverTargeting = { "hb_buyid_pubmatic": seatbid.ext.buyid }
+	}
+
+	// If `bid.ext.marketplace` is set in the server response,
+	// submit the bid to Prebid using the marketplace name.
+	if (bid.ext?.marketplace) {
+		res.bidderCode = bid.ext.marketplace;
+	}
+
+	// add meta fields
+	// NOTE: We will not recieve below fields from the translator response also not sure on what will be the key names for these in the response,
+	// when we needed we can add it back.
+	// New fields added, assignee fields name may change
+	// if (bid.ext.networkName) res.meta.networkName = bid.ext.networkName;
+	// if (bid.ext.advertiserName) res.meta.advertiserName = bid.ext.advertiserName;
+	// if (bid.ext.agencyName) res.meta.agencyName = bid.ext.agencyName;
+	// if (bid.ext.brandName) res.meta.brandName = bid.ext.brandName;
+	if (bid.ext) {
+		const { dspid, dchain, advid: extAdvid, dsa } = bid.ext;
+		if (dspid) res.meta.networkId = res.meta.demandSource = dspid;
+		if (dchain) res.meta.dchain = dchain;
+		if (dsa && Object.keys(dsa).length) res.meta.dsa = dsa;
+	}
+	
+	const advid = seatbid.seat || bid.ext?.advid;
+	if (advid) res.meta.advertiserId = res.meta.agencyId = res.meta.buyerId = advid;
+	
+	if (isNonEmptyArray(bid.adomain)) {
+	res.meta.clickUrl = res.meta.brandId = bid.adomain[0];
+	}
+	
+	if (isNonEmptyArray(bid.cat)) {
+	res.meta.secondaryCatIds = bid.cat;
+	res.meta.primaryCatId = bid.cat[0];
+	}
 }
 
 const addExtenstionParams = (req) => {
@@ -202,7 +257,7 @@ const NATIVE_ASSET_IMAGE_TYPE = {
 }
 
 const NET_REVENUE = true;
-const dealChannelValues = {
+const dealChannel = {
   1: 'PMP',
   5: 'PREF',
   6: 'PMPG'
@@ -1177,6 +1232,7 @@ export const spec = {
    */
   interpretResponse: (response, request) => {
     const bids = converter.fromORTB({response: response.body, request: request.data}).bids;
+	console.log('##########', bids);
     return bids;
   },
 
