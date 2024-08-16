@@ -575,14 +575,18 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['tgid'] = getTgId();
   outputObj['pbv'] = '$prebid.version$' || '-1';
 
-  if (floorData && floorFetchStatus) {
+  if (floorData) {
     const floorRootValues = getFloorsCommonField(floorData.floorRequestData);
     const { ffs, fsrc, fp, mv } = floorRootValues;
-    outputObj['ffs'] = ffs;
-    outputObj['fsrc'] = fsrc;
-    outputObj['fp'] = fp;
-    outputObj['fmv'] = mv || undefined;
-    outputObj['ft'] = getFloorType(floorData.floorResponseData);
+	if (floorData.floorRequestData) {
+		outputObj['ffs'] = ffs;
+		outputObj['fsrc'] = fsrc;
+		outputObj['fp'] = fp;
+	}
+    if (floorFetchStatus) {
+   		outputObj['fmv'] = mv || undefined;
+   		outputObj['ft'] = getFloorType(floorData.floorResponseData);
+    }
   }
 
   window.PWT?.CC?.cc && (outputObj.ctr = window.PWT.CC.cc);
