@@ -693,8 +693,14 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
 			pixelURL += `&${key}=${enc(value)}`;
 		}
 	});
-  	pixelURL += '&ft=' + enc(getFloorType(floorData.floorResponseData));
-    pixelURL += '&frv=' + enc(getFloorRule(floorData.floorResponseData));
+    const floorType = getFloorType(floorData.floorResponseData); 
+    if (floorType !== undefined) {
+      pixelURL += '&ft=' + enc(floorType);
+    }
+  	const floorRule = getFloorRule(floorData.floorResponseData); 
+    if (floorRule !== undefined) {
+      pixelURL += '&frv=' + enc(floorRule);
+    }
   }
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
   pixelURL += '&cds=' + getCDSDataLoggerStr(); // encoded string is returned from function
