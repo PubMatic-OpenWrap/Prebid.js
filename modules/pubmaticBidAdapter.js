@@ -24,13 +24,14 @@ const converter = ortbConverter({
 	imp(buildImp, bidRequest, context) {
 		const { kadfloor, currency, adSlot, deals, dctr } = bidRequest.params;
 		const imp = buildImp(bidRequest, context);
-		if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner);
 		if (deals) addPMPDeals(imp, deals);
 		if (dctr) addDealCustomTargetings(imp, dctr);
+		imp.bidfloor = _parseSlotParam('kadfloor', kadfloor),
+		imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY;
+		setFloorInImp(imp, bidRequest);
+		if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner);
 		setImpTagId(imp, adSlot);
 		// setImpDefaultParams(imp);
-		// imp.bidfloor = _parseSlotParam('kadfloor', kadfloor),
-		// imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY,
 		imp.secure = 1;
 		imp.pos = 0;
 		imp.displaymanager = 'Prebid.js',
@@ -53,9 +54,80 @@ const converter = ortbConverter({
 	bidResponse(buildBidResponse, bid, context) {
 		const bidResponse = buildBidResponse(bid, context);
 		updateResponseWithCustomFields(bidResponse, bid, context);
+		const { mediaType } = bidResponse;
+		const { params, adUnitCode, mediaTypes } = context?.bidRequest;
+		if (mediaType === VIDEO) {
+			const { context, maxduration } = mediaTypes[mediaType];
+			if (context === 'outstream' && params.outstreamAU && adUnitCode) {
+				bidResponse.rendererCode = params.outstreamAU;
+				bidResponse.renderer = BB_RENDERER.newRenderer(bidResponse.rendererCode, adUnitCode);
+			}
+			assignDealTier(bidResponse, context, maxduration);
+		}
 		return bidResponse;
+	},
+	overrides: {
+		imp: {
+			bidfloor: false
+		}
 	}
 });
+
+/**
+ * In case of adpod video context, assign prebiddealpriority to the dealtier property of adpod-video bid,
+ * so that adpod module can set the hb_pb_cat_dur targetting key.
+ * @param {*} bid
+ * @param {*} context
+ * @param {*} maxduration
+ * @returns
+ */
+const assignDealTier = (bid, context, maxduration) => {
+	if (!bid?.ext?.prebiddealpriority || !FEATURES.VIDEO) return;
+	if (context != ADPOD) return;
+  
+	const duration = bid?.ext?.video?.duration || maxduration;
+	// if (!duration) return;
+	bid.video = {
+	  context: ADPOD,
+	  durationSeconds: duration,
+	  dealTier: bid.ext.prebiddealpriority
+	};
+}
+
+const setFloorInImp = (imp, bid) => {
+	let bidFloor = -1;
+	if (typeof bid.getFloor === 'function' && !config.getConfig('pubmatic.disableFloors')) {
+		[BANNER, VIDEO, NATIVE].forEach(mediaType => {
+			if (!imp.hasOwnProperty(mediaType)) return;
+
+			const sizes = mediaType === 'banner' 
+				? imp[mediaType]?.format.map(({ w, h }) => [w, h]) 
+				: ['*'];
+	
+			sizes.forEach(size => {
+				const floorInfo = bid.getFloor({ currency: imp.bidfloorcur, mediaType, size });
+				logInfo(LOG_WARN_PREFIX, 'floor from floor module returned for mediatype:', mediaType, ' and size:', size, ' is: currency', floorInfo.currency, 'floor', floorInfo.floor);
+			
+				if (floorInfo?.currency === imp.bidfloorcur && !isNaN(parseInt(floorInfo.floor))) {
+					const mediaTypeFloor = parseFloat(floorInfo.floor);
+					logInfo(LOG_WARN_PREFIX, 'floor from floor module:', mediaTypeFloor, 'previous floor value', bidFloor, 'Min:', Math.min(mediaTypeFloor, bidFloor));
+					bidFloor = bidFloor === -1 ? mediaTypeFloor : Math.min(mediaTypeFloor, bidFloor);
+					logInfo(LOG_WARN_PREFIX, 'new floor value:', bidFloor);
+				}
+			});
+		});
+	}
+	// Determine the highest value between imp.bidfloor and the floor from the floor module.
+	// Since we're using Math.max, it's safe if no floor is returned from the floor module, as bidFloor defaults to -1.
+	if (imp.bidfloor) {
+		logInfo(LOG_WARN_PREFIX, 'Comparing floors:', 'from floor module:', bidFloor, 'impObj.bidfloor:', imp.bidfloor, 'Max:', Math.max(bidFloor, imp.bidfloor));
+		bidFloor = Math.max(bidFloor, imp.bidfloor);
+	}
+	
+	// Set imp.bidfloor only if bidFloor is greater than 0.
+	imp.bidfloor = (bidFloor > 0) ? bidFloor : UNDEFINED;
+	logInfo(LOG_WARN_PREFIX, 'Updated imp.bidfloor:', imp.bidfloor);
+}
 
 const addDealCustomTargetings = (imp, dctr) => {
 	if (isStr(dctr) && dctr.length > 0) {
@@ -341,20 +413,14 @@ function _parseSlotParam(paramName, paramValue) {
     return UNDEFINED;
   }
 
-  switch (paramName) {
-    case 'pmzoneid':
-      return paramValue.split(',').slice(0, 50).map(id => id.trim()).join();
-    case 'kadfloor':
-      return parseFloat(paramValue) || UNDEFINED;
-    case 'lat':
-      return parseFloat(paramValue) || UNDEFINED;
-    case 'lon':
-      return parseFloat(paramValue) || UNDEFINED;
-    case 'yob':
-      return parseInt(paramValue) || UNDEFINED;
-    default:
-      return paramValue;
-  }
+  const parsers = {
+    pmzoneid: () => paramValue.split(',').slice(0, 50).map(id => id.trim()).join(),
+    kadfloor: () => parseFloat(paramValue),
+    lat: () => parseFloat(paramValue),
+    lon: () => parseFloat(paramValue),
+    yob: () => parseInt(paramValue)
+  };
+  return parsers[paramName]?.() || paramValue;
 }
 
 function _cleanSlot(slotName) {
@@ -618,415 +684,12 @@ export function toOrtbNativeRequest(legacyNativeAssets) {
 
   return ortb;
 }
-// TODO delete this code when removing native 1.1 support
-
-function _createNativeRequest(params) {
-  var nativeRequestObject;
-
-  // TODO delete this code when removing native 1.1 support
-  if (!params.ortb) { // legacy assets definition found
-    nativeRequestObject = toOrtbNativeRequest(params);
-  } else { // ortb assets definition found
-    params = params.ortb;
-    // TODO delete this code when removing native 1.1 support
-    nativeRequestObject = { ver: '1.2', ...params, assets: [] };
-    const { assets } = params;
-
-    const isValidAsset = (asset) => asset.title || asset.img || asset.data || asset.video;
-
-    if (assets.length < 1 || !assets.some(asset => isValidAsset(asset))) {
-      logWarn(`${LOG_WARN_PREFIX}: Native assets object is empty or contains some invalid object`);
-      isInvalidNativeRequest = true;
-      return nativeRequestObject;
-    }
-
-    assets.forEach(asset => {
-      var assetObj = asset;
-      if (assetObj.img) {
-        if (assetObj.img.type == NATIVE_ASSET_IMAGE_TYPE.IMAGE) {
-          assetObj.w = assetObj.w || assetObj.width || (assetObj.sizes ? assetObj.sizes[0] : UNDEFINED);
-          assetObj.h = assetObj.h || assetObj.height || (assetObj.sizes ? assetObj.sizes[1] : UNDEFINED);
-          assetObj.wmin = assetObj.wmin || assetObj.minimumWidth || (assetObj.minsizes ? assetObj.minsizes[0] : UNDEFINED);
-          assetObj.hmin = assetObj.hmin || assetObj.minimumHeight || (assetObj.minsizes ? assetObj.minsizes[1] : UNDEFINED);
-        } else if (assetObj.img.type == NATIVE_ASSET_IMAGE_TYPE.ICON) {
-          assetObj.w = assetObj.w || assetObj.width || (assetObj.sizes ? assetObj.sizes[0] : UNDEFINED);
-          assetObj.h = assetObj.h || assetObj.height || (assetObj.sizes ? assetObj.sizes[1] : UNDEFINED);
-        }
-      }
-
-      if (assetObj && assetObj.id !== undefined && isValidAsset(assetObj)) {
-        nativeRequestObject.assets.push(assetObj);
-      }
-    }
-    );
-  }
-  return nativeRequestObject;
-}
-
-function _createBannerRequest(bid) {
-  var sizes = bid.mediaTypes.banner.sizes;
-  var format = [];
-  var bannerObj;
-  if (sizes !== UNDEFINED && isArray(sizes)) {
-    bannerObj = {};
-    if (!bid.params.width && !bid.params.height) {
-      if (sizes.length === 0) {
-        // i.e. since bid.params does not have width or height, and length of sizes is 0, need to ignore this banner imp
-        bannerObj = UNDEFINED;
-        logWarn(LOG_WARN_PREFIX + 'Error: mediaTypes.banner.size missing for adunit: ' + bid.params.adUnit + '. Ignoring the banner impression in the adunit.');
-        return bannerObj;
-      } else {
-        bannerObj.w = parseInt(sizes[0][0], 10);
-        bannerObj.h = parseInt(sizes[0][1], 10);
-        sizes = sizes.splice(1, sizes.length - 1);
-      }
-    } else {
-      bannerObj.w = bid.params.width;
-      bannerObj.h = bid.params.height;
-    }
-    if (sizes.length > 0) {
-      format = [];
-      sizes.forEach(function (size) {
-        if (size.length > 1) {
-          format.push({ w: size[0], h: size[1] });
-        }
-      });
-      if (format.length > 0) {
-        bannerObj.format = format;
-      }
-    }
-    bannerObj.pos = 0;
-    bannerObj.topframe = inIframe() ? 0 : 1;
-  } else {
-    logWarn(LOG_WARN_PREFIX + 'Error: mediaTypes.banner.size missing for adunit: ' + bid.params.adUnit + '. Ignoring the banner impression in the adunit.');
-    bannerObj = UNDEFINED;
-  }
-  return bannerObj;
-}
 
 export function checkVideoPlacement(videoData, adUnitCode) {
   // Check for video.placement property. If property is missing display log message.
   if (FEATURES.VIDEO && !deepAccess(videoData, 'plcmt')) {
     logWarn(MSG_VIDEO_PLCMT_MISSING + ' for ' + adUnitCode);
   };
-}
-
-function _createVideoRequest(bid) {
-  var videoData = mergeDeep(deepAccess(bid.mediaTypes, 'video'), bid.params.video);
-  var videoObj;
-
-  if (FEATURES.VIDEO && videoData !== UNDEFINED) {
-    videoObj = {};
-    checkVideoPlacement(videoData, bid.adUnitCode);
-    for (var key in VIDEO_CUSTOM_PARAMS) {
-      if (videoData.hasOwnProperty(key)) {
-        videoObj[key] = _checkParamDataType(key, videoData[key], VIDEO_CUSTOM_PARAMS[key]);
-      }
-    }
-    // read playersize and assign to h and w.
-    if (bid.mediaTypes.video.playerSize) {
-      if (isArray(bid.mediaTypes.video.playerSize[0])) {
-        videoObj.w = parseInt(bid.mediaTypes.video.playerSize[0][0], 10);
-        videoObj.h = parseInt(bid.mediaTypes.video.playerSize[0][1], 10);
-      } else if (isNumber(bid.mediaTypes.video.playerSize[0])) {
-        videoObj.w = parseInt(bid.mediaTypes.video.playerSize[0], 10);
-        videoObj.h = parseInt(bid.mediaTypes.video.playerSize[1], 10);
-      }
-    } else if (bid.mediaTypes.video.w && bid.mediaTypes.video.h) {
-      videoObj.w = parseInt(bid.mediaTypes.video.w, 10);
-      videoObj.h = parseInt(bid.mediaTypes.video.h, 10);
-    } else {
-      videoObj = UNDEFINED;
-      logWarn(LOG_WARN_PREFIX + 'Error: Video size params(playersize or w&h) missing for adunit: ' + bid.params.adUnit + ' with mediaType set as video. Ignoring video impression in the adunit.');
-      return videoObj;
-    }
-  } else {
-    videoObj = UNDEFINED;
-    logWarn(LOG_WARN_PREFIX + 'Error: Video config params missing for adunit: ' + bid.params.adUnit + ' with mediaType set as video. Ignoring video impression in the adunit.');
-  }
-  return videoObj;
-}
-
-function _addJWPlayerSegmentData(imp, bid) {
-  var jwSegData = (bid.rtd && bid.rtd.jwplayer && bid.rtd.jwplayer.targeting) || undefined;
-  var jwPlayerData = '';
-  const jwMark = 'jw-';
-
-  if (jwSegData === undefined || jwSegData === '' || !jwSegData.hasOwnProperty('segments')) return;
-
-  var maxLength = jwSegData.segments.length;
-
-  jwPlayerData += jwMark + 'id=' + jwSegData.content.id; // add the content id first
-
-  for (var i = 0; i < maxLength; i++) {
-    jwPlayerData += '|' + jwMark + jwSegData.segments[i] + '=1';
-  }
-
-  var ext;
-
-  ext = imp.ext;
-  ext && ext.key_val === undefined ? ext.key_val = jwPlayerData : ext.key_val += '|' + jwPlayerData;
-}
-
-function _createImpressionObject(bid, bidderRequest) {
-  var impObj = {};
-  var bannerObj;
-  var videoObj;
-  var nativeObj = {};
-  var sizes = bid.hasOwnProperty('sizes') ? bid.sizes : [];
-  var mediaTypes = '';
-  var format = [];
-  var isFledgeEnabled = bidderRequest?.fledgeEnabled;
-
-  impObj = {
-    id: bid.bidId,
-    tagid: bid.params.hashedKey || bid.params.adUnit || undefined,
-    bidfloor: _parseSlotParam('kadfloor', bid.params.kadfloor),
-    secure: 1,
-    ext: {
-      pmZoneId: _parseSlotParam('pmzoneid', bid.params.pmzoneid)
-    },
-    bidfloorcur: bid.params.currency ? _parseSlotParam('currency', bid.params.currency) : DEFAULT_CURRENCY,
-    displaymanager: 'Prebid.js',
-    displaymanagerver: '$prebid.version$' // prebid version
-  };
-
-  _addJWPlayerSegmentData(impObj, bid);
-
-  if (bid.hasOwnProperty('mediaTypes')) {
-    for (mediaTypes in bid.mediaTypes) {
-      switch (mediaTypes) {
-        case BANNER:
-          bannerObj = _createBannerRequest(bid);
-          if (bannerObj !== UNDEFINED) {
-            impObj.banner = bannerObj;
-          }
-          break;
-        case NATIVE:
-          // TODO uncomment below line when removing native 1.1 support
-          // nativeObj['request'] = JSON.stringify(_createNativeRequest(bid.nativeOrtbRequest));
-          // TODO delete below line when removing native 1.1 support
-          nativeObj['request'] = JSON.stringify(_createNativeRequest(bid.nativeParams));
-          if (!isInvalidNativeRequest) {
-            impObj.native = nativeObj;
-          } else {
-            logWarn(LOG_WARN_PREFIX + 'Error: Error in Native adunit ' + bid.params.adUnit + '. Ignoring the adunit. Refer to ' + PREBID_NATIVE_HELP_LINK + ' for more details.');
-            isInvalidNativeRequest = false;
-          }
-          isInvalidNativeRequest = false;
-          break;
-        case FEATURES.VIDEO && VIDEO:
-          videoObj = _createVideoRequest(bid);
-          if (videoObj !== UNDEFINED) {
-            impObj.video = videoObj;
-          }
-          break;
-      }
-    }
-  } else {
-    // mediaTypes is not present, so this is a banner only impression
-    // this part of code is required for older testcases with no 'mediaTypes' to run succesfully.
-    bannerObj = {
-      pos: 0,
-      w: bid.params.width,
-      h: bid.params.height,
-      topframe: inIframe() ? 0 : 1
-    };
-    if (isArray(sizes) && sizes.length > 1) {
-      sizes = sizes.splice(1, sizes.length - 1);
-      sizes.forEach(size => {
-        if (isArray(size) && size.length == 2) {
-          format.push({
-            w: size[0],
-            h: size[1]
-          });
-        };
-      });
-      bannerObj.format = format;
-    }
-    impObj.banner = bannerObj;
-  }
-
-  _addImpressionFPD(impObj, bid);
-
-  _addFloorFromFloorModule(impObj, bid);
-
-  _addFledgeflag(impObj, bid, isFledgeEnabled)
-
-  return impObj.hasOwnProperty(BANNER) ||
-          impObj.hasOwnProperty(NATIVE) ||
-          (FEATURES.VIDEO && impObj.hasOwnProperty(VIDEO)) ? impObj : UNDEFINED;
-}
-
-function _addFledgeflag(impObj, bid, isFledgeEnabled) {
-  if (isFledgeEnabled) {
-    impObj.ext = impObj.ext || {};
-    if (bid?.ortb2Imp?.ext?.ae !== undefined) {
-      impObj.ext.ae = bid.ortb2Imp.ext.ae;
-    }
-  } else {
-    if (impObj.ext?.ae) {
-      delete impObj.ext.ae;
-    }
-  }
-}
-
-function _addImpressionFPD(imp, bid) {
-  const ortb2 = {...deepAccess(bid, 'ortb2Imp.ext.data')};
-  Object.keys(ortb2).forEach(prop => {
-    /**
-     * Prebid AdSlot
-     * @type {(string|undefined)}
-     */
-    if (prop === 'pbadslot') {
-      if (typeof ortb2[prop] === 'string' && ortb2[prop]) deepSetValue(imp, 'ext.data.pbadslot', ortb2[prop]);
-    } else if (prop === 'adserver') {
-      /**
-       * Copy GAM AdUnit and Name to imp
-       */
-      ['name', 'adslot'].forEach(name => {
-        /** @type {(string|undefined)} */
-        const value = deepAccess(ortb2, `adserver.${name}`);
-        if (typeof value === 'string' && value) {
-          deepSetValue(imp, `ext.data.adserver.${name.toLowerCase()}`, value);
-          // copy GAM ad unit id as imp[].ext.dfp_ad_unit_code
-          if (name === 'adslot') {
-            deepSetValue(imp, `ext.dfp_ad_unit_code`, value);
-          }
-        }
-      });
-    } else {
-      deepSetValue(imp, `ext.data.${prop}`, ortb2[prop]);
-    }
-  });
-
-  const gpid = deepAccess(bid, 'ortb2Imp.ext.gpid');
-  gpid && deepSetValue(imp, `ext.gpid`, gpid);
-}
-
-function _addFloorFromFloorModule(impObj, bid) {
-  let bidFloor = -1;
-  // get lowest floor from floorModule
-  if (typeof bid.getFloor === 'function' && !config.getConfig('pubmatic.disableFloors')) {
-    [BANNER, VIDEO, NATIVE].forEach(mediaType => {
-      if (impObj.hasOwnProperty(mediaType)) {
-        let sizesArray = [];
-
-        if (mediaType === 'banner') {
-          if (impObj[mediaType].w && impObj[mediaType].h) {
-            sizesArray.push([impObj[mediaType].w, impObj[mediaType].h]);
-          }
-          if (isArray(impObj[mediaType].format)) {
-            impObj[mediaType].format.forEach(size => sizesArray.push([size.w, size.h]));
-          }
-        }
-
-        if (sizesArray.length === 0) {
-          sizesArray.push('*')
-        }
-
-        sizesArray.forEach(size => {
-          let floorInfo = bid.getFloor({ currency: impObj.bidfloorcur, mediaType: mediaType, size: size });
-          logInfo(LOG_WARN_PREFIX, 'floor from floor module returned for mediatype:', mediaType, ' and size:', size, ' is: currency', floorInfo.currency, 'floor', floorInfo.floor);
-          if (typeof floorInfo === 'object' && floorInfo.currency === impObj.bidfloorcur && !isNaN(parseInt(floorInfo.floor))) {
-            let mediaTypeFloor = parseFloat(floorInfo.floor);
-            logInfo(LOG_WARN_PREFIX, 'floor from floor module:', mediaTypeFloor, 'previous floor value', bidFloor, 'Min:', Math.min(mediaTypeFloor, bidFloor));
-            if (bidFloor === -1) {
-              bidFloor = mediaTypeFloor;
-            } else {
-              bidFloor = Math.min(mediaTypeFloor, bidFloor)
-            }
-            logInfo(LOG_WARN_PREFIX, 'new floor value:', bidFloor);
-          }
-        });
-      }
-    });
-  }
-  // get highest from impObj.bidfllor and floor from floor module
-  // as we are using Math.max, it is ok if we have not got any floor from floorModule, then value of bidFloor will be -1
-  if (impObj.bidfloor) {
-    logInfo(LOG_WARN_PREFIX, 'floor from floor module:', bidFloor, 'impObj.bidfloor', impObj.bidfloor, 'Max:', Math.max(bidFloor, impObj.bidfloor));
-    bidFloor = Math.max(bidFloor, impObj.bidfloor)
-  }
-
-  // assign value only if bidFloor is > 0
-  impObj.bidfloor = ((!isNaN(bidFloor) && bidFloor > 0) ? bidFloor : UNDEFINED);
-  logInfo(LOG_WARN_PREFIX, 'new impObj.bidfloor value:', impObj.bidfloor);
-}
-
-function _handleEids(payload, validBidRequests) {
-  let bidUserIdAsEids = deepAccess(validBidRequests, '0.userIdAsEids');
-  if (isArray(bidUserIdAsEids) && bidUserIdAsEids.length > 0) {
-    deepSetValue(payload, 'user.eids', bidUserIdAsEids);
-  }
-}
-
-function _checkMediaType(bid, newBid) {
-  // Create a regex here to check the strings
-  if (bid.ext && bid.ext['bidtype'] != undefined) {
-    newBid.mediaType = MEDIATYPE[bid.ext.bidtype];
-  } else {
-    logInfo(LOG_WARN_PREFIX + 'bid.ext.bidtype does not exist, checking alternatively for mediaType');
-    var adm = bid.adm;
-    var admStr = '';
-    var videoRegex = new RegExp(/VAST\s+version/);
-    if (adm.indexOf('span class="PubAPIAd"') >= 0) {
-      newBid.mediaType = BANNER;
-    } else if (FEATURES.VIDEO && videoRegex.test(adm)) {
-      newBid.mediaType = VIDEO;
-    } else {
-      try {
-        admStr = JSON.parse(adm.replace(/\\/g, ''));
-        if (admStr && admStr.native) {
-          newBid.mediaType = NATIVE;
-        }
-      } catch (e) {
-        logWarn(LOG_WARN_PREFIX + 'Error: Cannot parse native reponse for ad response: ' + adm);
-      }
-    }
-  }
-}
-
-function _parseNativeResponse(bid, newBid) {
-  if (bid.hasOwnProperty('adm')) {
-    var adm = '';
-    try {
-      adm = JSON.parse(bid.adm.replace(/\\/g, ''));
-    } catch (ex) {
-      logWarn(LOG_WARN_PREFIX + 'Error: Cannot parse native reponse for ad response: ' + newBid.adm);
-      return;
-    }
-    newBid.native = {
-      ortb: { ...adm.native }
-    };
-    newBid.mediaType = NATIVE;
-    if (!newBid.width) {
-      newBid.width = DEFAULT_WIDTH;
-    }
-    if (!newBid.height) {
-      newBid.height = DEFAULT_HEIGHT;
-    }
-  }
-}
-
-function _assignRenderer(newBid, request) {
-  let bidParams, context, adUnitCode;
-  if (request.bidderRequest && request.bidderRequest.bids) {
-    for (let bidderRequestBidsIndex = 0; bidderRequestBidsIndex < request.bidderRequest.bids.length; bidderRequestBidsIndex++) {
-      if (request.bidderRequest.bids[bidderRequestBidsIndex].bidId === newBid.requestId) {
-        bidParams = request.bidderRequest.bids[bidderRequestBidsIndex].params;
-
-        if (FEATURES.VIDEO) {
-          context = request.bidderRequest.bids[bidderRequestBidsIndex].mediaTypes[VIDEO].context;
-        }
-        adUnitCode = request.bidderRequest.bids[bidderRequestBidsIndex].adUnitCode;
-      }
-    }
-    if (context && context === 'outstream' && bidParams && bidParams.outstreamAU && adUnitCode) {
-      newBid.rendererCode = bidParams.outstreamAU;
-      newBid.renderer = BB_RENDERER.newRenderer(newBid.rendererCode, adUnitCode);
-    }
-  }
 }
 
 /**
@@ -1059,53 +722,6 @@ function isNonEmptyArray(test) {
     }
   }
   return false;
-}
-
-/**
- * Prepare meta object to pass as params
- * @param {*} br : bidResponse
- * @param {*} bid : bids
- */
-export function prepareMetaObject(br, bid, seat) {
-  br.meta = {};
-
-  if (bid.ext && bid.ext.dspid) {
-    br.meta.networkId = bid.ext.dspid;
-    br.meta.demandSource = bid.ext.dspid;
-  }
-
-  // NOTE: We will not recieve below fields from the translator response also not sure on what will be the key names for these in the response,
-  // when we needed we can add it back.
-  // New fields added, assignee fields name may change
-  // if (bid.ext.networkName) br.meta.networkName = bid.ext.networkName;
-  // if (bid.ext.advertiserName) br.meta.advertiserName = bid.ext.advertiserName;
-  // if (bid.ext.agencyName) br.meta.agencyName = bid.ext.agencyName;
-  // if (bid.ext.brandName) br.meta.brandName = bid.ext.brandName;
-  if (bid.ext && bid.ext.dchain) {
-    br.meta.dchain = bid.ext.dchain;
-  }
-
-  const advid = seat || (bid.ext && bid.ext.advid);
-  if (advid) {
-    br.meta.advertiserId = advid;
-    br.meta.agencyId = advid;
-    br.meta.buyerId = advid;
-  }
-
-  if (bid.adomain && isNonEmptyArray(bid.adomain)) {
-    br.meta.advertiserDomains = bid.adomain;
-    br.meta.clickUrl = bid.adomain[0];
-    br.meta.brandId = bid.adomain[0];
-  }
-
-  if (bid.cat && isNonEmptyArray(bid.cat)) {
-    br.meta.secondaryCatIds = bid.cat;
-    br.meta.primaryCatId = bid.cat[0];
-  }
-
-  if (bid.ext && bid.ext.dsa && Object.keys(bid.ext.dsa).length) {
-    br.meta.dsa = bid.ext.dsa;
-  }
 }
 
 const _handleCustomParams = (params, conf) => {
