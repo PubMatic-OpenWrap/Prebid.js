@@ -23,6 +23,7 @@ const converter = ortbConverter({
     },
 	imp(buildImp, bidRequest, context) {
 		const { kadfloor, currency, adSlot, deals, dctr } = bidRequest.params;
+		const { adUnitCode, mediaType } = bidRequest;
 		const imp = buildImp(bidRequest, context);
 		if (deals) addPMPDeals(imp, deals);
 		if (dctr) addDealCustomTargetings(imp, dctr);
@@ -30,8 +31,8 @@ const converter = ortbConverter({
 		imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY;
 		setFloorInImp(imp, bidRequest);
 		if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner);
+		if (imp.hasOwnProperty('video')) updateVideoImp(imp.video, mediaType?.video, adUnitCode);
 		setImpTagId(imp, adSlot);
-		// setImpDefaultParams(imp);
 		imp.secure = 1;
 		imp.pos = 0;
 		imp.displaymanager = 'Prebid.js',
@@ -72,6 +73,18 @@ const converter = ortbConverter({
 		}
 	}
 });
+
+const updateVideoImp = (videoImp, videoParams, adUnitCode) => {
+	if (!videoParams || (!videoImp.w && !videoImp.h)) {
+        videoImp = UNDEFINED;
+        logWarn(`${LOG_WARN_PREFIX}Error: Missing ${!videoParams ? 'video config params' : 'video size params (playersize or w&h)'} for adunit: ${adUnitCode} with mediaType set as video. Ignoring video impression in the adunit.`);
+        return;
+    }
+    
+    if (!videoImp.battr) {
+        videoImp.battr = videoParams.battr;
+    }
+}
 
 /**
  * In case of adpod video context, assign prebiddealpriority to the dealtier property of adpod-video bid,
