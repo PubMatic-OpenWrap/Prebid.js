@@ -4,8 +4,9 @@ import {includes} from './polyfill.js';
 import { EVENTS, S2S } from './constants.js';
 import {GreedyPromise} from './utils/promise.js';
 import {getGlobal} from './prebidGlobal.js';
+import { default as deepAccess } from 'dlv/index.js';
 
-export { default as deepAccess } from 'dlv/index.js';
+export { deepAccess };
 export { dset as deepSetValue } from 'dset';
 
 var tStr = 'String';
@@ -663,6 +664,21 @@ export function isSafeFrameWindow() {
   return !!(ws.$sf && ws.$sf.ext);
 }
 
+/**
+ * Returns the result of calling the function $sf.ext.geom() if it exists
+ * @see https://iabtechlab.com/wp-content/uploads/2016/03/SafeFrames_v1.1_final.pdf — 5.4 Function $sf.ext.geom
+ * @returns {Object | undefined} geometric information about the container
+ */
+export function getSafeframeGeometry() {
+  try {
+    const ws = getWindowSelf();
+    return (typeof ws.$sf.ext.geom === 'function') ? ws.$sf.ext.geom() : undefined;
+  } catch (e) {
+    logError('Error getting SafeFrame geometry', e);
+    return undefined;
+  }
+}
+
 export function isSafariBrowser() {
   return /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
 }
@@ -696,6 +712,33 @@ export function getPerformanceNow() {
 }
 
 /**
+ * Retuns the difference between `timing.domLoading` and `timing.navigationStart`.
+ * This function uses the deprecated `Performance.timing` API and should be removed in future.
+ * It has not been updated yet because it is still used in some modules.
+ * @deprecated
+ * @param {Window} w The window object used to perform the api call. default to window.self
+ * @returns {number}
+ */
+export function getDomLoadingDuration(w) {
+  let domLoadingDuration = -1;
+
+  w = w || getWindowSelf();
+
+  const performance = w.performance;
+
+  if (w.performance?.timing) {
+    if (w.performance.timing.navigationStart > 0) {
+      const val = performance.timing.domLoading - performance.timing.navigationStart;
+      if (val > 0) {
+        domLoadingDuration = val;
+      }
+    }
+  }
+
+  return domLoadingDuration;
+}
+
+/**
  * When the deviceAccess flag config option is false, no cookies should be read or set
  * @returns {boolean}
  */
@@ -707,6 +750,7 @@ export function hasDeviceAccess() {
  * @returns {(boolean|undefined)}
  */
 export function checkCookieSupport() {
+  // eslint-disable-next-line prebid/no-member
   if (window.navigator.cookieEnabled || !!document.cookie.length) {
     return true;
   }
@@ -1079,6 +1123,14 @@ export function safeJSONParse(data) {
   } catch (e) {}
 }
 
+export function safeJSONEncode(data) {
+  try {
+    return JSON.stringify(data);
+  } catch (e) {
+    return '';
+  }
+}
+
 /**
  * Returns a memoized version of `fn`.
  *
@@ -1201,4 +1253,21 @@ export function hasNonSerializableProperty(obj, checkedObjects = new Set()) {
     }
   }
   return false;
+}
+
+/**
+ * Returns the value of a nested property in an array of objects.
+ *
+ * @param {Array} collection - Array of objects.
+ * @param {String} key - Key of nested property.
+ * @returns {any, undefined} - Value of nested property.
+ */
+export function setOnAny(collection, key) {
+  for (let i = 0, result; i < collection.length; i++) {
+    result = deepAccess(collection[i], key);
+    if (result) {
+      return result;
+    }
+  }
+  return undefined;
 }
