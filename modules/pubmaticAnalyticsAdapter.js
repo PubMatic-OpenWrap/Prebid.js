@@ -376,6 +376,7 @@ function isOWPubmaticBid(adapterName) {
 }
 
 function getFloorsCommonField (floorData) {
+  if(!floorData) return;
   const { location, fetchStatus, floorProvider, modelVersion } = floorData;
   return {
 	  ffs: {
@@ -576,17 +577,22 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['pbv'] = '$prebid.version$' || '-1';
 
   if (floorData) {
-    const floorRootValues = getFloorsCommonField(floorData.floorRequestData);
-    const { ffs, fsrc, fp, mv } = floorRootValues;
-	if (floorData.floorRequestData) {
-		outputObj['ffs'] = ffs;
-		outputObj['fsrc'] = fsrc;
-		outputObj['fp'] = fp;
+    const floorRootValues = getFloorsCommonField(floorData?.floorRequestData);
+	if(floorRootValues) {
+		const { ffs, fsrc, fp, mv } = floorRootValues;
+		if (floorData?.floorRequestData) {
+			outputObj['ffs'] = ffs;
+			outputObj['fsrc'] = fsrc;
+			outputObj['fp'] = fp;
+		}
+		if (floorFetchStatus) {
+			   outputObj['fmv'] = mv || undefined;
+		}
 	}
-    if (floorFetchStatus) {
-   		outputObj['fmv'] = mv || undefined;
-   		outputObj['ft'] = getFloorType(floorData.floorResponseData);
-    }
+	if (floorFetchStatus) {
+		outputObj['ft'] = getFloorType(floorData?.floorResponseData);
+	}
+    
   }
 
   window.PWT?.CC?.cc && (outputObj.ctr = window.PWT.CC.cc);
