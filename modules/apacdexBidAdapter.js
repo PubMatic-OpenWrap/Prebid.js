@@ -1,25 +1,12 @@
 import { deepAccess, isPlainObject, isArray, replaceAuctionPrice, isFn, logError, deepClone } from '../src/utils.js';
 import { config } from '../src/config.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
-// import {hasPurpose1Consent} from '../src/utils/gpdr.js';
+import {hasPurpose1Consent} from '../src/utils/gdpr.js';
 import {parseDomain} from '../src/refererDetection.js';
 const BIDDER_CODE = 'apacdex';
-const CONFIG = {
-  'apacdex': {
-    'ENDPOINT': 'https://useast.quantumdex.io/auction/apacdex',
-    'USERSYNC': 'https://sync.quantumdex.io/usersync/apacdex'
-  },
-  'quantumdex': {
-    'ENDPOINT': 'https://useast.quantumdex.io/auction/quantumdex',
-    'USERSYNC': 'https://sync.quantumdex.io/usersync/quantumdex'
-  },
-  'valueimpression': {
-    'ENDPOINT': 'https://useast.quantumdex.io/auction/adapter',
-    'USERSYNC': 'https://sync.quantumdex.io/usersync/adapter'
-  }
-};
+const ENDPOINT = 'https://useast.quantumdex.io/auction/pbjs'
+const USERSYNC = 'https://sync.quantumdex.io/usersync/pbjs'
 
-var bidderConfig = CONFIG[BIDDER_CODE];
 var bySlotTargetKey = {};
 var bySlotSizesCount = {}
 
@@ -57,8 +44,6 @@ export const spec = {
     let geo;
     let test;
     let bids = [];
-
-    bidderConfig = CONFIG[validBidRequests[0].bidder];
 
     test = config.getConfig('debug');
 
@@ -159,13 +144,14 @@ export const spec = {
         transactionId: bid.ortb2Imp?.ext?.tid,
         sizes: bid.sizes,
         bidId: bid.bidId,
+        adUnitCode: bid.adUnitCode,
         bidFloor: bid.bidFloor
       }
     });
 
     return {
       method: 'POST',
-      url: bidderConfig.ENDPOINT,
+      url: ENDPOINT,
       data: payload,
       withCredentials: true,
       bidderRequests: bids
@@ -212,32 +198,47 @@ export const spec = {
     });
     return bidResponses;
   },
-  getUserSyncs: function (syncOptions, serverResponses) {
+  getUserSyncs: function (syncOptions, serverResponses, gdprConsent, uspConsent) {
     const syncs = [];
-    try {
-      if (syncOptions.iframeEnabled) {
-        syncs.push({
-          type: 'iframe',
-          url: bidderConfig.USERSYNC
-        });
+    if (hasPurpose1Consent(gdprConsent)) {
+      let params = '';
+      if (gdprConsent && typeof gdprConsent.consentString === 'string') {
+        // add 'gdpr' only if 'gdprApplies' is defined
+        if (typeof gdprConsent.gdprApplies === 'boolean') {
+          params = `?gdpr=${Number(gdprConsent.gdprApplies)}&gdpr_consent=${gdprConsent.consentString}`;
+        } else {
+          params = `?gdpr_consent=${gdprConsent.consentString}`;
+        }
       }
-      if (serverResponses.length > 0 && serverResponses[0].body && serverResponses[0].body.pixel) {
-        serverResponses[0].body.pixel.forEach(px => {
-          if (px.type === 'image' && syncOptions.pixelEnabled) {
-            syncs.push({
-              type: 'image',
-              url: px.url
-            });
-          }
-          if (px.type === 'iframe' && syncOptions.iframeEnabled) {
-            syncs.push({
-              type: 'iframe',
-              url: px.url
-            });
-          }
-        });
+      if (uspConsent) {
+        params += `${params ? '&' : '?'}us_privacy=${encodeURIComponent(uspConsent)}`;
       }
-    } catch (e) { }
+
+      try {
+        if (syncOptions.iframeEnabled) {
+          syncs.push({
+            type: 'iframe',
+            url: USERSYNC + params
+          });
+        }
+        if (serverResponses.length > 0 && serverResponses[0].body && serverResponses[0].body.pixel) {
+          serverResponses[0].body.pixel.forEach(px => {
+            if (px.type === 'image' && syncOptions.pixelEnabled) {
+              syncs.push({
+                type: 'image',
+                url: px.url + params
+              });
+            }
+            if (px.type === 'iframe' && syncOptions.iframeEnabled) {
+              syncs.push({
+                type: 'iframe',
+                url: px.url + params
+              });
+            }
+          });
+        }
+      } catch (e) { }
+    }
     return syncs;
   }
 };

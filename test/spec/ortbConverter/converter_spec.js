@@ -80,7 +80,7 @@ describe('pbjs-ortb converter', () => {
             if (context.reqContext?.ctx) {
               bidResponse.reqCtx = context.reqContext?.ctx;
             }
-			bidResponse.seatbid = context.seatbid;
+            bidResponse.seatbid = context.seatbid;
           }
         }
       },
