@@ -76,19 +76,15 @@ const converter = ortbConverter({
 });
 
 const updateNativeImp = (imp, nativeParams) => {
-	if (!nativeParams?.ortb) {
-		
-	} else {
-		let nativeConfig = JSON.parse(imp.native.request);
-		const { assets } = nativeConfig;
-		const isValidAsset = asset => asset.title || asset.img || asset.data || asset.video;
-		if (!assets?.length || !assets.some(isValidAsset)) {
-			logWarn(`${LOG_WARN_PREFIX}: Native assets object is empty or contains invalid objects`);
-			delete imp.native;
-			return;
-		}
-		imp.native.request = JSON.stringify({ ver: '1.2', nativeConfig});
-	}	
+	let nativeConfig = JSON.parse(imp.native.request);
+	const { assets } = nativeConfig;
+	const isValidAsset = asset => asset.title || asset.img || asset.data || asset.video;
+	if (!assets?.length || !assets.some(isValidAsset)) {
+		logWarn(`${LOG_WARN_PREFIX}: Native assets object is empty or contains invalid objects`);
+		delete imp.native;
+		return;
+	}
+	imp.native.request = JSON.stringify({ ver: '1.2', nativeConfig});
 }
 
 const updateVideoImp = (videoImp, videoParams, adUnitCode) => {
@@ -334,29 +330,6 @@ const DATA_TYPES = {
   'ARRAY': 'array',
   'OBJECT': 'object'
 };
-const VIDEO_CUSTOM_PARAMS = {
-  'mimes': DATA_TYPES.ARRAY,
-  'minduration': DATA_TYPES.NUMBER,
-  'maxduration': DATA_TYPES.NUMBER,
-  'startdelay': DATA_TYPES.NUMBER,
-  'playbackmethod': DATA_TYPES.ARRAY,
-  'api': DATA_TYPES.ARRAY,
-  'protocols': DATA_TYPES.ARRAY,
-  'w': DATA_TYPES.NUMBER,
-  'h': DATA_TYPES.NUMBER,
-  'battr': DATA_TYPES.ARRAY,
-  'linearity': DATA_TYPES.NUMBER,
-  'placement': DATA_TYPES.NUMBER,
-  'plcmt': DATA_TYPES.NUMBER,
-  'minbitrate': DATA_TYPES.NUMBER,
-  'maxbitrate': DATA_TYPES.NUMBER,
-  'skip': DATA_TYPES.NUMBER
-}
-
-const NATIVE_ASSET_IMAGE_TYPE = {
-  'ICON': 1,
-  'IMAGE': 3
-}
 
 const NET_REVENUE = true;
 const dealChannel = {
@@ -420,14 +393,7 @@ const BB_RENDERER = {
   }
 };
 
-const MEDIATYPE = [
-  BANNER,
-  VIDEO,
-  NATIVE
-]
-
 let publisherId = 0;
-let isInvalidNativeRequest = false;
 let biddersList = ['pubmatic'];
 const allBiddersList = ['all'];
 
@@ -453,275 +419,6 @@ function _parseSlotParam(paramName, paramValue) {
   return parsers[paramName]?.() || paramValue;
 }
 
-function _cleanSlot(slotName) {
-  if (isStr(slotName)) {
-    return slotName.replace(/^\s+/g, '').replace(/\s+$/g, '');
-  }
-  if (slotName) {
-    logWarn(BIDDER_CODE + ': adSlot must be a string. Ignoring adSlot');
-  }
-  return '';
-}
-
-function _parseAdSlot(bid) {
-  bid.params.adUnit = '';
-  bid.params.adUnitIndex = '0';
-  bid.params.width = 0;
-  bid.params.height = 0;
-  bid.params.adSlot = _cleanSlot(bid.params.adSlot);
-
-  var slot = bid.params.adSlot;
-  var splits = slot.split(':');
-
-  slot = splits[0];
-  if (splits.length == 2) {
-    bid.params.adUnitIndex = splits[1];
-  }
-  // check if size is mentioned in sizes array. in that case do not check for @ in adslot
-  splits = slot.split('@');
-  bid.params.adUnit = splits[0];
-  if (splits.length > 1) {
-    // i.e size is specified in adslot, so consider that and ignore sizes array
-    splits = splits.length == 2 ? splits[1].split('x') : splits.length == 3 ? splits[2].split('x') : [];
-    if (splits.length != 2) {
-      logWarn(LOG_WARN_PREFIX + 'AdSlot Error: adSlot not in required format');
-      return;
-    }
-    bid.params.width = parseInt(splits[0], 10);
-    bid.params.height = parseInt(splits[1], 10);
-  }
-  // Case : if Size is present in ad slot as well as in mediaTypes then ???
-  if (bid.hasOwnProperty('mediaTypes') &&
-         bid.mediaTypes.hasOwnProperty(BANNER) &&
-          bid.mediaTypes.banner.hasOwnProperty('sizes')) {
-    var i = 0;
-    var sizeArray = [];
-    for (;i < bid.mediaTypes.banner.sizes.length; i++) {
-      if (bid.mediaTypes.banner.sizes[i].length === 2) { // sizes[i].length will not be 2 in case where size is set as fluid, we want to skip that entry
-        sizeArray.push(bid.mediaTypes.banner.sizes[i]);
-      }
-    }
-    bid.mediaTypes.banner.sizes = sizeArray;
-    if (bid.mediaTypes.banner.sizes.length >= 1) {
-      // set the first size in sizes array in bid.params.width and bid.params.height. These will be sent as primary size.
-      // The rest of the sizes will be sent in format array.
-      if (!bid.params.width && !bid.params.height) {
-        bid.params.width = bid.mediaTypes.banner.sizes[0][0];
-        bid.params.height = bid.mediaTypes.banner.sizes[0][1];
-        bid.mediaTypes.banner.sizes = bid.mediaTypes.banner.sizes.splice(1, bid.mediaTypes.banner.sizes.length - 1);
-      } else if (bid.params.width == bid.mediaTypes.banner.sizes[0][0] && bid.params.height == bid.mediaTypes.banner.sizes[0][1]) {
-        bid.mediaTypes.banner.sizes = bid.mediaTypes.banner.sizes.splice(1, bid.mediaTypes.banner.sizes.length - 1);
-      }
-    }
-  }
-}
-
-function _initConf(refererInfo) {
-  return {
-    // TODO: do the fallbacks make sense here?
-    pageURL: refererInfo?.page || window.location.href,
-    refURL: refererInfo?.ref || window.document.referrer
-  };
-}
-
-function _createOrtbTemplate(conf) {
-  return {
-    id: '' + new Date().getTime(),
-    at: AUCTION_TYPE,
-    cur: [DEFAULT_CURRENCY],
-    imp: [],
-    site: {
-      page: conf.pageURL,
-      ref: conf.refURL,
-      publisher: {}
-    },
-    device: {
-      ua: navigator.userAgent,
-      js: 1,
-      dnt: (navigator.doNotTrack == 'yes' || navigator.doNotTrack == '1' || navigator.msDoNotTrack == '1') ? 1 : 0,
-      h: screen.height,
-      w: screen.width,
-      language: navigator.language,
-      connectiontype: getDeviceConnectionType()
-    },
-    user: {},
-    ext: {}
-  };
-}
-
-function _checkParamDataType(key, value, datatype) {
-  var errMsg = 'Ignoring param key: ' + key + ', expects ' + datatype + ', found ' + typeof value;
-  var functionToExecute;
-  switch (datatype) {
-    case DATA_TYPES.BOOLEAN:
-      functionToExecute = isBoolean;
-      break;
-    case DATA_TYPES.NUMBER:
-      functionToExecute = isNumber;
-      break;
-    case DATA_TYPES.STRING:
-      functionToExecute = isStr;
-      break;
-    case DATA_TYPES.ARRAY:
-      functionToExecute = isArray;
-      break;
-  }
-  if (functionToExecute(value)) {
-    return value;
-  }
-  logWarn(LOG_WARN_PREFIX + errMsg);
-  return UNDEFINED;
-}
-
-// TODO delete this code when removing native 1.1 support
-const PREBID_NATIVE_DATA_KEYS_TO_ORTB = {
-  'desc': 'desc',
-  'desc2': 'desc2',
-  'body': 'desc',
-  'body2': 'desc2',
-  'sponsoredBy': 'sponsored',
-  'cta': 'ctatext',
-  'rating': 'rating',
-  'address': 'address',
-  'downloads': 'downloads',
-  'likes': 'likes',
-  'phone': 'phone',
-  'price': 'price',
-  'salePrice': 'saleprice',
-  'displayUrl': 'displayurl',
-  'saleprice': 'saleprice',
-  'displayurl': 'displayurl'
-};
-
-const PREBID_NATIVE_DATA_KEY_VALUES = Object.values(PREBID_NATIVE_DATA_KEYS_TO_ORTB);
-
-// TODO remove this function when the support for 1.1 is removed
-/**
- * Copy of the function toOrtbNativeRequest from core native.js to handle the title len/length
- * and ext and mimes parameters from legacy assets.
- * @param {object} legacyNativeAssets
- * @returns an OpenRTB format of the same bid request
- */
-export function toOrtbNativeRequest(legacyNativeAssets) {
-  if (!legacyNativeAssets && !isPlainObject(legacyNativeAssets)) {
-    logWarn(`${LOG_WARN_PREFIX}: Native assets object is empty or not an object: ${legacyNativeAssets}`);
-    isInvalidNativeRequest = true;
-    return;
-  }
-  const ortb = {
-    ver: '1.2',
-    assets: []
-  };
-  for (let key in legacyNativeAssets) {
-    // skip conversion for non-asset keys
-    if (NATIVE_KEYS_THAT_ARE_NOT_ASSETS.includes(key)) continue;
-    if (!NATIVE_KEYS.hasOwnProperty(key) && !PREBID_NATIVE_DATA_KEY_VALUES.includes(key)) {
-      logWarn(`${LOG_WARN_PREFIX}: Unrecognized native asset code: ${key}. Asset will be ignored.`);
-      continue;
-    }
-
-    const asset = legacyNativeAssets[key];
-    let required = 0;
-    if (asset.required && isBoolean(asset.required)) {
-      required = Number(asset.required);
-    }
-    const ortbAsset = {
-      id: ortb.assets.length,
-      required
-    };
-    // data cases
-    if (key in PREBID_NATIVE_DATA_KEYS_TO_ORTB) {
-      ortbAsset.data = {
-        type: NATIVE_ASSET_TYPES[PREBID_NATIVE_DATA_KEYS_TO_ORTB[key]]
-      }
-      if (asset.len || asset.length) {
-        ortbAsset.data.len = asset.len || asset.length;
-      }
-      if (asset.ext) {
-        ortbAsset.data.ext = asset.ext;
-      }
-    // icon or image case
-    } else if (key === 'icon' || key === 'image') {
-      ortbAsset.img = {
-        type: key === 'icon' ? NATIVE_IMAGE_TYPES.ICON : NATIVE_IMAGE_TYPES.MAIN,
-      }
-      // if min_width and min_height are defined in aspect_ratio, they are preferred
-      if (asset.aspect_ratios) {
-        if (!isArray(asset.aspect_ratios)) {
-          logWarn(`${LOG_WARN_PREFIX}: image.aspect_ratios was passed, but it's not a an array: ${asset.aspect_ratios}`);
-        } else if (!asset.aspect_ratios.length) {
-          logWarn(`${LOG_WARN_PREFIX}: image.aspect_ratios was passed, but it's empty: ${asset.aspect_ratios}`);
-        } else {
-          const { min_width: minWidth, min_height: minHeight } = asset.aspect_ratios[0];
-          if (!isInteger(minWidth) || !isInteger(minHeight)) {
-            logWarn(`${LOG_WARN_PREFIX}: image.aspect_ratios min_width or min_height are invalid: ${minWidth}, ${minHeight}`);
-          } else {
-            ortbAsset.img.wmin = minWidth;
-            ortbAsset.img.hmin = minHeight;
-          }
-          const aspectRatios = asset.aspect_ratios
-            .filter((ar) => ar.ratio_width && ar.ratio_height)
-            .map(ratio => `${ratio.ratio_width}:${ratio.ratio_height}`);
-          if (aspectRatios.length > 0) {
-            ortbAsset.img.ext = {
-              aspectratios: aspectRatios
-            }
-          }
-        }
-      }
-
-      ortbAsset.img.w = asset.w || asset.width;
-      ortbAsset.img.h = asset.h || asset.height;
-      ortbAsset.img.wmin = asset.wmin || asset.minimumWidth || (asset.minsizes ? asset.minsizes[0] : UNDEFINED);
-      ortbAsset.img.hmin = asset.hmin || asset.minimumHeight || (asset.minsizes ? asset.minsizes[1] : UNDEFINED);
-
-      // if asset.sizes exist, by OpenRTB spec we should remove wmin and hmin
-      if (asset.sizes) {
-        if (asset.sizes.length !== 2 || !isInteger(asset.sizes[0]) || !isInteger(asset.sizes[1])) {
-          logWarn(`${LOG_WARN_PREFIX}: image.sizes was passed, but its value is not an array of integers: ${asset.sizes}`);
-        } else {
-          logInfo(`${LOG_WARN_PREFIX}: if asset.sizes exist, by OpenRTB spec we should remove wmin and hmin`);
-          ortbAsset.img.w = asset.sizes[0];
-          ortbAsset.img.h = asset.sizes[1];
-          delete ortbAsset.img.hmin;
-          delete ortbAsset.img.wmin;
-        }
-      }
-      asset.ext && (ortbAsset.img.ext = asset.ext);
-      asset.mimes && (ortbAsset.img.mimes = asset.mimes);
-    // title case
-    } else if (key === 'title') {
-      ortbAsset.title = {
-        // in openRTB, len is required for titles, while in legacy prebid was not.
-        // for this reason, if len is missing in legacy prebid, we're adding a default value of 140.
-        len: asset.len || asset.length || 140
-      }
-      asset.ext && (ortbAsset.title.ext = asset.ext);
-    // all extensions to the native bid request are passed as is
-    } else if (key === 'ext') {
-      ortbAsset.ext = asset;
-      // in `ext` case, required field is not needed
-      delete ortbAsset.required;
-    }
-    ortb.assets.push(ortbAsset);
-  }
-
-  if (ortb.assets.length < 1) {
-    logWarn(`${LOG_WARN_PREFIX}: Could not find any valid asset`);
-    isInvalidNativeRequest = true;
-    return;
-  }
-
-  return ortb;
-}
-
-export function checkVideoPlacement(videoData, adUnitCode) {
-  // Check for video.placement property. If property is missing display log message.
-  if (FEATURES.VIDEO && !deepAccess(videoData, 'plcmt')) {
-    logWarn(MSG_VIDEO_PLCMT_MISSING + ' for ' + adUnitCode);
-  };
-}
-
 function isNonEmptyArray(test) {
   if (isArray(test) === true) {
     if (test.length > 0) {
@@ -744,7 +441,6 @@ const _handleCustomParams = (params, conf) => {
 	});
 	return conf;
 };
-
 
 export const spec = {
   code: BIDDER_CODE,
@@ -802,8 +498,6 @@ export const spec = {
     return false;
   },
 
-  
-
   /**
    * Make a server request from the list of BidRequests.
    *
@@ -855,7 +549,6 @@ export const spec = {
    */
   interpretResponse: (response, request) => {
     const bids = converter.fromORTB({response: response.body, request: request.data}).bids;
-	console.log('##########', bids);
     return bids;
   },
 
