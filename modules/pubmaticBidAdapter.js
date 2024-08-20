@@ -23,7 +23,7 @@ const converter = ortbConverter({
     },
 	imp(buildImp, bidRequest, context) {
 		const { kadfloor, currency, adSlot, deals, dctr } = bidRequest.params;
-		const { adUnitCode, mediaType } = bidRequest;
+		const { adUnitCode, mediaTypes } = bidRequest;
 		const imp = buildImp(bidRequest, context);
 		if (deals) addPMPDeals(imp, deals);
 		if (dctr) addDealCustomTargetings(imp, dctr);
@@ -31,8 +31,8 @@ const converter = ortbConverter({
 		imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY;
 		setFloorInImp(imp, bidRequest);
 		if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner);
-		if (imp.hasOwnProperty('video')) updateVideoImp(imp.video, mediaType?.video, adUnitCode);
-		if (imp.hasOwnProperty('native')) updateNativeImp(imp, mediaType?.native);
+		if (imp.hasOwnProperty('video')) updateVideoImp(imp.video, mediaTypes?.video, adUnitCode);
+		if (imp.hasOwnProperty('native')) updateNativeImp(imp, mediaTypes?.native);
 		setImpTagId(imp, adSlot);
 		imp.secure = 1;
 		imp.pos = 0;
@@ -76,7 +76,7 @@ const converter = ortbConverter({
 });
 
 const updateNativeImp = (imp, nativeParams) => {
-	if (!nativeParams.ortb) {
+	if (!nativeParams?.ortb) {
 		
 	} else {
 		let nativeConfig = JSON.parse(imp.native.request);
