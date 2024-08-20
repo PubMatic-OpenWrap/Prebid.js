@@ -32,6 +32,7 @@ const converter = ortbConverter({
 		setFloorInImp(imp, bidRequest);
 		if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner);
 		if (imp.hasOwnProperty('video')) updateVideoImp(imp.video, mediaType?.video, adUnitCode);
+		if (imp.hasOwnProperty('native')) updateNativeImp(imp, mediaType?.native);
 		setImpTagId(imp, adSlot);
 		imp.secure = 1;
 		imp.pos = 0;
@@ -73,6 +74,22 @@ const converter = ortbConverter({
 		}
 	}
 });
+
+const updateNativeImp = (imp, nativeParams) => {
+	if (!nativeParams.ortb) {
+		
+	} else {
+		let nativeConfig = JSON.parse(imp.native.request);
+		const { assets } = nativeConfig;
+		const isValidAsset = asset => asset.title || asset.img || asset.data || asset.video;
+		if (!assets?.length || !assets.some(isValidAsset)) {
+			logWarn(`${LOG_WARN_PREFIX}: Native assets object is empty or contains invalid objects`);
+			delete imp.native;
+			return;
+		}
+		imp.native.request = JSON.stringify({ ver: '1.2', nativeConfig});
+	}	
+}
 
 const updateVideoImp = (videoImp, videoParams, adUnitCode) => {
 	if (!videoParams || (!videoImp.w && !videoImp.h)) {
