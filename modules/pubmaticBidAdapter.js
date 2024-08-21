@@ -68,6 +68,28 @@ const converter = ortbConverter({
 		}
 		return bidResponse;
 	},
+	response(buildResponse, bidResponses, ortbResponse, context) {
+		// Adding a zero bid for each no-bid
+		const { imp, site } = context?.ortbRequest;
+		const impIds = imp.map(impObj => impObj.id);
+		const responseIds = bidResponses.map(response => response.requestId);
+		const noBidImps = impIds.filter(id => !responseIds.includes(id));
+		noBidImps.forEach(noBidImp => {
+			bidResponses.push({
+				requestId: noBidImp,
+                width: 0,
+                height: 0,
+                ttl: 300,
+                ad: '',
+                creativeId: 0,
+                netRevenue: NET_REVENUE,
+                cpm: 0,
+                currency: ortbResponse.cur || DEFAULT_CURRENCY,
+                referrer: site?.ref || ''
+			})
+		})
+		return buildResponse(bidResponses, ortbResponse, context);
+	},
 	overrides: {
 		imp: {
 			bidfloor: false
@@ -76,15 +98,16 @@ const converter = ortbConverter({
 });
 
 const updateNativeImp = (imp, nativeParams) => {
-	let nativeConfig = JSON.parse(imp.native.request);
-	const { assets } = nativeConfig;
-	const isValidAsset = asset => asset.title || asset.img || asset.data || asset.video;
-	if (!assets?.length || !assets.some(isValidAsset)) {
-		logWarn(`${LOG_WARN_PREFIX}: Native assets object is empty or contains invalid objects`);
-		delete imp.native;
-		return;
+	if (nativeParams?.ortb) {
+		let nativeConfig = JSON.parse(imp.native.request);
+		const { assets } = nativeConfig;
+		if (!assets?.some(asset => asset.title || asset.img || asset.data || asset.video)) {
+            logWarn(`${LOG_WARN_PREFIX}: Native assets object is empty or contains invalid objects`);
+            delete imp.native;
+        } else {
+            imp.native.request = JSON.stringify({ ver: '1.2', nativeConfig });
+        }
 	}
-	imp.native.request = JSON.stringify({ ver: '1.2', nativeConfig});
 }
 
 const updateVideoImp = (videoImp, videoParams, adUnitCode) => {
@@ -342,52 +365,39 @@ const dealChannel = {
 const BB_RENDERER = {
   bootstrapPlayer: function(bid) {
     const config = {
-      code: bid.adUnitCode,
-    };
+		code: bid.adUnitCode,
+		vastXml: bid.vastXml || null,
+		vastUrl: bid.vastUrl || null,
+	};
 
-    if (bid.vastXml) config.vastXml = bid.vastXml;
-    else if (bid.vastUrl) config.vastUrl = bid.vastUrl;
-
-    if (!bid.vastXml && !bid.vastUrl) {
+    if (!config.vastXml && !config.vastUrl) {
       logWarn(`${LOG_WARN_PREFIX}: No vastXml or vastUrl on bid, bailing...`);
       return;
     }
 
     const rendererId = BB_RENDERER.getRendererId(PUBLICATION, bid.rendererCode);
-
     const ele = document.getElementById(bid.adUnitCode); // NB convention
 
-    let renderer;
-
-    for (let rendererIndex = 0; rendererIndex < window.bluebillywig.renderers.length; rendererIndex++) {
-      if (window.bluebillywig.renderers[rendererIndex]._id === rendererId) {
-        renderer = window.bluebillywig.renderers[rendererIndex];
-        break;
-      }
-    }
-
+	const renderer = window.bluebillywig.renderers.find(r => r._id === rendererId);
     if (renderer) renderer.bootstrap(config, ele);
     else logWarn(`${LOG_WARN_PREFIX}: Couldn't find a renderer with ${rendererId}`);
   },
-  newRenderer: function(rendererCode, adUnitCode) {
-    var rendererUrl = RENDERER_URL.replace('$RENDERER', rendererCode);
-    const renderer = Renderer.install({
-      url: rendererUrl,
-      loaded: false,
-      adUnitCode
-    });
 
+  newRenderer: function(rendererCode, adUnitCode) {
+    const rendererUrl = RENDERER_URL.replace('$RENDERER', rendererCode);
+	const renderer = Renderer.install({ url: rendererUrl, loaded: false, adUnitCode });
     try {
       renderer.setRender(BB_RENDERER.outstreamRender);
     } catch (err) {
       logWarn(`${LOG_WARN_PREFIX}: Error tying to setRender on renderer`, err);
     }
-
     return renderer;
   },
+
   outstreamRender: function(bid) {
-    bid.renderer.push(function() { BB_RENDERER.bootstrapPlayer(bid) });
+	bid.renderer.push(() => BB_RENDERER.bootstrapPlayer(bid));
   },
+
   getRendererId: function(pub, renderer) {
     return `${pub}-${renderer}`; // NB convention!
   }
@@ -454,48 +464,41 @@ export const spec = {
    * @return boolean True if this is a valid bid, and false otherwise.
    */
   isBidRequestValid: bid => {
-    if (bid && bid.params) {
-      if (!isStr(bid.params.publisherId)) {
-        logWarn(LOG_WARN_PREFIX + 'Error: publisherId is mandatory and cannot be numeric (wrap it in quotes in your config). Call to OpenBid will not be sent for ad unit: ' + JSON.stringify(bid));
-        return false;
-      }
-      // video ad validation
-      if (FEATURES.VIDEO && bid.hasOwnProperty('mediaTypes') && bid.mediaTypes.hasOwnProperty(VIDEO)) {
-        // bid.mediaTypes.video.mimes OR bid.params.video.mimes should be present and must be a non-empty array
-        let mediaTypesVideoMimes = deepAccess(bid.mediaTypes, 'video.mimes');
-        let paramsVideoMimes = deepAccess(bid, 'params.video.mimes');
-        if (isNonEmptyArray(mediaTypesVideoMimes) === false && isNonEmptyArray(paramsVideoMimes) === false) {
-          logWarn(LOG_WARN_PREFIX + 'Error: For video ads, bid.mediaTypes.video.mimes OR bid.params.video.mimes should be present and must be a non-empty array. Call to OpenBid will not be sent for ad unit:' + JSON.stringify(bid));
-          return false;
-        }
+	if (!(bid && bid.params)) return false;
+	const { publisherId, video } = bid.params;
+    const mediaTypes = bid.mediaTypes || {};
+    const videoMediaTypes = mediaTypes[VIDEO] || {};
 
-        if (!bid.mediaTypes[VIDEO].hasOwnProperty('context')) {
-          logError(`${LOG_WARN_PREFIX}: no context specified in bid. Rejecting bid: `, bid);
-          return false;
-        }
+	if (!isStr(publisherId)) {
+		logWarn(LOG_WARN_PREFIX + 'Error: publisherId is mandatory and cannot be numeric (wrap it in quotes in your config). Call to OpenBid will not be sent for ad unit: ' + JSON.stringify(bid));
+		return false;
+	}
 
-        if (bid.mediaTypes[VIDEO].context === 'outstream' &&
-          !isStr(bid.params.outstreamAU) &&
-          !bid.hasOwnProperty('renderer') &&
-          !bid.mediaTypes[VIDEO].hasOwnProperty('renderer')) {
-          // we are here since outstream ad-unit is provided without outstreamAU and renderer
-          // so it is not a valid video ad-unit
-          // but it may be valid banner or native ad-unit
-          // so if mediaType banner or Native is present then  we will remove media-type video and return true
+	if (FEATURES.VIDEO && mediaTypes.hasOwnProperty(VIDEO)) {
+		// bid.mediaTypes.video.mimes OR bid.params.video.mimes should be present and must be a non-empty array
+		const mediaTypesVideoMimes = deepAccess(bid, 'mediaTypes.video.mimes');
+		const paramsVideoMimes = deepAccess(bid, 'params.video.mimes');
 
-          if (bid.mediaTypes.hasOwnProperty(BANNER) || bid.mediaTypes.hasOwnProperty(NATIVE)) {
-            delete bid.mediaTypes[VIDEO];
-            logWarn(`${LOG_WARN_PREFIX}: for "outstream" bids either outstreamAU parameter must be provided or ad unit supplied renderer is required. Rejecting mediatype Video of bid: `, bid);
-            return true;
-          } else {
-            logError(`${LOG_WARN_PREFIX}: for "outstream" bids either outstreamAU parameter must be provided or ad unit supplied renderer is required. Rejecting bid: `, bid);
-            return false;
-          }
-        }
-      }
-      return true;
-    }
-    return false;
+		if (!isNonEmptyArray(mediaTypesVideoMimes) && !isNonEmptyArray(paramsVideoMimes)) {
+			logWarn(LOG_WARN_PREFIX + 'Error: For video ads, bid.mediaTypes.video.mimes OR bid.params.video.mimes should be present and must be a non-empty array. Call to OpenBid will not be sent for ad unit:' + JSON.stringify(bid));
+			return false;
+		}
+		if (!videoMediaTypes.context) {
+			logError(`${LOG_WARN_PREFIX}: No context specified in bid. Rejecting bid: `, bid);
+			return false;
+		}
+		if (videoMediaTypes.context === 'outstream' && !isStr(bid.params.outstreamAU) &&
+        !bid.renderer && !videoMediaTypes.renderer) {
+			if (mediaTypes.hasOwnProperty(BANNER) || mediaTypes.hasOwnProperty(NATIVE)) {
+				delete mediaTypes[VIDEO];
+				logWarn(`${LOG_WARN_PREFIX}: for "outstream" bids either outstreamAU parameter must be provided or ad unit supplied renderer is required. Rejecting mediatype Video of bid: `, bid);
+				return true;
+			}
+			logError(`${LOG_WARN_PREFIX}: for "outstream" bids either outstreamAU parameter must be provided or ad unit supplied renderer is required. Rejecting bid: `, bid);
+      		return false;
+		}
+	}
+    return true;
   },
 
   /**
@@ -556,23 +559,21 @@ export const spec = {
    * Register User Sync.
    */
   getUserSyncs: (syncOptions, responses, gdprConsent, uspConsent, gppConsent) => {
-    let syncurl = '' + publisherId;
+    let syncurl = publisherId;
 
     // Attaching GDPR Consent Params in UserSync url
     if (gdprConsent) {
-      syncurl += '&gdpr=' + (gdprConsent.gdprApplies ? 1 : 0);
-      syncurl += '&gdpr_consent=' + encodeURIComponent(gdprConsent.consentString || '');
+	  syncurl += `&gdpr=${gdprConsent.gdprApplies ? 1 : 0}&gdpr_consent=${encodeURIComponent(gdprConsent.consentString || '')}`;
     }
 
     // CCPA
     if (uspConsent) {
-      syncurl += '&us_privacy=' + encodeURIComponent(uspConsent);
+      syncurl += `&us_privacy=${encodeURIComponent(uspConsent)}`;
     }
 
     // GPP Consent
     if (gppConsent?.gppString && gppConsent?.applicableSections?.length) {
-      syncurl += '&gpp=' + encodeURIComponent(gppConsent.gppString);
-      syncurl += '&gpp_sid=' + encodeURIComponent(gppConsent?.applicableSections?.join(','));
+	  syncurl += `&gpp=${encodeURIComponent(gppConsent.gppString)}&gpp_sid=${encodeURIComponent(gppConsent.applicableSections.join(','))}`;
     }
 
     // coppa compliance
@@ -580,17 +581,9 @@ export const spec = {
       syncurl += '&coppa=1';
     }
 
-    if (syncOptions.iframeEnabled) {
-      return [{
-        type: 'iframe',
-        url: USER_SYNC_URL_IFRAME + syncurl
-      }];
-    } else {
-      return [{
-        type: 'image',
-        url: USER_SYNC_URL_IMAGE + syncurl
-      }];
-    }
+	const type = syncOptions.iframeEnabled ? 'iframe' : 'image';
+	const url = (type === 'iframe' ? USER_SYNC_URL_IFRAME : USER_SYNC_URL_IMAGE) + syncurl;
+	return [{ type, url }];
   }
 };
 
