@@ -33,7 +33,7 @@ const converter = ortbConverter({
 		if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner);
 		if (imp.hasOwnProperty('video')) updateVideoImp(imp.video, mediaTypes?.video, adUnitCode);
 		if (imp.hasOwnProperty('native')) updateNativeImp(imp, mediaTypes?.native);
-		setImpTagId(imp, adSlot);
+		setImpTagId(imp, adSlot.trim());
 		imp.secure = 1;
 		imp.pos = 0;
 		imp.displaymanager = 'Prebid.js',
