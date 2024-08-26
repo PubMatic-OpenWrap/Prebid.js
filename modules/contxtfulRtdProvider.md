@@ -65,6 +65,8 @@ pbjs.setConfig({
 ```
 ## Parameters
 
+## Parameters
+
 | Name                | Type     | Scope    | Description                                |
 |---------------------|----------|----------|--------------------------------------------|
 | `version`           | `String` | Required | Specifies the version of the Contxtful Receptivity API.  |
