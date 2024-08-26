@@ -27,17 +27,19 @@ const converter = ortbConverter({
 		const imp = buildImp(bidRequest, context);
 		if (deals) addPMPDeals(imp, deals);
 		if (dctr) addDealCustomTargetings(imp, dctr);
-		imp.bidfloor = _parseSlotParam('kadfloor', kadfloor),
-		imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY;
-		setFloorInImp(imp, bidRequest);
 		if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner);
 		if (imp.hasOwnProperty('video')) updateVideoImp(imp.video, mediaTypes?.video, adUnitCode);
 		if (imp.hasOwnProperty('native')) updateNativeImp(imp, mediaTypes?.native);
+		imp.bidfloor = _parseSlotParam('kadfloor', kadfloor),
+		imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY;
+		setFloorInImp(imp, bidRequest);
 		setImpTagId(imp, adSlot.trim());
 		imp.secure = 1;
 		imp.pos = 0;
-		imp.displaymanager = 'Prebid.js',
-    	imp.displaymanagerver = '$prebid.version$'
+		imp.displaymanager ||= 'Prebid.js';
+		imp.displaymanagerver ||= '$prebid.version$';
+		const gptAdSlot = imp.ext?.data?.adserver?.adslot;
+		if (gptAdSlot) imp.ext.dfp_ad_unit_code = gptAdSlot;
 		return imp;
 	},
 	request(buildRequest, imps, bidderRequest, context) {
@@ -51,6 +53,9 @@ const converter = ortbConverter({
 		reqLevelParams(request);
 		updateUserSiteDevice(request);
 		addExtenstionParams(request);
+		const marketPlaceEnabled = bidderRequest?.bidderCode
+  		? bidderSettings.get(bidderRequest.bidderCode, 'allowAlternateBidderCodes') : undefined;
+		if (marketPlaceEnabled) updateRequestExt(request, bidderRequest);
 		return request;
 	},
 	bidResponse(buildBidResponse, bid, context) {
@@ -65,6 +70,10 @@ const converter = ortbConverter({
 				bidResponse.renderer = BB_RENDERER.newRenderer(bidResponse.rendererCode, adUnitCode);
 			}
 			assignDealTier(bidResponse, context, maxduration);
+		}
+		if (mediaType === NATIVE) {
+			if (!bid.w) bidResponse.width = DEFAULT_WIDTH;
+			if (!bid.h) bidResponse.height = DEFAULT_HEIGHT;
 		}
 		return bidResponse;
 	},
@@ -96,6 +105,17 @@ const converter = ortbConverter({
 		}
 	}
 });
+
+const updateRequestExt = (req, bidderRequest) => {
+	const allBiddersList = ['all'];
+	let allowedBiddersList = bidderSettings.get(bidderRequest.bidderCode, 'allowedAlternateBidderCodes');
+	const biddersList = isArray(allowedBiddersList)
+    ? allowedBiddersList.map(val => val.trim().toLowerCase()).filter(uniques)
+    : allBiddersList;
+	req.ext.marketplace = {
+		allowedbidders: biddersList.includes('*') ? allBiddersList : ['pubmatic', ...biddersList],
+	}
+}
 
 const updateNativeImp = (imp, nativeParams) => {
 	if (nativeParams?.ortb) {
@@ -237,6 +257,7 @@ const setImpTagId = (imp, adSlot) => {
 const reqLevelParams = (req) => {
 	deepSetValue(req, 'at', AUCTION_TYPE);
 	deepSetValue(req, 'cur', [DEFAULT_CURRENCY]);
+	if (window.location.href.includes('pubmaticTest=true')) req.test = 1;
 };
   
 const updateUserSiteDevice = (req) => {
@@ -249,7 +270,7 @@ const updateUserSiteDevice = (req) => {
 		gender: gender ? gender.trim() : UNDEFINED,
 		yob: _parseSlotParam('yob', yob),
 	}
-	req.site.publisher.id = pubId;
+	if (req.site?.publisher) req.site.publisher.id = pubId;
 }
 
 const updateResponseWithCustomFields = (res, bid, ctx) => {
@@ -262,13 +283,9 @@ const updateResponseWithCustomFields = (res, bid, ctx) => {
 	if (bid.dealid) {
 		res.dealChannel = bid.ext?.deal_channel ? dealChannel[bid.ext.deal_channel] || null : 'PMP';
 	}
-
 	if (seatbid.ext?.buyid) {
 		res.adserverTargeting = { "hb_buyid_pubmatic": seatbid.ext.buyid }
 	}
-
-	// If `bid.ext.marketplace` is set in the server response,
-	// submit the bid to Prebid using the marketplace name.
 	if (bid.ext?.marketplace) {
 		res.bidderCode = bid.ext.marketplace;
 	}
@@ -292,12 +309,12 @@ const updateResponseWithCustomFields = (res, bid, ctx) => {
 	if (advid) res.meta.advertiserId = res.meta.agencyId = res.meta.buyerId = advid;
 	
 	if (isNonEmptyArray(bid.adomain)) {
-	res.meta.clickUrl = res.meta.brandId = bid.adomain[0];
+		res.meta.clickUrl = res.meta.brandId = bid.adomain[0];
 	}
 	
 	if (isNonEmptyArray(bid.cat)) {
-	res.meta.secondaryCatIds = bid.cat;
-	res.meta.primaryCatId = bid.cat[0];
+		res.meta.secondaryCatIds = bid.cat;
+		res.meta.primaryCatId = bid.cat[0];
 	}
 }
 
