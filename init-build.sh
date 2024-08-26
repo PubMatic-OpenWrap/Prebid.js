@@ -71,7 +71,7 @@ echo "This is SymLinking Start for Prebid"
 # cd $1
 
 # Define the path to the global Prebid.js node_modules directory
-PrebidJSNodeModules="${GLOBAL_PREBID_PKG_JSON_DIR_V8_52_0}/node_modules/"
+PrebidJSNodeModules="${GLOBAL_PREBID_PKG_JSON_DIR_V9_6_0}/node_modules/"
 
 # Define the name of the symlink to be created
 symLinkForPrebidNodeModules=node_modules
