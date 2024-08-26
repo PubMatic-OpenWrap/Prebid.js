@@ -110,7 +110,8 @@
       "videojsVideoProvider"
     ],
     "paapi": [
-      "fledgeForGpt"
+      "paapiForGpt",
+      "topLevelPaapi"
     ],
     "openWrap": [
       "dfpOpenWrap",
