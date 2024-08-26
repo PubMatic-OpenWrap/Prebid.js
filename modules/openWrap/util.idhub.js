@@ -239,7 +239,6 @@ export function addHookOnFunction(theObject, useProto, functionName, newFunction
 
 export function getUserIdConfiguration() {
   const userIdConfs = [];
-  window[pbNameSpace].onSSOLogin({});
   forEachOnObject(CONFIG.getIdentityPartners(), (parterId, partnerValues) => {
     if (!CONSTANTS.EXCLUDE_PARTNER_LIST.includes(parterId)) {
       userIdConfs.push(getUserIdParams(partnerValues));

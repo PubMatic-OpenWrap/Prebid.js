@@ -1409,7 +1409,6 @@ export function getConfigFromRegex(klmsForPartner, generatedKey) {
 // removeIf(removeUserIdRelatedCode)
 export function getUserIdConfiguration() {
   const userIdConfs = [];
-  window[pbNameSpace].onSSOLogin({});
   forEachOnObject(CONFIG.getIdentityPartners(), function (parterId, partnerValues) {
     if (!CONSTANTS.EXCLUDE_PARTNER_LIST.includes(parterId)) {
       userIdConfs.push(getUserIdParams(partnerValues));
