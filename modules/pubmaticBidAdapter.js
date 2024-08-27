@@ -329,7 +329,7 @@ const updateResponseWithCustomFields = (res, bid, ctx) => {
 }
 
 const addExtenstionParams = (req) => {
-	const { profId, verId, wiid } = conf;
+	const { profId, verId, wiid, transactionId } = conf;
 	req.ext = {
 		epoch: new Date().getTime(), // Sending epoch timestamp in request.ext object
 		wrapper: {
@@ -337,7 +337,7 @@ const addExtenstionParams = (req) => {
 			version: parseInt(verId),
 			wiid: wiid,
 			wv: $$REPO_AND_VERSION$$,
-			transactionId: '',
+			transactionId,
 			wp: 'pbjs'
 		}
 	}
