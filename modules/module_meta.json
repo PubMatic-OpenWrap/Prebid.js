@@ -694,7 +694,7 @@
             "path": "/modules/tcfControl.js",
             "module": "tcfControl"
         },
-        {
+	{
             "name": "multibid",
             "path": "/modules/multibid/index.js",
             "module": "multibid"
