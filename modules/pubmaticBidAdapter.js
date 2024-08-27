@@ -71,9 +71,16 @@ const converter = ortbConverter({
 			}
 			assignDealTier(bidResponse, context, maxduration);
 		}
-		if (mediaType === NATIVE) {
-			if (!bid.w) bidResponse.width = DEFAULT_WIDTH;
-			if (!bid.h) bidResponse.height = DEFAULT_HEIGHT;
+		if (mediaType === NATIVE && bid.adm) {
+			try {
+				const adm = JSON.parse(bid.adm.replace(/\\/g, ''));
+				bidResponse.native = { ortb: { ...adm.native } };
+			} catch (ex) {
+				logWarn(`${LOG_WARN_PREFIX}Error: Cannot parse native response for ad response: ${newBid.adm}`);
+				return;
+			}
+			bidResponse.width = bid.w || DEFAULT_WIDTH;
+			bidResponse.height = bid.h || DEFAULT_HEIGHT;
 		}
 		return bidResponse;
 	},
@@ -102,6 +109,9 @@ const converter = ortbConverter({
 	overrides: {
 		imp: {
 			bidfloor: false
+		},
+		bidResponse: {
+			native: false
 		}
 	}
 });
