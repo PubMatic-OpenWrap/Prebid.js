@@ -1,10 +1,9 @@
-import { getBidRequest, logWarn, isBoolean, isStr, isArray, inIframe, mergeDeep, deepAccess, isNumber, deepSetValue, logInfo, logError, deepClone, uniques, isPlainObject, isInteger, parseQueryStringParameters, generateUUID } from '../src/utils.js';
+import { logWarn, isStr, isArray, deepAccess, deepSetValue, logInfo, logError, deepClone, uniques, generateUUID } from '../src/utils.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
 import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
-import { NATIVE_IMAGE_TYPES, NATIVE_KEYS_THAT_ARE_NOT_ASSETS, NATIVE_KEYS, NATIVE_ASSET_TYPES } from '../src/constants.js';
 import { ortbConverter } from '../libraries/ortbConverter/converter.js';
 
 /**
@@ -13,8 +12,38 @@ import { ortbConverter } from '../libraries/ortbConverter/converter.js';
  * @typedef {import('../src/adapters/bidderFactory.js').validBidRequests} validBidRequests
  */
 
+const BIDDER_CODE = 'pubmatic';
+const LOG_WARN_PREFIX = 'PubMatic: ';
+const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator';
+const USER_SYNC_URL_IFRAME = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=';
+const USER_SYNC_URL_IMAGE = 'https://image8.pubmatic.com/AdServer/ImgSync?p=';
+const DEFAULT_CURRENCY = 'USD';
+const AUCTION_TYPE = 1;
+const PUBMATIC_ALIAS = 'pubmatic2';
+const UNDEFINED = undefined;
+const DEFAULT_WIDTH = 0;
+const DEFAULT_HEIGHT = 0;
+const PUBLICATION = 'pubmatic'; // Your publication on Blue Billywig, potentially with environment (e.g. publication.bbvms.com or publication.test.bbvms.com)
+const RENDERER_URL = 'https://pubmatic.bbvms.com/r/'.concat('$RENDERER', '.js'); // URL of the renderer application
+const MSG_VIDEO_PLCMT_MISSING = 'Video.plcmt param missing';
+const CUSTOM_PARAMS = {
+  'kadpageurl': '', // Custom page url	
+  'gender': '', // User gender
+  'yob': '', // User year of birth
+  'lat': '', // User location - Latitude
+  'lon': '', // User Location - Longitude
+  'wiid': '' // OpenWrap Wrapper Impression ID
+};
+const NET_REVENUE = true;
+const dealChannel = {
+  1: 'PMP',
+  5: 'PREF',
+  6: 'PMPG'
+};
+
 let conf = {};
 let blockedIabCategories = allowedIabCategories = [];
+let pubId = 0;
 
 const converter = ortbConverter({
 	context: {
@@ -34,12 +63,7 @@ const converter = ortbConverter({
 		imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY;
 		setFloorInImp(imp, bidRequest);
 		setImpTagId(imp, adSlot.trim());
-		imp.secure = 1;
-		imp.pos = 0;
-		imp.displaymanager ||= 'Prebid.js';
-		imp.displaymanagerver ||= '$prebid.version$';
-		const gptAdSlot = imp.ext?.data?.adserver?.adslot;
-		if (gptAdSlot) imp.ext.dfp_ad_unit_code = gptAdSlot;
+		setImpFields(imp);
 		return imp;
 	},
 	request(buildRequest, imps, bidderRequest, context) {
@@ -116,61 +140,13 @@ const converter = ortbConverter({
 	}
 });
 
-const updateRequestExt = (req, bidderRequest) => {
-	const allBiddersList = ['all'];
-	let allowedBiddersList = bidderSettings.get(bidderRequest.bidderCode, 'allowedAlternateBidderCodes');
-	const biddersList = isArray(allowedBiddersList)
-    ? allowedBiddersList.map(val => val.trim().toLowerCase()).filter(uniques)
-    : allBiddersList;
-	req.ext.marketplace = {
-		allowedbidders: biddersList.includes('*') ? allBiddersList : ['pubmatic', ...biddersList],
-	}
-}
-
-const updateNativeImp = (imp, nativeParams) => {
-	if (nativeParams?.ortb) {
-		let nativeConfig = JSON.parse(imp.native.request);
-		const { assets } = nativeConfig;
-		if (!assets?.some(asset => asset.title || asset.img || asset.data || asset.video)) {
-            logWarn(`${LOG_WARN_PREFIX}: Native assets object is empty or contains invalid objects`);
-            delete imp.native;
-        } else {
-            imp.native.request = JSON.stringify({ ver: '1.2', nativeConfig });
-        }
-	}
-}
-
-const updateVideoImp = (videoImp, videoParams, adUnitCode) => {
-	if (!videoParams || (!videoImp.w && !videoImp.h)) {
-        videoImp = UNDEFINED;
-        logWarn(`${LOG_WARN_PREFIX}Error: Missing ${!videoParams ? 'video config params' : 'video size params (playersize or w&h)'} for adunit: ${adUnitCode} with mediaType set as video. Ignoring video impression in the adunit.`);
-        return;
-    }
-    
-    if (!videoImp.battr) {
-        videoImp.battr = videoParams.battr;
-    }
-}
-
-/**
- * In case of adpod video context, assign prebiddealpriority to the dealtier property of adpod-video bid,
- * so that adpod module can set the hb_pb_cat_dur targetting key.
- * @param {*} bid
- * @param {*} context
- * @param {*} maxduration
- * @returns
- */
-const assignDealTier = (bid, context, maxduration) => {
-	if (!bid?.ext?.prebiddealpriority || !FEATURES.VIDEO) return;
-	if (context != ADPOD) return;
-  
-	const duration = bid?.ext?.video?.duration || maxduration;
-	// if (!duration) return;
-	bid.video = {
-	  context: ADPOD,
-	  durationSeconds: duration,
-	  dealTier: bid.ext.prebiddealpriority
-	};
+const setImpFields = imp => {
+	imp.secure = 1;
+	imp.pos = 0;
+	imp.displaymanager ||= 'Prebid.js';
+	imp.displaymanagerver ||= '$prebid.version$';
+	const gptAdSlot = imp.ext?.data?.adserver?.adslot;
+	if (gptAdSlot) imp.ext.dfp_ad_unit_code = gptAdSlot;
 }
 
 const setFloorInImp = (imp, bid) => {
@@ -208,6 +184,46 @@ const setFloorInImp = (imp, bid) => {
 	logInfo(LOG_WARN_PREFIX, 'Updated imp.bidfloor:', imp.bidfloor);
 }
 
+const updateBannerImp = (bannerObj) => {
+	const primarySize = bannerObj.format.shift(); 
+	bannerObj.w = primarySize.w;
+	bannerObj.h = primarySize.h;
+}
+
+const setImpTagId = (imp, adSlot) => {
+	const splits = adSlot.split(':')[0].split('@');
+    imp.tagid = splits[0];
+}
+
+const updateNativeImp = (imp, nativeParams) => {
+	if (nativeParams?.ortb) {
+		let nativeConfig = JSON.parse(imp.native.request);
+		const { assets } = nativeConfig;
+		if (!assets?.some(asset => asset.title || asset.img || asset.data || asset.video)) {
+            logWarn(`${LOG_WARN_PREFIX}: Native assets object is empty or contains invalid objects`);
+            delete imp.native;
+        } else {
+            imp.native.request = JSON.stringify({ ver: '1.2', nativeConfig });
+        }
+	}
+}
+
+const updateVideoImp = (videoImp, videoParams, adUnitCode) => {
+	if (!deepAccess(videoParams, 'plcmt')) {
+		logWarn(MSG_VIDEO_PLCMT_MISSING + ' for ' + adUnitCode);
+	};
+
+	if (!videoParams || (!videoImp.w && !videoImp.h)) {
+        videoImp = UNDEFINED;
+        logWarn(`${LOG_WARN_PREFIX}Error: Missing ${!videoParams ? 'video config params' : 'video size params (playersize or w&h)'} for adunit: ${adUnitCode} with mediaType set as video. Ignoring video impression in the adunit.`);
+        return;
+    }
+    
+    if (!videoImp.battr) {
+        videoImp.battr = videoParams.battr;
+    }
+}
+
 const addDealCustomTargetings = (imp, dctr) => {
 	if (isStr(dctr) && dctr.length > 0) {
 		const arr = dctr.split('|').filter(val => val.trim().length > 0);
@@ -235,33 +251,15 @@ const addPMPDeals = (imp, deals) => {
 	});
 }
 
-const validateAllowedCategories = (acat) => {
-	return acat
-    .filter(item => {
-		if (typeof item === 'string') {
-			return true;
-		} else {
-			logWarn(LOG_WARN_PREFIX + 'acat: Each category should be a string, ignoring category: ' + item);
-		}
-	})
-    .map(item => item.trim());
-}
-
-const validateBlockedCategories = (bcats) => {
-  const droppedCategories = bcats.filter(item => typeof item !== 'string' || item.length < 3);
-  logWarn(LOG_WARN_PREFIX + 'bcat: Each category must be a string with a length greater than 3, ignoring' + droppedCategories); 
-  return [...new Set(bcats.filter(item => typeof item === 'string' && item.length >= 3))];
-}
-
-const updateBannerImp = (bannerObj) => {
-	const primarySize = bannerObj.format.shift(); 
-	bannerObj.w = primarySize.w;
-	bannerObj.h = primarySize.h;
-}
-
-const setImpTagId = (imp, adSlot) => {
-	const splits = adSlot.split(':')[0].split('@');
-    imp.tagid = splits[0];
+const updateRequestExt = (req, bidderRequest) => {
+	const allBiddersList = ['all'];
+	let allowedBiddersList = bidderSettings.get(bidderRequest.bidderCode, 'allowedAlternateBidderCodes');
+	const biddersList = isArray(allowedBiddersList)
+    ? allowedBiddersList.map(val => val.trim().toLowerCase()).filter(uniques)
+    : allBiddersList;
+	req.ext.marketplace = {
+		allowedbidders: biddersList.includes('*') ? allBiddersList : ['pubmatic', ...biddersList],
+	}
 }
 
 const reqLevelParams = (req) => {
@@ -343,50 +341,50 @@ const addExtenstionParams = (req) => {
 	}
 }
 
+/**
+ * In case of adpod video context, assign prebiddealpriority to the dealtier property of adpod-video bid,
+ * so that adpod module can set the hb_pb_cat_dur targetting key.
+ * @param {*} bid
+ * @param {*} context
+ * @param {*} maxduration
+ * @returns
+ */
+const assignDealTier = (bid, context, maxduration) => {
+	if (!bid?.ext?.prebiddealpriority || !FEATURES.VIDEO) return;
+	if (context != ADPOD) return;
+  
+	const duration = bid?.ext?.video?.duration || maxduration;
+	// if (!duration) return;
+	bid.video = {
+	  context: ADPOD,
+	  durationSeconds: duration,
+	  dealTier: bid.ext.prebiddealpriority
+	};
+}
+
+const validateAllowedCategories = (acat) => {
+	return acat
+    .filter(item => {
+		if (typeof item === 'string') {
+			return true;
+		} else {
+			logWarn(LOG_WARN_PREFIX + 'acat: Each category should be a string, ignoring category: ' + item);
+		}
+	})
+    .map(item => item.trim());
+}
+
+const validateBlockedCategories = (bcats) => {
+  const droppedCategories = bcats.filter(item => typeof item !== 'string' || item.length < 3);
+  logWarn(LOG_WARN_PREFIX + 'bcat: Each category must be a string with a length greater than 3, ignoring' + droppedCategories); 
+  return [...new Set(bcats.filter(item => typeof item === 'string' && item.length >= 3))];
+}
+
 const getConnectionType = () => {
 	let connection = window.navigator && (window.navigator.connection || window.navigator.mozConnection || window.navigator.webkitConnection);
 	const types = { ethernet: 1, wifi: 2, 'slow-2g': 4, '2g': 4, '3g': 5, '4g': 6 };
   	return types[connection?.effectiveType] || 0;
 }
-
-const BIDDER_CODE = 'pubmatic';
-const LOG_WARN_PREFIX = 'PubMatic: ';
-const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator';
-const USER_SYNC_URL_IFRAME = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=';
-const USER_SYNC_URL_IMAGE = 'https://image8.pubmatic.com/AdServer/ImgSync?p=';
-const DEFAULT_CURRENCY = 'USD';
-const AUCTION_TYPE = 1;
-const PUBMATIC_ALIAS = 'pubmatic2';
-const UNDEFINED = undefined;
-const DEFAULT_WIDTH = 0;
-const DEFAULT_HEIGHT = 0;
-const PREBID_NATIVE_HELP_LINK = 'http://prebid.org/dev-docs/show-native-ads.html';
-const PUBLICATION = 'pubmatic'; // Your publication on Blue Billywig, potentially with environment (e.g. publication.bbvms.com or publication.test.bbvms.com)
-const RENDERER_URL = 'https://pubmatic.bbvms.com/r/'.concat('$RENDERER', '.js'); // URL of the renderer application
-const MSG_VIDEO_PLCMT_MISSING = 'Video.plcmt param missing';
-
-const CUSTOM_PARAMS = {
-  'kadpageurl': '', // Custom page url	
-  'gender': '', // User gender
-  'yob': '', // User year of birth
-  'lat': '', // User location - Latitude
-  'lon': '', // User Location - Longitude
-  'wiid': '' // OpenWrap Wrapper Impression ID
-};
-const DATA_TYPES = {
-  'NUMBER': 'number',
-  'STRING': 'string',
-  'BOOLEAN': 'boolean',
-  'ARRAY': 'array',
-  'OBJECT': 'object'
-};
-
-const NET_REVENUE = true;
-const dealChannel = {
-  1: 'PMP',
-  5: 'PREF',
-  6: 'PMPG'
-};
 
 // BB stands for Blue BillyWig
 const BB_RENDERER = {
@@ -429,16 +427,6 @@ const BB_RENDERER = {
     return `${pub}-${renderer}`; // NB convention!
   }
 };
-
-let publisherId = 0;
-let biddersList = ['pubmatic'];
-const allBiddersList = ['all'];
-
-export function _getDomainFromURL(url) {
-  let anchor = document.createElement('a');
-  anchor.href = url;
-  return anchor.hostname;
-}
 
 function _parseSlotParam(paramName, paramValue) {
   if (!isStr(paramValue)) {
@@ -537,6 +525,7 @@ export const spec = {
   buildRequests: (validBidRequests, bidderRequest) => {
 	const { page, ref } = bidderRequest?.refererInfo;
 	const { publisherId, profId, verId } = bidderRequest?.bids[0]?.params;
+	pubId = publisherId;
 	const wiid = generateUUID();
 	conf = {
 		pageURL: page || window.location.href,
@@ -583,7 +572,7 @@ export const spec = {
 	if (fledgeAuctionConfigs) {
 		return {
 		  bids,
-		  fledgeAuctionConfigs: Object.entries(fledgeAuctionConfigs).map(([bidId, cfg]) => ({
+		  paapi: Object.entries(fledgeAuctionConfigs).map(([bidId, cfg]) => ({
 			bidId,
 			config: { auctionSignals: {}, ...cfg }
 		  }))
@@ -596,7 +585,7 @@ export const spec = {
    * Register User Sync.
    */
   getUserSyncs: (syncOptions, responses, gdprConsent, uspConsent, gppConsent) => {
-    let syncurl = publisherId;
+    let syncurl = pubId;
 
     // Attaching GDPR Consent Params in UserSync url
     if (gdprConsent) {
