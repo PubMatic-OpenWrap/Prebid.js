@@ -274,8 +274,11 @@ const updateUserSiteDevice = (req) => {
 	if (req.device) Object.assign(req.device, { js: 1, connectiontype: getConnectionType() });
 	req.user = { gender: gender?.trim() || UNDEFINED, yob: _parseSlotParam('yob', yob) };
 	// adding geo if its empty need to check with QA and delete if not required
-	req.user.geo ||= {}; 
-	if (req.site?.publisher) Object.assign(req.site, { ref: req.site.ref || refURL, publisher: { id: pubId } });
+	req.user.geo ||= {};
+	if (req.site?.publisher) {
+		req.site.ref = req.site.ref || refURL;
+		req.site.publisher.id = pubId;
+	}
 }
 
 const updateResponseWithCustomFields = (res, bid, ctx) => {
