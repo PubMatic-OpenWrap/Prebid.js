@@ -185,6 +185,7 @@ const setFloorInImp = (imp, bid) => {
 
 const updateBannerImp = (bannerObj) => {
 	const primarySize = bannerObj.format.shift(); 
+	if (bannerObj.format && bannerObj.format.length === 0) delete bannerObj.format;
 	bannerObj.w = primarySize.w;
 	bannerObj.h = primarySize.h;
 	bannerObj.pos = 0;
