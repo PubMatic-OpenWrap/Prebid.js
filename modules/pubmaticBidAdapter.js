@@ -142,7 +142,6 @@ const converter = ortbConverter({
 
 const setImpFields = imp => {
 	imp.secure = 1;
-	imp.pos = 0;
 	imp.displaymanager ||= 'Prebid.js';
 	imp.displaymanagerver ||= '$prebid.version$';
 	const gptAdSlot = imp.ext?.data?.adserver?.adslot;
@@ -188,6 +187,7 @@ const updateBannerImp = (bannerObj) => {
 	const primarySize = bannerObj.format.shift(); 
 	bannerObj.w = primarySize.w;
 	bannerObj.h = primarySize.h;
+	bannerObj.pos = 0;
 }
 
 const setImpTagId = (imp, adSlot) => {
@@ -265,20 +265,17 @@ const updateRequestExt = (req, bidderRequest) => {
 const reqLevelParams = (req) => {
 	deepSetValue(req, 'at', AUCTION_TYPE);
 	deepSetValue(req, 'cur', [DEFAULT_CURRENCY]);
-	if (window.location.href.includes('pubmaticTest=true')) req.test = 1;
+	req.test = window.location.href.includes('pubmaticTest=true') ? 1 : undefined;
+	if (req.source && !Object.keys(req.source).length) delete req.source;
 };
-  
+
 const updateUserSiteDevice = (req) => {
-	const { gender, yob, pubId } = conf;
-	if (req.device) {
-		req.device.js = 1;
-		req.device.connectiontype = getConnectionType();
-	}
-	req.user = {
-		gender: gender ? gender.trim() : UNDEFINED,
-		yob: _parseSlotParam('yob', yob),
-	}
-	if (req.site?.publisher) req.site.publisher.id = pubId;
+	const { gender, yob, pubId, refURL } = conf;
+	if (req.device) Object.assign(req.device, { js: 1, connectiontype: getConnectionType() });
+	req.user = { gender: gender?.trim() || UNDEFINED, yob: _parseSlotParam('yob', yob) };
+	// adding geo if its empty need to check with QA and delete if not required
+	req.user.geo ||= {}; 
+	if (req.site?.publisher) Object.assign(req.site, { ref: req.site.ref || refURL, publisher: { id: pubId } });
 }
 
 const updateResponseWithCustomFields = (res, bid, ctx) => {
