@@ -51,7 +51,7 @@ const converter = ortbConverter({
         ttl: 300
     },
 	imp(buildImp, bidRequest, context) {
-		const { kadfloor, currency, adSlot, deals, dctr } = bidRequest.params;
+		const { kadfloor, currency, adSlot, deals, dctr, pmzoneid } = bidRequest.params;
 		const { adUnitCode, mediaTypes } = bidRequest;
 		const imp = buildImp(bidRequest, context);
 		if (deals) addPMPDeals(imp, deals);
@@ -59,6 +59,7 @@ const converter = ortbConverter({
 		if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner);
 		if (imp.hasOwnProperty('video')) updateVideoImp(imp.video, mediaTypes?.video, adUnitCode);
 		if (imp.hasOwnProperty('native')) updateNativeImp(imp, mediaTypes?.native);
+		if (pmzoneid) imp.ext.pmZoneId = pmzoneid;
 		imp.bidfloor = _parseSlotParam('kadfloor', kadfloor),
 		imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY;
 		setFloorInImp(imp, bidRequest);
@@ -273,7 +274,11 @@ const reqLevelParams = (req) => {
 const updateUserSiteDevice = (req) => {
 	const { gender, yob, pubId, refURL } = conf;
 	if (req.device) Object.assign(req.device, { js: 1, connectiontype: getConnectionType() });
-	req.user = { gender: gender?.trim() || UNDEFINED, yob: _parseSlotParam('yob', yob) };
+	req.user = {
+		...req.user,
+		gender: gender?.trim() || UNDEFINED,
+		yob: _parseSlotParam('yob', yob)
+	};
 	// adding geo if its empty need to check with QA and delete if not required
 	req.user.geo ||= {};
 	if (req.site?.publisher) {
