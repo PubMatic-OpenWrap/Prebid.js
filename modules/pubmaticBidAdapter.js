@@ -198,6 +198,8 @@ const setImpTagId = (imp, adSlot) => {
 }
 
 const updateNativeImp = (imp, nativeParams) => {
+	// delete native.ver to pass sanity
+	if (imp.native?.ver) delete imp.native.ver;
 	if (nativeParams?.ortb) {
 		let nativeConfig = JSON.parse(imp.native.request);
 		const { assets } = nativeConfig;
@@ -281,7 +283,7 @@ const updateUserSiteDevice = (req) => {
 	};
 	// Deleting device.ext to pass sanity
 	delete req.device.ext;
-	// adding geo if its empty need to check with QA and delete if not required
+	// adding geo if its empty need to check with QA and delete if not required to pass sanity
 	req.user.geo ||= {};
 	if (req.site?.publisher) {
 		req.site.ref = req.site.ref || refURL;
