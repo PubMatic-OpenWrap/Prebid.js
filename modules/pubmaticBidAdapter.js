@@ -279,6 +279,8 @@ const updateUserSiteDevice = (req) => {
 		gender: gender?.trim() || UNDEFINED,
 		yob: _parseSlotParam('yob', yob)
 	};
+	// Deleting device.ext to pass sanity
+	delete req.device.ext;
 	// adding geo if its empty need to check with QA and delete if not required
 	req.user.geo ||= {};
 	if (req.site?.publisher) {
