@@ -51,7 +51,7 @@ const converter = ortbConverter({
         ttl: 300
     },
 	imp(buildImp, bidRequest, context) {
-		const { kadfloor, currency, adSlot, deals, dctr, pmzoneid } = bidRequest.params;
+		const { kadfloor, currency, adSlot, deals, dctr, pmzoneid, hashedKey } = bidRequest.params;
 		const { adUnitCode, mediaTypes } = bidRequest;
 		const imp = buildImp(bidRequest, context);
 		if (deals) addPMPDeals(imp, deals);
@@ -63,7 +63,7 @@ const converter = ortbConverter({
 		imp.bidfloor = _parseSlotParam('kadfloor', kadfloor),
 		imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY;
 		setFloorInImp(imp, bidRequest);
-		setImpTagId(imp, adSlot.trim());
+		setImpTagId(imp, adSlot.trim(), hashedKey);
 		setImpFields(imp);
 		return imp;
 	},
@@ -192,9 +192,9 @@ const updateBannerImp = (bannerObj) => {
 	bannerObj.pos = 0;
 }
 
-const setImpTagId = (imp, adSlot) => {
+const setImpTagId = (imp, adSlot, hashedKey) => {
 	const splits = adSlot.split(':')[0].split('@');
-    imp.tagid = splits[0];
+    imp.tagid = hashedKey || splits[0];
 }
 
 const updateNativeImp = (imp, nativeParams) => {
@@ -226,6 +226,10 @@ const updateVideoImp = (videoImp, videoParams, adUnitCode) => {
     if (!videoImp.battr) {
         videoImp.battr = videoParams.battr;
     }
+	// Deleting skipafter, skipmin to pass sanity
+	if (videoImp.skipafter) delete videoImp.skipafter;
+	if (videoImp.skipmin) delete videoImp.skipmin;
+
 }
 
 const addDealCustomTargetings = (imp, dctr) => {
@@ -281,6 +285,11 @@ const updateUserSiteDevice = (req) => {
 		gender: gender?.trim() || UNDEFINED,
 		yob: _parseSlotParam('yob', yob)
 	};
+	// Deleting user.ext to pass sanity
+	if (req.user?.ext?.eids) {
+		Object.keys(req.user.ext).length === 1 ? (req.user.eids = req.user.ext.eids, delete req.user.ext) : delete req.user.ext.eids;
+	}
+
 	// Deleting device.ext to pass sanity
 	delete req.device.ext;
 	// adding geo if its empty need to check with QA and delete if not required to pass sanity
