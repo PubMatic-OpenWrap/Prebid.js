@@ -287,7 +287,10 @@ const updateUserSiteDevice = (req) => {
 	};
 	// Deleting user.ext to pass sanity
 	if (req.user?.ext?.eids) {
-		Object.keys(req.user.ext).length === 1 ? (req.user.eids = req.user.ext.eids, delete req.user.ext) : delete req.user.ext.eids;
+		const { eids } = req.user.ext;
+		const hasMoreProps = Object.keys(req.user.ext).length > 1;
+		req.user.eids = eids;
+		hasMoreProps ? delete req.user.ext.eids : delete req.user.ext;
 	}
 
 	// Deleting device.ext to pass sanity
