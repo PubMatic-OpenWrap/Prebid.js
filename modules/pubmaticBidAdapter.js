@@ -65,6 +65,10 @@ const converter = ortbConverter({
 		setFloorInImp(imp, bidRequest);
 		setImpTagId(imp, adSlot.trim(), hashedKey);
 		setImpFields(imp);
+
+		// Deleting igs & pappi object to pass sanity
+		if (imp.ext?.igs) delete imp.ext.igs;
+		if (imp.ext?.paapi) delete imp.ext.paapi;
 		return imp;
 	},
 	request(buildRequest, imps, bidderRequest, context) {
@@ -86,9 +90,11 @@ const converter = ortbConverter({
 	bidResponse(buildBidResponse, bid, context) {
 		const bidResponse = buildBidResponse(bid, context);
 		updateResponseWithCustomFields(bidResponse, bid, context);
-		const { mediaType } = bidResponse;
+		const { mediaType, playerWidth, playerHeight } = bidResponse;
 		const { params, adUnitCode, mediaTypes } = context?.bidRequest;
 		if (mediaType === VIDEO) {
+			if (!bidResponse.width) bidResponse.width = playerWidth;
+			if (!bidResponse.height) bidResponse.height = playerHeight;
 			const { context, maxduration } = mediaTypes[mediaType];
 			if (context === 'outstream' && params.outstreamAU && adUnitCode) {
 				bidResponse.rendererCode = params.outstreamAU;
