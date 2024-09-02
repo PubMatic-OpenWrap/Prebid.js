@@ -1,10 +1,11 @@
-import { logWarn, isStr, isArray, deepAccess, deepSetValue, logInfo, logError, deepClone, uniques, generateUUID } from '../src/utils.js';
+import { logWarn, isStr, isArray, deepAccess, deepSetValue, isBoolean, isInteger, logInfo, logError, deepClone, uniques, generateUUID } from '../src/utils.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
 import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
 import { ortbConverter } from '../libraries/ortbConverter/converter.js';
+import {NATIVE_ASSET_TYPES, NATIVE_IMAGE_TYPES, PREBID_NATIVE_DATA_KEYS_TO_ORTB, NATIVE_KEYS_THAT_ARE_NOT_ASSETS, NATIVE_KEYS} from '../src/constants.js';
 
 /**
  * @typedef {import('../src/adapters/bidderFactory.js').BidRequest} BidRequest
@@ -26,6 +27,7 @@ const DEFAULT_HEIGHT = 0;
 const PUBLICATION = 'pubmatic'; // Your publication on Blue Billywig, potentially with environment (e.g. publication.bbvms.com or publication.test.bbvms.com)
 const RENDERER_URL = 'https://pubmatic.bbvms.com/r/'.concat('$RENDERER', '.js'); // URL of the renderer application
 const MSG_VIDEO_PLCMT_MISSING = 'Video.plcmt param missing';
+const PREBID_NATIVE_DATA_KEY_VALUES = Object.values(PREBID_NATIVE_DATA_KEYS_TO_ORTB);
 const CUSTOM_PARAMS = {
   'kadpageurl': '', // Custom page url	
   'gender': '', // User gender
@@ -147,6 +149,60 @@ const converter = ortbConverter({
 	}
 });
 
+const handleImageProperties = asset => {
+	const imgProps = {};
+	if (asset.aspect_ratios && isArray(asset.aspect_ratios) && asset.aspect_ratios.length) {
+	  const { min_width: minWidth, min_height: minHeight } = asset.aspect_ratios[0];
+	  if (isInteger(minWidth) && isInteger(minHeight)) {
+		imgProps.wmin = minWidth;
+		imgProps.hmin = minHeight;
+	  }
+	  imgProps.ext = { aspectratios: asset.aspect_ratios.filter(({ ratio_width, ratio_height }) => ratio_width && ratio_height).map(({ ratio_width, ratio_height }) => `${ratio_width}:${ratio_height}`) };
+	}
+	imgProps.w = asset.w || asset.width;
+	imgProps.h = asset.h || asset.height;
+	if (asset.sizes && asset.sizes.length === 2 && isInteger(asset.sizes[0]) && isInteger(asset.sizes[1])) {
+	  imgProps.w = asset.sizes[0];
+	  imgProps.h = asset.sizes[1];
+	  delete imgProps.wmin;
+	  delete imgProps.hmin;
+	}
+	asset.ext && (imgProps.ext = asset.ext);
+	asset.mimes && (imgProps.mimes = asset.mimes);
+	return imgProps;
+}
+
+const toOrtbNativeRequest = legacyNativeAssets => {
+	const ortb = { ver: '1.2', assets: [] };
+  	for (let key in legacyNativeAssets) {
+		if (NATIVE_KEYS_THAT_ARE_NOT_ASSETS.includes(key)) continue;
+		if (!NATIVE_KEYS.hasOwnProperty(key) && !PREBID_NATIVE_DATA_KEY_VALUES.includes(key)) {
+		logWarn(`${LOG_WARN_PREFIX}: Unrecognized asset: ${key}. Ignored.`);
+		continue;
+		}
+
+		const asset = legacyNativeAssets[key];
+		const required = asset.required && isBoolean(asset.required) ? 1 : 0;
+		const ortbAsset = { id: ortb.assets.length, required };
+
+		if (key in PREBID_NATIVE_DATA_KEYS_TO_ORTB) {
+		ortbAsset.data = { type: NATIVE_ASSET_TYPES[PREBID_NATIVE_DATA_KEYS_TO_ORTB[key]], ...asset.len && { len: asset.len }, ...asset.ext && { ext: asset.ext } };
+		} else if (key === 'icon' || key === 'image') {
+		ortbAsset.img = {
+			type: key === 'icon' ? NATIVE_IMAGE_TYPES.ICON : NATIVE_IMAGE_TYPES.MAIN,
+			...handleImageProperties(asset)
+		};
+		} else if (key === 'title') {
+		ortbAsset.title = { len: asset.len || 140, ...asset.ext && { ext: asset.ext } };
+		} else if (key === 'ext') {
+		ortbAsset.ext = asset;
+		delete ortbAsset.required;
+		}
+		ortb.assets.push(ortbAsset);
+  	}
+  	return ortb;
+}
+
 const setImpFields = imp => {
 	imp.secure = 1;
 	imp.displaymanager ||= 'Prebid.js';
@@ -206,6 +262,11 @@ const setImpTagId = (imp, adSlot, hashedKey) => {
 }
 
 const updateNativeImp = (imp, nativeParams) => {
+	// Adding ext & mimes to pass sanity starts here
+	if (!nativeParams?.ortb) {
+		imp.native.request = JSON.stringify(toOrtbNativeRequest(nativeParams));
+	}
+	// Adding ext & mimes to pass sanity ends here
 	// delete native.ver to pass sanity
 	if (imp.native?.ver) delete imp.native.ver;
 	if (nativeParams?.ortb) {
