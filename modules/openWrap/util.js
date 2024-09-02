@@ -1260,7 +1260,7 @@ export function getAdUnitConfig(sizes, currentSlot) {
         if (config.renderer && !isEmptyObject(config.renderer)) {
           adUnitConfig['renderer'] = config.renderer;
         }
-				if(config.ortb2Imp && !refThis.isEmptyObject(config.ortb2Imp)){
+				if(config.ortb2Imp && !isEmptyObject(config.ortb2Imp)){
 					adUnitConfig['ortb2Imp'] = config.ortb2Imp;
 				}
         if (!isBanner || (config.banner && (isOwnProperty(config.banner, 'enabled') && !config.banner.enabled))) {
@@ -2078,7 +2078,7 @@ export function applyDataTypeChangesIfApplicable(params) {
 									try {
 										params[key] = JSON.parse(paramValue);
 									} catch (e) {
-										refThis.logError("Error parsing requestedAttributesOverrides for partner ", partnerName);
+										logError("Error parsing requestedAttributesOverrides for partner ", partnerName);
 									}
                 }
               }

@@ -653,7 +653,7 @@ export function applyDataTypeChangesIfApplicable(params) {
 									try {
 										params[key] = JSON.parse(paramValue);
 									} catch (e) {
-										refThis.logError("Error parsing requestedAttributesOverrides for partner ", partnerName);
+										logError("Error parsing requestedAttributesOverrides for partner ", partnerName);
 									}
                 }
               }
