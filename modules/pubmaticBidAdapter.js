@@ -153,6 +153,8 @@ const setImpFields = imp => {
 	imp.displaymanagerver ||= '$prebid.version$';
 	const gptAdSlot = imp.ext?.data?.adserver?.adslot;
 	if (gptAdSlot) imp.ext.dfp_ad_unit_code = gptAdSlot;
+	// Delete ext.data in case of no-adserver
+	if (Object.keys(imp.ext?.data).length === 0) delete imp.ext.data
 }
 
 const setFloorInImp = (imp, bid) => {
@@ -285,11 +287,12 @@ const reqLevelParams = (req) => {
 
 const updateUserSiteDevice = (req) => {
 	const { gender, yob, pubId, refURL } = conf;
+	const { user } = req;
 	if (req.device) Object.assign(req.device, { js: 1, connectiontype: getConnectionType() });
 	req.user = {
 		...req.user,
-		gender: gender?.trim() || UNDEFINED,
-		yob: _parseSlotParam('yob', yob)
+		gender: user?.gender || gender?.trim() || UNDEFINED,
+		yob: user?.yob || _parseSlotParam('yob', yob)
 	};
 	// Deleting user.ext to pass sanity
 	if (req.user?.ext?.eids) {
