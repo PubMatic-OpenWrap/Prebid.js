@@ -219,9 +219,9 @@ const setFloorInImp = (imp, bid) => {
 		[BANNER, VIDEO, NATIVE].forEach(mediaType => {
 			if (!imp.hasOwnProperty(mediaType)) return;
 
-			const sizes = mediaType === 'banner' 
-				? imp[mediaType]?.format.map(({ w, h }) => [w, h]) 
-				: ['*'];
+			const sizes = (mediaType === 'banner' 
+				? imp[mediaType]?.format?.map(({ w, h }) => [w, h]) 
+				: ['*'])|| ['*'];
 	
 			sizes.forEach(size => {
 				const floorInfo = bid.getFloor({ currency: imp.bidfloorcur, mediaType, size });
@@ -295,10 +295,12 @@ const updateVideoImp = (videoImp, videoParams, adUnitCode) => {
     if (!videoImp.battr) {
         videoImp.battr = videoParams.battr;
     }
-	// Deleting skipafter, skipmin to pass sanity
+	// Deleting skipafter, skipmin, playbackend, delivery & pos to pass sanity
 	if (videoImp.skipafter) delete videoImp.skipafter;
 	if (videoImp.skipmin) delete videoImp.skipmin;
-
+	if (videoImp.playbackend) delete videoImp.playbackend;
+	if (videoImp.delivery) delete videoImp.delivery;
+	if (videoImp.pos) delete videoImp.pos;
 }
 
 const addDealCustomTargetings = (imp, dctr) => {
