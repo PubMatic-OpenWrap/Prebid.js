@@ -276,7 +276,7 @@ const updateNativeImp = (imp, nativeParams) => {
             logWarn(`${LOG_WARN_PREFIX}: Native assets object is empty or contains invalid objects`);
             delete imp.native;
         } else {
-            imp.native.request = JSON.stringify({ ver: '1.2', nativeConfig });
+            imp.native.request = JSON.stringify({ ver: '1.2', ...nativeConfig });
         }
 	}
 }
@@ -382,6 +382,7 @@ const updateResponseWithCustomFields = (res, bid, ctx) => {
 	res.ad = bid.adm;
 	res.pm_dspid = bid.ext?.dspid ? bid.ext.dspid : null;
 	res.pm_seat = seatbid.seat;
+	if (!res.creativeId) res.creativeId = bid.id;
 	if (bid.dealid) {
 		res.dealChannel = bid.ext?.deal_channel ? dealChannel[bid.ext.deal_channel] || null : 'PMP';
 	}
