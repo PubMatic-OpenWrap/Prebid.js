@@ -28,7 +28,8 @@ describe('PubMatic adapter', () => {
 		profId: '100',
 		verId: '200',
 		currency: 'AUD',
-		dctr: 'key1:val1,val2|key2:val1'
+		dctr: 'key1:val1,val2|key2:val1',
+		deals: ['deal-1', 'deal-2']
     },
     placementCode: '/19968336/header-bid-tag-1',
     sizes: [
@@ -114,7 +115,8 @@ describe('PubMatic adapter', () => {
 		source: {}
 	},
 	timeout: 2000
-  }
+  };
+  let videoBid, videoBidderRequest, utilsLogWarnMock, nativeBidderRequest;
 
   describe('Bid validations', () => {
     it('should return true if publisherId is present in params', () => {
@@ -138,8 +140,7 @@ describe('PubMatic adapter', () => {
 
 
 	describe('VIDEO', () => {
-		let videoBid = {};
-		beforeEach(function () {
+		beforeEach(() => {
 			videoBid = utils.deepClone(validBidRequests[0]);
 			delete videoBid.mediaTypes.banner;
 			videoBid.mediaTypes.video = {
@@ -182,10 +183,241 @@ describe('PubMatic adapter', () => {
   });
 
   describe('Request formation', () => {
-	it('should return true if publisherId is present in params', () => {
-		const request = spec.buildRequests(validBidRequests, bidderRequest);
-		console.log('*****', request);
-		expect(request.imp).to.have('banner');
-    });
+	describe('IMP', () => {
+		it('should generate request with banner', () => {
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('banner');
+			expect(imp[0]).to.have.property('id').equal('23acc48ad47af5');
+		});
+
+		it('should add pmp if deals are present in parameters', () => {
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('pmp');
+			expect(imp[0]).to.have.property('pmp').to.have.property('deals').with.lengthOf(2);
+		});
+
+		it('should not add pmp if deals are absent in parameters', () => {
+			delete validBidRequests[0].params.deals;
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.not.have.property('pmp');
+		});
+
+		it('should add key_val property if dctr is present in parameters', () => {
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('ext');
+			expect(imp[0]).to.have.property('ext').to.have.property('key_val');
+		});
+
+		it('should not add key_val if dctr is absent in parameters', () => {
+			delete validBidRequests[0].params.dctr;
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('ext').to.not.have.property('key_val');
+		});
+		
+		it('should set w and h to the primary size for banner', () => {
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('banner');
+			expect(imp[0]).to.have.property('banner').to.have.property('w').equal(728);
+			expect(imp[0]).to.have.property('banner').to.have.property('h').equal(90);
+		});
+
+		it('should have 1 size in the banner.format array', () => {
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('banner').to.have.property('format');
+			expect(imp[0]).to.have.property('banner').to.have.property('format').with.lengthOf(1);
+		});
+		  
+		it('should add pmZoneId in ext if pmzoneid is present in parameters', () => {
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('ext');
+			expect(imp[0]).to.have.property('ext').to.have.property('pmZoneId');
+		});
+
+		it('should add bidfloor if kadfloor is present in parameters', () => {
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('bidfloor');
+			expect(imp[0]).to.have.property('bidfloor').equal(1.2);
+		});
+
+		it('should add bidfloorcur if currency is present in parameters', () => {
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('bidfloorcur');
+			expect(imp[0]).to.have.property('bidfloorcur').equal('AUD');
+		});
+
+		it('should add bidfloorcur with default value if currency is missing in parameters', () => {
+			delete validBidRequests[0].params.currency;
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('bidfloorcur');
+			expect(imp[0]).to.have.property('bidfloorcur').equal('USD');
+		});
+
+		it('should add tagid', () => {
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('tagid');
+			expect(imp[0]).to.have.property('tagid').equal('/15671365/DMDemo');
+		});
+		
+		it('should add secure, displaymanager & displaymanagerver', () => {
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('secure').equal(1);
+			expect(imp[0]).to.have.property('displaymanager').equal('Prebid.js');
+			expect(imp[0]).to.have.property('displaymanagerver');
+		});
+
+		it('should include the properties topframe and format as an array', () => {
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('banner').to.have.property('topframe');
+			expect(imp[0]).to.have.property('banner').to.have.property('format').to.be.an('array');
+		});
+
+		describe('VIDEO', () => {
+			beforeEach(() => {
+				utilsLogWarnMock = sinon.stub(utils, 'logWarn');
+				videoBidderRequest = utils.deepClone(bidderRequest);
+				delete videoBidderRequest.bids[0].mediaTypes.banner;
+				videoBidderRequest.bids[0].mediaTypes.video = {
+					skip: 1,
+					mimes: ['video/mp4', 'video/x-flv'],
+					minduration: 5,
+					maxduration: 30,
+					startdelay: 5,
+					playbackmethod: [1, 3],
+					api: [1, 2],
+					protocols: [2, 3],
+					battr: [13, 14],
+					linearity: 1,
+					placement: 2,
+					plcmt: 1,
+					minbitrate: 10,
+					maxbitrate: 10,
+					playerSize: [640, 480]
+				}
+			});
+
+			afterEach(() => {
+				utilsLogWarnMock.restore();
+			})
+
+			it('should generate request with mediatype video', () => {
+				const request = spec.buildRequests(validBidRequests, videoBidderRequest);
+				const { imp } = request?.data;
+				expect(imp).to.be.an('array');
+				expect(imp[0]).to.have.property('video');
+			});
+
+			it('should log a warning if plcmt is missing', () => {
+				delete videoBidderRequest.bids[0].mediaTypes.video.playerSize;
+				const request = spec.buildRequests(validBidRequests, videoBidderRequest);
+				const { imp } = request?.data;
+				expect(imp).to.be.an('array');
+				sinon.assert.called(utils.logWarn);
+			});
+
+			it('should log a warning if playerSize is missing', () => {
+				delete videoBidderRequest.bids[0].mediaTypes.video.plcmt;
+				const request = spec.buildRequests(validBidRequests, videoBidderRequest);
+				const { imp } = request?.data;
+				expect(imp).to.be.an('array');
+				sinon.assert.called(utils.logWarn);
+				expect(imp.video).to.be.undefined;
+			});
+
+			it('should have all supporting parameters', () => {
+				const request = spec.buildRequests(validBidRequests, videoBidderRequest);
+				const { imp } = request?.data;
+				expect(imp).to.be.an('array');
+				expect(imp[0]).to.have.property('video');
+				expect(imp[0]).to.have.property('video').to.have.property('mimes');
+				expect(imp[0]).to.have.property('video').to.have.property('minbitrate');
+				expect(imp[0]).to.have.property('video').to.have.property('maxbitrate');
+				expect(imp[0]).to.have.property('video').to.have.property('minduration');
+				expect(imp[0]).to.have.property('video').to.have.property('maxduration');
+				expect(imp[0]).to.have.property('video').to.have.property('plcmt');
+				expect(imp[0]).to.have.property('video').to.have.property('battr');
+				expect(imp[0]).to.have.property('video').to.have.property('startdelay');
+				expect(imp[0]).to.have.property('video').to.have.property('playbackmethod');
+				expect(imp[0]).to.have.property('video').to.have.property('api');
+				expect(imp[0]).to.have.property('video').to.have.property('protocols');
+				expect(imp[0]).to.have.property('video').to.have.property('linearity');
+				expect(imp[0]).to.have.property('video').to.have.property('placement');
+				expect(imp[0]).to.have.property('video').to.have.property('skip');
+				expect(imp[0]).to.have.property('video').to.have.property('w');
+				expect(imp[0]).to.have.property('video').to.have.property('h');
+			});
+		});
+
+		describe('NATIVE', () => {
+			beforeEach(() => {
+				utilsLogWarnMock = sinon.stub(utils, 'logWarn');
+				nativeBidderRequest = utils.deepClone(bidderRequest);
+				delete nativeBidderRequest.bids[0].mediaTypes.banner;
+				nativeBidderRequest.bids[0].nativeOrtbRequest = {
+					ver: '1.2',
+					assets: [{
+						id: 0,
+						img: {
+							'type': 3,
+							'w': 300,
+							'h': 250
+						},
+						required: 1,
+					}]
+				}
+				nativeBidderRequest.bids[0].mediaTypes.native = {
+					title: {
+						required: true,
+						length: 80
+					},
+					image: {
+						required: true,
+						sizes: [300, 250]
+					},
+					sponsoredBy: {
+						required: true
+					}
+				}
+			});
+
+			afterEach(() => {
+				utilsLogWarnMock.restore();
+			})
+
+			it('should generate request with mediatype native', () => {
+				const request = spec.buildRequests(validBidRequests, nativeBidderRequest);
+				const { imp } = request?.data;
+				expect(imp).to.be.an('array');
+				expect(imp[0]).to.have.property('native');
+			});
+		});
+	});	
   });
 })

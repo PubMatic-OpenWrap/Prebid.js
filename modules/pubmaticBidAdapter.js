@@ -68,7 +68,6 @@ const converter = ortbConverter({
     setFloorInImp(imp, bidRequest);
     setImpTagId(imp, adSlot.trim(), hashedKey);
     setImpFields(imp);
-
     // Deleting igs & pappi object to pass sanity
     if (imp.ext?.igs) delete imp.ext.igs;
     if (imp.ext?.paapi) delete imp.ext.paapi;
@@ -211,7 +210,7 @@ const setImpFields = imp => {
   const gptAdSlot = imp.ext?.data?.adserver?.adslot;
   if (gptAdSlot) imp.ext.dfp_ad_unit_code = gptAdSlot;
   // Delete ext.data in case of no-adserver
-  if (Object.keys(imp.ext?.data).length === 0) delete imp.ext.data
+  if (imp.ext?.data && Object.keys(imp.ext.data).length === 0) delete imp.ext.data
 }
 
 const setFloorInImp = (imp, bid) => {
@@ -286,13 +285,11 @@ const updateVideoImp = (videoImp, videoParams, adUnitCode) => {
   if (!deepAccess(videoParams, 'plcmt')) {
     logWarn(MSG_VIDEO_PLCMT_MISSING + ' for ' + adUnitCode);
   };
-
   if (!videoParams || (!videoImp.w && !videoImp.h)) {
     videoImp = UNDEFINED;
     logWarn(`${LOG_WARN_PREFIX}Error: Missing ${!videoParams ? 'video config params' : 'video size params (playersize or w&h)'} for adunit: ${adUnitCode} with mediaType set as video. Ignoring video impression in the adunit.`);
     return;
   }
-
   if (!videoImp.battr) {
     videoImp.battr = videoParams.battr;
   }
@@ -321,12 +318,12 @@ const addPMPDeals = (imp, deals) => {
   }
   deals.forEach(deal => {
     if (typeof deal === 'string' && deal.length > 3) {
-		  if (!imp.pmp) {
-        imp.pmp = { private_auction: 0, deals: [] };
-		  }
-		  imp.pmp.deals.push({ id: deal });
+		if (!imp.pmp) {
+        	imp.pmp = { private_auction: 0, deals: [] };
+		}
+		imp.pmp.deals.push({ id: deal });
     } else {
-		  logWarn(`${LOG_WARN_PREFIX}Error: deal-id present in array bid.params.deals should be a string with more than 3 characters length, deal-id ignored: ${dealId}`);
+		logWarn(`${LOG_WARN_PREFIX}Error: deal-id present in array bid.params.deals should be a string with more than 3 characters length, deal-id ignored: ${dealId}`);
     }
   });
 }
@@ -622,6 +619,7 @@ export const spec = {
     const { publisherId, profId, verId } = bidderRequest?.bids[0]?.params;
     pubId = publisherId;
     const wiid = generateUUID();
+	let bid;
     conf = {
       pageURL: page || window.location.href,
       refURL: ref || window.document.referrer,
@@ -651,7 +649,6 @@ export const spec = {
       data: data,
       bidderRequest: bidderRequest
     };
-
     return serverRequest;
   },
 
