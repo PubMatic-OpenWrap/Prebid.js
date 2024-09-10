@@ -76,10 +76,12 @@ const converter = ortbConverter({
   request(buildRequest, imps, bidderRequest, context) {
     const request = buildRequest(imps, bidderRequest, context);
     if (blockedIabCategories.length || request.bcat) {
-      request.bcat = validateBlockedCategories([...blockedIabCategories, ...request.bcat]);
+	  const validatedBCategories = validateBlockedCategories([...(blockedIabCategories || []), ...(request.bcat || [])]);
+      if (validatedBCategories.length) request.bcat = validatedBCategories;
     }
     if (allowedIabCategories.length || request.acat) {
-      request.bcat = validateAllowedCategories([...allowedIabCategories, ...request.acat]);
+	  const validatedACategories = validateAllowedCategories([...(allowedIabCategories || []), ...(request.acat || [])]);
+      if (validatedACategories.length) request.acat = validatedACategories;
     }
     reqLevelParams(request);
     updateUserSiteDevice(request);
@@ -456,20 +458,23 @@ const assignDealTier = (bid, context, maxduration) => {
 }
 
 const validateAllowedCategories = (acat) => {
-  return acat
-    .filter(item => {
-      if (typeof item === 'string') {
-        return true;
-      } else {
-        logWarn(LOG_WARN_PREFIX + 'acat: Each category should be a string, ignoring category: ' + item);
-      }
-    })
-    .map(item => item.trim());
-}
+	return [...new Set(
+	  acat
+		.filter(item => {
+		  if (typeof item === 'string') {
+			return true;
+		  } else {
+			logWarn(LOG_WARN_PREFIX + 'acat: Each category should be a string, ignoring category: ' + item);
+		  }
+		})
+		.map(item => item.trim())
+	)];
+};
 
 const validateBlockedCategories = (bcats) => {
+  bcats = bcats.map(item => typeof item === 'string' ? item.trim() : item);
   const droppedCategories = bcats.filter(item => typeof item !== 'string' || item.length < 3);
-  logWarn(LOG_WARN_PREFIX + 'bcat: Each category must be a string with a length greater than 3, ignoring' + droppedCategories);
+  logWarn(LOG_WARN_PREFIX + 'bcat: Each category must be a string with a length greater than 3, ignoring ' + droppedCategories);
   return [...new Set(bcats.filter(item => typeof item === 'string' && item.length >= 3))];
 }
 
@@ -620,6 +625,8 @@ export const spec = {
     pubId = publisherId;
     const wiid = generateUUID();
 	let bid;
+	blockedIabCategories = [];
+	allowedIabCategories = [];
     conf = {
       pageURL: page || window.location.href,
       refURL: ref || window.document.referrer,

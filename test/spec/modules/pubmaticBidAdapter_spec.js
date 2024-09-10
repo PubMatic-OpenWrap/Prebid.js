@@ -391,7 +391,7 @@ describe('PubMatic adapter', () => {
 						},
 						required: 1,
 					}]
-				}
+				};
 				nativeBidderRequest.bids[0].mediaTypes.native = {
 					title: {
 						required: true,
@@ -419,5 +419,72 @@ describe('PubMatic adapter', () => {
 			});
 		});
 	});	
+
+	describe('rest of ORTB request', () => {
+		describe('BCAT', () => {
+			it('should contain only string values', () => {
+				validBidRequests[0].params.bcat = [1, 2, 3, 'IAB1', 'IAB2'];
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('bcat');
+				expect(request.data).to.have.property('bcat').to.deep.equal(['IAB1', 'IAB2']);
+			});
+		  
+			it('should contain string values with length greater than 3', function() {
+				validBidRequests[0].params.bcat = ['AB', 'CD', 'IAB1', 'IAB2'];
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('bcat');
+				expect(request.data).to.have.property('bcat').to.deep.equal(['IAB1', 'IAB2']);
+			});
+
+			it('should trim strings', function() {
+				validBidRequests[0].params.bcat = ['   IAB1    ', '   IAB2   '];
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('bcat');
+				expect(request.data).to.have.property('bcat').to.deep.equal(['IAB1', 'IAB2']);
+			});
+
+			it('should pass unique strings', function() {
+				validBidRequests[0].params.bcat = ['IAB1', 'IAB2', 'IAB1', 'IAB2', 'IAB1', 'IAB2'];
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('bcat');
+				expect(request.data).to.have.property('bcat').to.deep.equal(['IAB1', 'IAB2']);
+			});
+
+			it('should fail if validations are not met', function() {
+				validBidRequests[0].params.bcat = ['', 'IA', 'IB'];
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.not.have.property('bcat');
+			});
+		});
+
+		describe('ACAT', () => {
+			it('should contain only string values', () => {
+				validBidRequests[0].params.acat = [1, 2, 3, 'IAB1', 'IAB2'];
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('acat');
+				expect(request.data).to.have.property('acat').to.deep.equal(['IAB1', 'IAB2']);
+			});
+
+			it('should trim strings', function() {
+				validBidRequests[0].params.acat = ['   IAB1    ', '   IAB2   '];
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('acat');
+				expect(request.data).to.have.property('acat').to.deep.equal(['IAB1', 'IAB2']);
+			});
+
+			it('should pass unique strings', function() {
+				validBidRequests[0].params.acat = ['IAB1', 'IAB2', 'IAB1', 'IAB2', 'IAB1', 'IAB2'];
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('acat');
+				expect(request.data).to.have.property('acat').to.deep.equal(['IAB1', 'IAB2']);
+			});
+
+			it('should fail if validations are not met', function() {
+				validBidRequests[0].params.acat = ['', 'IA', 'IB'];
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('acat');
+			});
+		});
+	});
   });
 })
