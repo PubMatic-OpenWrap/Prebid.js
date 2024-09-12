@@ -1,8 +1,7 @@
 import { expect } from 'chai';
 import { spec } from 'modules/pubmaticBidAdapter.js';
 import * as utils from 'src/utils.js';
-import { config } from 'src/config.js';
-import * as constants from 'src/constants.js';
+import { bidderSettings } from 'src/bidderSettings.js';
 
 describe('PubMatic adapter', () => {
   let firstBid, secondBid, firstResponse, secondResponse, bidResponses;
@@ -41,14 +40,31 @@ describe('PubMatic adapter', () => {
     requestId: '0fb4905b-9456-4152-86be-c6f6d259ba99',
     bidderRequestId: '1c56ad30b9b8ca8',
 	ortb2: {
-		device: {},
+		device: {
+			w: 1200,
+			h: 1800,
+			sua: {},
+			language: "en",
+			js: 1,
+			connectiontype: 6
+		},
 		site: {domain: "ebay.com", page: "https://ebay.com"},
 		source: {}
 	},
     ortb2Imp: {
 		ext: {
         	tid: '92489f71-1bf2-49a0-adf9-000cea934729',
-        	gpid: '/1111/homepage-leftnav'
+        	gpid: '/1111/homepage-leftnav',
+			data: {
+				pbadslot: '/1111/homepage-leftnav',
+				adserver: {
+					name: 'gam',
+					adslot: '/1111/homepage-leftnav'
+				},
+				customData: {
+					id: 'id-1'
+				}
+			}
 		}
     },
     // schain: schainConfig
@@ -110,7 +126,14 @@ describe('PubMatic adapter', () => {
 		ref: ""
 	},
 	ortb2: {
-		device: {},
+		device: {
+			w: 1200,
+			h: 1800,
+			sua: {},
+			language: "en",
+			js: 1,
+			connectiontype: 6
+		},
 		site: {domain: "ebay.com", page: "https://ebay.com"},
 		source: {}
 	},
@@ -417,6 +440,16 @@ describe('PubMatic adapter', () => {
 				expect(imp).to.be.an('array');
 				expect(imp[0]).to.have.property('native');
 			});
+
+			// it('should not generate native request for invalid assets', () => {
+			// 	nativeBidderRequest.bids[0].mediaTypes.native.invalidAsset = {
+			// 		required: true
+			// 	}
+			// 	const request = spec.buildRequests(validBidRequests, nativeBidderRequest);
+			// 	const { imp } = request?.data;
+			// 	expect(imp).to.be.an('array');
+			// 	expect(imp[0]).to.not.have.property('native');
+			// });
 		});
 	});	
 
@@ -465,26 +498,308 @@ describe('PubMatic adapter', () => {
 				expect(request.data).to.have.property('acat').to.deep.equal(['IAB1', 'IAB2']);
 			});
 
-			it('should trim strings', function() {
+			it('should trim strings', () => {
 				validBidRequests[0].params.acat = ['   IAB1    ', '   IAB2   '];
 				const request = spec.buildRequests(validBidRequests, bidderRequest);
 				expect(request.data).to.have.property('acat');
 				expect(request.data).to.have.property('acat').to.deep.equal(['IAB1', 'IAB2']);
 			});
 
-			it('should pass unique strings', function() {
+			it('should pass unique strings', () => {
 				validBidRequests[0].params.acat = ['IAB1', 'IAB2', 'IAB1', 'IAB2', 'IAB1', 'IAB2'];
 				const request = spec.buildRequests(validBidRequests, bidderRequest);
 				expect(request.data).to.have.property('acat');
 				expect(request.data).to.have.property('acat').to.deep.equal(['IAB1', 'IAB2']);
 			});
 
-			it('should fail if validations are not met', function() {
+			it('should fail if validations are not met', () => {
 				validBidRequests[0].params.acat = ['', 'IA', 'IB'];
 				const request = spec.buildRequests(validBidRequests, bidderRequest);
 				expect(request.data).to.have.property('acat');
 			});
 		});
+
+		describe('TMAX, ID, AT, CUR, EXT', () => {
+			it('should have tmax', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('tmax').to.equal(2000);
+			});
+
+			it('should remove test if pubmaticTest is not set', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('test').to.equal(undefined);
+			});
+
+			it('should have id', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('id');
+			});
+
+			it('should set at to 1', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('at').to.equal(1);
+			});
+
+			it('should have cur', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('cur').to.be.an('array').to.have.lengthOf(1);
+				expect(request.data).to.have.property('cur').to.include.members(['USD']);
+			});
+
+			it('should have ext', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('ext').to.have.property('epoch');
+				expect(request.data).to.have.property('ext').to.have.property('wrapper');
+				expect(request.data).to.have.property('ext').to.have.property('wrapper').to.have.property('profile');
+				expect(request.data).to.have.property('ext').to.have.property('wrapper').to.have.property('wiid');
+				expect(request.data).to.have.property('ext').to.have.property('wrapper').to.have.property('wv');
+				expect(request.data).to.have.property('ext').to.have.property('wrapper').to.have.property('wp');
+			});
+
+			it('should have url with post method', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request).to.have.property('method').to.equal('POST');
+				expect(request).to.have.property('url').to.equal('https://hbopenbid.pubmatic.com/translator?source=ow-client');
+			});
+		});
+
+		describe('GROUPM', () => {
+			let bidderSettingStub;
+			beforeEach(() => {
+				bidderSettingStub = sinon.stub(bidderSettings, 'get');
+			});
+
+			afterEach(() => {
+				bidderSettingStub.restore();
+			});
+
+			it('should skip setting the marketplace object in extension if allowAlternateBidderCodes is not defined', () => {
+				bidderSettingStub.returns(undefined);
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('ext').to.not.have.property('marketplace');
+			});
+
+			it('should set the marketplace object in the extension when allowAlternateBidderCodes is set to "groupm"', () => {
+				bidderSettingStub.withArgs('pubmatic', 'allowAlternateBidderCodes').returns(true);
+				bidderSettingStub.withArgs('pubmatic', 'allowedAlternateBidderCodes').returns(['groupm']);
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('ext').to.have.property('marketplace');
+				expect(request.data).to.have.property('ext').to.have.property('marketplace').to.have.property('allowedbidders').to.be.an('array');
+				expect(request.data.ext.marketplace.allowedbidders.length).to.equal(2);
+				expect(request.data.ext.marketplace.allowedbidders[0]).to.equal('pubmatic');
+				expect(request.data.ext.marketplace.allowedbidders[1]).to.equal('groupm');
+			});
+
+			it('should be ALL by default', () => {
+				bidderSettingStub.returns(true);
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data.ext.marketplace.allowedbidders).to.be.an('array');
+				expect(request.data.ext.marketplace.allowedbidders[0]).to.equal('pubmatic');
+			});
+
+			it('should be ALL when allowedAlternateBidderCodes is \'*\'', () => {
+				bidderSettingStub.withArgs('pubmatic', 'allowAlternateBidderCodes').returns(true);
+				bidderSettingStub.withArgs('pubmatic', 'allowedAlternateBidderCodes').returns(['*']);
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data.ext.marketplace.allowedbidders).to.be.an('array');
+				expect(request.data.ext.marketplace.allowedbidders[0]).to.equal('all');
+			});
+		});
+
+		describe('SITE', () => {
+			it('should have site object', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('site');
+			});
+
+			it('should have site object with page, domain', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('site').to.have.property('page').to.equal("https://ebay.com");
+				expect(request.data).to.have.property('site').to.have.property('domain').to.equal("ebay.com");
+			});
+		});
+
+		describe('DEVICE', () => {
+			it('should have device object', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('device');
+				expect(request.data.device).to.have.property('w').to.equal(1200);
+				expect(request.data.device).to.have.property('h').to.equal(1800);
+				expect(request.data.device).to.have.property('js').to.equal(1);
+				expect(request.data.device).to.have.property('connectiontype');
+				expect(request.data.device).to.have.property('language').to.equal('en');
+			});
+		});
+		
+		describe('CONFIG/BADV', () => {
+			let copiedBidderRequest;
+			beforeEach(() => {
+				copiedBidderRequest = utils.deepClone(bidderRequest);
+				copiedBidderRequest.ortb2.app = {
+					id: 'app-id',
+					name: 'app-name',
+				};
+				copiedBidderRequest.ortb2.site.ext = {
+					id: 'site-id',
+					name: 'site-name',
+				}
+				copiedBidderRequest.ortb2.badv = ['example.com'];
+			});
+
+			it('should have app if it is set in ortb2', () => {
+				const request = spec.buildRequests(validBidRequests, copiedBidderRequest);
+				expect(request.data).to.have.property('app');
+			});
+
+			it('should include app if it is defined in ortb2 but not site', () => {
+				const request = spec.buildRequests(validBidRequests, copiedBidderRequest);
+				expect(request.data).to.have.property('app');
+				expect(request.data).to.not.have.property('site');
+			});
+
+			it('should have badv if it is set in ortb2', () => {
+				const request = spec.buildRequests(validBidRequests, copiedBidderRequest);
+				expect(request.data).to.have.property('badv');
+				expect(request.data.badv).to.deep.equal(['example.com']);
+			});
+		});
+
+		describe('AUCTION ID', () => {
+			it('should use auctionId as wiid when it is not provided in params', () => {
+				const copiedValidBidRequests = utils.deepClone(validBidRequests);
+				delete copiedValidBidRequests[0].params.wiid;
+				const request = spec.buildRequests(copiedValidBidRequests, bidderRequest);
+				expect(request.data).to.have.property('ext');
+				expect(request.data.ext).to.have.property('wrapper');
+				expect(request.data.ext.wrapper).to.have.property('wiid');
+				expect(request.data.ext.wrapper.wiid).to.equal('ee3074fe-97ce-4681-9235-d7622aede74c');
+			});
+
+			it('should use auctionId as wiid from params', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('ext');
+				expect(request.data.ext).to.have.property('wrapper');
+				expect(request.data.ext.wrapper).to.have.property('wiid');
+				expect(request.data.ext.wrapper.wiid).to.equal('1234567890');
+			});
+		});
+
+		describe('GDPR', () => {
+			let copiedBidderRequest;
+			beforeEach(() => {
+				copiedBidderRequest = utils.deepClone(bidderRequest);
+				copiedBidderRequest.ortb2.user = {
+					ext: {
+						consent: "kjfdniwjnifwenrif3"
+					}
+				}
+			});
+
+			it('should have GDPR string', () => {
+				const request = spec.buildRequests(validBidRequests, copiedBidderRequest);
+				expect(request.data).to.have.property('user');
+				expect(request.data.user).to.have.property('ext');
+				expect(request.data.user.ext).to.have.property('consent').to.equal('kjfdniwjnifwenrif3');
+			});
+		});
+
+		describe('DSA', () => {
+			const dsa = {
+				dsarequired: 3,
+				pubrender: 0,
+				datatopub: 2,
+				transparency: [
+				  {
+					domain: 'platform1domain.com',
+					dsaparams: [1]
+				  },
+				  {
+					domain: 'SSP2domain.com',
+					dsaparams: [1, 2]
+				  }
+				]
+			};
+			beforeEach(() => {
+				bidderRequest.ortb2.regs = {ext : { dsa } };
+			});
+
+			it('should have DSA in regs.ext', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('regs');
+				expect(request.data.regs).to.have.property('ext');
+				expect(request.data.regs.ext).to.have.property('dsa').to.deep.equal(dsa);
+			});
+		});
+
+		describe('ORTB2IMP', () => {
+			it('should send gpid if specified', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('imp');
+				expect(request.data.imp[0]).to.have.property('ext');
+				expect(request.data.imp[0].ext).to.have.property('gpid');
+				expect(request.data.imp[0].ext.gpid).to.equal('/1111/homepage-leftnav');
+			});
+
+			it('should send pbadslot if specified', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('imp');
+				expect(request.data.imp[0]).to.have.property('ext');
+				expect(request.data.imp[0].ext).to.have.property('data');
+				expect(request.data.imp[0].ext.data).to.have.property('pbadslot');
+				expect(request.data.imp[0].ext.data.pbadslot).to.equal('/1111/homepage-leftnav');
+			});
+
+			it('should send adserver if specified', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('imp');
+				expect(request.data.imp[0]).to.have.property('ext');
+				expect(request.data.imp[0].ext).to.have.property('data');
+				expect(request.data.imp[0].ext.data).to.have.property('adserver');
+				expect(request.data.imp[0].ext.data.adserver).to.have.property('name');
+				expect(request.data.imp[0].ext.data.adserver.name).to.equal('gam');
+				expect(request.data.imp[0].ext.data.adserver).to.have.property('adslot');
+				expect(request.data.imp[0].ext.data.adserver.adslot).to.equal('/1111/homepage-leftnav');
+			});
+
+			it('should send custom data if specified', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('imp');
+				expect(request.data.imp[0]).to.have.property('ext');
+				expect(request.data.imp[0].ext).to.have.property('data');
+				expect(request.data.imp[0].ext.data).to.have.property('customData');
+				expect(request.data.imp[0].ext.data.customData).to.have.property('id').to.equal('id-1');
+			});
+		});
+
+		// describe('USER ID/ EIDS', () => {
+		// 	let copiedBidderRequest;
+		// 	beforeEach(() => {
+		// 		copiedBidderRequest = utils.deepClone(bidderRequest);
+		// 		copiedBidderRequest.bids[0].userId = {
+		// 			id5id : {
+		// 				uid: 'id5id-xyz-user-id'
+		// 			}
+		// 		}
+		// 		copiedBidderRequest.bids[0].userIdAsEids = [{
+		// 			source: 'id5-sync.com',
+		// 			uids: [{
+		// 				'id': "ID5*G3_osFE_-UHoUjSuA4T8-f51U-JTNOoGcb2aMpx1APnDy8pDwkKCzXCcoSb1HXIIw9AjWBOWmZ3QbMUDTXKq8MPPW8h0II9mBYkP4F_IXkvD-XG64NuFFDPKvez1YGGx",
+		// 				'atype': 1,
+		// 				'ext': {
+		// 					'linkType': 2,
+		// 					'pba': 'q6Vzr0jEebxzmvS8aSrVQJFoJnOxs9gKBKCOLw1y6ew='
+		// 				}
+		// 			}]
+		// 		}]
+		// 	});
+
+		// 	it('should send gpid if specified', () => {
+		// 		const request = spec.buildRequests(validBidRequests, copiedBidderRequest);
+		// 		expect(request.data).to.have.property('user');
+		// 		console.log('######', request.data.user);
+		// 		expect(request.data.user).to.have.property('eids');
+		// 	});	
+		// });
 	});
   });
 })

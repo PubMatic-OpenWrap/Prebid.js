@@ -346,6 +346,7 @@ const reqLevelParams = (req) => {
   deepSetValue(req, 'cur', [DEFAULT_CURRENCY]);
   req.test = window.location.href.includes('pubmaticTest=true') ? 1 : undefined;
   if (req.source && !Object.keys(req.source).length) delete req.source;
+  if (req.app?.publisher) req.app.publisher.id = pubId;
 };
 
 const updateUserSiteDevice = (req) => {
