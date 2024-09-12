@@ -440,16 +440,60 @@ describe('PubMatic adapter', () => {
 				expect(imp).to.be.an('array');
 				expect(imp[0]).to.have.property('native');
 			});
+		});
 
-			// it('should not generate native request for invalid assets', () => {
-			// 	nativeBidderRequest.bids[0].mediaTypes.native.invalidAsset = {
-			// 		required: true
-			// 	}
-			// 	const request = spec.buildRequests(validBidRequests, nativeBidderRequest);
-			// 	const { imp } = request?.data;
-			// 	expect(imp).to.be.an('array');
-			// 	expect(imp[0]).to.not.have.property('native');
-			// });
+		describe('MULTIFORMAT', () => {
+			let multiFormatBidderRequest;
+			it('should have both banner & video impressions', () => {
+				multiFormatBidderRequest = utils.deepClone(bidderRequest);
+				multiFormatBidderRequest.bids[0].mediaTypes.video = {
+					skip: 1,
+					mimes: ['video/mp4', 'video/x-flv'],
+					minduration: 5,
+					maxduration: 30,
+					startdelay: 5,
+					playbackmethod: [1, 3],
+					api: [1, 2],
+					protocols: [2, 3],
+					battr: [13, 14],
+					linearity: 1,
+					placement: 2,
+					plcmt: 1,
+					minbitrate: 10,
+					maxbitrate: 10,
+					playerSize: [640, 480]
+				}
+				const request = spec.buildRequests(validBidRequests, multiFormatBidderRequest);
+				const { imp } = request?.data;
+				expect(imp).to.be.an('array');
+				expect(imp[0]).to.have.property('banner');
+				expect(imp[0].banner).to.have.property('topframe');
+				expect(imp[0].banner).to.have.property('format');
+				expect(imp[0]).to.have.property('video');
+			});
+
+			it('should have both banner & native impressions', () => {
+				multiFormatBidderRequest = utils.deepClone(bidderRequest);
+				multiFormatBidderRequest.bids[0].nativeOrtbRequest = {
+					ver: '1.2',
+					assets: [{
+						id: 0,
+						img: {
+							'type': 3,
+							'w': 300,
+							'h': 250
+						},
+						required: 1,
+					}]
+				};
+				const request = spec.buildRequests(validBidRequests, multiFormatBidderRequest);
+				const { imp } = request?.data;
+				expect(imp).to.be.an('array');
+				expect(imp[0]).to.have.property('banner');
+				expect(imp[0].banner).to.have.property('topframe');
+				expect(imp[0].banner).to.have.property('format');
+				expect(imp[0]).to.have.property('native');
+			});
 		});
 	});	
 
@@ -700,6 +744,20 @@ describe('PubMatic adapter', () => {
 				expect(request.data).to.have.property('user');
 				expect(request.data.user).to.have.property('ext');
 				expect(request.data.user.ext).to.have.property('consent').to.equal('kjfdniwjnifwenrif3');
+			});
+		});
+
+		describe('GPP', () => {
+			it('should have gpp & gpp_sid in request if set using ortb2 and not present in request', () => {
+				let copiedBidderRequest = utils.deepClone(bidderRequest);
+				copiedBidderRequest.ortb2.regs = {
+					gpp: 'DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN',
+					gpp_sid: [5]
+				}
+				const request = spec.buildRequests(validBidRequests, copiedBidderRequest);
+				expect(request.data).to.have.property('regs');
+				expect(request.data.regs).to.have.property('gpp').to.equal('DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN');
+				expect(request.data.regs).to.have.property('gpp_sid').that.eql([5]);
 			});
 		});
 
