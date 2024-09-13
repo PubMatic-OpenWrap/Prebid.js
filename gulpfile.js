@@ -30,6 +30,7 @@ const {minify} = require('terser');
 const Vinyl = require('vinyl');
 const wrap = require('gulp-wrap');
 const rename = require('gulp-rename');
+var gulpFooter = require('gulp-footer');
 
 var prebid = require('./package.json');
 var port = 9999;
@@ -563,7 +564,8 @@ function getFooterContent() {
 }
 
 gulp.task('append-footer', function () {
-  return gulp.src(['build/*/' + getBundleName(), getFooterContent()], {allowEmpty: true})
+  return gulp.src(['build/*/' + getBundleName()], {allowEmpty: true})
+    .pipe(gulpFooter(getFooterContent()))
     .pipe(gulp.dest('build/'));
 });
 
