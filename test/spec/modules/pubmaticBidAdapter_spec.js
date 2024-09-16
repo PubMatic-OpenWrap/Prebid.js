@@ -4,7 +4,8 @@ import * as utils from 'src/utils.js';
 import { bidderSettings } from 'src/bidderSettings.js';
 
 describe('PubMatic adapter', () => {
-  let firstBid, secondBid, firstResponse, secondResponse, bidResponses;
+  let firstBid, firstResponse, response, videoResponse;
+  let request = {};
   firstBid = {
 	adUnitCode: 'Div1',
     bidder: 'pubmatic',
@@ -36,7 +37,7 @@ describe('PubMatic adapter', () => {
 		[300, 600],
 		['fluid']
     ],
-    bidId: '23acc48ad47af5',
+    bidId: '3736271c3c4b27',
     requestId: '0fb4905b-9456-4152-86be-c6f6d259ba99',
     bidderRequestId: '1c56ad30b9b8ca8',
 	ortb2: {
@@ -69,51 +70,64 @@ describe('PubMatic adapter', () => {
     },
     // schain: schainConfig
   }
+  videoBid = {
+    'seat': 'seat-id',
+    'ext': {
+		  'buyid': 'BUYER-ID-987'
+    },
+    'bid': [{
+		'id': '74858439-49D7-4169-BA5D-44A046315B2F',
+		'impid': '3736271c3c4b27',
+		'price': 1.3,
+		'adm': '<VAST version="3.0"><Ad id="601364"><InLine><AdSystem>Acudeo Compatible</AdSystem><AdTitle>VAST 2.0 Instream Test 1</AdTitle><Description>VAST 2.0 Instream Test 1</Description><Impression><![CDATA[http://172.16.4.213/AdServer/AdDisplayTrackerServlet?operId=1&pubId=5890&siteId=47163&adId=1405268&adType=13&adServerId=243&kefact=70.000000&kaxefact=70.000000&kadNetFrequecy=0&kadwidth=0&kadheight=0&kadsizeid=97&kltstamp=1529929473&indirectAdId=0&adServerOptimizerId=2&ranreq=0.1&kpbmtpfact=100.000000&dcId=1&tldId=0&passback=0&svr=MADS1107&ekefact=Ad8wW91TCwCmdG0jlfjXn7Tyzh20hnTVx-m5DoNSep-RXGDr&ekaxefact=Ad8wWwRUCwAGir4Zzl1eF0bKiC-qrCV0D0yp_eE7YizB_BQk&ekpbmtpfact=Ad8wWxRUCwD7qgzwwPE2LnS5-Ou19uO5amJl1YT6-XVFvQ41&imprId=48F73E1A-7F23-443D-A53C-30EE6BBF5F7F&oid=48F73E1A-7F23-443D-A53C-30EE6BBF5F7F&crID=creative-1_1_2&ucrid=160175026529250297&campaignId=17050&creativeId=0&pctr=0.000000&wDSPByrId=511&wDspId=6&wbId=0&wrId=0&wAdvID=3170&isRTB=1&rtbId=EBCA079F-8D7C-45B8-B733-92951F670AA1&pmZoneId=zone1&pageURL=www.yahoo.com&lpu=ae.com]]></Impression><Impression>https://dsptracker.com/{PSPM}</Impression><Error><![CDATA[http://172.16.4.213/track?operId=7&p=5890&s=47163&a=1405268&wa=243&ts=1529929473&wc=17050&crId=creative-1_1_2&ucrid=160175026529250297&impid=48F73E1A-7F23-443D-A53C-30EE6BBF5F7F&advertiser_id=3170&ecpm=70.000000&er=[ERRORCODE]]]></Error><Error><![CDATA[https://Errortrack.com?p=1234&er=[ERRORCODE]]]></Error><Creatives><Creative AdID="601364"><Linear skipoffset="20%"><TrackingEvents><Tracking event="close"><![CDATA[https://mytracking.com/linear/close]]></Tracking><Tracking event="skip"><![CDATA[https://mytracking.com/linear/skip]]></Tracking><Tracking event="creativeView"><![CDATA[http://172.16.4.213/track?operId=7&p=5890&s=47163&a=1405268&wa=243&ts=1529929473&wc=17050&crId=creative-1_1_2&ucrid=160175026529250297&impid=48F73E1A-7F23-443D-A53C-30EE6BBF5F7F&advertiser_id=3170&ecpm=70.000000&e=1]]></Tracking><Tracking event="start"><![CDATA[http://172.16.4.213/track?operId=7&p=5890&s=47163&a=1405268&wa=243&ts=1529929473&wc=17050&crId=creative-1_1_2&ucrid=160175026529250297&impid=48F73E1A-7F23-443D-A53C-30EE6BBF5F7F&advertiser_id=3170&ecpm=70.000000&e=2]]></Tracking><Tracking event="midpoint"><![CDATA[http://172.16.4.213/track?operId=7&p=5890&s=47163&a=1405268&wa=243&ts=1529929473&wc=17050&crId=creative-1_1_2&ucrid=160175026529250297&impid=48F73E1A-7F23-443D-A53C-30EE6BBF5F7F&advertiser_id=3170&ecpm=70.000000&e=3]]></Tracking><Tracking event="firstQuartile"><![CDATA[http://172.16.4.213/track?operId=7&p=5890&s=47163&a=1405268&wa=243&ts=1529929473&wc=17050&crId=creative-1_1_2&ucrid=160175026529250297&impid=48F73E1A-7F23-443D-A53C-30EE6BBF5F7F&advertiser_id=3170&ecpm=70.000000&e=4]]></Tracking><Tracking event="thirdQuartile"><![CDATA[http://172.16.4.213/track?operId=7&p=5890&s=47163&a=1405268&wa=243&ts=1529929473&wc=17050&crId=creative-1_1_2&ucrid=160175026529250297&impid=48F73E1A-7F23-443D-A53C-30EE6BBF5F7F&advertiser_id=3170&ecpm=70.000000&e=5]]></Tracking><Tracking event="complete"><![CDATA[http://172.16.4.213/track?operId=7&p=5890&s=47163&a=1405268&wa=243&ts=1529929473&wc=17050&crId=creative-1_1_2&ucrid=160175026529250297&impid=48F73E1A-7F23-443D-A53C-30EE6BBF5F7F&advertiser_id=3170&ecpm=70.000000&e=6]]></Tracking></TrackingEvents><Duration>00:00:04</Duration><VideoClicks><ClickTracking><![CDATA[http://172.16.4.213/track?operId=7&p=5890&s=47163&a=1405268&wa=243&ts=1529929473&wc=17050&crId=creative-1_1_2&ucrid=160175026529250297&impid=48F73E1A-7F23-443D-A53C-30EE6BBF5F7F&advertiser_id=3170&ecpm=70.000000&e=99]]></ClickTracking><ClickThrough>https://www.pubmatic.com</ClickThrough></VideoClicks><MediaFiles><MediaFile delivery="progressive" type="video/mp4" bitrate="500" width="400" height="300" scalable="true" maintainAspectRatio="true"><![CDATA[https://stagingnyc.pubmatic.com:8443/video/Shashank/mediaFileHost/media/mp4-sample-2.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>',
+		'adomain': ['blackrock.com'],
+		'h': 250,
+		'w': 300,
+		'ext': {
+			'deal_channel': 6,
+			'advid': 976,
+			'dspid': 123
+		},
+		'dealid': "PUBDEAL1",
+		'mtype': 2
+    }]
+  };
   firstResponse = {
     'seat': 'seat-id',
     'ext': {
 		  'buyid': 'BUYER-ID-987'
     },
     'bid': [{
-		  'id': '74858439-49D7-4169-BA5D-44A046315B2F',
-		  'impid': '23acc48ad47af5',
-		  'price': 1.3,
-		  'adm': 'image3.pubmatic.com Layer based creative',
-		  'adomain': ['blackrock.com'],
-		  'h': 250,
-		  'w': 300,
-		  'ext': {
-        'deal_channel': 6,
-        'advid': 976,
-        'dspid': 123
-		  }
+		'id': '74858439-49D7-4169-BA5D-44A046315B2F',
+		'impid': '3736271c3c4b27',
+		'price': 1.3,
+		'adm': 'image3.pubmatic.com Layer based creative',
+		'adomain': ['blackrock.com'],
+		'h': 250,
+		'w': 300,
+		'ext': {
+			'deal_channel': 6,
+			'advid': 976,
+			'dspid': 123
+		},
+		'dealid': "PUBDEAL1",
+		'mtype': 1
     }]
   };
-  secondResponse = {
-    'ext': {
-		  'buyid': 'BUYER-ID-789'
-    },
-    'bid': [{
-		  'id': '74858439-49D7-4169-BA5D-44A046315BEF',
-		  'impid': '22bddb28db77e',
-		  'price': 1.7,
-		  'adm': 'image3.pubmatic.com Layer based creative',
-		  'adomain': ['hivehome.com'],
-		  'h': 250,
-		  'w': 300,
-		  'ext': {
-        'deal_channel': 5,
-        'advid': 832,
-        'dspid': 422
-		  }
-    }]
-  };
-  bidResponses = {
+  response = {
     'body': {
-		  'id': '93D3BAD6-E2E2-49FB-9D89-920B1761C865',
-		  'seatbid': [firstResponse, secondResponse]
+		  cur: 'USD',
+		  id: '93D3BAD6-E2E2-49FB-9D89-920B1761C865',
+		  seatbid: [firstResponse]
     }
   };
+  videoResponse = {
+	'body': {
+		  cur: 'USD',
+		  id: '93D3BAD6-E2E2-49FB-9D89-920B1761C865',
+		  seatbid: [videoBid]
+    }
+  }
   let validBidRequests = [firstBid];
   let bidderRequest = {
 	bids : [firstBid],
@@ -212,7 +226,7 @@ describe('PubMatic adapter', () => {
 			const { imp } = request?.data;
 			expect(imp).to.be.an('array');
 			expect(imp[0]).to.have.property('banner');
-			expect(imp[0]).to.have.property('id').equal('23acc48ad47af5');
+			expect(imp[0]).to.have.property('id').equal('3736271c3c4b27');
 		});
 
 		it('should add pmp if deals are present in parameters', () => {
@@ -829,6 +843,28 @@ describe('PubMatic adapter', () => {
 			});
 		});
 
+		describe('FLEDGE', () => {
+			it('should not send imp.ext.ae when FLEDGE is disabled, ', () => {
+				const request = spec.buildRequests(validBidRequests, bidderRequest);
+				expect(request.data).to.have.property('imp');
+				expect(request.data.imp).to.be.an('array');
+				expect(request.data.imp[0]).to.have.property('ext');
+				expect(request.data.imp[0].ext).to.not.have.property('ae');
+			});
+
+			// it('should send imp.ext.ae when FLEDGE is enabled, ', () => {
+			// 	bidderRequest.paapi = {
+			// 		enabled: true,
+			// 		componentSeller: false
+			// 	}
+			// 	const request = spec.buildRequests(validBidRequests, bidderRequest);
+			// 	expect(request.data).to.have.property('imp');
+			// 	expect(request.data.imp).to.be.an('array');
+			// 	expect(request.data.imp[0]).to.have.property('ext');
+			// 	expect(request.data.imp[0].ext).to.have.property('ae');
+			// });
+		})
+
 		// describe('USER ID/ EIDS', () => {
 		// 	let copiedBidderRequest;
 		// 	beforeEach(() => {
@@ -860,4 +896,127 @@ describe('PubMatic adapter', () => {
 		// });
 	});
   });
+
+  describe('Response', () => {
+	it('should return response in prebid format', () => {
+		const request = spec.buildRequests(validBidRequests, bidderRequest);
+		const bidResponse = spec.interpretResponse(response, request);
+		expect(bidResponse).to.be.an('array');
+		expect(bidResponse[0]).to.be.an('object');
+		expect(bidResponse[0]).to.have.property('ad');
+		expect(bidResponse[0]).to.have.property('dealId');
+		expect(bidResponse[0]).to.have.property('dealChannel');
+		expect(bidResponse[0]).to.have.property('currency');
+		expect(bidResponse[0]).to.have.property('meta');
+		expect(bidResponse[0]).to.have.property('mediaType');
+		expect(bidResponse[0]).to.have.property('referrer');
+		expect(bidResponse[0]).to.have.property('cpm');
+		expect(bidResponse[0]).to.have.property('pm_seat');
+		expect(bidResponse[0]).to.have.property('pm_dspid');
+		expect(bidResponse[0]).to.have.property('sspID');
+		expect(bidResponse[0]).to.have.property('partnerImpId');
+		expect(bidResponse[0]).to.have.property('requestId');
+		expect(bidResponse[0]).to.have.property('width');
+		expect(bidResponse[0]).to.have.property('height');
+		expect(bidResponse[0]).to.have.property('ttl');
+		expect(bidResponse[0]).to.have.property('netRevenue');
+		expect(bidResponse[0]).to.have.property('creativeId');
+	});
+
+	it('should return response and match with input values', () => {
+		const request = spec.buildRequests(validBidRequests, bidderRequest);
+		const bidResponse = spec.interpretResponse(response, request);
+		expect(bidResponse).to.be.an('array');
+		expect(bidResponse[0]).to.be.an('object');
+		expect(bidResponse[0]).to.have.property('currency').to.be.equal('USD');
+		expect(bidResponse[0]).to.have.property('dealId').to.equal('PUBDEAL1');
+		expect(bidResponse[0]).to.have.property('dealChannel').to.equal('PMPG');
+		expect(bidResponse[0]).to.have.property('meta').to.be.an('object');
+		expect(bidResponse[0]).to.have.property('mediaType').to.equal('banner');
+		expect(bidResponse[0]).to.have.property('cpm').to.equal(1.3);
+		expect(bidResponse[0]).to.have.property('pm_seat').to.equal('seat-id');
+		expect(bidResponse[0]).to.have.property('pm_dspid').to.equal(123);
+		expect(bidResponse[0]).to.have.property('sspID').to.equal('74858439-49D7-4169-BA5D-44A046315B2F');
+		expect(bidResponse[0]).to.have.property('requestId').to.equal('3736271c3c4b27');
+		expect(bidResponse[0]).to.have.property('width').to.equal(300);
+		expect(bidResponse[0]).to.have.property('height').to.equal(250);
+		expect(bidResponse[0]).to.have.property('ttl').to.equal(300);
+	});
+
+	describe('DEALID', () => {
+		it('should set deal_channel to PMP if ext.deal_channel is missing', () => {
+			const copiedResponse = utils.deepClone(response);
+			delete copiedResponse.body.seatbid[0].bid[0].ext.deal_channel;
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const bidResponse = spec.interpretResponse(copiedResponse, request);
+			expect(bidResponse).to.be.an('array');
+			expect(bidResponse[0]).to.be.an('object');
+			expect(bidResponse[0]).to.have.property('dealChannel').to.equal('PMP');
+		});
+	
+		it('should exclude deal_id and deal_channel from the response if the deal id is missing', () => {
+			const copiedResponse = utils.deepClone(response);
+			delete copiedResponse.body.seatbid[0].bid[0].ext.deal_channel;
+			delete copiedResponse.body.seatbid[0].bid[0].dealid;
+			const request = spec.buildRequests(validBidRequests, bidderRequest);
+			const bidResponse = spec.interpretResponse(copiedResponse, request);
+			expect(bidResponse).to.be.an('array');
+			expect(bidResponse[0]).to.be.an('object');
+			expect(bidResponse[0]).to.not.have.property('dealId');
+			expect(bidResponse[0]).to.not.have.property('dealChannel');
+		});
+	});
+
+	describe('VIDEO', () => {
+		beforeEach(() => {
+			let videoBidderRequest = utils.deepClone(bidderRequest);
+			delete videoBidderRequest.bids[0].mediaTypes.banner;
+			videoBidderRequest.bids[0].mediaTypes.video = {
+				skip: 1,
+				mimes: ['video/mp4', 'video/x-flv'],
+				minduration: 5,
+				maxduration: 30,
+				startdelay: 5,
+				playbackmethod: [1, 3],
+				api: [1, 2],
+				protocols: [2, 3],
+				battr: [13, 14],
+				linearity: 1,
+				placement: 2,
+				plcmt: 1,
+				context: 'outstream',
+				minbitrate: 10,
+				maxbitrate: 10,
+				playerSize: [640, 480]
+			}
+		});
+		
+		it('should generate video response', () => {
+			const request = spec.buildRequests(validBidRequests, videoBidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('video');
+			const bidResponse = spec.interpretResponse(videoResponse, request);
+			expect(bidResponse).to.be.an('array');
+			expect(bidResponse[0]).to.be.an('object');
+			expect(bidResponse[0]).to.have.property('vastXml');
+			expect(bidResponse[0]).to.have.property('mediaType');
+			expect(bidResponse[0]).to.have.property('playerHeight');
+			expect(bidResponse[0]).to.have.property('playerWidth');
+		});
+
+		it('should generate video response with input values', () => {
+			const request = spec.buildRequests(validBidRequests, videoBidderRequest);
+			const { imp } = request?.data;
+			expect(imp).to.be.an('array');
+			expect(imp[0]).to.have.property('video');
+			const bidResponse = spec.interpretResponse(videoResponse, request);
+			expect(bidResponse).to.be.an('array');
+			expect(bidResponse[0]).to.be.an('object');
+			expect(bidResponse[0]).to.have.property('mediaType').to.equal('video');
+			expect(bidResponse[0]).to.have.property('playerHeight').to.equal(480);
+			expect(bidResponse[0]).to.have.property('playerWidth').to.equal(640);
+		});
+	});
+  })
 })
