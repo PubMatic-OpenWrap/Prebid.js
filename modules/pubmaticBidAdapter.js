@@ -36,6 +36,31 @@ const CUSTOM_PARAMS = {
   'lon': '', // User Location - Longitude
   'wiid': '' // OpenWrap Wrapper Impression ID
 };
+
+// start - delete after upgrade
+const VIDEO_CUSTOM_PARAMS = {
+	'mimes': 'array',
+	'minduration': 'number',
+	'maxduration': 'number',
+	'startdelay': 'number',
+	'playbackmethod': 'array',
+	'api': 'array',
+	'protocols': 'array',
+	'w': 'number',
+	'h': 'number',
+	'battr': 'array',
+	'linearity': 'number',
+	'placement': 'number',
+	'plcmt': 'number',
+	'minbitrate': 'number',
+	'maxbitrate': 'number',
+	'skip': 'number',
+	'pos': 'number',
+	'skipmin': 'number',
+    'skipafter': 'number',
+	'delivery': 'array'
+}
+// end
 const NET_REVENUE = true;
 const dealChannel = {
   1: 'PMP',
@@ -301,6 +326,18 @@ const updateVideoImp = (videoImp, videoParams, adUnitCode) => {
   if (videoImp.playbackend) delete videoImp.playbackend;
   if (videoImp.delivery) delete videoImp.delivery;
   if (videoImp.pos) delete videoImp.pos;
+
+  // start - delete after upgrade
+  Object.keys(videoImp).forEach(key => {
+	const expectedType = VIDEO_CUSTOM_PARAMS[key];
+	const actualValue = videoImp[key];
+	// Check if value matches expected type or delete
+	if (!expectedType || (expectedType === 'array' ? !Array.isArray(actualValue) : typeof actualValue !== expectedType)) {
+		logWarn(`${LOG_WARN_PREFIX}Ignoring param key: ${key}, expects ${expectedType}, found ${typeof actualValue}`);
+		delete videoImp[key];
+	}
+  });
+  // end
 }
 
 const addDealCustomTargetings = (imp, dctr) => {
@@ -352,7 +389,13 @@ const reqLevelParams = (req) => {
 const updateUserSiteDevice = (req) => {
   const { gender, yob, pubId, refURL } = conf;
   const { user } = req;
-  if (req.device) Object.assign(req.device, { js: 1, connectiontype: getConnectionType() });
+  if (req.device) {
+	// start - delete after upgrade
+	req.device.w = window.screen.width;
+	req.device.h = window.screen.height;
+	// end
+	Object.assign(req.device, { js: 1, connectiontype: getConnectionType() });
+  }
   req.user = {
     ...req.user,
     gender: user?.gender || gender?.trim() || UNDEFINED,
