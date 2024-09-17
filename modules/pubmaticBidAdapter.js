@@ -692,8 +692,8 @@ export const spec = {
       return {
 		  bids,
 		  paapi: Object.entries(fledgeAuctionConfigs).map(([bidId, cfg]) => ({
-          bidId,
-          config: { auctionSignals: {}, ...cfg }
+			bidId,
+			config: { auctionSignals: {}, ...cfg }
 		  }))
       };
     }
