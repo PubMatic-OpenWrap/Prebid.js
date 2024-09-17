@@ -93,9 +93,6 @@ const converter = ortbConverter({
     setFloorInImp(imp, bidRequest);
     setImpTagId(imp, adSlot.trim(), hashedKey);
     setImpFields(imp);
-    // Deleting igs & pappi object to pass sanity
-    if (imp.ext?.igs) delete imp.ext.igs;
-    if (imp.ext?.paapi) delete imp.ext.paapi;
     return imp;
   },
   request(buildRequest, imps, bidderRequest, context) {
@@ -289,13 +286,9 @@ const setImpTagId = (imp, adSlot, hashedKey) => {
 }
 
 const updateNativeImp = (imp, nativeParams) => {
-  // Adding ext & mimes to pass sanity starts here
   if (!nativeParams?.ortb) {
     imp.native.request = JSON.stringify(toOrtbNativeRequest(nativeParams));
   }
-  // Adding ext & mimes to pass sanity ends here
-  // delete native.ver to pass sanity
-  if (imp.native?.ver) delete imp.native.ver;
   if (nativeParams?.ortb) {
     let nativeConfig = JSON.parse(imp.native.request);
     const { assets } = nativeConfig;
@@ -320,12 +313,6 @@ const updateVideoImp = (videoImp, videoParams, adUnitCode) => {
   if (!videoImp.battr) {
     videoImp.battr = videoParams.battr;
   }
-  // Deleting skipafter, skipmin, playbackend, delivery & pos to pass sanity
-  if (videoImp.skipafter) delete videoImp.skipafter;
-  if (videoImp.skipmin) delete videoImp.skipmin;
-  if (videoImp.playbackend) delete videoImp.playbackend;
-  if (videoImp.delivery) delete videoImp.delivery;
-  if (videoImp.pos) delete videoImp.pos;
 
   // start - delete after upgrade
   Object.keys(videoImp).forEach(key => {
@@ -401,18 +388,7 @@ const updateUserSiteDevice = (req) => {
     gender: user?.gender || gender?.trim() || UNDEFINED,
     yob: user?.yob || _parseSlotParam('yob', yob)
   };
-  // Deleting user.ext to pass sanity
-  if (req.user?.ext?.eids) {
-    const { eids } = req.user.ext;
-    const hasMoreProps = Object.keys(req.user.ext).length > 1;
-    req.user.eids = eids;
-    hasMoreProps ? delete req.user.ext.eids : delete req.user.ext;
-  }
 
-  // Deleting device.ext to pass sanity
-  delete req.device.ext;
-  // adding geo if its empty need to check with QA and delete if not required to pass sanity
-  req.user.geo ||= {};
   if (req.site?.publisher) {
     req.site.ref = req.site.ref || refURL;
     req.site.publisher.id = pubId;
