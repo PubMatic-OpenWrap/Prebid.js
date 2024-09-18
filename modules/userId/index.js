@@ -699,6 +699,12 @@ export const startAuctionHook = timedAuctionHook('userId', function requestBidsH
     getIds().catch(() => null),
     delay(auctionDelay)
   ]).then(() => {
+    // initializedSubmodulesUpdated - flag to identify if any module has been added from the page post module initialization. This is specifically for OW use case
+    if (initializedSubmodulesUpdated && initializedSubmodules !== undefined) {
+      for (var index in initializedSubmodules) {
+        submodules.push(initializedSubmodules[index]);
+      }
+    }
     addIdData(reqBidsConfigObj);
     uidMetrics().join(useMetrics(reqBidsConfigObj.metrics), {propagate: false, includeGroups: true});
     // calling fn allows prebid to continue processing
