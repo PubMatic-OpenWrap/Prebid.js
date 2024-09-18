@@ -72,8 +72,12 @@ function wrapURI(uri, impTrackerURLs) {
  * @return {Object|null} - The payload to be sent to the prebid-server endpoints, or null if the bid can't be converted cleanly.
  */
 function toStorageRequest(bid, {index = auctionManager.index} = {}) {
-  const vastValue = bid.vastXml ? bid.vastXml : wrapURI(bid.vastUrl, bid.vastImpUrl);
+  let vastValue = bid.vastXml ? bid.vastXml : wrapURI(bid.vastUrl, bid.vastImpUrl);
   const auction = index.getAuction(bid);
+  /* istanbul ignore next */
+  if (window && window.PWT) {
+    vastValue = window.PWT.UpdateVastWithTracker(bid, vastValue);
+  }
   const ttlWithBuffer = Number(bid.ttl) + ttlBufferInSeconds;
   let payload = {
     type: 'xml',

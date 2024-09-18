@@ -440,6 +440,264 @@ describe('paapi module', () => {
               });
             });
           });
+
+          it('and filter them by ad unit', () => {
+            const cfg = getPAAPIConfig({auctionId, adUnitCode: 'au1'});
+            expect(Object.keys(cfg)).to.have.members(['au1']);
+            sinon.assert.match(cfg.au1, {
+              componentAuctions: [cf1]
+            });
+          });
+
+          it('and not return them again', () => {
+            getPAAPIConfig();
+            const cfg = getPAAPIConfig();
+            expect(cfg).to.eql({});
+          });
+
+          describe('includeBlanks = true', () => {
+            it('includes all ad units', () => {
+              const cfg = getPAAPIConfig({}, true);
+              expect(Object.keys(cfg)).to.have.members(['au1', 'au2', 'au3']);
+              expect(cfg.au3).to.eql(null);
+            });
+            it('includes the targeted adUnit', () => {
+              expect(getPAAPIConfig({adUnitCode: 'au3'}, true)).to.eql({
+                au3: null
+              });
+            });
+            it('includes the targeted auction', () => {
+              const cfg = getPAAPIConfig({auctionId}, true);
+              expect(Object.keys(cfg)).to.have.members(['au1', 'au2', 'au3']);
+              expect(cfg.au3).to.eql(null);
+            });
+            it('does not include non-existing ad units', () => {
+              expect(getPAAPIConfig({adUnitCode: 'other'})).to.eql({});
+            });
+            it('does not include non-existing auctions', () => {
+              expect(getPAAPIConfig({auctionId: 'other'})).to.eql({});
+            });
+          });
+        });
+
+        it('should drop auction configs after end of auction', () => {
+          events.emit(EVENTS.AUCTION_END, {auctionId});
+          addPaapiConfigHook(nextFnSpy, {auctionId, adUnitCode: 'au'}, paapiConfig);
+          events.emit(EVENTS.AUCTION_END, {auctionId});
+          expect(getPAAPIConfig({auctionId})).to.eql({});
+        });
+
+        describe('FPD', () => {
+          let ortb2, ortb2Imp;
+          beforeEach(() => {
+            ortb2 = {fpd: 1};
+            ortb2Imp = {fpd: 2};
+          });
+
+          function getComponentAuctionConfig() {
+            addPaapiConfigHook(nextFnSpy, {
+              auctionId,
+              adUnitCode: 'au1',
+              ortb2: {fpd: 1},
+              ortb2Imp: {fpd: 2}
+            }, paapiConfig);
+            events.emit(EVENTS.AUCTION_END, {auctionId});
+            return getPAAPIConfig({auctionId}).au1.componentAuctions[0];
+          }
+
+          it('should be added to auctionSignals', () => {
+            sinon.assert.match(getComponentAuctionConfig().auctionSignals, {
+              prebid: {ortb2, ortb2Imp}
+            });
+          });
+          it('should not override existing auctionSignals', () => {
+            auctionConfig.auctionSignals = {prebid: {ortb2: {fpd: 'original'}}};
+            sinon.assert.match(getComponentAuctionConfig().auctionSignals, {
+              prebid: {
+                ortb2: {fpd: 'original'},
+                ortb2Imp
+              }
+            });
+          });
+
+          it('should be added to perBuyerSignals', () => {
+            auctionConfig.interestGroupBuyers = ['buyer.1', 'buyer.2'];
+            const pbs = getComponentAuctionConfig().perBuyerSignals;
+            sinon.assert.match(pbs, {
+              'buyer.1': {prebid: {ortb2, ortb2Imp}},
+              'buyer.2': {prebid: {ortb2, ortb2Imp}}
+            });
+          });
+
+          it('should not override existing perBuyerSignals', () => {
+            auctionConfig.interestGroupBuyers = ['buyer'];
+            const original = {
+              prebid: {
+                ortb2: {
+                  fpd: 'original'
+                }
+              }
+            };
+            auctionConfig.perBuyerSignals = {
+              buyer: deepClone(original)
+            };
+            sinon.assert.match(getComponentAuctionConfig().perBuyerSignals.buyer, original);
+          });
+        });
+
+        describe('submodules', () => {
+          let submods;
+          beforeEach(() => {
+            submods = [1, 2].map(i => ({
+              name: `test${i}`,
+              onAuctionConfig: sinon.stub()
+            }));
+            submods.forEach(registerSubmodule);
+          });
+
+          describe('onAuctionConfig', () => {
+            const auctionId = 'aid';
+            it('is invoked with null configs when there\'s no config', () => {
+              events.emit(EVENTS.AUCTION_END, {auctionId, adUnitCodes: ['au']});
+              submods.forEach(submod => sinon.assert.calledWith(submod.onAuctionConfig, auctionId, {au: null}));
+            });
+            it('is invoked with relevant configs', () => {
+              addPaapiConfigHook(nextFnSpy, {auctionId, adUnitCode: 'au1'}, paapiConfig);
+              addPaapiConfigHook(nextFnSpy, {auctionId, adUnitCode: 'au2'}, paapiConfig);
+              events.emit(EVENTS.AUCTION_END, {auctionId, adUnitCodes: ['au1', 'au2', 'au3']});
+              submods.forEach(submod => {
+                sinon.assert.calledWith(submod.onAuctionConfig, auctionId, {
+                  au1: {componentAuctions: [auctionConfig]},
+                  au2: {componentAuctions: [auctionConfig]},
+                  au3: null
+                });
+              });
+            });
+            it('removes configs from getPAAPIConfig if the module calls markAsUsed', () => {
+              submods[0].onAuctionConfig.callsFake((auctionId, configs, markAsUsed) => {
+                markAsUsed('au1');
+              });
+              addPaapiConfigHook(nextFnSpy, {auctionId, adUnitCode: 'au1'}, paapiConfig);
+              events.emit(EVENTS.AUCTION_END, {auctionId, adUnitCodes: ['au1']});
+              expect(getPAAPIConfig()).to.eql({});
+            });
+            it('keeps them available if they do not', () => {
+              addPaapiConfigHook(nextFnSpy, {auctionId, adUnitCode: 'au1'}, paapiConfig);
+              events.emit(EVENTS.AUCTION_END, {auctionId, adUnitCodes: ['au1']});
+              expect(getPAAPIConfig()).to.not.be.empty;
+            });
+          });
+        });
+
+        describe('floor signal', () => {
+          before(() => {
+            if (!getGlobal().convertCurrency) {
+              getGlobal().convertCurrency = () => null;
+              getGlobal().convertCurrency.mock = true;
+            }
+          });
+          after(() => {
+            if (getGlobal().convertCurrency.mock) {
+              delete getGlobal().convertCurrency;
+            }
+          });
+
+          beforeEach(() => {
+            sandbox.stub(getGlobal(), 'convertCurrency').callsFake((amount, from, to) => {
+              if (from === to) return amount;
+              if (from === 'USD' && to === 'JPY') return amount * 100;
+              if (from === 'JPY' && to === 'USD') return amount / 100;
+              throw new Error('unexpected currency conversion');
+            });
+          });
+
+          Object.entries({
+            'bids': (payload, values) => {
+              payload.bidsReceived = values
+                .map((val) => ({adUnitCode: 'au', cpm: val.amount, currency: val.cur}))
+                .concat([{adUnitCode: 'other', cpm: 10000, currency: 'EUR'}]);
+            },
+            'no bids': (payload, values) => {
+              payload.bidderRequests = values
+                .map((val) => ({
+                  bids: [{
+                    adUnitCode: 'au',
+                    getFloor: () => ({floor: val.amount, currency: val.cur})
+                  }]
+                }))
+                .concat([{bids: {adUnitCode: 'other', getFloor: () => ({floor: -10000, currency: 'EUR'})}}]);
+            }
+          }).forEach(([tcase, setup]) => {
+            describe(`when auction has ${tcase}`, () => {
+              Object.entries({
+                'no currencies': {
+                  values: [{amount: 1}, {amount: 100}, {amount: 10}, {amount: 100}],
+                  'bids': {
+                    bidfloor: 100,
+                    bidfloorcur: undefined
+                  },
+                  'no bids': {
+                    bidfloor: 1,
+                    bidfloorcur: undefined,
+                  }
+                },
+                'only zero values': {
+                  values: [{amount: 0, cur: 'USD'}, {amount: 0, cur: 'JPY'}],
+                  'bids': {
+                    bidfloor: undefined,
+                    bidfloorcur: undefined,
+                  },
+                  'no bids': {
+                    bidfloor: undefined,
+                    bidfloorcur: undefined,
+                  }
+                },
+                'matching currencies': {
+                  values: [{amount: 10, cur: 'JPY'}, {amount: 100, cur: 'JPY'}],
+                  'bids': {
+                    bidfloor: 100,
+                    bidfloorcur: 'JPY',
+                  },
+                  'no bids': {
+                    bidfloor: 10,
+                    bidfloorcur: 'JPY',
+                  }
+                },
+                'mixed currencies': {
+                  values: [{amount: 10, cur: 'USD'}, {amount: 10, cur: 'JPY'}],
+                  'bids': {
+                    bidfloor: 10,
+                    bidfloorcur: 'USD'
+                  },
+                  'no bids': {
+                    bidfloor: 10,
+                    bidfloorcur: 'JPY',
+                  }
+                }
+              }).forEach(([t, testConfig]) => {
+                const values = testConfig.values;
+                const {bidfloor, bidfloorcur} = testConfig[tcase];
+
+                describe(`with ${t}`, () => {
+                  let payload;
+                  beforeEach(() => {
+                    payload = {auctionId};
+                    setup(payload, values);
+                  });
+
+                  it('should populate bidfloor/bidfloorcur', () => {
+                    addPaapiConfigHook(nextFnSpy, {auctionId, adUnitCode: 'au'}, paapiConfig);
+                    events.emit(EVENTS.AUCTION_END, payload);
+                    const cfg = getPAAPIConfig({auctionId}).au;
+                    const signals = cfg.auctionSignals;
+                    sinon.assert.match(cfg.componentAuctions[0].auctionSignals, signals || {});
+                    expect(signals?.prebid?.bidfloor).to.eql(bidfloor);
+                    expect(signals?.prebid?.bidfloorcur).to.eql(bidfloorcur);
+                  });
+                });
+              });
+            });
+          });
         });
 
         describe('requestedSize', () => {
@@ -905,6 +1163,149 @@ describe('paapi module', () => {
             };
             expect(getImpExt().global?.paapi?.requestedSize).to.not.exist;
           });
+          Object.assign(adUnits[0], {ortb2Imp: {ext: {ae: 0}}});
+          sinon.assert.match(getImpExt(), {
+            global: {
+              ae: 0,
+            },
+            rubicon: undefined,
+            appnexus: undefined
+          });
+        });
+
+        it('should override per-bidder when excluded via paapi.bidders', () => {
+          config.setConfig({
+            paapi: {
+              enabled: true,
+              defaultForSlots: 1,
+              bidders: ['rubicon']
+            }
+          })
+          sinon.assert.match(getImpExt(), {
+            global: {
+              ae: 1,
+              igs: {
+                ae: 1,
+                biddable: 1
+              }
+            },
+            rubicon: undefined,
+            appnexus: {
+              ae: 0,
+              igs: {
+                ae: 0,
+                biddable: 0
+              }
+            }
+          })
+        })
+
+        it('should populate ext.igs when request has ext.ae', () => {
+          config.setConfig({
+            paapi: {
+              enabled: true
+            }
+          });
+          Object.assign(adUnits[0], {ortb2Imp: {ext: {ae: 3}}});
+          sinon.assert.match(getImpExt(), {
+            global: {
+              ae: 3,
+              igs: {
+                ae: 3,
+                biddable: 1
+              }
+            },
+            rubicon: undefined,
+            appnexus: undefined,
+          });
+        });
+
+        it('should not override pub-defined ext.igs', () => {
+          config.setConfig({
+            paapi: {
+              enabled: true
+            }
+          });
+          Object.assign(adUnits[0], {ortb2Imp: {ext: {ae: 1, igs: {biddable: 0}}}});
+          sinon.assert.match(getImpExt(), {
+            global: {
+              ae: 1,
+              igs: {
+                ae: 1,
+                biddable: 0
+              }
+            },
+            rubicon: undefined,
+            appnexus: undefined
+          })
+        });
+
+        it('should fill ext.ae from ext.igs, if defined', () => {
+          config.setConfig({
+            paapi: {
+              enabled: true
+            }
+          });
+          Object.assign(adUnits[0], {ortb2Imp: {ext: {igs: {}}}});
+          sinon.assert.match(getImpExt(), {
+            global: {
+              ae: 1,
+              igs: {
+                ae: 1,
+                biddable: 1
+              }
+            },
+            appnexus: undefined,
+            rubicon: undefined
+          })
+        });
+
+        describe('ortb2Imp.ext.paapi.requestedSize', () => {
+          beforeEach(() => {
+            config.setConfig({
+              paapi: {
+                enabled: true,
+                defaultForSlots: 1,
+              }
+            });
+          });
+
+          it('should default to value returned by getPAAPISize', () => {
+            getPAAPISizeStub.returns([123, 321]);
+            expect(getImpExt().global.paapi).to.eql({
+              requestedSize: {
+                width: 123,
+                height: 321
+              }
+            });
+          });
+
+          it('should not be overridden, if provided by the pub', () => {
+            adUnits[0].ortb2Imp = {
+              ext: {
+                paapi: {
+                  requestedSize: {
+                    width: '123px',
+                    height: '321px'
+                  }
+                }
+              }
+            };
+            expect(getImpExt().global.paapi).to.eql({
+              requestedSize: {
+                width: '123px',
+                height: '321px'
+              }
+            })
+            sinon.assert.notCalled(getPAAPISizeStub);
+          });
+
+          it('should not be set if adUnit has no banner sizes', () => {
+            adUnits[0].mediaTypes = {
+              video: {}
+            };
+            expect(getImpExt().global?.paapi?.requestedSize).to.not.exist;
+          });
         });
       });
     });
@@ -1125,6 +1526,226 @@ describe('paapi module', () => {
       },
       'can handle placeholder sizes': {
         in: [[1, 1]],
+        out: undefined
+      }
+    }).forEach(([t, {in: input, out}]) => {
+      it(t, () => {
+        expect(getPAAPISize(input)).to.eql(out);
+      });
+    });
+  });
+
+  describe('igb', () => {
+    let igb1, igb2;
+    const buyer1 = 'https://buyer1.example';
+    const buyer2 = 'https://buyer2.example';
+    beforeEach(() => {
+      igb1 = {
+        origin: buyer1,
+        cur: 'EUR',
+        maxbid: 1,
+        pbs: {
+          signal: 1
+        },
+        ps: {
+          priority: 1
+        }
+      };
+      igb2 = {
+        origin: buyer2,
+        cur: 'USD',
+        maxbid: 2,
+        pbs: {
+          signal: 2
+        },
+        ps: {
+          priority: 2
+        }
+      };
+    });
+
+    describe('mergeBuyers', () => {
+      it('should merge multiple igb into a partial auction config', () => {
+        sinon.assert.match(mergeBuyers([igb1, igb2]), {
+          interestGroupBuyers: [buyer1, buyer2],
+          perBuyerCurrencies: {
+            [buyer1]: 'EUR',
+            [buyer2]: 'USD'
+          },
+          perBuyerSignals: {
+            [buyer1]: {
+              signal: 1
+            },
+            [buyer2]: {
+              signal: 2
+            }
+          },
+          perBuyerPrioritySignals: {
+            [buyer1]: {
+              priority: 1
+            },
+            [buyer2]: {
+              priority: 2
+            }
+          },
+          auctionSignals: {
+            prebid: {
+              perBuyerMaxbid: {
+                [buyer1]: 1,
+                [buyer2]: 2
+              }
+            }
+          }
+        });
+      });
+
+      Object.entries(IGB_TO_CONFIG).forEach(([igbField, configField]) => {
+        it(`should not set ${configField} if ${igbField} is undefined`, () => {
+          delete igb1[igbField];
+          expect(deepAccess(mergeBuyers([igb1, igb2]), configField)[buyer1]).to.not.exist;
+        });
+      });
+
+      it('ignores igbs that have no origin', () => {
+        delete igb1.origin;
+        expect(mergeBuyers([igb1, igb2])).to.eql(mergeBuyers([igb2]));
+      });
+
+      it('ignores igbs with duplicate origin', () => {
+        igb2.origin = igb1.origin;
+        expect(mergeBuyers([igb1, igb2])).to.eql(mergeBuyers([igb1]));
+      });
+    });
+
+    describe('partitionBuyers', () => {
+      it('should return a single partition when there are no duplicates', () => {
+        expect(partitionBuyers([igb1, igb2])).to.eql([[igb1, igb2]]);
+      });
+      it('should ignore igbs that have no origin', () => {
+        delete igb1.origin;
+        expect(partitionBuyers([igb1, igb2])).to.eql([[igb2]]);
+      });
+      it('should return a single partition when duplicates exist, but do not conflict', () => {
+        expect(partitionBuyers([igb1, igb2, deepClone(igb1)])).to.eql([[igb1, igb2]]);
+      });
+      it('should return multiple partitions when there are conflicts', () => {
+        const igb3 = deepClone(igb1);
+        const igb4 = deepClone(igb1);
+        igb3.pbs.signal = 'conflict';
+        igb4.ps.signal = 'conflict';
+        expect(partitionBuyers([igb1, igb2, igb3, igb4])).to.eql([
+          [igb1, igb2],
+          [igb3],
+          [igb4]
+        ]);
+      });
+    });
+
+    describe('partitionBuyersByBidder', () => {
+      it('should split requests by bidder', () => {
+        expect(partitionBuyersByBidder([[{bidder: 'a'}, igb1], [{bidder: 'b'}, igb2]])).to.eql([
+          [{bidder: 'a'}, [igb1]],
+          [{bidder: 'b'}, [igb2]]
+        ]);
+      });
+
+      it('accepts repeated buyers, if from different bidders', () => {
+        expect(partitionBuyersByBidder([
+          [{bidder: 'a', extra: 'data'}, igb1],
+          [{bidder: 'b', more: 'data'}, igb1],
+          [{bidder: 'a'}, igb2],
+          [{bidder: 'b'}, igb2]
+        ])).to.eql([
+          [{bidder: 'a', extra: 'data'}, [igb1, igb2]],
+          [{bidder: 'b', more: 'data'}, [igb1, igb2]]
+        ]);
+      });
+      describe('buyersToAuctionConfig', () => {
+        let config, partitioners, merge, igbRequests;
+        beforeEach(() => {
+          config = {
+            auctionConfig: {
+              decisionLogicURL: 'mock-decision-logic'
+            }
+          };
+          partitioners = {
+            compact: sinon.stub(),
+            expand: sinon.stub(),
+          };
+          let i = 0;
+          merge = sinon.stub().callsFake(() => ({config: i++}));
+          igbRequests = [
+            [{}, igb1],
+            [{}, igb2]
+          ];
+        });
+
+        function toAuctionConfig(reqs = igbRequests) {
+          return buyersToAuctionConfigs(reqs, merge, config, partitioners);
+        }
+
+        it('uses compact partitions by default, and returns an auction config for each one', () => {
+          partitioners.compact.returns([[{}, 1], [{}, 2]]);
+          const [cf1, cf2] = toAuctionConfig();
+          sinon.assert.match(cf1, {
+            ...config.auctionConfig,
+            config: 0
+          });
+          sinon.assert.match(cf2, {
+            ...config.auctionConfig,
+            config: 1
+          });
+          sinon.assert.calledWith(partitioners.compact, igbRequests);
+          [1, 2].forEach(mockPart => sinon.assert.calledWith(merge, mockPart));
+        });
+
+        it('uses per-bidder partition when config has separateAuctions', () => {
+          config.separateAuctions = true;
+          partitioners.expand.returns([]);
+          toAuctionConfig();
+          sinon.assert.called(partitioners.expand);
+        });
+
+        it('does not return any auction config when configuration does not specify auctionConfig', () => {
+          delete config.auctionConfig;
+          expect(toAuctionConfig()).to.eql([]);
+          Object.values(partitioners).forEach(part => sinon.assert.notCalled(part));
+        });
+
+        it('sets FPD in auction signals when partitioner returns it', () => {
+          const fpd = {
+            ortb2: {fpd: 1},
+            ortb2Imp: {fpd: 2}
+          };
+          partitioners.compact.returns([[{}], [fpd]]);
+          const [cf1, cf2] = toAuctionConfig();
+          expect(cf1.auctionSignals?.prebid).to.not.exist;
+          expect(cf2.auctionSignals.prebid).to.eql(fpd);
+        });
+      });
+    });
+  });
+
+  describe('getPAAPISize', () => {
+    before(() => {
+      getPAAPISize.getHooks().remove();
+    });
+
+    Object.entries({
+      'ignores placeholders': {
+        in: [[1, 1], [0, 0], [3, 4]],
+        out: [3, 4]
+      },
+      'picks largest size by area': {
+        in: [[200, 100], [150, 150]],
+        out: [150, 150]
+      },
+      'can handle no sizes': {
+        in: [],
+        out: undefined
+      },
+      'can handle no input': {
+        in: undefined,
         out: undefined
       }
     }).forEach(([t, {in: input, out}]) => {

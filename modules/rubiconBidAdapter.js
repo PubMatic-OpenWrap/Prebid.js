@@ -302,7 +302,6 @@ export const spec = {
 
     if (filteredRequests && filteredRequests.length) {
       const data = converter.toORTB({bidRequests: filteredRequests, bidderRequest});
-
       filteredHttpRequest.push({
         method: 'POST',
         url: `https://${rubiConf.videoHost || 'prebid-server'}.rubiconproject.com/openrtb2/auction`,

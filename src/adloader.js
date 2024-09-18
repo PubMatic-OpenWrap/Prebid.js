@@ -12,6 +12,8 @@ const _approvedLoadExternalJSList = [
   'showheroes-bs',
   // RTD modules:
   'aaxBlockmeter',
+  'pbjs-debug-ui',
+  'confiant',
   'adagio',
   'adloox',
   'akamaidap',
