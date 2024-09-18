@@ -875,7 +875,9 @@ export function updateModuleParams(moduleToUpdate) {
         moduleToUpdate.params[param.key] = getRawPDString(emailHashes, userIdentity.userID);
         break;
       case 'uid2':
-        moduleToUpdate.params[param.key] = getHexToBase64(emailHashes ? emailHashes[param.hashType] : undefined);
+        moduleToUpdate.params[param.key] = emailHashes && emailHashes[param.hashType]
+        ? emailHashes[param.hashType]
+        : getHexToBase64(emailHashes?.SHA256);
         break;
       default:
         moduleToUpdate.params[param.key] = emailHashes ? emailHashes[param.hashType] : undefined;
