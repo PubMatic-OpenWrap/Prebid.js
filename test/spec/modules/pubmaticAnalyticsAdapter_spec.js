@@ -620,9 +620,9 @@ describe('pubmatic analytics adapter', function () {
       expect(data.it).to.equal('hybrid');
       expect(data.fmv).to.equal('floorModelTest');
       expect(data.ft).to.equal(1);
-	  expect(data.ffs).to.equal(1);
-	  expect(data.fsrc).to.equal(2);
-	  expect(data.fp).to.equal('pubmatic');
+      expect(data.ffs).to.equal(1);
+	    expect(data.fsrc).to.equal(2);
+	    expect(data.fp).to.equal('pubmatic');
       expect(data.pbv).to.equal('$prebid.version$' || '-1');
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);
@@ -860,9 +860,9 @@ describe('pubmatic analytics adapter', function () {
       expect(data.pid).to.equal('1111');
       expect(data.fmv).to.equal('floorModelTest');
       expect(data.ft).to.equal(1);
-	  expect(data.ffs).to.equal(1);
-	  expect(data.fsrc).to.equal(2);
-	  expect(data.fp).to.equal('pubmatic');
+	    expect(data.ffs).to.equal(1);
+	    expect(data.fsrc).to.equal(2);
+	    expect(data.fp).to.equal('pubmatic');
       expect(data.pbv).to.equal('$prebid.version$' || '-1');
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);
@@ -1689,9 +1689,9 @@ describe('pubmatic analytics adapter', function () {
       expect(data.it).to.equal('hybrid');
       expect(data.fmv).to.equal('floorModelTest');
       expect(data.pbv).to.equal('$prebid.version$' || '-1');
-	  expect(data.ffs).to.equal(1);
-	  expect(data.fsrc).to.equal(2);
-	  expect(data.fp).to.equal('pubmatic');
+      expect(data.ffs).to.equal(1);
+	    expect(data.fsrc).to.equal(2);
+	    expect(data.fp).to.equal('pubmatic');
       expect(data.ft).to.equal(1);
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);

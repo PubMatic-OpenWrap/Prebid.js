@@ -272,7 +272,7 @@ describe('Smart bid adapter tests', function () {
     expect(requestContent).to.have.property('siteid').and.to.equal('1234');
     expect(requestContent).to.have.property('pageid').and.to.equal('5678');
     expect(requestContent).to.have.property('formatid').and.to.equal('90');
-    // expect(requestContent).to.have.property('currencyCode').and.to.equal('EUR');
+    expect(requestContent).to.have.property('currencyCode').and.to.equal('EUR');
     expect(requestContent).to.have.property('bidfloor').and.to.equal(0.42);
     expect(requestContent).to.have.property('targeting').and.to.equal('test=prebid');
     expect(requestContent).to.have.property('tagId').and.to.equal('sas_42');
@@ -465,6 +465,32 @@ describe('Smart bid adapter tests', function () {
     });
   });
 
+  it('Verify metadata', function () {
+    const adomain = ['advertiser-domain.com'];
+    const dsa = {
+      dsarequired: 1,
+      pubrender: 0,
+      datatopub: 1,
+      transparency: [{
+        domain: 'smartadserver.com',
+        dsaparams: [1, 2]
+      }]
+    };
+    const request = spec.buildRequests(DEFAULT_PARAMS);
+    const bids = spec.interpretResponse({
+      body: {
+        ...BID_RESPONSE.body,
+        adomain,
+        dsa,
+      }
+    }, request[0]);
+
+    expect(bids[0].cpm).to.equal(12);
+    expect(bids[0]).to.have.property('meta');
+    expect(bids[0].meta).to.have.property('advertiserDomains').and.to.deep.equal(adomain);
+    expect(bids[0].meta).to.have.property('dsa').and.to.deep.equal(dsa);
+  });
+
   describe('gdpr tests', function () {
     afterEach(function () {
       config.setConfig({ ortb2: undefined });
@@ -643,7 +669,7 @@ describe('Smart bid adapter tests', function () {
       expect(requestContent).to.have.property('siteid').and.to.equal('1234');
       expect(requestContent).to.have.property('pageid').and.to.equal('5678');
       expect(requestContent).to.have.property('formatid').and.to.equal('90');
-      // expect(requestContent).to.have.property('currencyCode').and.to.equal('EUR');
+      expect(requestContent).to.have.property('currencyCode').and.to.equal('EUR');
       expect(requestContent).to.have.property('bidfloor').and.to.equal(0.42);
       expect(requestContent).to.have.property('targeting').and.to.equal('test=prebid');
       expect(requestContent).to.have.property('tagId').and.to.equal('sas_42');
@@ -984,7 +1010,7 @@ describe('Smart bid adapter tests', function () {
       expect(requestContent).to.have.property('siteid').and.to.equal('1234');
       expect(requestContent).to.have.property('pageid').and.to.equal('5678');
       expect(requestContent).to.have.property('formatid').and.to.equal('91');
-      // expect(requestContent).to.have.property('currencyCode').and.to.equal('EUR');
+      expect(requestContent).to.have.property('currencyCode').and.to.equal('EUR');
       expect(requestContent).to.have.property('bidfloor').and.to.equal(0.43);
       expect(requestContent).to.have.property('targeting').and.to.equal('test=prebid-outstream');
       expect(requestContent).to.have.property('tagId').and.to.equal('sas_43');
@@ -1509,6 +1535,38 @@ describe('Smart bid adapter tests', function () {
       const requestContent = JSON.parse(request[0].data);
 
       expect(requestContent).to.have.property('gpid').and.to.equal(gpid);
+    });
+  });
+
+  describe('Digital Services Act (DSA)', function () {
+    it('should include dsa if ortb2.regs.ext.dsa available', function () {
+      const dsa = {
+        dsarequired: 1,
+        pubrender: 0,
+        datatopub: 1,
+        transparency: [
+          {
+            domain: 'ok.domain.com',
+            dsaparams: [1, 2]
+          },
+          {
+            domain: 'ko.domain.com',
+            dsaparams: [1, '3']
+          }
+        ]
+      };
+
+      const bidRequests = deepClone(DEFAULT_PARAMS_WO_OPTIONAL);
+      bidRequests[0].ortb2 = {
+        regs: {
+          ext: { dsa }
+        }
+      };
+
+      const request = spec.buildRequests(bidRequests);
+      const requestContent = JSON.parse(request[0].data);
+
+      expect(requestContent).to.have.property('dsa').and.to.deep.equal(dsa);
     });
   });
 

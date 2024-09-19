@@ -58,6 +58,7 @@ export const EVENTS = {
   IH_INIT: 'initIdentityHub',
   BID_ACCEPTED: 'bidAccepted',
   RUN_PAAPI_AUCTION: 'paapiRunAuction',
+  PBS_ANALYTICS: 'pbsAnalytics',
   PAAPI_BID: 'paapiBid',
   PAAPI_NO_BID: 'paapiNoBid',
   PAAPI_ERROR: 'paapiError',
