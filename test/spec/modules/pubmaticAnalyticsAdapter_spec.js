@@ -570,10 +570,14 @@ describe('pubmatic analytics adapter', function () {
           identityOnly: 1
         }
       });
-      window.PWT = {...window.PWT,
-        versionDetails: {
-          openwrap_version: 'vX.Y.Z'
-        }}
+      window.PWT = {
+        ...window.PWT,
+        versionDetails: function () {
+          return {
+            openwrap_version: 'vX.Y.Z'
+          }
+        }
+      }
     });
 
     afterEach(function () {
@@ -626,7 +630,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.pbv).to.equal('$prebid.version$' || '-1');
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);
-      expect(data.owv).to.equal(window?.PWT?.versionDetails?.openwrap_version || '-1');
+      expect(data.owv).to.equal(window?.PWT?.versionDetails()?.openwrap_version || '-1');
       expect(data.pbv).to.equal(getGlobal()?.version || '-1');
 
       // slot 1
