@@ -569,11 +569,11 @@ gulp.task('append-footer', function () {
     .pipe(gulp.dest('build/'));
 });
 
-gulp.task('update-namespace', async function () { 
+gulp.task('update-namespace', function () { 
   var patternsToReplace = getPatternsToReplace();
   console.log("Patterns to replace => ", patternsToReplace);
   if(patternsToReplace.length > 0){
-    return gulp.src(['build/*/'+ getBundleName()])
+    return gulp.src(['build/*/'+ getBundleName()], {allowEmpty: true})
     .pipe(replace(patternsToReplace[0].match, patternsToReplace[0].replacement))
     .pipe(replace(patternsToReplace[1].match, patternsToReplace[1].replacement))
     .pipe(gulp.dest('build/'));
