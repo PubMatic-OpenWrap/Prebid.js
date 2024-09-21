@@ -1365,6 +1365,7 @@ function initPbjsConfig() {
   configureBidderAliasesIfAvailable();
   enablePrebidPubMaticAnalyticIfRequired();
   setPbjsBidderSettingsIfRequired();
+  util.getGeoInfo();
 }
 export {initPbjsConfig};
 
