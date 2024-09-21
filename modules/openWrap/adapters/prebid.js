@@ -1195,23 +1195,23 @@ function getPbjsAdServerTargetingConfig() {
     // todo: what abt hb_deal, hb_uuid(video?), hb_cache_id(video?), hb_cache_host(video?) ?
     {
       key: 'pwtpid', // hb_bidder
-      val({bidderCode}) {
+      val({ bidderCode }) {
         return bidderCode;
       }
     }, {
       key: 'pwtsid', // hb_adid
-      val({adId}) {
+      val({ adId }) {
         return adId;
       }
     }, {
       key: 'pwtecp', // hb_pb
-      val({cpm}) {
+      val({ cpm }) {
         // return bidResponse.pbMg;
         return (cpm || 0).toFixed(CONSTANTS.COMMON.BID_PRECISION);
       }
     }, {
       key: 'pwtsz', // hb_size
-      val({size}) {
+      val({ size }) {
         return size;
       }
     }, {
@@ -1223,14 +1223,14 @@ function getPbjsAdServerTargetingConfig() {
       }
     }, {
       key: 'pwtplt', // hb_format
-      val({mediaType, videoCacheKey, native}) {
+      val({ mediaType, videoCacheKey, native }) {
         // return bidResponse.mediaType;
         return (mediaType == 'video' && videoCacheKey) ? CONSTANTS.PLATFORM_VALUES.VIDEO : (native ? CONSTANTS.PLATFORM_VALUES.NATIVE : CONSTANTS.PLATFORM_VALUES.DISPLAY);
       }
     },
     {
       key: 'pwtdid', // hb_deal
-      val({dealId}) { // todo: do we want to concat dealchannel as well?
+      val({ dealId }) { // todo: do we want to concat dealchannel as well?
         return dealId || '';
       }
     },
@@ -1270,17 +1270,17 @@ function getPbjsAdServerTargetingConfig() {
     },
     {
       key: 'pwtcid', // custom
-      val({mediaType, videoCacheKey}) { // todo: empty value?
+      val({ mediaType, videoCacheKey }) { // todo: empty value?
         return (mediaType == 'video' && videoCacheKey) ? videoCacheKey : '';
       }
     }, {
       key: 'pwtcurl', // custom
-      val({mediaType, videoCacheKey}) { // todo: empty value?
+      val({ mediaType, videoCacheKey }) { // todo: empty value?
         return (mediaType == 'video' && videoCacheKey) ? CONSTANTS.CONFIG.CACHE_URL : '';
       }
     }, {
       key: 'pwtcpath', // custom
-      val({mediaType, videoCacheKey}) { // todo: empty value?
+      val({ mediaType, videoCacheKey }) { // todo: empty value?
         return (mediaType == 'video' && videoCacheKey) ? CONSTANTS.CONFIG.CACHE_PATH : '';
       }
     }, {
@@ -1288,7 +1288,27 @@ function getPbjsAdServerTargetingConfig() {
       val(bidResponse) { // todo: empty value?
         return '';
       }
-    }
+    }, {
+			key: 'pwtacat',
+			val({meta}) {
+				return (meta && meta.primaryCatId) ? meta.primaryCatId : '';
+			}
+		}, {
+			key: 'pwtdsp',
+			val({meta}) {
+				return (meta && meta.networkId) ? meta.networkId : '';
+			}
+		}, {
+			key: 'pwtcrid',
+			val({creativeId}) {
+				return creativeId ? creativeId : '';
+			}
+		}, {
+			key: 'pwtpb',
+			val(bidResponse) {
+				return bidResponse[CONSTANTS.PRICE_GRANULARITY_KEYS[owpbjs.readConfig('priceGranularity')]] || null;
+			}
+		}
   ];
 }
 
