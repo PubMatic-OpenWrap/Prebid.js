@@ -822,7 +822,7 @@ function bidRejectedHandler(args) {
 function bidderDoneHandler(args) {
   cache.auctions[args.auctionId].bidderDonePendingCount--;
   args.bids.forEach(bid => {
-    let cachedBid = cache.auctions[bid.auctionId].adUnitCodes[bid.adUnitCode].bids[bid.bidId || bid.originalRequestId || bid.requestId];
+    let cachedBid = cache.auctions[bid.auctionId].adUnitCodes[bid.adUnitCode].bids[bid.bidId || bid.originalRequestId || bid.requestId][0];
     if (typeof bid.serverResponseTimeMs !== 'undefined') {
       cachedBid.serverLatencyTimeMs = bid.serverResponseTimeMs;
     }
