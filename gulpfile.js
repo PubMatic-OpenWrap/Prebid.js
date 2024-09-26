@@ -530,6 +530,7 @@ function addPattern(patterns, match, replacement) {
           replacement: replacement
       });
   }
+  return patterns;
 }
 
 function getOverrideNamespace(namespace, defaultName, returnValueInCaseMissingNamespace) {
@@ -546,12 +547,12 @@ function getPatternsToReplace() {
   var owNamespace = argv.owNamespace || '';
   var patterns = [];
   if (isIdentityOnly) {
-      addPattern(patterns, /ihowpbjs|owpbjs/g, getOverrideNamespace(pbNamespace,  'ihowpbjs', 'ihowpbjs'));
-      addPattern(patterns, /IHPWT/g, getOverrideNamespace(owNamespace, 'IHPWT', 'IHPWT'));
+    patterns = addPattern(patterns, /ihowpbjs|owpbjs/g, getOverrideNamespace(pbNamespace,  'ihowpbjs', 'ihowpbjs'));
+    patterns = addPattern(patterns, /IHPWT/g, getOverrideNamespace(owNamespace, 'IHPWT', 'IHPWT'));
   } else {
       // Passing null as we don't want to replace the used value(i.e. PWT) with default value(i.e. PWT) as both are same,
-      addPattern(patterns, /owpbjs/g, getOverrideNamespace(pbNamespace, 'owpbjs', null));
-      addPattern(patterns, /PWT/g, getOverrideNamespace(owNamespace, 'PWT', null));
+      patterns = addPattern(patterns, /owpbjs/g, getOverrideNamespace(pbNamespace, 'owpbjs', null));
+      patterns = addPattern(patterns, /PWT/g, getOverrideNamespace(owNamespace, 'PWT', null));
   }
   return patterns;
 }
@@ -569,7 +570,7 @@ gulp.task('append-footer', function () {
     .pipe(gulp.dest('build/'));
 });
 
-gulp.task('update-namespace', function () { 
+gulp.task('update-namespace', function (done) { 
   var patternsToReplace = getPatternsToReplace();
   //console.log("Patterns to replace => ", patternsToReplace);
   if(patternsToReplace.length > 0){
@@ -577,6 +578,8 @@ gulp.task('update-namespace', function () {
     .pipe(replace(patternsToReplace[0].match, patternsToReplace[0].replacement))
     .pipe(replace(patternsToReplace[1].match, patternsToReplace[1].replacement))
     .pipe(gulp.dest('build/'));
+  } else {
+    done();
   }
 });
 
