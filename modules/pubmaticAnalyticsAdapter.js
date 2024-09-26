@@ -395,6 +395,9 @@ function getFloorsCommonField (floorData) {
     mv: modelVersion
   }
 }
+function getFloorValue(floorResponseData) {
+  return floorResponseData ? floorResponseData.floorValue : undefined;
+}
 
 function getFloorRule(floorResponseData) {
   return floorResponseData ? floorResponseData.floorRuleValue : undefined;
@@ -449,6 +452,7 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid, e) {
         'ocpm': bid.bidResponse ? (bid.bidResponse.originalCpm || 0) : 0,
         'ocry': bid.bidResponse ? (bid.bidResponse.originalCurrency || CURRENCY_USD) : CURRENCY_USD,
         'frv': bid.bidResponse ? bid.bidResponse.floorData?.floorRuleValue : undefined,
+        'fv': bid.bidResponse ? bid.bidResponse.floorData?.floorValue : undefined,
         'md': bid.bidResponse ? getMetadata(bid.bidResponse.meta) : undefined,
         'pb': pg || undefined
       });
@@ -707,6 +711,10 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
     if (floorRule !== undefined) {
       pixelURL += '&frv=' + enc(floorRule);
     }
+    const floorValue = getFloorValue(floorData.floorResponseData);
+    if (floorValue !== undefined) {
+      pixelURL += '&fv=' + enc(floorValue);
+    }    
   }
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
   pixelURL += '&cds=' + getCDSDataLoggerStr(); // encoded string is returned from function
