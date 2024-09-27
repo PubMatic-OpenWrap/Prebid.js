@@ -469,6 +469,20 @@ export function getPrebidVersion() {
   return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
 }
 
+export function getGppConsent() {
+	const gpp = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CONSENT] || CONSTANTS.CONFIG.DEFAULT_GPP_CONSENT;
+	return gpp === "1";
+}
+
+export function getGppCmpApi() {
+	return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CMPAPI] || CONSTANTS.CONFIG.DEFAULT_GPP_CMPAPI;
+}
+
+export function getGppTimeout() {
+	const gppTimeout = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_TIMEOUT];
+	return gppTimeout ? window.parseInt(gppTimeout) : CONSTANTS.CONFIG.DEFAULT_GPP_TIMEOUT;
+}
+
 export function shouldClearTargeting() {
 	return window.PWT.shouldClearTargeting !== undefined ? Boolean(window.PWT.shouldClearTargeting) : true;
 };

@@ -46,6 +46,8 @@ export const COMMON = {
   'TEST_GROUP_DETAILS': 'testConfigDetails',
   'TEST_PWT': 'test_pwt',
   'PRICE_GRANULARITY': 'priceGranularity',
+  "PRICE_GRANULARITY_CUSTOM" : "custom",
+	"PRICE_GRANULARITY_BUCKETS" : "customPriceGranularityConfig",
   'GRANULARITY_MULTIPLIER': 'granularityMultiplier',
   'TEST_PARTNER': 'test_adapters',
   'REDUCE_CODE_SIZE': 'reduceCodeSize',
@@ -112,6 +114,12 @@ export const CONFIG = {
   'TIMEOUT_ADJUSTMENT': 50,
   'SSO_ENABLED': 'ssoEnabled',
   'FLOOR_SOURCE': 'floorSource',
+  "GPP_CONSENT": "gpp",
+	"GPP_CMPAPI": "gppCmpApi",
+	"GPP_TIMEOUT": "gppTimeout",
+	"DEFAULT_GPP_CONSENT": "0",
+	"DEFAULT_GPP_CMPAPI": "iab",
+	"DEFAULT_GPP_TIMEOUT": 10000,
   'GDPR_ACTION_TIMEOUT': 'gdprActionTimeout',
   'PB_GLOBAL_VAR_NAMESPACE': 'pbGlobalVarNamespace',
   'OW_GLOBAL_VAR_NAMESPACE': 'owGlobalVarNamespace'
@@ -161,7 +169,8 @@ export const WRAPPER_TARGETING_KEYS = {
   'CACHE_PATH': 'pwtcpath',
 	"ACAT": "pwtacat",
 	"CRID": "pwtcrid",
-	"DSP": "pwtdsp"
+	"DSP": "pwtdsp",
+  "PRICE_BUCKET": "pwtpb"
 };
 
 export const IGNORE_PREBID_KEYS = {
@@ -220,6 +229,7 @@ export const MESSAGES = {
   "M33": "AdUnitsArray response should be an array.",
 	"M34": "Invalid HTML Element selected for ad rendering.",
 	"M35": "Winning bid not found for Div Id :",
+  "M36": "Price Buckets should be set for custom price granularity",
   IDENTITY: {
     M1: 'Unable to get User Id from OpenIdentity',
     M2: 'Setting UserIds to EB ',
@@ -359,3 +369,12 @@ export const REGEX_BROWSERS = [/\b(?:crmo|crios)\/([\w\.]+)/i, /edg(?:e|ios|a)?\
 
 export const BROWSER_MAPPING = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 42, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64,
   65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90];
+
+export const PRICE_GRANULARITY_KEYS = {
+    auto: "pbAg",
+    dense: "pbDg",
+    low: "pbLg",
+    medium: "pbMg",
+    high:"pbHg",
+    custom: "pbCg"
+  };
