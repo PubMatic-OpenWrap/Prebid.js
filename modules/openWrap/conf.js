@@ -25,7 +25,6 @@ function setOWConfig(owConfig) {
   alias = owConfig.alias;
   test_adapters = owConfig.test_adapters;
   test_identityPartners = owConfig.test_identityPartners;
-
 };
 
 config.getConfig('openWrap', config => setOWConfig(config.openWrap));

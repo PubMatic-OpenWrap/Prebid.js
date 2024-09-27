@@ -1031,7 +1031,7 @@ function setPrebidConfig() {
         url: CONSTANTS.CONFIG.CACHE_URL + CONSTANTS.CONFIG.CACHE_PATH,
         ignoreBidderCacheKey: true
       },
-      bidderSequence: 'random',
+      bidderSequence: CONF.pwt.bidderOrderingEnabled === "1" ? "fixed" : "random",
       disableAjaxTimeout: CONFIG.getDisableAjaxTimeout(),
       enableSendAllBids: CONFIG.getSendAllBidsStatus(),
       targetingControls: {
@@ -1079,15 +1079,6 @@ function setPrebidConfig() {
 }
 
 export {setPrebidConfig};
-
-function realignPubmaticAdapters() {
-  if (CONF.adapters && CONF.adapters['pubmatic']) {
-    const pubmaticAdpater = {'pubmatic': CONF.adapters['pubmatic']};
-    CONF.adapters = Object.assign(pubmaticAdpater, CONF.adapters);
-  }
-}
-
-export {realignPubmaticAdapters};
 
 function gets2sConfig(prebidConfig) {
   const bidderParams = {};
@@ -1388,7 +1379,6 @@ function initPbjsConfig() {
     return;
   }
   window[pbNameSpace].logging = util.isDebugLogEnabled();
-  realignPubmaticAdapters();
   setPrebidConfig();
   configureBidderAliasesIfAvailable();
   enablePrebidPubMaticAnalyticIfRequired();

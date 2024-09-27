@@ -298,7 +298,32 @@ export function isReduceCodeSizeFeatureEnabled() {
 
 // endRemoveIf(removeAlways)
 export function getPriceGranularity() {
-  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PRICE_GRANULARITY] || null;
+  const priceGranularity = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PRICE_GRANULARITY] || null;
+
+  if (priceGranularity === CONSTANTS.COMMON.PRICE_GRANULARITY_CUSTOM) {
+    const bucketsValue = getPriceGranularityBuckets();
+    if (bucketsValue !== null) {
+      return bucketsValue;
+    } else {
+      util.logWarning(CONSTANTS.MESSAGES.M36);
+      return null;
+    }
+  }
+  else {
+    return priceGranularity;
+  }
+}
+
+export function getPriceGranularityBuckets() {
+  let pgBuckets = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PRICE_GRANULARITY_BUCKETS] || null;
+  if (pgBuckets === null)
+    return null;
+
+  // API would be providing us with ranges as keyword, we need to raplace it by buckets before processing
+  let transformedBuckets = {};
+  delete Object.assign(transformedBuckets, pgBuckets, { ['buckets']: pgBuckets['ranges'] })['ranges'];
+
+  return transformedBuckets;
 }
 
 export function getGranularityMultiplier() {
