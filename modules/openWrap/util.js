@@ -33,8 +33,10 @@ const mediaTypeConfigPerSlot = {};
 var mediaTypeConfig = mediaTypeConfigPerSlot;
 export { mediaTypeConfig };
 
-const pbNameSpace = parseInt(conf[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.IDENTITY_ONLY] || CONSTANTS.CONFIG.DEFAULT_IDENTITY_ONLY) ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
-export { pbNameSpace };
+function getPbNameSpace() { 
+  return parseInt(conf[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.IDENTITY_ONLY] || CONSTANTS.CONFIG.DEFAULT_IDENTITY_ONLY) ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
+}
+// export { pbNameSpace };
 function isA(object, testForType) {
   return toString.call(object) === `[object ${testForType}]`;
 }
@@ -1812,7 +1814,7 @@ export function getLiverampParams(params) {
   if (params.params.cssSelectors && params.params.cssSelectors.length > 0) {
     params.params.cssSelectors = params.params.cssSelectors.split(',');
   }
-  const userIdentity = window[pbNameSpace].getUserIdentities() || {};
+  const userIdentity = window[getPbNameSpace()].getUserIdentities() || {};
   const enableSSO = CONFIG.isSSOEnabled() || false;
   const detectionMechanism = params.params.detectionMechanism;
   const enableCustomId = params.params.enableCustomId === 'true';
@@ -1850,8 +1852,8 @@ export function getLiverampParams(params) {
       if yes, if sso is enabled and 'direct' is selected as detection mechanism, sso emails will be sent to ats script.
       if sso is disabled, and 'direct' is selected as detection mechanism, we will look for publisher provided email ids, and if available the hashes will be sent to ats script.
       */
-      if (enableCustomId && isFunction(window[pbNameSpace].getUserIdentities) && window[pbNameSpace].getUserIdentities() !== undefined) {
-        atsObject.customerID = window[pbNameSpace].getUserIdentities().customerID || undefined;
+      if (enableCustomId && isFunction(window[getPbNameSpace()].getUserIdentities) && window[getPbNameSpace()].getUserIdentities() !== undefined) {
+        atsObject.customerID = window[getPbNameSpace()].getUserIdentities().customerID || undefined;
       }
       break;
   };
@@ -1859,7 +1861,7 @@ export function getLiverampParams(params) {
 }
 
 export function getEmailHashes() {
-  const userIdentity = window[pbNameSpace].getUserIdentities() || {};
+  const userIdentity = window[getPbNameSpace()].getUserIdentities() || {};
   const enableSSO = CONFIG.isSSOEnabled() || false;
   const emailHash = enableSSO && userIdentity.emailHash ? userIdentity.emailHash : userIdentity.pubProvidedEmailHash ? userIdentity.pubProvidedEmailHash : undefined;
   const emailHashArr = [];
@@ -1897,7 +1899,7 @@ export function getPublinkLauncherParams(params) {
   if (params.params.cssSelectors && params.params.cssSelectors.length > 0) {
     params.params.cssSelectors = params.params.cssSelectors.split(',');
   }
-  const userIdentity = window[pbNameSpace].getUserIdentities() || {};
+  const userIdentity = window[getPbNameSpace()].getUserIdentities() || {};
   const enableSSO = CONFIG.isSSOEnabled() || false;
   const detectionMechanism = params.params.detectionMechanism;
   const lnchObject = {
@@ -1948,7 +1950,7 @@ export function initLiveRampAts(params) {
 export function initZeoTapJs({ partnerId }) {
   function addZeoTapJs() {
     let n = document; const t = window;
-    const userIdentity = window[pbNameSpace].getUserIdentities() || {};
+    const userIdentity = window[getPbNameSpace()].getUserIdentities() || {};
     const enableSSO = CONFIG.isSSOEnabled() || false;
     let userIdentityObject = {};
     if ((window.PWT && (window.PWT.OVERRIDES_SCRIPT_BASED_MODULES && window.PWT.OVERRIDES_SCRIPT_BASED_MODULES.includes('zeotapIdPlus'))) || window.PWT.OVERRIDES_SCRIPT_BASED_MODULES === undefined) {
@@ -2118,13 +2120,13 @@ export function getGeoInfo() {
 	let geoDetectionURL = 'https://ut.pubmatic.com/geo?pubid=' +
 		conf[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.PUBLISHER_ID];
 
-	let info = window[pbNameSpace].getDataFromLocalStorage(PREFIX, LOCATION_INFO_VALIDITY);
+	let info = window[getPbNameSpace()].getDataFromLocalStorage(PREFIX, LOCATION_INFO_VALIDITY);
 	if(info && JSON.parse(info).cc) {	// Got valid data
 		window.PWT.CC = JSON.parse(info);
 	} else {
-		window[pbNameSpace].detectLocation(geoDetectionURL,
+		window[getPbNameSpace()].detectLocation(geoDetectionURL,
 		function(loc) {
-			window[pbNameSpace].setAndStringifyToLocalStorage(PREFIX, loc);
+			window[getPbNameSpace()].setAndStringifyToLocalStorage(PREFIX, loc);
 			window.PWT.CC = loc;
 		});
 	}
