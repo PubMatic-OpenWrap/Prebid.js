@@ -1156,7 +1156,7 @@ function checkForYahooSSPBidder(prebidConfig) {
   const isYahooSSP = CONF.adapters.hasOwnProperty(CONSTANTS.YAHOOSSP);
 
   if (!isYahooSSP) {
-    for (const bidder in CONF.alias) {
+    for (let bidder in CONF.alias) {
       bidder = bidder.name ? bidder.name : bidder;
       if (CONFIG.getAdapterNameForAlias(bidder) == CONSTANTS.YAHOOSSP) {
         isYahooAlias = true;
