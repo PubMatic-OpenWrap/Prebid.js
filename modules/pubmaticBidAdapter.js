@@ -39,26 +39,26 @@ const CUSTOM_PARAMS = {
 
 // start - delete after upgrade
 const VIDEO_CUSTOM_PARAMS = {
-	'mimes': 'array',
-	'minduration': 'number',
-	'maxduration': 'number',
-	'startdelay': 'number',
-	'playbackmethod': 'array',
-	'api': 'array',
-	'protocols': 'array',
-	'w': 'number',
-	'h': 'number',
-	'battr': 'array',
-	'linearity': 'number',
-	'placement': 'number',
-	'plcmt': 'number',
-	'minbitrate': 'number',
-	'maxbitrate': 'number',
-	'skip': 'number',
-	'pos': 'number',
-	'skipmin': 'number',
-    'skipafter': 'number',
-	'delivery': 'array'
+  'mimes': 'array',
+  'minduration': 'number',
+  'maxduration': 'number',
+  'startdelay': 'number',
+  'playbackmethod': 'array',
+  'api': 'array',
+  'protocols': 'array',
+  'w': 'number',
+  'h': 'number',
+  'battr': 'array',
+  'linearity': 'number',
+  'placement': 'number',
+  'plcmt': 'number',
+  'minbitrate': 'number',
+  'maxbitrate': 'number',
+  'skip': 'number',
+  'pos': 'number',
+  'skipmin': 'number',
+  'skipafter': 'number',
+  'delivery': 'array'
 }
 // end
 const NET_REVENUE = true;
@@ -69,7 +69,7 @@ const dealChannel = {
 };
 
 let conf = {};
-let blockedIabCategories = []; 
+let blockedIabCategories = [];
 let allowedIabCategories = [];
 let pubId = 0;
 
@@ -84,7 +84,7 @@ const converter = ortbConverter({
     const imp = buildImp(bidRequest, context);
     if (deals) addPMPDeals(imp, deals);
     if (dctr) addDealCustomTargetings(imp, dctr);
-    if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner);
+    if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner, adSlot, hashedKey);
     if (imp.hasOwnProperty('video')) updateVideoImp(imp.video, mediaTypes?.video, adUnitCode);
     if (imp.hasOwnProperty('native')) updateNativeImp(imp, mediaTypes?.native);
     if (pmzoneid) imp.ext.pmZoneId = pmzoneid;
@@ -272,12 +272,31 @@ const setFloorInImp = (imp, bid) => {
   logInfo(LOG_WARN_PREFIX, 'Updated imp.bidfloor:', imp.bidfloor);
 }
 
-const updateBannerImp = (bannerObj) => {
-  const primarySize = bannerObj.format.shift();
-  if (bannerObj.format && bannerObj.format.length === 0) delete bannerObj.format;
-  bannerObj.w = primarySize.w;
-  bannerObj.h = primarySize.h;
-  bannerObj.pos = 0;
+const updateBannerImp = (bannerObj, adSlot, hashedKey) => {
+	// start of custom change
+  if (hashedKey) {
+	let slot = adSlot.split(':');
+	let splits = slot[0]?.split('@');
+	splits = splits?.length == 2 ? splits[1].split('x') : splits.length == 3 ? splits[2].split('x') : [];
+	if (splits.length == 2) {
+		bannerObj.w = parseInt(splits[0]);
+  		bannerObj.h = parseInt(splits[1]);
+	}
+	if (bannerObj.format && bannerObj.format.length === 0){
+		delete bannerObj.format;
+	} else if (bannerObj.format[0].w == bannerObj.w && bannerObj.format[0].h == bannerObj.h) {
+		bannerObj.format.shift();
+	}
+	bannerObj.pos = 0;
+  } // end of custom change
+  else {
+	const primarySize = bannerObj.format.shift();
+	if (bannerObj.format && bannerObj.format.length === 0) delete bannerObj.format;
+	bannerObj.w = primarySize.w;
+	bannerObj.h = primarySize.h;
+	bannerObj.pos = 0;
+  }
+  
 }
 
 const setImpTagId = (imp, adSlot, hashedKey) => {
@@ -316,13 +335,13 @@ const updateVideoImp = (videoImp, videoParams, adUnitCode) => {
 
   // start - delete after upgrade
   Object.keys(videoImp).forEach(key => {
-	const expectedType = VIDEO_CUSTOM_PARAMS[key];
-	const actualValue = videoImp[key];
-	// Check if value matches expected type or delete
-	if (!expectedType || (expectedType === 'array' ? !Array.isArray(actualValue) : typeof actualValue !== expectedType)) {
-		logWarn(`${LOG_WARN_PREFIX}Ignoring param key: ${key}, expects ${expectedType}, found ${typeof actualValue}`);
-		delete videoImp[key];
-	}
+    const expectedType = VIDEO_CUSTOM_PARAMS[key];
+    const actualValue = videoImp[key];
+    // Check if value matches expected type or delete
+    if (!expectedType || (expectedType === 'array' ? !Array.isArray(actualValue) : typeof actualValue !== expectedType)) {
+      logWarn(`${LOG_WARN_PREFIX}Ignoring param key: ${key}, expects ${expectedType}, found ${typeof actualValue}`);
+      delete videoImp[key];
+    }
   });
   // end
 }
@@ -344,12 +363,12 @@ const addPMPDeals = (imp, deals) => {
   }
   deals.forEach(deal => {
     if (typeof deal === 'string' && deal.length > 3) {
-		if (!imp.pmp) {
+      if (!imp.pmp) {
         	imp.pmp = { private_auction: 0, deals: [] };
-		}
-		imp.pmp.deals.push({ id: deal });
+      }
+      imp.pmp.deals.push({ id: deal });
     } else {
-		logWarn(`${LOG_WARN_PREFIX}Error: deal-id present in array bid.params.deals should be a string with more than 3 characters length, deal-id ignored: ${dealId}`);
+      logWarn(`${LOG_WARN_PREFIX}Error: deal-id present in array bid.params.deals should be a string with more than 3 characters length, deal-id ignored: ${dealId}`);
     }
   });
 }
@@ -377,17 +396,23 @@ const updateUserSiteDevice = (req) => {
   const { gender, yob, pubId, refURL } = conf;
   const { user } = req;
   if (req.device) {
-	// start - delete after upgrade
-	req.device.w = window.screen.width;
-	req.device.h = window.screen.height;
-	// end
-	Object.assign(req.device, { js: 1, connectiontype: getConnectionType() });
+    // start - delete after upgrade
+    req.device.w = window.screen.width;
+    req.device.h = window.screen.height;
+    // end
+    Object.assign(req.device, { js: 1, connectiontype: getConnectionType() });
   }
   req.user = {
     ...req.user,
     gender: user?.gender || gender?.trim() || UNDEFINED,
     yob: user?.yob || _parseSlotParam('yob', yob)
   };
+
+  // start - IH eids for Prebid
+  const userIdAsEids = deepAccess(bidRequest, '0.userIdAsEids');
+  if (bidRequest.length && userIdAsEids?.length && !req.user.ext) {
+    req.user.ext = { eids: userIdAsEids };
+  } // end - IH eids for Prebid
 
   if (req.site?.publisher) {
     req.site.ref = req.site.ref || refURL;
@@ -446,8 +471,8 @@ const addExtenstionParams = (req) => {
   req.ext = {
     epoch: new Date().getTime(), // Sending epoch timestamp in request.ext object
     wrapper: {
-      profile: parseInt(profId),
-      version: parseInt(verId),
+      profile: profId ? parseInt(profId) : undefined,
+      version: verId ? parseInt(verId) : undefined,
       wiid: wiid,
       wv: $$REPO_AND_VERSION$$,
       transactionId,
@@ -478,17 +503,17 @@ const assignDealTier = (bid, context, maxduration) => {
 }
 
 const validateAllowedCategories = (acat) => {
-	return [...new Set(
+  return [...new Set(
 	  acat
-		.filter(item => {
+      .filter(item => {
 		  if (typeof item === 'string') {
-			return true;
+          return true;
 		  } else {
-			logWarn(LOG_WARN_PREFIX + 'acat: Each category should be a string, ignoring category: ' + item);
+          logWarn(LOG_WARN_PREFIX + 'acat: Each category should be a string, ignoring category: ' + item);
 		  }
-		})
-		.map(item => item.trim())
-	)];
+      })
+      .map(item => item.trim())
+  )];
 };
 
 const validateBlockedCategories = (bcats) => {
@@ -644,9 +669,9 @@ export const spec = {
     const { publisherId, profId, verId } = bidderRequest?.bids[0]?.params;
     pubId = publisherId;
     const wiid = generateUUID();
-	let bid;
-	blockedIabCategories = [];
-	allowedIabCategories = [];
+    let bid;
+    blockedIabCategories = [];
+    allowedIabCategories = [];
     conf = {
       pageURL: page || window.location.href,
       refURL: ref || window.document.referrer,
@@ -692,8 +717,8 @@ export const spec = {
       return {
 		  bids,
 		  paapi: Object.entries(fledgeAuctionConfigs).map(([bidId, cfg]) => ({
-			bidId,
-			config: { auctionSignals: {}, ...cfg }
+          bidId,
+          config: { auctionSignals: {}, ...cfg }
 		  }))
       };
     }
