@@ -392,7 +392,7 @@ const reqLevelParams = (req) => {
   if (req.app?.publisher) req.app.publisher.id = pubId;
 };
 
-const updateUserSiteDevice = (req) => {
+const updateUserSiteDevice = (req, bidRequest) => {
   const { gender, yob, pubId, refURL } = conf;
   const { user } = req;
   if (req.device) {
