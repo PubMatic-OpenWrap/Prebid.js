@@ -276,12 +276,15 @@ const updateBannerImp = (bannerObj, adSlot) => {
 	let slot = adSlot.split(':');
 	let splits = slot[0]?.split('@');
 	splits = splits?.length == 2 ? splits[1].split('x') : splits.length == 3 ? splits[2].split('x') : [];
+	const primarySize = bannerObj.format[0];
 	if (splits.length == 2) {
 		bannerObj.w = parseInt(splits[0]);
   		bannerObj.h = parseInt(splits[1]);
+	} else {
+		bannerObj.w = primarySize.w;
+  		bannerObj.h = primarySize.h;
 	}
-
-	const primarySize = bannerObj.format[0];
+	
 	if (bannerObj.w == primarySize.w && bannerObj.h == primarySize.h) {
 		bannerObj.format.shift();
 		if (!bannerObj.format.length) delete bannerObj.format;
