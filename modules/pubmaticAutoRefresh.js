@@ -16,7 +16,7 @@
 
 import { config } from '../src/config.js';
 import * as events from '../src/events.js';
-import { EVENTS } from '../src/constants.json';
+import { EVENTS } from '../src/constants.js';
 import { mergeDeep, logMessage, logWarn, pick, timestamp, isFn, isArray } from '../src/utils.js';
 import { getGlobal } from '../src/prebidGlobal.js';
 import { find } from '../src/polyfill.js';
@@ -124,7 +124,7 @@ let openWrapSetup = {
 };
 
 let DEFAULT_CONFIG = {
-  enabled: false,
+  enabled: true,
   // how many times we should refresh the ad-gptSlot after it is rendered
   maximumRefreshCount: 999,
   // delay in ms after which the gptSlot to refresh
@@ -373,7 +373,7 @@ function setDefaultSlotConfig() {
 }
 
 function markRefreshedAdUnit(adUnit) {
-  let slot = getGptSlotForAdUnitCode(adUnit.adUnitId || adUnit.code);
+  let slot = getGptSlotForAdUnitCode(adUnit.owAdUnitId || adUnit.code);
   if (slot) {
     let slotRefreshKey = slot.getTargeting(DEFAULT_CONFIG.kvKeyForRefresh);
     let slotRefreshCountKey = slot.getTargeting(DEFAULT_CONFIG.kvKeyForRefreshCount);

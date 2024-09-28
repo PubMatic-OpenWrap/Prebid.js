@@ -20,7 +20,9 @@ const typeFunction = 'Function';
 const typeNumber = 'Number';
 const toString = Object.prototype.toString;
 // const refThis = this;
-const pbNameSpace = CONFIG.isIdentityOnly() ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
+function getPbNameSpace() { 
+  return CONFIG.isIdentityOnly() ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
+}
 // const idsAppendedToAdUnits = false;
 
 function isA(object, testForType) {
@@ -239,7 +241,6 @@ export function addHookOnFunction(theObject, useProto, functionName, newFunction
 
 export function getUserIdConfiguration() {
   const userIdConfs = [];
-  window[pbNameSpace].onSSOLogin({});
   forEachOnObject(CONFIG.getIdentityPartners(), (parterId, partnerValues) => {
     if (!CONSTANTS.EXCLUDE_PARTNER_LIST.includes(parterId)) {
       userIdConfs.push(getUserIdParams(partnerValues));
@@ -289,8 +290,8 @@ export function getUserIdParams(params) {
 }
 
 export function getUserIds() {
-  if (isFunction(window[pbNameSpace].getUserIds)) {
-    return window[pbNameSpace].getUserIds();
+  if (isFunction(window[getPbNameSpace()].getUserIds)) {
+    return window[getPbNameSpace()].getUserIds();
   } else {
     logWarning(`getUserIds${CONSTANTS.MESSAGES.IDENTITY.M6}`);
   }
@@ -330,8 +331,8 @@ export function forEachOnArray(theArray, callback) {
 }
 
 export function getUserIdsAsEids() {
-  if (isFunction(window[pbNameSpace].getUserIdsAsEids)) {
-    return window[pbNameSpace].getUserIdsAsEids();
+  if (isFunction(window[getPbNameSpace()].getUserIdsAsEids)) {
+    return window[getPbNameSpace()].getUserIdsAsEids();
   } else {
     logWarning(`getUserIdsAsEids${CONSTANTS.MESSAGES.IDENTITY.M6}`);
   }
@@ -364,7 +365,7 @@ export function getLiverampParams(params) {
   if (params.params.cssSelectors && params.params.cssSelectors.length > 0) {
     params.params.cssSelectors = params.params.cssSelectors.split(',');
   }
-  const userIdentity = window[pbNameSpace].getUserIdentities() || {};
+  const userIdentity = window[getPbNameSpace()].getUserIdentities() || {};
   const enableSSO = CONFIG.isSSOEnabled() || false;
   const detectionMechanism = params.params.detectionMechanism;
   const enableCustomId = params.params.enableCustomId === 'true';
@@ -402,8 +403,8 @@ export function getLiverampParams(params) {
       if yes, if sso is enabled and 'direct' is selected as detection mechanism, sso emails will be sent to ats script.
       if sso is disabled, and 'direct' is selected as detection mechanism, we will look for publisher provided email ids, and if available the hashes will be sent to ats script.
       */
-      if (enableCustomId && isFunction(window[pbNameSpace].getUserIdentities) && window[pbNameSpace].getUserIdentities() !== undefined) {
-        atsObject.customerID = window[pbNameSpace].getUserIdentities().customerID || undefined;
+      if (enableCustomId && isFunction(window[getPbNameSpace()].getUserIdentities) && window[getPbNameSpace()].getUserIdentities() !== undefined) {
+        atsObject.customerID = window[getPbNameSpace()].getUserIdentities().customerID || undefined;
       }
       break;
   };
@@ -430,7 +431,7 @@ export function initLiveRampAts(params) {
 }
 
 export function getEmailHashes() {
-  const userIdentity = window[pbNameSpace].getUserIdentities() || {};
+  const userIdentity = window[getPbNameSpace()].getUserIdentities() || {};
   const enableSSO = CONFIG.isSSOEnabled() || false;
   const emailHash = enableSSO && userIdentity.emailHash ? userIdentity.emailHash : userIdentity.pubProvidedEmailHash ? userIdentity.pubProvidedEmailHash : undefined;
   const emailHashArr = [];
@@ -494,7 +495,7 @@ export function getPublinkLauncherParams(params) {
   if (params.params.cssSelectors && params.params.cssSelectors.length > 0) {
     params.params.cssSelectors = params.params.cssSelectors.split(',');
   }
-  const userIdentity = window[pbNameSpace].getUserIdentities() || {};
+  const userIdentity = window[getPbNameSpace()].getUserIdentities() || {};
   const enableSSO = CONFIG.isSSOEnabled() || false;
   const detectionMechanism = params.params.detectionMechanism;
   const lnchObject = {
@@ -527,7 +528,7 @@ export function getPublinkLauncherParams(params) {
 export function initZeoTapJs({ partnerId }) {
   function addZeoTapJs() {
     let n = document; const t = window;
-    const userIdentity = window[pbNameSpace].getUserIdentities() || {};
+    const userIdentity = window[getPbNameSpace()].getUserIdentities() || {};
     const enableSSO = CONFIG.isSSOEnabled() || false;
     let userIdentityObject = {};
     if ((window.IHPWT && (window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES && window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES.includes('zeotapIdPlus'))) || window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES === undefined) {
@@ -651,7 +652,11 @@ export function applyDataTypeChangesIfApplicable(params) {
             case 'customObject':
               if (paramValue) {
                 if (key === 'params.requestedAttributesOverrides') {
-                  params[key] = { 'uid2': (paramValue === 'true' || paramValue === '1') }
+									try {
+										params[key] = JSON.parse(paramValue);
+									} catch (e) {
+										logError("Error parsing requestedAttributesOverrides for partner ", partnerName);
+									}
                 }
               }
               break;
@@ -678,8 +683,8 @@ export function applyCustomParamValuesfApplicable(params) {
 
 export function getOWConfig() {
   const obj = {
-    'openwrap_version': CONFIG[CONSTANTS.COMMON.OWVERSION],
-    'prebid_version': CONFIG[CONSTANTS.COMMON.PBVERSION],
+    'openwrap_version': CONFIG.getOwVersion(),
+    'prebid_version': CONFIG.getPrebidVersion(),
     'profileId': CONFIG.getProfileID(),
     'profileVersionId': CONFIG.getProfileDisplayVersionID()
   };

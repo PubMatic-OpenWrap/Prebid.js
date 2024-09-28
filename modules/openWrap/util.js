@@ -33,8 +33,10 @@ const mediaTypeConfigPerSlot = {};
 var mediaTypeConfig = mediaTypeConfigPerSlot;
 export { mediaTypeConfig };
 
-const pbNameSpace = parseInt(conf[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.IDENTITY_ONLY] || CONSTANTS.CONFIG.DEFAULT_IDENTITY_ONLY) ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
-export { pbNameSpace };
+function getPbNameSpace() { 
+  return parseInt(conf[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.IDENTITY_ONLY] || CONSTANTS.CONFIG.DEFAULT_IDENTITY_ONLY) ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
+}
+// export { pbNameSpace };
 function isA(object, testForType) {
   return toString.call(object) === `[object ${testForType}]`;
 }
@@ -162,10 +164,10 @@ export function getUniqueIdentifierStr() {
 export function copyKeyValueObject(copyTo, copyFrom) {
   /* istanbul ignore else */
   if (isObject(copyTo) && isObject(copyFrom)) {
-    const utilRef = this;
+    // const utilRef = this;
     forEachOnObject(copyFrom, function (key, value) {
-      copyFrom[key] = utilRef.isArray(value) ? value : [value];
-      if (utilRef.isOwnProperty(copyTo, key)) {
+      copyFrom[key] = isArray(value) ? value : [value];
+      if (isOwnProperty(copyTo, key)) {
         // copyTo[key].push.apply(copyTo[key], value);
         if (!isArray(copyTo[key])) {
           const temp = copyTo[key];
@@ -1137,6 +1139,12 @@ export function ajaxRequest(url, callback, data, options) {
 
 // endRemoveIf(removeLegacyAnalyticsRelatedCode)
 
+export function addFloorConfigIfPresent(config, adUnitConfig, defaultFloor) {
+	if(config.floors || defaultFloor){
+		adUnitConfig["floors"] = config.floors || defaultFloor;
+	}	
+}
+
 // Returns mediaTypes for adUnits which are sent to prebid
 export function getAdUnitConfig(sizes, currentSlot) {
   function iskgpvpresent() {
@@ -1189,6 +1197,7 @@ export function getAdUnitConfig(sizes, currentSlot) {
       let isNative = true;
       let isBanner = true;
       let config;
+			var defaultFloor = undefined;
       var divId = isFunction(currentSlot.getDivID) ? currentSlot.getDivID() : currentSlot.getSlotId().getDomId();
 
       // TODO: Have to write logic if required in near future to support multiple kgpvs, right now
@@ -1208,6 +1217,7 @@ export function getAdUnitConfig(sizes, currentSlot) {
           isVideo = false;
         }
         config = slotConfig['config'][CONSTANTS.COMMON.DEFAULT];
+				defaultFloor = config && config["floors"];
         if (config.renderer && !isEmptyObject(config.renderer)) {
           adUnitConfig['renderer'] = config.renderer;
         }
@@ -1252,11 +1262,16 @@ export function getAdUnitConfig(sizes, currentSlot) {
         if (config.renderer && !isEmptyObject(config.renderer)) {
           adUnitConfig['renderer'] = config.renderer;
         }
+				if(config.ortb2Imp && !isEmptyObject(config.ortb2Imp)){
+					adUnitConfig['ortb2Imp'] = config.ortb2Imp;
+				}
         if (!isBanner || (config.banner && (isOwnProperty(config.banner, 'enabled') && !config.banner.enabled))) {
           mediaTypeConfig[divId] = mediaTypeObject;
           adUnitConfig['mediaTypeObject'] = mediaTypeObject
+					addFloorConfigIfPresent(config, adUnitConfig, defaultFloor);
           return adUnitConfig;
         }
+				addFloorConfigIfPresent(config, adUnitConfig, defaultFloor);
       } else {
         log(`Config not found for adSlot: ${JSON.stringify(currentSlot)}`);
       }
@@ -1396,7 +1411,6 @@ export function getConfigFromRegex(klmsForPartner, generatedKey) {
 // removeIf(removeUserIdRelatedCode)
 export function getUserIdConfiguration() {
   const userIdConfs = [];
-  window[pbNameSpace].onSSOLogin({});
   forEachOnObject(CONFIG.getIdentityPartners(), function (parterId, partnerValues) {
     if (!CONSTANTS.EXCLUDE_PARTNER_LIST.includes(parterId)) {
       userIdConfs.push(getUserIdParams(partnerValues));
@@ -1638,6 +1652,7 @@ export function generateMonetizationPixel(slotID, theBid) {
   pixelURL += `&kgpv=${window.encodeURIComponent(kgpv)}`;
   pixelURL += `&piid=${window.encodeURIComponent(sspID)}`;
   pixelURL += `&rf=${window.encodeURIComponent(isRefreshed)}`;
+	pixelURL += "&di=" + window.encodeURIComponent(theBid.getDealID() || "-1");
 
   pixelURL += `&plt=${window.encodeURIComponent(getDevicePlatform())}`;
   pixelURL += (isFunction(theBid.getWidth) && isFunction(theBid.getHeight))
@@ -1740,8 +1755,8 @@ export function getDevicePlatform() {
 export function getOWConfig() {
   const obj = {
     'timeout': CONFIG.getTimeout(),
-    'openwrap_version': CONFIG[CONSTANTS.COMMON.OWVERSION],
-    'prebid_version': CONFIG[CONSTANTS.COMMON.PBVERSION],
+    'openwrap_version': CONFIG.getOWVersion(),
+    'prebid_version': CONFIG.getPrebidVersion(),
     'profileId': CONFIG.getProfileID(),
     'profileVersionId': CONFIG.getProfileDisplayVersionID()
   };
@@ -1799,7 +1814,7 @@ export function getLiverampParams(params) {
   if (params.params.cssSelectors && params.params.cssSelectors.length > 0) {
     params.params.cssSelectors = params.params.cssSelectors.split(',');
   }
-  const userIdentity = window[pbNameSpace].getUserIdentities() || {};
+  const userIdentity = window[getPbNameSpace()].getUserIdentities() || {};
   const enableSSO = CONFIG.isSSOEnabled() || false;
   const detectionMechanism = params.params.detectionMechanism;
   const enableCustomId = params.params.enableCustomId === 'true';
@@ -1837,8 +1852,8 @@ export function getLiverampParams(params) {
       if yes, if sso is enabled and 'direct' is selected as detection mechanism, sso emails will be sent to ats script.
       if sso is disabled, and 'direct' is selected as detection mechanism, we will look for publisher provided email ids, and if available the hashes will be sent to ats script.
       */
-      if (enableCustomId && isFunction(window[pbNameSpace].getUserIdentities) && window[pbNameSpace].getUserIdentities() !== undefined) {
-        atsObject.customerID = window[pbNameSpace].getUserIdentities().customerID || undefined;
+      if (enableCustomId && isFunction(window[getPbNameSpace()].getUserIdentities) && window[getPbNameSpace()].getUserIdentities() !== undefined) {
+        atsObject.customerID = window[getPbNameSpace()].getUserIdentities().customerID || undefined;
       }
       break;
   };
@@ -1846,7 +1861,7 @@ export function getLiverampParams(params) {
 }
 
 export function getEmailHashes() {
-  const userIdentity = window[pbNameSpace].getUserIdentities() || {};
+  const userIdentity = window[getPbNameSpace()].getUserIdentities() || {};
   const enableSSO = CONFIG.isSSOEnabled() || false;
   const emailHash = enableSSO && userIdentity.emailHash ? userIdentity.emailHash : userIdentity.pubProvidedEmailHash ? userIdentity.pubProvidedEmailHash : undefined;
   const emailHashArr = [];
@@ -1884,7 +1899,7 @@ export function getPublinkLauncherParams(params) {
   if (params.params.cssSelectors && params.params.cssSelectors.length > 0) {
     params.params.cssSelectors = params.params.cssSelectors.split(',');
   }
-  const userIdentity = window[pbNameSpace].getUserIdentities() || {};
+  const userIdentity = window[getPbNameSpace()].getUserIdentities() || {};
   const enableSSO = CONFIG.isSSOEnabled() || false;
   const detectionMechanism = params.params.detectionMechanism;
   const lnchObject = {
@@ -1935,7 +1950,7 @@ export function initLiveRampAts(params) {
 export function initZeoTapJs({ partnerId }) {
   function addZeoTapJs() {
     let n = document; const t = window;
-    const userIdentity = window[pbNameSpace].getUserIdentities() || {};
+    const userIdentity = window[getPbNameSpace()].getUserIdentities() || {};
     const enableSSO = CONFIG.isSSOEnabled() || false;
     let userIdentityObject = {};
     if ((window.PWT && (window.PWT.OVERRIDES_SCRIPT_BASED_MODULES && window.PWT.OVERRIDES_SCRIPT_BASED_MODULES.includes('zeotapIdPlus'))) || window.PWT.OVERRIDES_SCRIPT_BASED_MODULES === undefined) {
@@ -2062,7 +2077,11 @@ export function applyDataTypeChangesIfApplicable(params) {
             case 'customObject':
               if (paramValue) {
                 if (key === 'params.requestedAttributesOverrides') {
-                  params[key] = { 'uid2': (paramValue === 'true' || paramValue === '1') }
+									try {
+										params[key] = JSON.parse(paramValue);
+									} catch (e) {
+										logError("Error parsing requestedAttributesOverrides for partner ", partnerName);
+									}
                 }
               }
               break;
@@ -2093,4 +2112,36 @@ export function getBrowserDetails() {
 
 export function getPltForFloor() {
   return getDevicePlatform().toString();
+}
+
+export function getGeoInfo() {
+	let PREFIX = 'UINFO';
+	let LOCATION_INFO_VALIDITY =  172800000; // 2 * 24 * 60 * 60 * 1000 - 2 days
+	let geoDetectionURL = 'https://ut.pubmatic.com/geo?pubid=' +
+		conf[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.PUBLISHER_ID];
+
+	let info = window[getPbNameSpace()].getDataFromLocalStorage(PREFIX, LOCATION_INFO_VALIDITY);
+	if(info && JSON.parse(info).cc) {	// Got valid data
+		window.PWT.CC = JSON.parse(info);
+	} else {
+		window[getPbNameSpace()].detectLocation(geoDetectionURL,
+		function(loc) {
+			window[getPbNameSpace()].setAndStringifyToLocalStorage(PREFIX, loc);
+			window.PWT.CC = loc;
+		});
+	}
+}
+
+export function getCDSTargetingData(obj) {
+	obj = obj || {};
+	let cdsData = window[CONSTANTS.COMMON.PREBID_NAMESPACE].getConfig('cds');
+    cdsData && Object.keys(cdsData).map(function(key) {
+      if((cdsData[key].sendtoGAM !== false)) {
+        let val = cdsData[key].value;
+        val = (!Array.isArray(val) && typeof val !== 'object' &&
+            typeof val !== 'function' && typeof val !== 'undefined') ? val : '';
+        obj[key] = val;
+      }
+    });
+	return obj;
 }

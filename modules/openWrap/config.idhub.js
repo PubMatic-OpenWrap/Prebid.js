@@ -2,8 +2,8 @@ import * as config from './conf.js';
 import * as CONSTANTS from './constants.js';
 // let refThis = null;
 // refThis = this;
-CONSTANTS.COMMON.OWVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
-CONSTANTS.COMMON.PBVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
+// CONSTANTS.COMMON.OWVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
+// CONSTANTS.COMMON.PBVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
 
 // needed
 export function getGdpr() {
@@ -65,6 +65,21 @@ export function getCCPATimeout() {
   return ccpaTimeout ? window.parseInt(ccpaTimeout) : CONSTANTS.CONFIG.DEFAULT_CCPA_TIMEOUT;
 }
 
+// needed
+export function getGppConsent() {
+	const gpp = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CONSENT] || CONSTANTS.CONFIG.DEFAULT_GPP_CONSENT;
+	return gpp === "1";
+}
+// needed
+export function getGppCmpApi() {
+	return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CMPAPI] || CONSTANTS.CONFIG.DEFAULT_GPP_CMPAPI;
+}
+// needed
+export function getGppTimeout() {
+	const gppTimeout = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_TIMEOUT];
+	return gppTimeout ? window.parseInt(gppTimeout) : CONSTANTS.CONFIG.DEFAULT_GPP_TIMEOUT;
+}
+
 export function getProfileID() {
   return config.pwt[CONSTANTS.CONFIG.PROFILE_ID] || '0';
 }
@@ -91,3 +106,11 @@ export function getIHAnalyticsAdapterExpiry() {
 }
 
 export const PBJS_NAMESPACE = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBJS_NAMESPACE] || 'pbjs';
+
+export function getOwVersion() {
+  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
+}
+
+export function getPrebidVersion() {
+  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
+}

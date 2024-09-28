@@ -69,6 +69,12 @@ let setConfig = () => {
           timeout: CONFIG.getCCPATimeout(),
         };
       }
+
+      // Set Gpp consent config
+			if (CONFIG.getGppConsent()) {
+				prebidConfig = COMMON_CONFIG.setConsentConfig(prebidConfig, "gpp", CONFIG.getGppCmpApi(), CONFIG.getGppTimeout());
+			}
+      
       window.IHPWT.ssoEnabled = CONFIG.isSSOEnabled() || false;
       if (CONFIG.isUserIdModuleEnabled()) {
         prebidConfig['userSync']['userIds'] = util.getUserIdConfiguration();

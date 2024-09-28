@@ -4,8 +4,13 @@ import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
 import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
-import CONSTANTS from '../src/constants.json';
-import {convertTypes} from '../libraries/transformParamsUtils/convertTypes.js';
+import { NATIVE_IMAGE_TYPES, NATIVE_KEYS_THAT_ARE_NOT_ASSETS, NATIVE_KEYS, NATIVE_ASSET_TYPES } from '../src/constants.js';
+
+/**
+ * @typedef {import('../src/adapters/bidderFactory.js').BidRequest} BidRequest
+ * @typedef {import('../src/adapters/bidderFactory.js').Bid} Bid
+ * @typedef {import('../src/adapters/bidderFactory.js').validBidRequests} validBidRequests
+ */
 
 const BIDDER_CODE = 'pubmatic';
 const LOG_WARN_PREFIX = 'PubMatic: ';
@@ -21,7 +26,7 @@ const DEFAULT_HEIGHT = 0;
 const PREBID_NATIVE_HELP_LINK = 'http://prebid.org/dev-docs/show-native-ads.html';
 const PUBLICATION = 'pubmatic'; // Your publication on Blue Billywig, potentially with environment (e.g. publication.bbvms.com or publication.test.bbvms.com)
 const RENDERER_URL = 'https://pubmatic.bbvms.com/r/'.concat('$RENDERER', '.js'); // URL of the renderer application
-const MSG_VIDEO_PLACEMENT_MISSING = 'Video.Placement param missing';
+const MSG_VIDEO_PLCMT_MISSING = 'Video.plcmt param missing';
 
 const CUSTOM_PARAMS = {
   'kadpageurl': '', // Custom page url
@@ -62,6 +67,10 @@ const VIDEO_CUSTOM_PARAMS = {
 const NATIVE_ASSET_IMAGE_TYPE = {
   'ICON': 1,
   'IMAGE': 3
+}
+
+const BANNER_CUSTOM_PARAMS = {
+  'battr': DATA_TYPES.ARRAY
 }
 
 const NET_REVENUE = true;
@@ -265,6 +274,25 @@ function _handleCustomParams(params, conf) {
   return conf;
 }
 
+export function getDeviceConnectionType() {
+  let connection = window.navigator && (window.navigator.connection || window.navigator.mozConnection || window.navigator.webkitConnection);
+  switch (connection?.effectiveType) {
+    case 'ethernet':
+      return 1;
+    case 'wifi':
+      return 2;
+    case 'slow-2g':
+    case '2g':
+      return 4;
+    case '3g':
+      return 5;
+    case '4g':
+      return 6;
+    default:
+      return 0;
+  }
+}
+
 function _createOrtbTemplate(conf) {
   return {
     id: '' + new Date().getTime(),
@@ -282,7 +310,8 @@ function _createOrtbTemplate(conf) {
       dnt: (navigator.doNotTrack == 'yes' || navigator.doNotTrack == '1' || navigator.msDoNotTrack == '1') ? 1 : 0,
       h: screen.height,
       w: screen.width,
-      language: navigator.language
+      language: navigator.language,
+      connectiontype: getDeviceConnectionType()
     },
     user: {},
     ext: {}
@@ -333,7 +362,6 @@ const PREBID_NATIVE_DATA_KEYS_TO_ORTB = {
   'displayurl': 'displayurl'
 };
 
-const { NATIVE_IMAGE_TYPES, NATIVE_KEYS_THAT_ARE_NOT_ASSETS, NATIVE_KEYS, NATIVE_ASSET_TYPES } = CONSTANTS;
 const PREBID_NATIVE_DATA_KEY_VALUES = Object.values(PREBID_NATIVE_DATA_KEYS_TO_ORTB);
 
 // TODO remove this function when the support for 1.1 is removed
@@ -534,6 +562,14 @@ function _createBannerRequest(bid) {
     }
     bannerObj.pos = 0;
     bannerObj.topframe = inIframe() ? 0 : 1;
+
+    // Adding Banner custom params
+    const bannerCustomParams = {...deepAccess(bid, 'ortb2Imp.banner')};
+    for (let key in BANNER_CUSTOM_PARAMS) {
+      if (bannerCustomParams.hasOwnProperty(key)) {
+        bannerObj[key] = _checkParamDataType(key, bannerCustomParams[key], BANNER_CUSTOM_PARAMS[key]);
+      }
+    }
   } else {
     logWarn(LOG_WARN_PREFIX + 'Error: mediaTypes.banner.size missing for adunit: ' + bid.params.adUnit + '. Ignoring the banner impression in the adunit.');
     bannerObj = UNDEFINED;
@@ -543,8 +579,8 @@ function _createBannerRequest(bid) {
 
 export function checkVideoPlacement(videoData, adUnitCode) {
   // Check for video.placement property. If property is missing display log message.
-  if (FEATURES.VIDEO && !deepAccess(videoData, 'placement')) {
-    logWarn(MSG_VIDEO_PLACEMENT_MISSING + ' for ' + adUnitCode);
+  if (FEATURES.VIDEO && !deepAccess(videoData, 'plcmt')) {
+    logWarn(MSG_VIDEO_PLCMT_MISSING + ' for ' + adUnitCode);
   };
 }
 
@@ -655,7 +691,7 @@ function _createImpressionObject(bid, bidderRequest) {
   var sizes = bid.hasOwnProperty('sizes') ? bid.sizes : [];
   var mediaTypes = '';
   var format = [];
-  var isFledgeEnabled = bidderRequest?.fledgeEnabled;
+  var isFledgeEnabled = bidderRequest?.paapi?.enabled;
 
   impObj = {
     id: bid.bidId,
@@ -665,7 +701,9 @@ function _createImpressionObject(bid, bidderRequest) {
     ext: {
       pmZoneId: _parseSlotParam('pmzoneid', bid.params.pmzoneid)
     },
-    bidfloorcur: bid.params.currency ? _parseSlotParam('currency', bid.params.currency) : DEFAULT_CURRENCY
+    bidfloorcur: bid.params.currency ? _parseSlotParam('currency', bid.params.currency) : DEFAULT_CURRENCY,
+    displaymanager: 'Prebid.js',
+    displaymanagerver: '$prebid.version$' // prebid version
   };
 
   _addPMPDealsInImpression(impObj, bid);
@@ -754,9 +792,9 @@ function _addImpressionFPD(imp, bid) {
   const ortb2 = {...deepAccess(bid, 'ortb2Imp.ext.data')};
   Object.keys(ortb2).forEach(prop => {
     /**
-      * Prebid AdSlot
-      * @type {(string|undefined)}
-    */
+     * Prebid AdSlot
+     * @type {(string|undefined)}
+     */
     if (prop === 'pbadslot') {
       if (typeof ortb2[prop] === 'string' && ortb2[prop]) deepSetValue(imp, 'ext.data.pbadslot', ortb2[prop]);
     } else if (prop === 'adserver') {
@@ -1024,6 +1062,10 @@ export function prepareMetaObject(br, bid, seat) {
     br.meta.secondaryCatIds = bid.cat;
     br.meta.primaryCatId = bid.cat[0];
   }
+
+  if (bid.ext && bid.ext.dsa && Object.keys(bid.ext.dsa).length) {
+    br.meta.dsa = bid.ext.dsa;
+  }
 }
 
 /**
@@ -1048,11 +1090,11 @@ export const spec = {
   supportedMediaTypes: [BANNER, VIDEO, NATIVE],
   aliases: [PUBMATIC_ALIAS],
   /**
-  * Determines whether or not the given bid request is valid. Valid bid request must have placementId and hbid
-  *
-  * @param {BidRequest} bid The bid params to validate.
-  * @return boolean True if this is a valid bid, and false otherwise.
-  */
+   * Determines whether or not the given bid request is valid. Valid bid request must have placementId and hbid
+   *
+   * @param {BidRequest} bid The bid params to validate.
+   * @return boolean True if this is a valid bid, and false otherwise.
+   */
   isBidRequestValid: bid => {
     if (bid && bid.params) {
       if (!isStr(bid.params.publisherId)) {
@@ -1101,7 +1143,6 @@ export const spec = {
   /**
    * Make a server request from the list of BidRequests.
    *
-   * @param {validBidRequests[]} - an array of bids
    * @return ServerRequest Info describing the request to the server.
    */
   buildRequests: (validBidRequests, bidderRequest) => {
@@ -1250,6 +1291,11 @@ export const spec = {
       deepSetValue(payload, 'regs.coppa', 1);
     }
 
+    // dsa
+    if (bidderRequest?.ortb2?.regs?.ext?.dsa) {
+      deepSetValue(payload, 'regs.ext.dsa', bidderRequest.ortb2.regs.ext.dsa);
+    }
+
     _handleEids(payload, validBidRequests);
 
     // First Party Data
@@ -1303,7 +1349,7 @@ export const spec = {
     if (bidderRequest?.timeout) {
       payload.tmax = bidderRequest.timeout;
     } else {
-      payload.tmax = window?.PWT?.versionDetails?.timeout;
+      payload.tmax = window?.PWT?.versionDetails()?.timeout;
     }
 
     // Sending epoch timestamp in request.ext object
@@ -1500,12 +1546,13 @@ export const spec = {
         });
         return {
           bids: bidResponses,
-          fledgeAuctionConfigs,
+          paapi: fledgeAuctionConfigs,
         }
       }
     } catch (error) {
       logError(error);
     }
+
     return bidResponses;
   },
 
@@ -1548,20 +1595,6 @@ export const spec = {
         url: USER_SYNC_URL_IMAGE + syncurl
       }];
     }
-  },
-
-  /**
-   * Covert bid param types for S2S
-   * @param {Object} params bid params
-   * @param {Boolean} isOpenRtb boolean to check openrtb2 protocol
-   * @return {Object} params bid params
-   */
-
-  transformBidParams: function (params, isOpenRtb, adUnit, bidRequests) {
-    return convertTypes({
-      'publisherId': 'string',
-      'adSlot': 'string'
-    }, params);
   }
 };
 

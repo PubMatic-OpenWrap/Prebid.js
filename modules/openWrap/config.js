@@ -4,8 +4,8 @@ import * as util from './util.js';
 
 // let refThis = null;
 // refThis = this;
-CONSTANTS.COMMON.OWVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
-CONSTANTS.COMMON.PBVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
+// CONSTANTS.COMMON.OWVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
+// CONSTANTS.COMMON.PBVERSION = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
 
 export function getPublisherId() {
   return util.trim(config.pwt.pubid) || '0';
@@ -298,7 +298,32 @@ export function isReduceCodeSizeFeatureEnabled() {
 
 // endRemoveIf(removeAlways)
 export function getPriceGranularity() {
-  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PRICE_GRANULARITY] || null;
+  const priceGranularity = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PRICE_GRANULARITY] || null;
+
+  if (priceGranularity === CONSTANTS.COMMON.PRICE_GRANULARITY_CUSTOM) {
+    const bucketsValue = getPriceGranularityBuckets();
+    if (bucketsValue !== null) {
+      return bucketsValue;
+    } else {
+      util.logWarning(CONSTANTS.MESSAGES.M36);
+      return null;
+    }
+  }
+  else {
+    return priceGranularity;
+  }
+}
+
+export function getPriceGranularityBuckets() {
+  let pgBuckets = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PRICE_GRANULARITY_BUCKETS] || null;
+  if (pgBuckets === null)
+    return null;
+
+  // API would be providing us with ranges as keyword, we need to raplace it by buckets before processing
+  let transformedBuckets = {};
+  delete Object.assign(transformedBuckets, pgBuckets, { ['buckets']: pgBuckets['ranges'] })['ranges'];
+
+  return transformedBuckets;
 }
 
 export function getGranularityMultiplier() {
@@ -403,7 +428,7 @@ export function forEachBidderAlias(callback) {
 
 export function getAdapterNameForAlias(aliasName) {
   if (config.alias && config.alias[aliasName]) {
-    return config.alias[aliasName];
+    return config.alias[aliasName] && config.alias[aliasName].name ? config.alias[aliasName].name : config.alias[aliasName];
   }
   return aliasName;
 }
@@ -434,10 +459,10 @@ export function getTimeoutForPBSRequest() {
 }
 
 export function getPubMaticAndAlias(s2sBidders) {
-  const pubMaticaliases = s2sBidders.filter(adapter => {
-    if ((config.alias && config.alias[adapter] && config.alias[adapter].includes('pubmatic')) || adapter.includes('pubmatic')) {
-      return adapter;
-    }
+  const pubMaticaliases = s2sBidders.filter(adapter => {		
+    if(config.alias && config.alias[adapter] && ( config.alias[adapter].name ? config.alias[adapter].name.includes("pubmatic") : config.alias[adapter].includes("pubmatic") )|| adapter.includes("pubmatic")) {
+			return adapter;
+		}
   });
   return pubMaticaliases;
 }
@@ -460,3 +485,29 @@ export function createMacros() {
 export function getMarketplaceBidders() {
   return config.pwt.marketplaceBidders ? config.pwt.marketplaceBidders.split(',') : false;
 }
+
+export function getOWVersion() {
+  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
+}
+
+export function getPrebidVersion() {
+  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBVERSION];
+}
+
+export function getGppConsent() {
+	const gpp = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CONSENT] || CONSTANTS.CONFIG.DEFAULT_GPP_CONSENT;
+	return gpp === "1";
+}
+
+export function getGppCmpApi() {
+	return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CMPAPI] || CONSTANTS.CONFIG.DEFAULT_GPP_CMPAPI;
+}
+
+export function getGppTimeout() {
+	const gppTimeout = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_TIMEOUT];
+	return gppTimeout ? window.parseInt(gppTimeout) : CONSTANTS.CONFIG.DEFAULT_GPP_TIMEOUT;
+}
+
+export function shouldClearTargeting() {
+	return window.PWT.shouldClearTargeting !== undefined ? Boolean(window.PWT.shouldClearTargeting) : true;
+};

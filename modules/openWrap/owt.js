@@ -18,17 +18,18 @@ window.PWT.refURL = window.PWT.refURL || metaInfo.refURL;
 window.PWT.isSafeFrame = window.PWT.isSafeFrame || false;
 window.PWT.safeFrameMessageListenerAdded = window.PWT.safeFrameMessageListenerAdded || false;
 window.PWT.isSyncAuction = window.PWT.isSyncAuction || false;
+window.PWT.shouldClearTargeting = window.PWT.shouldClearTargeting !== undefined ? Boolean(window.PWT.shouldClearTargeting) : true;
 // usingDifferentProfileVersion
 window.PWT.udpv = window.PWT.udpv || util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtv');
 
 util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtc') && util.enableDebugLog();
 util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtvc') && util.enableVisualDebugLog();
 
-var isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
+//var isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
 
 window.PWT.displayCreative = function(theDocument, bidID) {
   util.log('In displayCreative for: ' + bidID);
-  if (isPrebidPubMaticAnalyticsEnabled) {
+  if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
     window[CONSTANTS.COMMON.PREBID_NAMESPACE].renderAd(theDocument, bidID);
   } else {
     // removeIf(removeLegacyAnalyticsRelatedCode)
@@ -41,7 +42,7 @@ window.PWT.displayPMPCreative = function(theDocument, values, priorityArray) {
   util.log('In displayPMPCreative for: ' + values);
   var bidID = util.getBididForPMP(values, priorityArray);
   if (bidID) {
-    if (isPrebidPubMaticAnalyticsEnabled) {
+    if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
       window[CONSTANTS.COMMON.PREBID_NAMESPACE].renderAd(theDocument, bidID);
     } else {
       // removeIf(removeLegacyAnalyticsRelatedCode)
@@ -56,7 +57,7 @@ window.PWT.sfDisplayCreative = function(theDocument, bidID) {
   var ucTag = window.ucTag || {};
   this.isSafeFrame = true;
   ucTag = window.ucTag || {};
-  if (isPrebidPubMaticAnalyticsEnabled) {
+  if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
     ucTag.renderAd(theDocument, {adId: bidID, pubUrl: document.referrer});
   } else {
     window.parent.postMessage(
@@ -141,7 +142,7 @@ window.PWT.UpdateVastWithTracker = function(bid, vast) {
 // endRemoveIf(removeLegacyAnalyticsRelatedCode)
 
 // removeIf(removeInStreamRelatedCode)
-window.PWT.generateDFPURL = function(adUnit, custParams) {
+window.PWT.generateDFPURL = function(adUnit, cust_params) {
   var dfpurl = '';
   if (!adUnit || !util.isObject(adUnit)) {
     util.logError('An AdUnit should be an Object', adUnit);
@@ -152,11 +153,12 @@ window.PWT.generateDFPURL = function(adUnit, custParams) {
   } else {
     util.logWarning('No bid found for given adUnit');
   }
+	util.getCDSTargetingData(cust_params);
   var params = {
     adUnit: adUnit,
     params: {
       iu: adUnit.adUnitId,
-      custParams: custParams,
+			cust_params: cust_params,
       output: 'vast'
     }
   };
@@ -181,7 +183,7 @@ window.PWT.setAuctionTimeout = function(timeout) {
   }
 }
 
-window.PWT.versionDetails = util.getOWConfig();
+window.PWT.versionDetails = util.getOWConfig;
 
 window.PWT.getAdapterNameForAlias = CONFIG.getAdapterNameForAlias;
 
