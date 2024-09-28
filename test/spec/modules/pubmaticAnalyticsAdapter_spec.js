@@ -899,7 +899,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.s[0].ps[0].ocpm).to.equal(1.23);
       expect(data.s[0].ps[0].ocry).to.equal('USD');
       expect(data.s[0].ps[0].frv).to.equal(1.1);
-      expect(data.s[1].ps[0].pb).to.equal(1.50);
+      expect(data.s[0].ps[0].pb).to.equal(1.50);
 
       // tracker slot1
       let firstTracker = requests[0].url;
