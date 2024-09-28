@@ -84,7 +84,7 @@ const converter = ortbConverter({
     const imp = buildImp(bidRequest, context);
     if (deals) addPMPDeals(imp, deals);
     if (dctr) addDealCustomTargetings(imp, dctr);
-    if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner, adSlot, hashedKey);
+    if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner, adSlot);
     if (imp.hasOwnProperty('video')) updateVideoImp(imp.video, mediaTypes?.video, adUnitCode);
     if (imp.hasOwnProperty('native')) updateNativeImp(imp, mediaTypes?.native);
     if (pmzoneid) imp.ext.pmZoneId = pmzoneid;
@@ -272,9 +272,7 @@ const setFloorInImp = (imp, bid) => {
   logInfo(LOG_WARN_PREFIX, 'Updated imp.bidfloor:', imp.bidfloor);
 }
 
-const updateBannerImp = (bannerObj, adSlot, hashedKey) => {
-	// start of custom change
-  if (hashedKey) {
+const updateBannerImp = (bannerObj, adSlot) => {
 	let slot = adSlot.split(':');
 	let splits = slot[0]?.split('@');
 	splits = splits?.length == 2 ? splits[1].split('x') : splits.length == 3 ? splits[2].split('x') : [];
@@ -282,21 +280,13 @@ const updateBannerImp = (bannerObj, adSlot, hashedKey) => {
 		bannerObj.w = parseInt(splits[0]);
   		bannerObj.h = parseInt(splits[1]);
 	}
-	if (bannerObj.format && bannerObj.format.length === 0){
-		delete bannerObj.format;
-	} else if (bannerObj.format[0].w == bannerObj.w && bannerObj.format[0].h == bannerObj.h) {
+
+	const primarySize = bannerObj.format[0];
+	if (bannerObj.w == primarySize.w && bannerObj.h == primarySize.h) {
 		bannerObj.format.shift();
+		if (!bannerObj.format.length) delete bannerObj.format;
 	}
 	bannerObj.pos = 0;
-  } // end of custom change
-  else {
-	const primarySize = bannerObj.format.shift();
-	if (bannerObj.format && bannerObj.format.length === 0) delete bannerObj.format;
-	bannerObj.w = primarySize.w;
-	bannerObj.h = primarySize.h;
-	bannerObj.pos = 0;
-  }
-  
 }
 
 const setImpTagId = (imp, adSlot, hashedKey) => {
