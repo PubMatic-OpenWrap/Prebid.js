@@ -84,13 +84,13 @@ const converter = ortbConverter({
     const imp = buildImp(bidRequest, context);
     if (deals) addPMPDeals(imp, deals);
     if (dctr) addDealCustomTargetings(imp, dctr);
+	imp.bidfloor = _parseSlotParam('kadfloor', kadfloor),
+    imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY;
+    setFloorInImp(imp, bidRequest);
     if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner, adSlot);
     if (imp.hasOwnProperty('video')) updateVideoImp(imp.video, mediaTypes?.video, adUnitCode);
     if (imp.hasOwnProperty('native')) updateNativeImp(imp, mediaTypes?.native);
     if (pmzoneid) imp.ext.pmZoneId = pmzoneid;
-    imp.bidfloor = _parseSlotParam('kadfloor', kadfloor),
-    imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY;
-    setFloorInImp(imp, bidRequest);
     setImpTagId(imp, adSlot.trim(), hashedKey);
     setImpFields(imp);
     return imp;
@@ -386,7 +386,7 @@ const reqLevelParams = (req) => {
 };
 
 const updateUserSiteDevice = (req, bidRequest) => {
-  const { gender, yob, pubId, refURL } = conf;
+  const { gender, yob, pubId, refURL, kadpageurl } = conf;
   const { user } = req;
   if (req.device) {
     // start - delete after upgrade
@@ -411,6 +411,8 @@ const updateUserSiteDevice = (req, bidRequest) => {
     req.site.ref = req.site.ref || refURL;
     req.site.publisher.id = pubId;
   }
+  // if kadpageurl present then update site.page url with kadpageurl
+  if (req.site?.page && kadpageurl) req.site.page = kadpageurl;
 }
 
 const updateResponseWithCustomFields = (res, bid, ctx) => {
