@@ -403,7 +403,7 @@ const updateUserSiteDevice = (req, bidRequest) => {
 
   // start - IH eids for Prebid
   const userIdAsEids = deepAccess(bidRequest, '0.userIdAsEids');
-  if (bidRequest.length && userIdAsEids?.length && !req.user.ext) {
+  if (bidRequest.length && userIdAsEids?.length && !req.user.ext?.eids) {
     req.user.ext = { eids: userIdAsEids };
   } // end - IH eids for Prebid
 
