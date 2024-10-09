@@ -637,7 +637,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   );
 }
 
-function executeBidWonLoggerCall(auctionId, adUnitId) {
+function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   const winningBidId = cache.auctions[auctionId].adUnitCodes[adUnitId].bidWon;
   const winningBids = cache.auctions[auctionId].adUnitCodes[adUnitId].bids[winningBidId];
   if (!winningBids) {
@@ -718,6 +718,10 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   }
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
   pixelURL += '&cds=' + getCDSDataLoggerStr(); // encoded string is returned from function
+
+  if (isIma) {
+    return pixelURL;
+  }
 
   ajax(
     pixelURL,
@@ -844,11 +848,43 @@ function bidderDoneHandler(args) {
 }
 
 function bidWonHandler(args) {
-  let auctionCache = cache.auctions[args.auctionId];
-  auctionCache.adUnitCodes[args.adUnitCode].bidWon = args.originalRequestId || args.requestId;
-  auctionCache.adUnitCodes[args.adUnitCode].bidWonAdId = args.adId;
-  executeBidWonLoggerCall(args.auctionId, args.adUnitCode);
+  generateBidWonLogger(args, false);
 }
+
+function generateBidWonLogger(bid, isIma) {
+  var auctionCache = cache.auctions[bid.auctionId];
+  auctionCache.adUnitCodes[bid.adUnitCode].bidWon = bid.requestId;
+  auctionCache.adUnitCodes[bid.adUnitCode].bidWonAdId = bid.adId;
+  return executeBidWonLoggerCall(bid.auctionId, bid.adUnitCode, isIma);
+}
+
+getGlobal().injectTrackerForIMA = function (args, vast) {
+  var bid = cache.auctions[args.auctionId].adUnitCodes[args.adUnitCode].bids[args.requestId][0];
+  if (!bid) {
+    logError(LOG_PRE_FIX + 'Could not find associated bid request for bid response with requestId: ', args.requestId);
+    return;
+  }
+  bid.adId = args.adId;
+  bid.auctionId = args.auctionId;
+  bid.adUnitCode = args.adUnitCode;
+  bid.requestId = args.requestId;
+  bid.bidResponse = parseBidResponse(args);
+  try {
+    var domParser = new DOMParser();
+    var parsedVast = domParser.parseFromString(vast, 'application/xml');
+    var impEle = parsedVast.createElement('Impression');
+    impEle.innerHTML = '<![CDATA[' + generateBidWonLogger(bid, true) + ']]>';
+    if (parsedVast.getElementsByTagName('Wrapper').length == 1) {
+      parsedVast.getElementsByTagName('Wrapper')[0].appendChild(impEle);
+    } else if (parsedVast.getElementsByTagName('InLine').length == 1) {
+      parsedVast.getElementsByTagName('InLine')[0].appendChild(impEle);
+    }
+    return new XMLSerializer().serializeToString(parsedVast);
+  } catch (ex) {
+    logError(LOG_PRE_FIX + ' Exception in injecting tracker for IMA ', ex);
+    return vast;
+  }
+};
 
 function auctionEndHandler(args) {
   // if for the given auction bidderDonePendingCount == 0 then execute logger call sooners
