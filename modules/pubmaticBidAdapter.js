@@ -88,7 +88,7 @@ const converter = ortbConverter({
     imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY;
     setFloorInImp(imp, bidRequest);
     if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner, adSlot);
-    if (imp.hasOwnProperty('video')) updateVideoImp(imp.video, mediaTypes?.video, adUnitCode);
+    if (imp.hasOwnProperty('video')) updateVideoImp(imp.video, mediaTypes?.video, adUnitCode, imp);
     if (imp.hasOwnProperty('native')) updateNativeImp(imp, mediaTypes?.native);
     if (pmzoneid) imp.ext.pmZoneId = pmzoneid;
     setImpTagId(imp, adSlot.trim(), hashedKey);
@@ -313,12 +313,12 @@ const updateNativeImp = (imp, nativeParams) => {
   }
 }
 
-const updateVideoImp = (videoImp, videoParams, adUnitCode) => {
+const updateVideoImp = (videoImp, videoParams, adUnitCode, imp) => {
   if (!deepAccess(videoParams, 'plcmt')) {
     logWarn(MSG_VIDEO_PLCMT_MISSING + ' for ' + adUnitCode);
   };
   if (!videoParams || (!videoImp.w && !videoImp.h)) {
-    videoImp = UNDEFINED;
+    delete imp.video;
     logWarn(`${LOG_WARN_PREFIX}Error: Missing ${!videoParams ? 'video config params' : 'video size params (playersize or w&h)'} for adunit: ${adUnitCode} with mediaType set as video. Ignoring video impression in the adunit.`);
     return;
   }
