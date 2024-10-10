@@ -697,24 +697,21 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   if (floorData && floorFetchStatus) {
     const floorRootValues = getFloorsCommonField(floorData.floorRequestData);
     const { fsrc, fp, mv } = floorRootValues;
-	const params = { fsrc, fp, fmv: mv };
-	Object.entries(params).forEach(([key, value]) => {
-		if (value !== undefined) {
-			pixelURL += `&${key}=${enc(value)}`;
-		}
-	});
+    const params = { fsrc, fp, fmv: mv };
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        pixelURL += `&${key}=${enc(value)}`;
+      }
+    });
     const floorType = getFloorType(floorData.floorResponseData); 
     if (floorType !== undefined) {
       pixelURL += '&ft=' + enc(floorType);
     }
-  	const floorRule = getFloorRule(floorData.floorResponseData); 
-    if (floorRule !== undefined) {
-      pixelURL += '&frv=' + enc(floorRule);
-    }
-    const floorValue = getFloorValue(floorData.floorResponseData);
-    if (floorValue !== undefined) {
-      pixelURL += '&fv=' + enc(floorValue);
-    }    
+    const floorRuleValue = winningBid.bidResponse?.floorData?.floorRuleValue;
+    (floorRuleValue !== undefined) && (pixelURL += '&frv=' + enc(floorRuleValue));
+
+    const floorValue = winningBid.bidResponse?.floorData?.floorValue;
+    (floorValue !== undefined) && (pixelURL += '&fv=' + enc(floorValue));
   }
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
   pixelURL += '&cds=' + getCDSDataLoggerStr(); // encoded string is returned from function
