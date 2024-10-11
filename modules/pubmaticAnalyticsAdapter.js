@@ -452,7 +452,7 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid, e) {
         'ocpm': bid.bidResponse ? (bid.bidResponse.originalCpm || 0) : 0,
         'ocry': bid.bidResponse ? (bid.bidResponse.originalCurrency || CURRENCY_USD) : CURRENCY_USD,
         'frv': bid.bidResponse ? bid.bidResponse.floorData?.floorRuleValue : undefined,
-        'fv': bid.bidResponse ? bid.bidResponse.floorData?.floorValue : undefined,
+        'fv': bid.bidResponse ? bid.bidResponse?.floorData?.floorValue : undefined,
         'md': bid.bidResponse ? getMetadata(bid.bidResponse.meta) : undefined,
         'pb': pg || undefined
       });
@@ -707,10 +707,10 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
     if (floorType !== undefined) {
       pixelURL += '&ft=' + enc(floorType);
     }
-    const floorRuleValue = winningBid.bidResponse?.floorData?.floorRuleValue;
+    const floorRuleValue = winningBid?.bidResponse?.floorData?.floorRuleValue;
     (floorRuleValue !== undefined) && (pixelURL += '&frv=' + enc(floorRuleValue));
 
-    const floorValue = winningBid.bidResponse?.floorData?.floorValue;
+    const floorValue = winningBid?.bidResponse?.floorData?.floorValue;
     (floorValue !== undefined) && (pixelURL += '&fv=' + enc(floorValue));
   }
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
