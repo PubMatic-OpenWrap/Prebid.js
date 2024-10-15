@@ -856,7 +856,7 @@ function bytesToBase64(bytes) {
 
 export function getHexToBase64(hex) {
   if (!hex || typeof hex !== 'string' || hex.trim() === '') {
-    logError(`Invalid hex input: hex string is undefined, null, or empty.`);
+    logWarn(`Invalid hex input: hex string is undefined, null, or empty. This message applies only to client-side integration.`);
     return undefined;
   }
   return bytesToBase64(hexToBytes(hex)); // Convert byte array to Base64
