@@ -14,6 +14,7 @@ import {config} from './config.js';
 import {auctionManager} from './auctionManager.js';
 import {logError, logWarn} from './utils.js';
 import {addBidToAuction} from './auction.js';
+import {getGlobal} from '../src/prebidGlobal.js';
 
 /**
  * Might be useful to be configurable in the future
@@ -75,8 +76,8 @@ function toStorageRequest(bid, {index = auctionManager.index} = {}) {
   let vastValue = bid.vastXml ? bid.vastXml : wrapURI(bid.vastUrl, bid.vastImpUrl);
   const auction = index.getAuction(bid);
   /* istanbul ignore next */
-  if (window && window.PWT) {
-    vastValue = window.PWT.UpdateVastWithTracker(bid, vastValue);
+  if (window && window.ima) {
+    vastValue = getGlobal().injectTrackerForIMA(bid, vastValue);
   }
   const ttlWithBuffer = Number(bid.ttl) + ttlBufferInSeconds;
   let payload = {
