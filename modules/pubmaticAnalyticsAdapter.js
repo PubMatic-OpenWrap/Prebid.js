@@ -399,10 +399,6 @@ function getFloorValue(floorResponseData) {
   return floorResponseData ? floorResponseData.floorValue : undefined;
 }
 
-function getFloorRule(floorResponseData) {
-  return floorResponseData ? floorResponseData.floorRuleValue : undefined;
-}
-
 function getFloorType(floorResponseData) {
   return floorResponseData ? (floorResponseData.enforcements.enforceJS == false ? 0 : 1) : undefined;
 }
@@ -713,6 +709,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
     const floorValue = winningBid?.bidResponse?.floorData?.floorValue;
     (floorValue !== undefined) && (pixelURL += '&fv=' + enc(floorValue));
   }
+
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
   pixelURL += '&cds=' + getCDSDataLoggerStr(); // encoded string is returned from function
 
