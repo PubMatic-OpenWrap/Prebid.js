@@ -703,7 +703,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
     if (floorType !== undefined) {
       pixelURL += '&ft=' + enc(floorType);
     }
-  	const floorRule = getFloorRule(floorData.floorResponseData); 
+  	const floorRule = winningBid?.bidResponse?.floorData?.floorRuleValue;
     if (floorRule !== undefined) {
       pixelURL += '&frv=' + enc(floorRule);
     }
