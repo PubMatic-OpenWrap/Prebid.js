@@ -395,9 +395,8 @@ function getFloorsCommonField (floorData) {
     mv: modelVersion
   }
 }
-
-function getFloorRule(floorResponseData) {
-  return floorResponseData ? floorResponseData.floorRuleValue : undefined;
+function getFloorValue(floorResponseData) {
+  return floorResponseData ? floorResponseData.floorValue : undefined;
 }
 
 function getFloorType(floorResponseData) {
@@ -449,6 +448,7 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid, e) {
         'ocpm': bid.bidResponse ? (bid.bidResponse.originalCpm || 0) : 0,
         'ocry': bid.bidResponse ? (bid.bidResponse.originalCurrency || CURRENCY_USD) : CURRENCY_USD,
         'frv': bid.bidResponse ? bid.bidResponse.floorData?.floorRuleValue : undefined,
+        'fv': bid.bidResponse ? bid.bidResponse?.floorData?.floorValue : undefined,
         'md': bid.bidResponse ? getMetadata(bid.bidResponse.meta) : undefined,
         'pb': pg || undefined
       });
@@ -633,7 +633,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   );
 }
 
-function executeBidWonLoggerCall(auctionId, adUnitId) {
+function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   const winningBidId = cache.auctions[auctionId].adUnitCodes[adUnitId].bidWon;
   const winningBids = cache.auctions[auctionId].adUnitCodes[adUnitId].bids[winningBidId];
   if (!winningBids) {
@@ -693,23 +693,29 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   if (floorData && floorFetchStatus) {
     const floorRootValues = getFloorsCommonField(floorData.floorRequestData);
     const { fsrc, fp, mv } = floorRootValues;
-	const params = { fsrc, fp, fmv: mv };
-	Object.entries(params).forEach(([key, value]) => {
-		if (value !== undefined) {
-			pixelURL += `&${key}=${enc(value)}`;
-		}
-	});
+    const params = { fsrc, fp, fmv: mv };
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        pixelURL += `&${key}=${enc(value)}`;
+      }
+    });
     const floorType = getFloorType(floorData.floorResponseData); 
     if (floorType !== undefined) {
       pixelURL += '&ft=' + enc(floorType);
     }
-  	const floorRule = getFloorRule(floorData.floorResponseData); 
-    if (floorRule !== undefined) {
-      pixelURL += '&frv=' + enc(floorRule);
-    }
+    const floorRuleValue = winningBid?.bidResponse?.floorData?.floorRuleValue;
+    (floorRuleValue !== undefined) && (pixelURL += '&frv=' + enc(floorRuleValue));
+
+    const floorValue = winningBid?.bidResponse?.floorData?.floorValue;
+    (floorValue !== undefined) && (pixelURL += '&fv=' + enc(floorValue));
   }
+
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
   pixelURL += '&cds=' + getCDSDataLoggerStr(); // encoded string is returned from function
+
+  if (isIma) {
+    return pixelURL;
+  }
 
   ajax(
     pixelURL,
@@ -836,11 +842,43 @@ function bidderDoneHandler(args) {
 }
 
 function bidWonHandler(args) {
-  let auctionCache = cache.auctions[args.auctionId];
-  auctionCache.adUnitCodes[args.adUnitCode].bidWon = args.originalRequestId || args.requestId;
-  auctionCache.adUnitCodes[args.adUnitCode].bidWonAdId = args.adId;
-  executeBidWonLoggerCall(args.auctionId, args.adUnitCode);
+  generateBidWonLogger(args, false);
 }
+
+function generateBidWonLogger(bid, isIma) {
+  var auctionCache = cache.auctions[bid.auctionId];
+  auctionCache.adUnitCodes[bid.adUnitCode].bidWon = bid.requestId;
+  auctionCache.adUnitCodes[bid.adUnitCode].bidWonAdId = bid.adId;
+  return executeBidWonLoggerCall(bid.auctionId, bid.adUnitCode, isIma);
+}
+
+getGlobal().injectTrackerForIMA = function (args, vast) {
+  var bid = cache.auctions[args.auctionId].adUnitCodes[args.adUnitCode].bids[args.requestId][0];
+  if (!bid) {
+    logError(LOG_PRE_FIX + 'Could not find associated bid request for bid response with requestId: ', args.requestId);
+    return;
+  }
+  bid.adId = args.adId;
+  bid.auctionId = args.auctionId;
+  bid.adUnitCode = args.adUnitCode;
+  bid.requestId = args.requestId;
+  bid.bidResponse = parseBidResponse(args);
+  try {
+    var domParser = new DOMParser();
+    var parsedVast = domParser.parseFromString(vast, 'application/xml');
+    var impEle = parsedVast.createElement('Impression');
+    impEle.innerHTML = '<![CDATA[' + generateBidWonLogger(bid, true) + ']]>';
+    if (parsedVast.getElementsByTagName('Wrapper').length == 1) {
+      parsedVast.getElementsByTagName('Wrapper')[0].appendChild(impEle);
+    } else if (parsedVast.getElementsByTagName('InLine').length == 1) {
+      parsedVast.getElementsByTagName('InLine')[0].appendChild(impEle);
+    }
+    return new XMLSerializer().serializeToString(parsedVast);
+  } catch (ex) {
+    logError(LOG_PRE_FIX + ' Exception in injecting tracker for IMA ', ex);
+    return vast;
+  }
+};
 
 function auctionEndHandler(args) {
   // if for the given auction bidderDonePendingCount == 0 then execute logger call sooners
