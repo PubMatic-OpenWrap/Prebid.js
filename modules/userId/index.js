@@ -842,6 +842,26 @@ export function getRawPDString(emailHashes, userID) {
   return btoa(pdString);
 };
 
+function hexToBytes(hex) {
+  return Uint8Array.from(
+    hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
+  );
+}
+
+// Module to convert byte array to Base64
+function bytesToBase64(bytes) {
+  const binaryString = String.fromCharCode(...bytes);
+  return btoa(binaryString);
+}
+
+export function getHexToBase64(hex) {
+  if (!hex || typeof hex !== 'string' || hex.trim() === '') {
+    logWarn(`Invalid hex input: hex string is undefined, null, or empty. This message applies only to UID2 client-side integration.`);
+    return undefined;
+  }
+  return bytesToBase64(hexToBytes(hex)); // Convert byte array to Base64
+}
+
 export function updateModuleParams(moduleToUpdate) {
   let params = MODULE_PARAM_TO_UPDATE_FOR_SSO[moduleToUpdate.name];
   if (!params) return;
@@ -850,7 +870,19 @@ export function updateModuleParams(moduleToUpdate) {
   let enableSSO = (window.IHPWT && window.IHPWT.ssoEnabled) || (window.PWT && window.PWT.ssoEnabled) || false;
   let emailHashes = enableSSO && userIdentity.emailHash ? userIdentity.emailHash : userIdentity.pubProvidedEmailHash ? userIdentity.pubProvidedEmailHash : undefined;
   params.forEach(function(param) {
-    moduleToUpdate.params[param.key] = (moduleToUpdate.name === 'id5Id' ? getRawPDString(emailHashes, userIdentity.userID) : emailHashes ? emailHashes[param.hashType] : undefined);
+    switch (moduleToUpdate.name) {
+      case 'id5Id':
+        moduleToUpdate.params[param.key] = getRawPDString(emailHashes, userIdentity.userID);
+        break;
+      case 'uid2':
+        moduleToUpdate.params[param.key] = emailHashes && emailHashes[param.hashType]
+        ? emailHashes[param.hashType]
+        : getHexToBase64(emailHashes?.SHA256);
+        break;
+      default:
+        moduleToUpdate.params[param.key] = emailHashes ? emailHashes[param.hashType] : undefined;
+        break;
+    }
   });
 }
 
