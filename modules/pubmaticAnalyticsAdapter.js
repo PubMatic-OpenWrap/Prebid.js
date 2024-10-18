@@ -600,6 +600,16 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     let adUnit = auctionCache.adUnitCodes[adUnitId];
     let origAdUnit = getAdUnit(auctionCache.origAdUnits, adUnitId) || {};
     // getGptSlotInfoForAdUnitCode returns gptslot corresponding to adunit provided as input.
+
+// BID_CACHING
+    let winningCachedBid = highestCpmBids.filter(bid => (
+        bid.adUnitCode === adUnitId &&  // CHECK AD UNIT CODE
+        bid.latestTargetedAuctionId == auctionId && // MATCH THE TARGETED AUCTION ID OF WINNING BID WITH CURRENT AUCTION ID
+        bid.latestTargetedAuctionId != bid.auctionId // DIFFERENT AUCTION ID INDICATE THAT THE BID WAS CACHED
+    ));
+    console.log("----------------> pri winningCachedBid ", winningCachedBid);
+// BID_CACHING
+
     let slotObject = {
       'sn': adUnitId,
       'au': origAdUnit.owAdUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId,
