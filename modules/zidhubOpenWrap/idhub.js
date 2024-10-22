@@ -35,7 +35,7 @@ let enablePubMaticIdentityAnalyticsIfRequired = () => {
 let setConfig = () => {
   if (util.isFunction(window[pbNameSpace].setConfig) || typeof window[pbNameSpace].setConfig == 'function') {
     if (CONFIG.isIdentityOnly()) {
-      const prebidConfig = {
+      let prebidConfig = {
         debug: util.isDebugLogEnabled(),
         userSync: {
           syncDelay: 2000,
