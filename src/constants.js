@@ -121,7 +121,8 @@ export const REFRESH_IDMODULES_LIST = {
     'id5Id',
     'publinkId',
     'connectId',
-    'liveIntentId'
+    'liveIntentId',
+    'uid2'
   ],
   SCRIPT_BASED_MODULES: [
     'zeotapIdPlus',
@@ -151,7 +152,13 @@ export const MODULE_PARAM_TO_UPDATE_FOR_SSO = {
   liveIntentId: [
     {
       key: 'emailHash',
-      hashType: 'SHA256'
+      hashType: 'SHA256' // Default Hex encoding
+    }
+  ],
+  uid2: [
+    {
+      key: 'emailHash',
+      hashType: 'SHA256_BASE64' // SHA256 Base64 encoding
     }
   ]
 };
