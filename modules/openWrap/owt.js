@@ -3,6 +3,7 @@ import * as bidManager from './bidManager.js';
 import * as CONSTANTS from './constants.js';
 import * as CONFIG from './config.js';
 import * as conf from './conf.js';
+var ucTag = require("prebid-universal-creative");
 const metaInfo = util.getMetaInfo(window);
 
 window.PWT = window.PWT || {};

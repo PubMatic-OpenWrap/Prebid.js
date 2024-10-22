@@ -404,7 +404,7 @@ function generatedKeyCallbackForPbAnalytics(adapterID, adUnits, adapterConfig, i
   let code;
   let sizes;
   let divID;
-  let adUnitId;
+  let owAdUnitId;
   let mediaTypeConfig;
   let partnerConfig;
 

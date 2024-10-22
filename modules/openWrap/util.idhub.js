@@ -13,6 +13,12 @@ var debugLogIsEnabled = false;
 export { debugLogIsEnabled };
 
 /* end-test-block */
+var visualDebugLogIsEnabled = false;
+
+/* start-test-block */
+export { visualDebugLogIsEnabled };
+
+/* end-test-block */
 
 const typeArray = 'Array';
 const typeString = 'String';
