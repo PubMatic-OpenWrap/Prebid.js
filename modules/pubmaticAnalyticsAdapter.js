@@ -427,8 +427,8 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid, e) {
       partnerBids.push({
         'pn': adapterName,
         'bc': bid.bidderCode || bid.bidder,
-        'bidid': bid.bidId || bidId,
-        'origbidid': bid?.bidResponse?.partnerImpId || prebidBidId || bid.bidId || bidId,
+        'bidid': prebidBidId || bid.bidId || bidId,
+        'origbidid': bid?.bidResponse?.partnerImpId || bid.bidId || bidId,
         'db': bid.bidResponse ? 0 : 1,
         'kgpv': getValueForKgpv(bid, adUnitId),
         'kgpsv': bid.params && bid.params.kgpv ? getUpdatedKGPVForVideo(bid.params.kgpv, bid.bidResponse) : adUnitId,
