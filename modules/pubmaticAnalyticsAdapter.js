@@ -630,7 +630,6 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   pixelURL += '&tst=' + Math.round((new window.Date()).getTime() / 1000);
   pixelURL += '&iid=' + enc(wiid);
   pixelURL += '&bidid=' + (generatedBidId ? enc(generatedBidId) : enc(winningBidId));
-  pixelURL += '&origbidid=' + enc(winningBidId);
   pixelURL += '&pid=' + enc(profileId);
   pixelURL += '&pdvid=' + enc(profileVersionId);
   pixelURL += '&slot=' + enc(adUnitId);
@@ -641,7 +640,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   pixelURL += '&eg=' + enc(winningBid.bidResponse.bidGrossCpmUSD);
   pixelURL += '&kgpv=' + enc(getValueForKgpv(winningBid, adUnitId));
   pixelURL += '&rf=' + enc(origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0);
-  pixelURL += '&origbidid=' + enc(winningBid?.bidResponse?.partnerImpId || winningBid?.bidResponse?.prebidBidId || winningBid.bidId);
+  pixelURL += '&origbidid=' + enc(winningBid?.bidResponse?.partnerImpId || winningBidId);
   pixelURL += '&di=' + enc(winningBid?.bidResponse?.dealId || OPEN_AUCTION_DEAL_ID);
   pixelURL += '&pb=' + enc(pg);
 
