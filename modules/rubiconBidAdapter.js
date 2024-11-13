@@ -42,6 +42,8 @@ config.getConfig('rubicon', config => {
 
 const GVLID = 52;
 
+let impIdMap = {};
+
 var sizeMap = {
   1: '468x60',
   2: '728x90',
@@ -148,7 +150,13 @@ var sizeMap = {
   580: '505x656',
   622: '192x160',
   632: '1200x450',
-  634: '340x450'
+  634: '340x450',
+  680: '970x570',
+  682: '300x240',
+  684: '970x550',
+  686: '300x210',
+  688: '300x220',
+  690: '970x170'
 };
 
 _each(sizeMap, (item, key) => sizeMap[item] = key);
@@ -211,6 +219,9 @@ export const converter = ortbConverter({
     }
 
     setBidFloors(bidRequest, imp);
+
+    // ensure unique imp IDs for twin adunits
+    imp.id = impIdMap[imp.id] ? imp.id + impIdMap[imp.id]++ : (impIdMap[imp.id] = 2, imp.id);
 
     return imp;
   },
@@ -302,6 +313,8 @@ export const spec = {
 
     if (filteredRequests && filteredRequests.length) {
       const data = converter.toORTB({bidRequests: filteredRequests, bidderRequest});
+      resetImpIdMap();
+
       filteredHttpRequest.push({
         method: 'POST',
         url: `https://${rubiConf.videoHost || 'prebid-server'}.rubiconproject.com/openrtb2/auction`,
@@ -702,6 +715,10 @@ export const spec = {
 
         if (ad.adomain) {
           bid.meta.advertiserDomains = Array.isArray(ad.adomain) ? ad.adomain : [ad.adomain];
+        }
+
+        if (ad.emulated_format) {
+          bid.meta.mediaType = ad.emulated_format;
         }
 
         if (ad.creative_type === VIDEO) {
@@ -1151,6 +1168,7 @@ function bidType(bid, log = false) {
 }
 
 export const resetRubiConf = () => rubiConf = {};
+export const resetImpIdMap = () => impIdMap = {};
 export function masSizeOrdering(sizes) {
   const MAS_SIZE_PRIORITY = [15, 2, 9];
 
@@ -1186,7 +1204,7 @@ export function determineRubiconVideoSizeId(bid) {
 }
 
 /**
- * @param {PrebidConfig} config
+ * @param {Object} config
  * @returns {{ranges: {ranges: Object[]}}}
  */
 export function getPriceGranularity(config) {
@@ -1235,7 +1253,6 @@ export function hasValidVideoParams(bid) {
 /**
  * Make sure the required params are present
  * @param {Object} schain
- * @param {boolean}
  */
 export function hasValidSupplyChainParams(schain) {
   let isValid = false;
