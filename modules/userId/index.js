@@ -567,7 +567,7 @@ function addIdData({adUnits, ortb2Fragments}) {
         if (Object.keys(bidderIds).length > 0) {
           bid.userId = bidderIds;
         }
-        if (bidderEids.length > 0) {
+        if (bidderEids.length >= 0) {
           bid.userIdAsEids = bidderEids;
         }
       });
