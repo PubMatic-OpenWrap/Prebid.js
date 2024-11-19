@@ -31,9 +31,10 @@ describe('pubxai analytics adapter', () => {
   });
 
   describe('track', () => {
+    const pubxId = '6c415fc0-8b0e-4cf5-be73-01526a4db625';
     let initOptions = {
       samplingRate: '1',
-      pubxId: '6c415fc0-8b0e-4cf5-be73-01526a4db625',
+      pubxId: pubxId,
     };
 
     let originalVS;
@@ -148,7 +149,7 @@ describe('pubxai analytics adapter', () => {
         timeout: 1000,
         config: {
           samplingRate: '1',
-          pubxId: '6c415fc0-8b0e-4cf5-be73-01526a4db625',
+          pubxId: pubxId,
         },
       },
       bidRequested: {
@@ -529,7 +530,7 @@ describe('pubxai analytics adapter', () => {
             null,
           auctionId: 'bc3806e4-873e-453c-8ae5-204f35e923b4',
           sizes: '300x250',
-          renderStatus: 2,
+          bidType: 2,
           requestTimestamp: 1616654312804,
           creativeId: 96846035,
           currency: 'USD',
@@ -598,6 +599,7 @@ describe('pubxai analytics adapter', () => {
         consentTypes: Object.keys(getGlobal().getConsentMetadata?.() || {}),
       },
       pmacDetail: {},
+      extraData: {},
       initOptions: {
         ...initOptions,
         auctionId: 'bc3806e4-873e-453c-8ae5-204f35e923b4',
@@ -651,7 +653,7 @@ describe('pubxai analytics adapter', () => {
         placementId: 13144370,
         renderedSize: '300x250',
         sizes: '300x250',
-        renderStatus: 4,
+        bidType: 4,
         responseTimestamp: 1616654313071,
         requestTimestamp: 1616654312804,
         status: 'rendered',
@@ -692,6 +694,7 @@ describe('pubxai analytics adapter', () => {
         consentTypes: Object.keys(getGlobal().getConsentMetadata?.() || {}),
       },
       pmacDetail: {},
+      extraData: {},
       initOptions: {
         ...initOptions,
         auctionId: 'bc3806e4-873e-453c-8ae5-204f35e923b4',
@@ -762,8 +765,9 @@ describe('pubxai analytics adapter', () => {
         );
         expect(Object.fromEntries(parsedUrl.searchParams)).to.deep.equal({
           auctionTimestamp: '1616654312804',
-          pubxaiAnalyticsVersion: 'v2.0.0',
+          pubxaiAnalyticsVersion: 'v2.1.0',
           prebidVersion: '$prebid.version$',
+          pubxId: pubxId,
         });
         expect(expectedData.type).to.equal('text/json');
         expect(JSON.parse(await readBlobSafariCompat(expectedData))).to.deep.equal([
@@ -805,8 +809,9 @@ describe('pubxai analytics adapter', () => {
       // Step 8: check that the meta information in the call is correct
       expect(Object.fromEntries(parsedUrl.searchParams)).to.deep.equal({
         auctionTimestamp: '1616654312804',
-        pubxaiAnalyticsVersion: 'v2.0.0',
+        pubxaiAnalyticsVersion: 'v2.1.0',
         prebidVersion: '$prebid.version$',
+        pubxId: pubxId,
       });
 
       // Step 9: check that the data sent in the request is correct
@@ -930,8 +935,9 @@ describe('pubxai analytics adapter', () => {
         );
         expect(Object.fromEntries(parsedUrl.searchParams)).to.deep.equal({
           auctionTimestamp: '1616654312804',
-          pubxaiAnalyticsVersion: 'v2.0.0',
+          pubxaiAnalyticsVersion: 'v2.1.0',
           prebidVersion: '$prebid.version$',
+          pubxId: pubxId,
         });
         expect(expectedData.type).to.equal('text/json');
         expect(JSON.parse(await readBlobSafariCompat(expectedData))).to.deep.equal([
@@ -1046,8 +1052,9 @@ describe('pubxai analytics adapter', () => {
         );
         expect(Object.fromEntries(parsedUrl.searchParams)).to.deep.equal({
           auctionTimestamp: '1616654312804',
-          pubxaiAnalyticsVersion: 'v2.0.0',
+          pubxaiAnalyticsVersion: 'v2.1.0',
           prebidVersion: '$prebid.version$',
+          pubxId: pubxId,
         });
         expect(expectedData.type).to.equal('text/json');
         expect(JSON.parse(await readBlobSafariCompat(expectedData))).to.deep.equal([
