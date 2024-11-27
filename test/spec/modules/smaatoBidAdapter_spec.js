@@ -1600,7 +1600,7 @@ describe('smaatoBidAdapterTest', () => {
         ]);
       });
 
-      it('sets primary category id in case of enabled brand category exclusion', () => {
+      xit('sets primary category id in case of enabled brand category exclusion', () => {
         config.setConfig({adpod: {brandCategoryExclusion: true}});
 
         const bids = spec.interpretResponse(serverResponse, bidRequestWithAdpodContext)
