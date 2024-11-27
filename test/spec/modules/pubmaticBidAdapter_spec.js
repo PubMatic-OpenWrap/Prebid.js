@@ -4098,7 +4098,6 @@ describe('PubMatic adapter', function () {
     });
   });
 
-<<<<<<< HEAD
   describe('Response checking', function () {
     let multipleBidRequests = [
       {
@@ -4167,355 +4166,11 @@ describe('PubMatic adapter', function () {
         expect(response[0].creativeId).to.equal(bidResponses.body.seatbid[0].bid[0].crid);
       } else {
         expect(response[0].creativeId).to.equal(bidResponses.body.seatbid[0].bid[0].id);
-=======
-    describe('Response checking', function () {
-      it('should check for valid response values', function () {
-        let request = spec.buildRequests(bidRequests, {
-          auctionId: 'new-auction-id'
-        });
-        let data = JSON.parse(request.data);
-        let response = spec.interpretResponse(bidResponses, request);
-        expect(response).to.be.an('array').with.length.above(0);
-        expect(response[0].requestId).to.equal(bidResponses.body.seatbid[0].bid[0].impid);
-        expect(response[0].cpm).to.equal(parseFloat((bidResponses.body.seatbid[0].bid[0].price).toFixed(2)));
-        expect(response[0].width).to.equal(bidResponses.body.seatbid[0].bid[0].w);
-        expect(response[0].height).to.equal(bidResponses.body.seatbid[0].bid[0].h);
-        if (bidResponses.body.seatbid[0].bid[0].crid) {
-          expect(response[0].creativeId).to.equal(bidResponses.body.seatbid[0].bid[0].crid);
-        } else {
-          expect(response[0].creativeId).to.equal(bidResponses.body.seatbid[0].bid[0].id);
-        }
-        expect(response[0].dealId).to.equal(bidResponses.body.seatbid[0].bid[0].dealid);
-        expect(response[0].currency).to.equal('USD');
-        expect(response[0].netRevenue).to.equal(true);
-        expect(response[0].ttl).to.equal(360);
-        expect(response[0].meta.networkId).to.equal(123);
-        expect(response[0].adserverTargeting.hb_buyid_pubmatic).to.equal('BUYER-ID-987');
-        expect(response[0].meta.buyerId).to.equal('seat-id');
-        expect(response[0].meta.dchain).to.equal('dchain');
-        expect(response[0].meta.clickUrl).to.equal('blackrock.com');
-        expect(response[0].meta.advertiserDomains[0]).to.equal('blackrock.com');
-        expect(response[0].referrer).to.include(data.site.ref);
-        expect(response[0].ad).to.equal(bidResponses.body.seatbid[0].bid[0].adm);
-        expect(response[0].pm_seat).to.equal(bidResponses.body.seatbid[0].seat);
-        expect(response[0].pm_dspid).to.equal(bidResponses.body.seatbid[0].bid[0].ext.dspid);
-        expect(response[0].partnerImpId).to.equal(bidResponses.body.seatbid[0].bid[0].id);
-
-        expect(response[1].requestId).to.equal(bidResponses.body.seatbid[1].bid[0].impid);
-        expect(response[1].cpm).to.equal(parseFloat((bidResponses.body.seatbid[1].bid[0].price).toFixed(2)));
-        expect(response[1].width).to.equal(bidResponses.body.seatbid[1].bid[0].w);
-        expect(response[1].height).to.equal(bidResponses.body.seatbid[1].bid[0].h);
-        if (bidResponses.body.seatbid[1].bid[0].crid) {
-          expect(response[1].creativeId).to.equal(bidResponses.body.seatbid[1].bid[0].crid);
-        } else {
-          expect(response[1].creativeId).to.equal(bidResponses.body.seatbid[1].bid[0].id);
-        }
-        expect(response[1].dealId).to.equal(bidResponses.body.seatbid[1].bid[0].dealid);
-        expect(response[1].currency).to.equal('USD');
-        expect(response[1].netRevenue).to.equal(true);
-        expect(response[1].ttl).to.equal(360);
-        expect(response[1].meta.networkId).to.equal(422);
-        expect(response[1].adserverTargeting.hb_buyid_pubmatic).to.equal('BUYER-ID-789');
-        expect(response[1].meta.buyerId).to.equal(832);
-        expect(response[1].meta.clickUrl).to.equal('hivehome.com');
-        expect(response[1].meta.advertiserDomains[0]).to.equal('hivehome.com');
-        expect(response[1].referrer).to.include(data.site.ref);
-        expect(response[1].ad).to.equal(bidResponses.body.seatbid[1].bid[0].adm);
-        expect(response[1].pm_seat).to.equal(bidResponses.body.seatbid[1].seat || null);
-        expect(response[1].pm_dspid).to.equal(bidResponses.body.seatbid[1].bid[0].ext.dspid);
-        expect(response[0].partnerImpId).to.equal(bidResponses.body.seatbid[0].bid[0].id);
-      });
-
-      it('should check for dealChannel value selection', function () {
-        let request = spec.buildRequests(bidRequests, {
-          auctionId: 'new-auction-id'
-        });
-        let response = spec.interpretResponse(bidResponses, request);
-        expect(response).to.be.an('array').with.length.above(0);
-        expect(response[0].dealChannel).to.equal('PMPG');
-        expect(response[1].dealChannel).to.equal('PREF');
-      });
-
-      it('should check for unexpected dealChannel value selection', function () {
-        let request = spec.buildRequests(bidRequests, {
-          auctionId: 'new-auction-id'
-        });
-        let updateBiResponse = bidResponses;
-        updateBiResponse.body.seatbid[0].bid[0].ext.deal_channel = 11;
-
-        let response = spec.interpretResponse(updateBiResponse, request);
-
-        expect(response).to.be.an('array').with.length.above(0);
-        expect(response[0].dealChannel).to.equal(null);
-      });
-
-      it('should have a valid native bid response', function() {
-        let request = spec.buildRequests(nativeBidRequests, {
-          auctionId: 'new-auction-id'
-        });
-        let data = JSON.parse(request.data);
-        data.imp[0].id = '2a5571261281d4';
-        request.data = JSON.stringify(data);
-        let response = spec.interpretResponse(nativeBidResponse, request);
-        let assets = response[0].native.ortb.assets;
-        expect(response).to.be.an('array').with.length.above(0);
-        expect(response[0].native).to.exist.and.to.be.an('object');
-        expect(response[0].mediaType).to.exist.and.to.equal('native');
-        expect(assets).to.be.an('array').with.length.above(0);
-        expect(assets[0].title).to.exist.and.to.be.an('object');
-        expect(assets[1].img).to.exist.and.to.be.an('object');
-        expect(assets[1].img.url).to.exist.and.to.be.an('string');
-        expect(assets[1].img.h).to.exist;
-        expect(assets[1].img.w).to.exist;
-        expect(assets[2].data).to.exist.and.to.be.an('object');
-      });
-
-      it('should check for valid banner mediaType in case of multiformat request', function() {
-        let request = spec.buildRequests(bidRequests, {
-          auctionId: 'new-auction-id'
-        });
-        let response = spec.interpretResponse(bannerBidResponse, request);
-
-        expect(response[0].mediaType).to.equal('banner');
-      });
-
-      it('should check for valid native mediaType in case of multiformat request', function() {
-        let request = spec.buildRequests(nativeBidRequests, {
-          auctionId: 'new-auction-id'
-        });
-        let response = spec.interpretResponse(nativeBidResponse, request);
-
-        expect(response[0].mediaType).to.equal('native');
-      });
-
-      it('should not assign renderer if bid is native', function() {
-        let request = spec.buildRequests(nativeBidRequests, {
-          auctionId: 'new-auction-id'
-        });
-        let response = spec.interpretResponse(nativeBidResponse, request);
-        expect(response[0].renderer).to.not.exist;
-      });
-
-      it('should not assign renderer if bid is of banner', function() {
-        let request = spec.buildRequests(bidRequests, {
-          auctionId: 'new-auction-id'
-        });
-        let response = spec.interpretResponse(bidResponses, request);
-        expect(response[0].renderer).to.not.exist;
-      });
-
-      it('should set ibv field in bid.ext when bid.ext.ibv exists', function() {
-        let request = spec.buildRequests(bidRequests, {
-          auctionId: 'new-auction-id'
-        });
-
-        let copyOfBidResponse = utils.deepClone(bannerBidResponse);
-        let bidExt = utils.deepClone(copyOfBidResponse.body.seatbid[0].bid[0].ext);
-        copyOfBidResponse.body.seatbid[0].bid[0].ext = Object.assign(bidExt, {
-          ibv: true
-        });
-
-        let response = spec.interpretResponse(copyOfBidResponse, request);
-        expect(response[0].ext.ibv).to.equal(true);
-        expect(response[0].meta.mediaType).to.equal('video');
-      });
-
-      it('should not set ibv field when bid.ext does not exist ', function() {
-        let request = spec.buildRequests(bidRequests, {
-          auctionId: 'new-auction-id'
-        });
-
-        let response = spec.interpretResponse(bannerBidResponse, request);
-        expect(response[0].ext).to.not.exist;
-        expect(response[0].meta).to.exist;
-        expect(response[0].meta.mediaType).to.equal('banner');
-      });
-
-      if (FEATURES.VIDEO) {
-        it('should check for valid video mediaType in case of multiformat request', function() {
-          let request = spec.buildRequests(videoBidRequests, {
-            auctionId: 'new-auction-id'
-          });
-          let response = spec.interpretResponse(videoBidResponse, request);
-          expect(response[0].mediaType).to.equal('video');
-        });
-
-        it('should assign renderer if bid is video and request is for outstream', function() {
-          let request = spec.buildRequests(outstreamBidRequest, validOutstreamBidRequest);
-          let response = spec.interpretResponse(outstreamVideoBidResponse, request);
-          expect(response[0].renderer).to.exist;
-        });
-
-        it('should not assign renderer if bidderRequest is not present', function() {
-          let request = spec.buildRequests(outstreamBidRequest, {
-            auctionId: 'new-auction-id'
-          });
-          let response = spec.interpretResponse(outstreamVideoBidResponse, request);
-          expect(response[0].renderer).to.not.exist;
-        });
-
-        it('should not assign renderer if bid is video and request is for instream', function() {
-          let request = spec.buildRequests(videoBidRequests, {
-            auctionId: 'new-auction-id'
-          });
-          let response = spec.interpretResponse(videoBidResponse, request);
-          expect(response[0].renderer).to.not.exist;
-        });
-
-        it('should assign mediaType by reading bid.ext.mediaType', function() {
-          let newvideoRequests = [{
-            'bidder': 'pubmatic',
-            'params': {
-              'adSlot': 'SLOT_NHB1@728x90',
-              'publisherId': '5670',
-              'video': {
-                'mimes': ['video/mp4'],
-                'skippable': true,
-                'protocols': [1, 2, 5],
-                'linearity': 1
-              }
-            },
-            'mediaTypes': {
-              'video': {
-                'playerSize': [
-                  [640, 480]
-                ],
-                'protocols': [1, 2, 5],
-                'context': 'instream',
-                'mimes': ['video/flv'],
-                'skippable': false,
-                'skip': 1,
-                'linearity': 2
-              }
-            },
-            'adUnitCode': 'video1',
-            'transactionId': '803e3750-0bbe-4ffe-a548-b6eca15087bf',
-            'sizes': [
-              [640, 480]
-            ],
-            'bidId': '2c95df014cfe97',
-            'bidderRequestId': '1fe59391566442',
-            'auctionId': '3a4118ef-fb96-4416-b0b0-3cfc1cebc142',
-            'src': 'client',
-            'bidRequestsCount': 1,
-            'bidderRequestsCount': 1,
-            'bidderWinsCount': 0
-          }];
-          let newvideoBidResponses = {
-            'body': {
-              'id': '1621441141473',
-              'cur': 'USD',
-              'customdata': 'openrtb1',
-              'ext': {
-                'buyid': 'myBuyId'
-              },
-              'seatbid': [{
-                'bid': [{
-                  'id': '2c95df014cfe97',
-                  'impid': '2c95df014cfe97',
-                  'price': 4.2,
-                  'cid': 'test1',
-                  'crid': 'test2',
-                  'adm': "<VAST version='3.0'><Ad id='601364'><InLine><AdSystem>Acudeo Compatible</AdSystem><AdTitle>VAST 2.0 Instream Test 1</AdTitle><Description>VAST 2.0 Instream Test 1</Description><Creatives><Creative AdID='601364'><Linear skipoffset='20%'><TrackingEvents><Tracking event='close'><![CDATA[https://mytracking.com/linear/close]]></Tracking><Tracking event='skip'><![CDATA[https://mytracking.com/linear/skip]]></Tracking><MediaFiles><MediaFile delivery='progressive' type='video/mp4' bitrate='500' width='400' height='300' scalable='true' maintainAspectRatio='true'><![CDATA[https://localhost/pubmatic.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>",
-                  'w': 0,
-                  'h': 0,
-                  'dealId': 'ASEA-MS-KLY-TTD-DESKTOP-ID-VID-6S-030420',
-                  'ext': {
-                    'bidtype': 1
-                  }
-                }],
-                'ext': {
-                  'buyid': 'myBuyId'
-                }
-              }]
-            },
-            'headers': {}
-          }
-          let newrequest = spec.buildRequests(newvideoRequests, {
-            auctionId: 'new-auction-id'
-          });
-          let newresponse = spec.interpretResponse(newvideoBidResponses, newrequest);
-          expect(newresponse[0].mediaType).to.equal('video')
-        })
-
-        it('should assign mediaType even if bid.ext.mediaType does not exists', function() {
-          let newvideoRequests = [{
-            'bidder': 'pubmatic',
-            'params': {
-              'adSlot': 'SLOT_NHB1@728x90',
-              'publisherId': '5670',
-              'video': {
-                'mimes': ['video/mp4'],
-                'skippable': true,
-                'protocols': [1, 2, 5],
-                'linearity': 1
-              }
-            },
-            'mediaTypes': {
-              'video': {
-                'playerSize': [
-                  [640, 480]
-                ],
-                'protocols': [1, 2, 5],
-                'context': 'instream',
-                'mimes': ['video/flv'],
-                'skippable': false,
-                'skip': 1,
-                'linearity': 2
-              }
-            },
-            'adUnitCode': 'video1',
-            'transactionId': '803e3750-0bbe-4ffe-a548-b6eca15087bf',
-            'sizes': [
-              [640, 480]
-            ],
-            'bidId': '2c95df014cfe97',
-            'bidderRequestId': '1fe59391566442',
-            'auctionId': '3a4118ef-fb96-4416-b0b0-3cfc1cebc142',
-            'src': 'client',
-            'bidRequestsCount': 1,
-            'bidderRequestsCount': 1,
-            'bidderWinsCount': 0
-          }];
-          let newvideoBidResponses = {
-            'body': {
-              'id': '1621441141473',
-              'cur': 'USD',
-              'customdata': 'openrtb1',
-              'ext': {
-                'buyid': 'myBuyId'
-              },
-              'seatbid': [{
-                'bid': [{
-                  'id': '2c95df014cfe97',
-                  'impid': '2c95df014cfe97',
-                  'price': 4.2,
-                  'cid': 'test1',
-                  'crid': 'test2',
-                  'adm': "<VAST version='3.0'><Ad id='601364'><InLine><AdSystem>Acudeo Compatible</AdSystem><AdTitle>VAST 2.0 Instream Test 1</AdTitle><Description>VAST 2.0 Instream Test 1</Description><Creatives><Creative AdID='601364'><Linear skipoffset='20%'><TrackingEvents><Tracking event='close'><![CDATA[https://mytracking.com/linear/close]]></Tracking><Tracking event='skip'><![CDATA[https://mytracking.com/linear/skip]]></Tracking><MediaFiles><MediaFile delivery='progressive' type='video/mp4' bitrate='500' width='400' height='300' scalable='true' maintainAspectRatio='true'><![CDATA[https://localhost/pubmatic.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>",
-                  'w': 0,
-                  'h': 0,
-                  'dealId': 'ASEA-MS-KLY-TTD-DESKTOP-ID-VID-6S-030420'
-                }],
-                'ext': {
-                  'buyid': 'myBuyId'
-                }
-              }]
-            },
-            'headers': {}
-          }
-          let newrequest = spec.buildRequests(newvideoRequests, {
-            auctionId: 'new-auction-id'
-          });
-          let newresponse = spec.interpretResponse(newvideoBidResponses, newrequest);
-          expect(newresponse[0].mediaType).to.equal('video')
-        });
->>>>>>> a60d6679b (PubMatic Bid Adapter : support for InBannerVideo (IBV) Field in Bid Response with meta.mediaType (#12484))
       }
       expect(response[0].dealId).to.equal(bidResponses.body.seatbid[0].bid[0].dealid);
       expect(response[0].currency).to.equal('USD');
       expect(response[0].netRevenue).to.equal(true);
-      expect(response[0].ttl).to.equal(300);
+      expect(response[0].ttl).to.equal(360);
       expect(response[0].meta.networkId).to.equal(123);
       // expect(response[0].meta.buyerId).to.equal(976);
       expect(response[0].meta.clickUrl).to.equal('blackrock.com');
@@ -4554,7 +4209,6 @@ describe('PubMatic adapter', function () {
 
       request = JSON.parse(request.data);
 
-<<<<<<< HEAD
       expect(response).to.be.an('array').with.length.above(0);
       expect(response[0].requestId).to.equal(request.imp[0].id);
       expect(response[0].dealChannel).to.equal(undefined);
@@ -4564,55 +4218,6 @@ describe('PubMatic adapter', function () {
     it('should check for unexpected dealChannel value selection', function () {
       let request = spec.buildRequests(bidRequests, {
         'auctionId': 'new-auction-id'
-=======
-        const bid = {
-          'adomain': [
-            'mystartab.com'
-          ],
-          cat: ['IAB_CATEGORY'],
-          ext: {
-            advid: '12',
-            'dspid': 6,
-            'deal_channel': 1,
-            'bidtype': 0,
-            advertiserId: 'adid',
-            dsa,
-            // networkName: 'nwnm',
-            // primaryCatId: 'pcid',
-            // advertiserName: 'adnm',
-            // agencyId: 'agid',
-            // agencyName: 'agnm',
-            // brandId: 'brid',
-            // brandName: 'brnm',
-            // dchain: 'dc',
-            // demandSource: 'ds',
-            // secondaryCatIds: ['secondaryCatIds']
-          },
-        };
-
-        const br = {
-          mediaType: 'video'
-        };
-        prepareMetaObject(br, bid, null);
-        expect(br.meta.networkId).to.equal(6); // dspid
-        expect(br.meta.buyerId).to.equal('12'); // adid
-        expect(br.meta.advertiserId).to.equal('12');
-        // expect(br.meta.networkName).to.equal('nwnm');
-        expect(br.meta.primaryCatId).to.equal('IAB_CATEGORY');
-        // expect(br.meta.advertiserName).to.equal('adnm');
-        expect(br.meta.agencyId).to.equal('12');
-        // expect(br.meta.agencyName).to.equal('agnm');
-        expect(br.meta.brandId).to.equal('mystartab.com');
-        // expect(br.meta.brandName).to.equal('brnm');
-        // expect(br.meta.dchain).to.equal('dc');
-        expect(br.meta.demandSource).to.equal(6);
-        expect(br.meta.secondaryCatIds).to.be.an('array').with.length.above(0);
-        expect(br.meta.secondaryCatIds[0]).to.equal('IAB_CATEGORY');
-        expect(br.meta.advertiserDomains).to.be.an('array').with.length.above(0); // adomain
-        expect(br.meta.clickUrl).to.equal('mystartab.com'); // adomain
-        expect(br.meta.dsa).to.equal(dsa); // dsa
-        expect(br.meta.mediaType).to.equal('video'); // mediaType
->>>>>>> a60d6679b (PubMatic Bid Adapter : support for InBannerVideo (IBV) Field in Bid Response with meta.mediaType (#12484))
       });
       let updateBiResponse = bidResponses;
       updateBiResponse.body.seatbid[0].bid[0].ext.deal_channel = 11;
@@ -4672,6 +4277,33 @@ describe('PubMatic adapter', function () {
       let response = spec.interpretResponse(bidResponses, request);
       expect(response[0].renderer).to.not.exist;
     });
+
+	it('should set ibv field in bid.ext when bid.ext.ibv exists', function() {
+        let request = spec.buildRequests(bidRequests, {
+          auctionId: 'new-auction-id'
+        });
+
+        let copyOfBidResponse = utils.deepClone(bannerBidResponse);
+        let bidExt = utils.deepClone(copyOfBidResponse.body.seatbid[0].bid[0].ext);
+        copyOfBidResponse.body.seatbid[0].bid[0].ext = Object.assign(bidExt, {
+          ibv: true
+        });
+
+        let response = spec.interpretResponse(copyOfBidResponse, request);
+        expect(response[0].ext.ibv).to.equal(true);
+        expect(response[0].meta.mediaType).to.equal('video');
+      });
+
+      it('should not set ibv field when bid.ext does not exist ', function() {
+        let request = spec.buildRequests(bidRequests, {
+          auctionId: 'new-auction-id'
+        });
+
+        let response = spec.interpretResponse(bannerBidResponse, request);
+        expect(response[0].ext).to.not.exist;
+        expect(response[0].meta).to.exist;
+        expect(response[0].meta.mediaType).to.equal('banner');
+      });
 
     it('should assign mediaType by reading bid.ext.mediaType', function() {
       let newvideoRequests = [{
@@ -5074,58 +4706,6 @@ describe('PubMatic adapter', function () {
         expect(data.imp[0]['banner']['battr']).to.equal(undefined);
       });
     });
-
-    describe('setIBVField', function() {
-      it('should set ibv field in newBid.ext when bid.ext.ibv exists', function() {
-        const bid = {
-          ext: {
-            ibv: true
-          }
-        };
-        const newBid = {};
-        setIBVField(bid, newBid);
-        expect(newBid.ext).to.exist;
-        expect(newBid.ext.ibv).to.equal(true);
-        expect(newBid.meta).to.exist;
-        expect(newBid.meta.mediaType).to.equal('video');
-      });
-
-      it('should not set ibv field when bid.ext.ibv does not exist', function() {
-        const bid = {
-          ext: {}
-        };
-        const newBid = {};
-        setIBVField(bid, newBid);
-        expect(newBid.ext).to.not.exist;
-        expect(newBid.meta).to.not.exist;
-      });
-
-      it('should not set ibv field when bid.ext does not exist', function() {
-        const bid = {};
-        const newBid = {};
-        setIBVField(bid, newBid);
-        expect(newBid.ext).to.not.exist;
-        expect(newBid.meta).to.not.exist;
-      });
-
-      it('should preserve existing newBid.ext properties', function() {
-        const bid = {
-          ext: {
-            ibv: true
-          }
-        };
-        const newBid = {
-          ext: {
-            existingProp: 'should remain'
-          }
-        };
-        setIBVField(bid, newBid);
-        expect(newBid.ext.existingProp).to.equal('should remain');
-        expect(newBid.ext.ibv).to.equal(true);
-        expect(newBid.meta).to.exist;
-        expect(newBid.meta.mediaType).to.equal('video');
-      });
-    });
   });
 
   describe('getDeviceConnectionType', function() {
@@ -5183,6 +4763,57 @@ describe('PubMatic adapter', function () {
     });
   }
 
+  describe('setIBVField', function() {
+	it('should set ibv field in newBid.ext when bid.ext.ibv exists', function() {
+	  const bid = {
+		ext: {
+		  ibv: true
+		}
+	  };
+	  const newBid = {};
+	  setIBVField(bid, newBid);
+	  expect(newBid.ext).to.exist;
+	  expect(newBid.ext.ibv).to.equal(true);
+	  expect(newBid.meta).to.exist;
+	  expect(newBid.meta.mediaType).to.equal('video');
+	});
+
+	it('should not set ibv field when bid.ext.ibv does not exist', function() {
+	  const bid = {
+		ext: {}
+	  };
+	  const newBid = {};
+	  setIBVField(bid, newBid);
+	  expect(newBid.ext).to.not.exist;
+	  expect(newBid.meta).to.not.exist;
+	});
+
+	it('should not set ibv field when bid.ext does not exist', function() {
+	  const bid = {};
+	  const newBid = {};
+	  setIBVField(bid, newBid);
+	  expect(newBid.ext).to.not.exist;
+	  expect(newBid.meta).to.not.exist;
+	});
+
+	it('should preserve existing newBid.ext properties', function() {
+	  const bid = {
+		ext: {
+		  ibv: true
+		}
+	  };
+	  const newBid = {
+		ext: {
+		  existingProp: 'should remain'
+		}
+	  };
+	  setIBVField(bid, newBid);
+	  expect(newBid.ext.existingProp).to.equal('should remain');
+	  expect(newBid.ext.ibv).to.equal(true);
+	  expect(newBid.meta).to.exist;
+	  expect(newBid.meta.mediaType).to.equal('video');
+	});
+  });
   if (FEATURES.VIDEO) {
     describe('Video request params', function() {
       let sandbox, utilsMock, newVideoRequest;
@@ -5307,7 +4938,6 @@ describe('PubMatic adapter', function () {
     });
   });
 
-<<<<<<< HEAD
   describe('Fledge Auction config Response', function () {
     let response;
     let bidRequestConfigs = [
@@ -5425,10 +5055,12 @@ describe('PubMatic adapter', function () {
           dchain: 'dc',
           // demandSource: 'ds',
           // secondaryCatIds: ['secondaryCatIds']
-        }
+        },
       };
 
-      const br = {};
+	  const br = {
+		mediaType: 'video'
+	  };
       prepareMetaObject(br, bid, null);
       expect(br.meta.networkId).to.equal(6); // dspid
       expect(br.meta.buyerId).to.equal('12'); // adid
@@ -5447,6 +5079,7 @@ describe('PubMatic adapter', function () {
       expect(br.meta.advertiserDomains).to.be.an('array').with.length.above(0); // adomain
       expect(br.meta.clickUrl).to.equal('mystartab.com'); // adomain
       expect(br.meta.dsa).to.equal(dsa); // dsa
+	  expect(br.meta.mediaType).to.equal('video'); // mediaType
     });
 
     it('Should be empty, when ext and adomain is absent in bid object', function () {
@@ -5482,9 +5115,7 @@ describe('PubMatic adapter', function () {
       expect(br.meta.agencyId).to.equal('5100');
     });
   });
-})
-})
-=======
+
   describe('setTTL', function() {
     it('should set ttl field in newBid.ttl when bid.exp exists', function() {
       const bid = {
@@ -5530,4 +5161,3 @@ describe('PubMatic adapter', function () {
     });
   });
 });
->>>>>>> e11a5111b (PubMatic Bid Adapter: Updated default TTL and added mediaType based TTL (#12487))
