@@ -560,8 +560,8 @@ function getPatternsToReplace() {
 function getFooterContent() {
   var isIdentityOnly = argv.isIdentityOnly || 0;
   return isIdentityOnly 
-    ? `\nif (typeof window.IHPWT === 'object' && typeof window.IHPWT.jsLoaded === 'function') {\n window.IHPWT.jsLoaded();\n}`
-    : `\nif (typeof window.PWT === 'object' && typeof window.PWT.jsLoaded === 'function') {\n window.PWT.jsLoaded();\n}`;
+    ? `\nif (typeof window.IHPWT === 'object' && typeof window.IHPWT.jsLoaded === 'function') {\n setTimeout(function() { window.IHPWT.jsLoaded();},5)\n}`
+    : `\nif (typeof window.PWT === 'object' && typeof window.PWT.jsLoaded === 'function') {\n setTimeout(function() { window.PWT.jsLoaded();},5)\n}`;
 }
 
 gulp.task('append-footer', function () {
