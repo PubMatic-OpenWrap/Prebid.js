@@ -1517,11 +1517,6 @@ export const spec = {
               }
               prepareMetaObject(newBid, bid, seatbidder.seat);
 			  setIBVField(bid, newBid);
-              // START of Experimental change
-              if (response.body.ext) {
-                newBid['ext'] = response.body.ext;
-              }
-              // END of Experimental change
 
               // adserverTargeting
               if (seatbidder.ext && seatbidder.ext.buyid) {
