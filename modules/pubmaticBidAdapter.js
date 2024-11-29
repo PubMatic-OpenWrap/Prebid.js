@@ -1548,7 +1548,7 @@ export const spec = {
                 requestId: impData.id,
                 width: 0,
                 height: 0,
-                ttl: 300,
+                ttl: 0,
                 ad: '',
                 creativeId: 0,
                 netRevenue: NET_REVENUE,
