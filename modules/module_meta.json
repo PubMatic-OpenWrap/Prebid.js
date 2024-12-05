@@ -1,311 +1,278 @@
 {
-    "Analytics Module": [
+    "Others": [
         {
-            "name": "id5AnalyticsAdapter",
-            "path": "/modules/id5AnalyticsAdapter.js",
-            "module": "id5AnalyticsAdapter"
+            "name": "bidViewabilityIO",
+            "path": "/modules/bidViewabilityIO.js",
+            "module": "bidViewabilityIO"
         },
         {
-            "name": "AsteriobidPbmAnalyticsAdapter",
-            "path": "/modules/AsteriobidPbmAnalyticsAdapter.js",
-            "module": "AsteriobidPbmAnalyticsAdapter"
+            "name": "dchain",
+            "path": "/modules/dchain.js",
+            "module": "dchain"
         },
         {
-            "name": "adagioAnalyticsAdapter",
-            "path": "/modules/adagioAnalyticsAdapter.js",
-            "module": "adagioAnalyticsAdapter"
+            "name": "gppControl_usstates",
+            "path": "/modules/gppControl_usstates.js",
+            "module": "gppControl_usstates"
         },
         {
-            "name": "malltvAnalyticsAdapter",
-            "path": "/modules/malltvAnalyticsAdapter.js",
-            "module": "malltvAnalyticsAdapter"
+            "name": "uid2IdSystem_shared",
+            "path": "/modules/uid2IdSystem_shared.js",
+            "module": "uid2IdSystem_shared"
         },
         {
-            "name": "byDataAnalyticsAdapter",
-            "path": "/modules/byDataAnalyticsAdapter.js",
-            "module": "byDataAnalyticsAdapter"
+            "name": "anPspParamsConverter",
+            "path": "/modules/anPspParamsConverter.js",
+            "module": "anPspParamsConverter"
         },
         {
-            "name": "concertAnalyticsAdapter",
-            "path": "/modules/concertAnalyticsAdapter.js",
-            "module": "concertAnalyticsAdapter"
+            "name": "konduitAccelerate",
+            "path": "/modules/konduitWrapper.js",
+            "module": "konduitWrapper"
         },
         {
-            "name": "symitriAnalyticsAdapter",
-            "path": "/modules/symitriAnalyticsAdapter.js",
-            "module": "symitriAnalyticsAdapter"
+            "name": "iABCategoryTranslation",
+            "path": "/modules/categoryTranslation.js",
+            "module": "categoryTranslation"
         },
         {
-            "name": "smartyadsAnalyticsAdapter",
-            "path": "/modules/smartyadsAnalyticsAdapter.js",
-            "module": "smartyadsAnalyticsAdapter"
+            "name": "nativeRendering",
+            "path": "/modules/nativeRendering.js",
+            "module": "nativeRendering"
         },
         {
-            "name": "oxxionAnalyticsAdapter",
-            "path": "/modules/oxxionAnalyticsAdapter.js",
-            "module": "oxxionAnalyticsAdapter"
+            "name": "idImportLibrary",
+            "path": "/modules/idImportLibrary.js",
+            "module": "idImportLibrary"
         },
         {
-            "name": "liveIntentAnalyticsAdapter",
-            "path": "/modules/liveIntentAnalyticsAdapter.js",
-            "module": "liveIntentAnalyticsAdapter"
+            "name": "yieldmoSyntheticInventoryModule",
+            "path": "/modules/yieldmoSyntheticInventoryModule.js",
+            "module": "yieldmoSyntheticInventoryModule"
         },
         {
-            "name": "appierAnalyticsAdapter",
-            "path": "/modules/appierAnalyticsAdapter.js",
-            "module": "appierAnalyticsAdapter"
+            "name": "dsaControl",
+            "path": "/modules/dsaControl.js",
+            "module": "dsaControl"
         },
         {
-            "name": "invisiblyAnalyticsAdapter",
-            "path": "/modules/invisiblyAnalyticsAdapter.js",
-            "module": "invisiblyAnalyticsAdapter"
+            "name": "paapiForGpt",
+            "path": "/modules/paapiForGpt.js",
+            "module": "paapiForGpt"
         },
         {
-            "name": "yieldoneAnalyticsAdapter",
-            "path": "/modules/yieldoneAnalyticsAdapter.js",
-            "module": "yieldoneAnalyticsAdapter"
+            "name": "paapi",
+            "path": "/modules/paapi.js",
+            "module": "paapi"
         },
         {
-            "name": "adWMGAnalyticsAdapter",
-            "path": "/modules/adWMGAnalyticsAdapter.js",
-            "module": "adWMGAnalyticsAdapter"
+            "name": "supplyChainObject",
+            "path": "/modules/schain.js",
+            "module": "schain"
         },
         {
-            "name": "yuktamediaAnalyticsAdapter",
-            "path": "/modules/yuktamediaAnalyticsAdapter.js",
-            "module": "yuktamediaAnalyticsAdapter"
+            "name": "sizeMappingV2",
+            "path": "/modules/sizeMappingV2.js",
+            "module": "sizeMappingV2"
         },
         {
-            "name": "adlooxAnalyticsAdapter",
-            "path": "/modules/adlooxAnalyticsAdapter.js",
-            "module": "adlooxAnalyticsAdapter"
+            "name": "allowActivities",
+            "path": "/modules/allowActivities.js",
+            "module": "allowActivities"
         },
         {
-            "name": "intentIqAnalyticsAdapter",
-            "path": "/modules/intentIqAnalyticsAdapter.js",
-            "module": "intentIqAnalyticsAdapter"
+            "name": "bidViewability",
+            "path": "/modules/bidViewability.js",
+            "module": "bidViewability"
         },
         {
-            "name": "medianetAnalyticsAdapter",
-            "path": "/modules/medianetAnalyticsAdapter.js",
-            "module": "medianetAnalyticsAdapter"
+            "name": "topLevelPaapi",
+            "path": "/modules/topLevelPaapi.js",
+            "module": "topLevelPaapi"
         },
         {
-            "name": "bidwatchAnalyticsAdapter",
-            "path": "/modules/bidwatchAnalyticsAdapter.js",
-            "module": "bidwatchAnalyticsAdapter"
+            "name": "bidViewabilityIO",
+            "path": "/modules/gppControl_usnat.js",
+            "module": "gppControl_usnat"
         },
         {
-            "name": "nobidAnalyticsAdapter",
-            "path": "/modules/nobidAnalyticsAdapter.js",
-            "module": "nobidAnalyticsAdapter"
+            "name": "Currency",
+            "path": "/modules/currency.js",
+            "module": "currency"
         },
         {
-            "name": "fintezaAnalyticsAdapter",
-            "path": "/modules/fintezaAnalyticsAdapter.js",
-            "module": "fintezaAnalyticsAdapter"
+            "name": "consentManagementTcf",
+            "path": "/modules/consentManagementTcf.js",
+            "module": "consentManagementTcf"
         },
         {
-            "name": "optimonAnalyticsAdapter",
-            "path": "/modules/optimonAnalyticsAdapter.js",
-            "module": "optimonAnalyticsAdapter"
+            "name": "tcfControl",
+            "path": "/modules/tcfControl.js",
+            "module": "tcfControl"
         },
         {
-            "name": "pubwiseAnalyticsAdapter",
-            "path": "/modules/pubwiseAnalyticsAdapter.js",
-            "module": "pubwiseAnalyticsAdapter"
+            "name": "gAMExpress",
+            "path": "/modules/express.js",
+            "module": "express"
         },
         {
-            "name": "pubmaticAnalyticsAdapter",
-            "path": "/modules/pubmaticAnalyticsAdapter.js",
-            "module": "pubmaticAnalyticsAdapter"
+            "name": "instreamTracking",
+            "path": "/modules/instreamTracking.js",
+            "module": "instreamTracking"
         },
         {
-            "name": "adxcgAnalyticsAdapter",
-            "path": "/modules/adxcgAnalyticsAdapter.js",
-            "module": "adxcgAnalyticsAdapter"
+            "name": "gptPreAuction",
+            "path": "/modules/gptPreAuction.js",
+            "module": "gptPreAuction"
         },
         {
-            "name": "pubmaticIHAnalyticsAdapter",
-            "path": "/modules/pubmaticIHAnalyticsAdapter.js",
-            "module": "pubmaticIHAnalyticsAdapter"
+            "name": "Server-to-Server Testing",
+            "path": "/modules/s2sTesting.js",
+            "module": "s2sTesting"
         },
         {
-            "name": "hadronAnalyticsAdapter",
-            "path": "/modules/hadronAnalyticsAdapter.js",
-            "module": "hadronAnalyticsAdapter"
+            "name": "consentManagementGpp",
+            "path": "/modules/consentManagementGpp.js",
+            "module": "consentManagementGpp"
         },
         {
-            "name": "genericAnalyticsAdapter",
-            "path": "/modules/genericAnalyticsAdapter.js",
-            "module": "genericAnalyticsAdapter"
+            "name": "CCPA",
+            "path": "/modules/consentManagementUsp.js",
+            "module": "consentManagementUsp"
         },
         {
-            "name": "growthCodeAnalyticsAdapter",
-            "path": "/modules/growthCodeAnalyticsAdapter.js",
-            "module": "growthCodeAnalyticsAdapter"
+            "name": "priceFloors",
+            "path": "/modules/priceFloors.js",
+            "module": "priceFloors"
         },
         {
-            "name": "pianoDmpAnalyticsAdapter",
-            "path": "/modules/pianoDmpAnalyticsAdapter.js",
-            "module": "pianoDmpAnalyticsAdapter"
+            "name": "topicsFpdModule",
+            "path": "/modules/topicsFpdModule.js",
+            "module": "topicsFpdModule"
         },
         {
-            "name": "rivrAnalyticsAdapter",
-            "path": "/modules/rivrAnalyticsAdapter.js",
-            "module": "rivrAnalyticsAdapter"
+            "name": "sizeMapping",
+            "path": "/modules/sizeMapping.js",
+            "module": "sizeMapping"
         },
         {
-            "name": "ucfunnelAnalyticsAdapter",
-            "path": "/modules/ucfunnelAnalyticsAdapter.js",
-            "module": "ucfunnelAnalyticsAdapter"
+            "name": "dfpAdpod",
+            "path": "/modules/dfpAdpod.js",
+            "module": "dfpAdpod"
         },
         {
-            "name": "adxpremiumAnalyticsAdapter",
-            "path": "/modules/adxpremiumAnalyticsAdapter.js",
-            "module": "adxpremiumAnalyticsAdapter"
+            "name": "multibid",
+            "path": "/modules/multibid/index.js",
+            "module": "multibid"
         },
         {
-            "name": "adkernelAdnAnalyticsAdapter",
-            "path": "/modules/adkernelAdnAnalyticsAdapter.js",
-            "module": "adkernelAdnAnalyticsAdapter"
+            "name": "fanAdapter",
+            "path": "/modules/fanAdapter.js",
+            "module": "fanAdapter"
+        }
+    ],
+    "Video": [
+        {
+            "name": "freeWheelAdserverVideo",
+            "path": "/modules/freeWheelAdserverVideo.js",
+            "module": "freeWheelAdserverVideo"
         },
         {
-            "name": "greenbidsAnalyticsAdapter",
-            "path": "/modules/greenbidsAnalyticsAdapter.js",
-            "module": "greenbidsAnalyticsAdapter"
+            "name": "adplayerproVideoProvider",
+            "path": "/modules/adplayerproVideoProvider.js",
+            "module": "adplayerproVideoProvider"
         },
         {
-            "name": "agmaAnalyticsAdapter",
-            "path": "/modules/agmaAnalyticsAdapter.js",
-            "module": "agmaAnalyticsAdapter"
+            "name": "jwplayerVideoProvider",
+            "path": "/modules/jwplayerVideoProvider.js",
+            "module": "jwplayerVideoProvider"
         },
         {
-            "name": "pubperfAnalyticsAdapter",
-            "path": "/modules/pubperfAnalyticsAdapter.js",
-            "module": "pubperfAnalyticsAdapter"
-        },
-        {
-            "name": "kargoAnalyticsAdapter",
-            "path": "/modules/kargoAnalyticsAdapter.js",
-            "module": "kargoAnalyticsAdapter"
-        },
-        {
-            "name": "relevantAnalyticsAdapter",
-            "path": "/modules/relevantAnalyticsAdapter.js",
-            "module": "relevantAnalyticsAdapter"
-        },
-        {
-            "name": "magniteAnalyticsAdapter",
-            "path": "/modules/magniteAnalyticsAdapter.js",
-            "module": "magniteAnalyticsAdapter"
-        },
-        {
-            "name": "ooloAnalyticsAdapter",
-            "path": "/modules/ooloAnalyticsAdapter.js",
-            "module": "ooloAnalyticsAdapter"
-        },
-        {
-            "name": "33acrossAnalyticsAdapter",
-            "path": "/modules/33acrossAnalyticsAdapter.js",
-            "module": "33acrossAnalyticsAdapter"
-        },
-        {
-            "name": "pulsepointAnalyticsAdapter",
-            "path": "/modules/pulsepointAnalyticsAdapter.js",
-            "module": "pulsepointAnalyticsAdapter"
-        },
-        {
-            "name": "atsAnalyticsAdapter",
-            "path": "/modules/atsAnalyticsAdapter.js",
-            "module": "atsAnalyticsAdapter"
-        },
-        {
-            "name": "zeta_global_sspAnalyticsAdapter",
-            "path": "/modules/zeta_global_sspAnalyticsAdapter.js",
-            "module": "zeta_global_sspAnalyticsAdapter"
-        },
-        {
-            "name": "eightPodAnalyticsAdapter",
-            "path": "/modules/eightPodAnalyticsAdapter.js",
-            "module": "eightPodAnalyticsAdapter"
-        },
-        {
-            "name": "pubxaiAnalyticsAdapter",
-            "path": "/modules/pubxaiAnalyticsAdapter.js",
-            "module": "pubxaiAnalyticsAdapter"
-        },
-        {
-            "name": "konduitAnalyticsAdapter",
-            "path": "/modules/konduitAnalyticsAdapter.js",
-            "module": "konduitAnalyticsAdapter"
-        },
-        {
-            "name": "asteriobidAnalyticsAdapter",
-            "path": "/modules/asteriobidAnalyticsAdapter.js",
-            "module": "asteriobidAnalyticsAdapter"
-        },
-        {
-            "name": "roxotAnalyticsAdapter",
-            "path": "/modules/roxotAnalyticsAdapter.js",
-            "module": "roxotAnalyticsAdapter"
-        },
-        {
-            "name": "yandexAnalyticsAdapter",
-            "path": "/modules/yandexAnalyticsAdapter.js",
-            "module": "yandexAnalyticsAdapter"
-        },
-        {
-            "name": "terceptAnalyticsAdapter",
-            "path": "/modules/terceptAnalyticsAdapter.js",
-            "module": "terceptAnalyticsAdapter"
-        },
-        {
-            "name": "sharethroughAnalyticsAdapter",
-            "path": "/modules/sharethroughAnalyticsAdapter.js",
-            "module": "sharethroughAnalyticsAdapter"
-        },
-        {
-            "name": "advRedAnalyticsAdapter",
-            "path": "/modules/advRedAnalyticsAdapter.js",
-            "module": "advRedAnalyticsAdapter"
-        },
-        {
-            "name": "pubstackAnalyticsAdapter",
-            "path": "/modules/pubstackAnalyticsAdapter.js",
-            "module": "pubstackAnalyticsAdapter"
-        },
-        {
-            "name": "automatadAnalyticsAdapter",
-            "path": "/modules/automatadAnalyticsAdapter.js",
-            "module": "automatadAnalyticsAdapter"
-        },
-        {
-            "name": "conversantAnalyticsAdapter",
-            "path": "/modules/conversantAnalyticsAdapter.js",
-            "module": "conversantAnalyticsAdapter"
-        },
-        {
-            "name": "datablocksAnalyticsAdapter",
-            "path": "/modules/datablocksAnalyticsAdapter.js",
-            "module": "datablocksAnalyticsAdapter"
-        },
-        {
-            "name": "livewrappedAnalyticsAdapter",
-            "path": "/modules/livewrappedAnalyticsAdapter.js",
-            "module": "livewrappedAnalyticsAdapter"
-        },
-        {
-            "name": "scaleableAnalyticsAdapter",
-            "path": "/modules/scaleableAnalyticsAdapter.js",
-            "module": "scaleableAnalyticsAdapter"
+            "name": "videojsVideoProvider",
+            "path": "/modules/videojsVideoProvider.js",
+            "module": "videojsVideoProvider"
         }
     ],
     "RTD Module": [
         {
-            "name": "brandmetricsRtdProvider",
-            "path": "/modules/brandmetricsRtdProvider.js",
-            "module": "brandmetricsRtdProvider"
+            "name": "imRtdProvider",
+            "path": "/modules/imRtdProvider.js",
+            "module": "imRtdProvider"
+        },
+        {
+            "name": "humansecurityRtdProvider",
+            "path": "/modules/humansecurityRtdProvider.js",
+            "module": "humansecurityRtdProvider"
+        },
+        {
+            "name": "relevadRtdProvider",
+            "path": "/modules/relevadRtdProvider.js",
+            "module": "relevadRtdProvider"
+        },
+        {
+            "name": "1plusXRtdProvider",
+            "path": "/modules/1plusXRtdProvider.js",
+            "module": "1plusXRtdProvider"
+        },
+        {
+            "name": "cleanioRtdProvider",
+            "path": "/modules/cleanioRtdProvider.js",
+            "module": "cleanioRtdProvider"
+        },
+        {
+            "name": "arcspanRtdProvider",
+            "path": "/modules/arcspanRtdProvider.js",
+            "module": "arcspanRtdProvider"
+        },
+        {
+            "name": "azerionedgeRtdProvider",
+            "path": "/modules/azerionedgeRtdProvider.js",
+            "module": "azerionedgeRtdProvider"
+        },
+        {
+            "name": "wurflRtdProvider",
+            "path": "/modules/wurflRtdProvider.js",
+            "module": "wurflRtdProvider"
+        },
+        {
+            "name": "mgidRtdProvider",
+            "path": "/modules/mgidRtdProvider.js",
+            "module": "mgidRtdProvider"
+        },
+        {
+            "name": "medianetRtdProvider",
+            "path": "/modules/medianetRtdProvider.js",
+            "module": "medianetRtdProvider"
+        },
+        {
+            "name": "goldfishAdsRtdProvider",
+            "path": "/modules/goldfishAdsRtdProvider.js",
+            "module": "goldfishAdsRtdProvider"
+        },
+        {
+            "name": "mediafilterRtdProvider",
+            "path": "/modules/mediafilterRtdProvider.js",
+            "module": "mediafilterRtdProvider"
+        },
+        {
+            "name": "experianRtdProvider",
+            "path": "/modules/experianRtdProvider.js",
+            "module": "experianRtdProvider"
+        },
+        {
+            "name": "sirdataRtdProvider",
+            "path": "/modules/sirdataRtdProvider.js",
+            "module": "sirdataRtdProvider"
+        },
+        {
+            "name": "timeoutRtdProvider",
+            "path": "/modules/timeoutRtdProvider.js",
+            "module": "timeoutRtdProvider"
+        },
+        {
+            "name": "akamaiDapRtdProvider",
+            "path": "/modules/akamaiDapRtdProvider.js",
+            "module": "akamaiDapRtdProvider"
         },
         {
             "name": "permutiveRtdProvider",
@@ -318,24 +285,9 @@
             "module": "geolocationRtdProvider"
         },
         {
-            "name": "oxxionRtdProvider",
-            "path": "/modules/oxxionRtdProvider.js",
-            "module": "oxxionRtdProvider"
-        },
-        {
-            "name": "raynRtdProvider",
-            "path": "/modules/raynRtdProvider.js",
-            "module": "raynRtdProvider"
-        },
-        {
             "name": "reconciliationRtdProvider",
             "path": "/modules/reconciliationRtdProvider.js",
             "module": "reconciliationRtdProvider"
-        },
-        {
-            "name": "adlooxRtdProvider",
-            "path": "/modules/adlooxRtdProvider.js",
-            "module": "adlooxRtdProvider"
         },
         {
             "name": "optimeraRtdProvider",
@@ -343,19 +295,14 @@
             "module": "optimeraRtdProvider"
         },
         {
-            "name": "a1MediaRtdProvider",
-            "path": "/modules/a1MediaRtdProvider.js",
-            "module": "a1MediaRtdProvider"
+            "name": "aaxBlockmeterRtdProvider",
+            "path": "/modules/aaxBlockmeterRtdProvider.js",
+            "module": "aaxBlockmeterRtdProvider"
         },
         {
-            "name": "contxtfulRtdProvider",
-            "path": "/modules/contxtfulRtdProvider.js",
-            "module": "contxtfulRtdProvider"
-        },
-        {
-            "name": "humansecurityRtdProvider",
-            "path": "/modules/humansecurityRtdProvider.js",
-            "module": "humansecurityRtdProvider"
+            "name": "mobianRtdProvider",
+            "path": "/modules/mobianRtdProvider.js",
+            "module": "mobianRtdProvider"
         },
         {
             "name": "iasRtdProvider",
@@ -363,44 +310,29 @@
             "module": "iasRtdProvider"
         },
         {
-            "name": "blueconicRtdProvider",
-            "path": "/modules/blueconicRtdProvider.js",
-            "module": "blueconicRtdProvider"
+            "name": "geoedgeRtdProvider",
+            "path": "/modules/geoedgeRtdProvider.js",
+            "module": "geoedgeRtdProvider"
         },
         {
-            "name": "mgidRtdProvider",
-            "path": "/modules/mgidRtdProvider.js",
-            "module": "mgidRtdProvider"
+            "name": "pubxaiRtdProvider",
+            "path": "/modules/pubxaiRtdProvider.js",
+            "module": "pubxaiRtdProvider"
         },
         {
-            "name": "wurflRtdProvider",
-            "path": "/modules/wurflRtdProvider.js",
-            "module": "wurflRtdProvider"
-        },
-        {
-            "name": "akamaiDapRtdProvider",
-            "path": "/modules/akamaiDapRtdProvider.js",
-            "module": "akamaiDapRtdProvider"
-        },
-        {
-            "name": "dynamicAdBoostRtdProvider",
-            "path": "/modules/dynamicAdBoostRtdProvider.js",
-            "module": "dynamicAdBoostRtdProvider"
-        },
-        {
-            "name": "arcspanRtdProvider",
-            "path": "/modules/arcspanRtdProvider.js",
-            "module": "arcspanRtdProvider"
-        },
-        {
-            "name": "relevadRtdProvider",
-            "path": "/modules/relevadRtdProvider.js",
-            "module": "relevadRtdProvider"
+            "name": "hadronRtdProvider",
+            "path": "/modules/hadronRtdProvider.js",
+            "module": "hadronRtdProvider"
         },
         {
             "name": "intersectionRtdProvider",
             "path": "/modules/intersectionRtdProvider.js",
             "module": "intersectionRtdProvider"
+        },
+        {
+            "name": "qortexRtdProvider",
+            "path": "/modules/qortexRtdProvider.js",
+            "module": "qortexRtdProvider"
         },
         {
             "name": "symitriDapRtdProvider",
@@ -413,14 +345,9 @@
             "module": "adagioRtdProvider"
         },
         {
-            "name": "growthCodeRtdProvider",
-            "path": "/modules/growthCodeRtdProvider.js",
-            "module": "growthCodeRtdProvider"
-        },
-        {
-            "name": "imRtdProvider",
-            "path": "/modules/imRtdProvider.js",
-            "module": "imRtdProvider"
+            "name": "anonymisedRtdProvider",
+            "path": "/modules/anonymisedRtdProvider.js",
+            "module": "anonymisedRtdProvider"
         },
         {
             "name": "confiantRtdProvider",
@@ -428,14 +355,9 @@
             "module": "confiantRtdProvider"
         },
         {
-            "name": "goldfishAdsRtdProvider",
-            "path": "/modules/goldfishAdsRtdProvider.js",
-            "module": "goldfishAdsRtdProvider"
-        },
-        {
-            "name": "qortexRtdProvider",
-            "path": "/modules/qortexRtdProvider.js",
-            "module": "qortexRtdProvider"
+            "name": "weboramaRtdProvider",
+            "path": "/modules/weboramaRtdProvider.js",
+            "module": "weboramaRtdProvider"
         },
         {
             "name": "dgkeywordRtdProvider",
@@ -443,49 +365,34 @@
             "module": "dgkeywordRtdProvider"
         },
         {
-            "name": "azerionedgeRtdProvider",
-            "path": "/modules/azerionedgeRtdProvider.js",
-            "module": "azerionedgeRtdProvider"
-        },
-        {
             "name": "browsiRtdProvider",
             "path": "/modules/browsiRtdProvider.js",
             "module": "browsiRtdProvider"
         },
         {
-            "name": "cleanioRtdProvider",
-            "path": "/modules/cleanioRtdProvider.js",
-            "module": "cleanioRtdProvider"
+            "name": "adlooxRtdProvider",
+            "path": "/modules/adlooxRtdProvider.js",
+            "module": "adlooxRtdProvider"
         },
         {
-            "name": "adnuntiusRtdProvider",
-            "path": "/modules/adnuntiusRtdProvider.js",
-            "module": "adnuntiusRtdProvider"
+            "name": "oxxionRtdProvider",
+            "path": "/modules/oxxionRtdProvider.js",
+            "module": "oxxionRtdProvider"
         },
         {
-            "name": "51DegreesRtdProvider",
-            "path": "/modules/51DegreesRtdProvider.js",
-            "module": "51DegreesRtdProvider"
+            "name": "contxtfulRtdProvider",
+            "path": "/modules/contxtfulRtdProvider.js",
+            "module": "contxtfulRtdProvider"
         },
         {
-            "name": "mobianRtdProvider",
-            "path": "/modules/mobianRtdProvider.js",
-            "module": "mobianRtdProvider"
+            "name": "neuwoRtdProvider",
+            "path": "/modules/neuwoRtdProvider.js",
+            "module": "neuwoRtdProvider"
         },
         {
-            "name": "hadronRtdProvider",
-            "path": "/modules/hadronRtdProvider.js",
-            "module": "hadronRtdProvider"
-        },
-        {
-            "name": "anonymisedRtdProvider",
-            "path": "/modules/anonymisedRtdProvider.js",
-            "module": "anonymisedRtdProvider"
-        },
-        {
-            "name": "experianRtdProvider",
-            "path": "/modules/experianRtdProvider.js",
-            "module": "experianRtdProvider"
+            "name": "a1MediaRtdProvider",
+            "path": "/modules/a1MediaRtdProvider.js",
+            "module": "a1MediaRtdProvider"
         },
         {
             "name": "jwplayerRtdProvider",
@@ -493,59 +400,9 @@
             "module": "jwplayerRtdProvider"
         },
         {
-            "name": "gameraRtdProvider",
-            "path": "/modules/gameraRtdProvider.js",
-            "module": "gameraRtdProvider"
-        },
-        {
-            "name": "aaxBlockmeterRtdProvider",
-            "path": "/modules/aaxBlockmeterRtdProvider.js",
-            "module": "aaxBlockmeterRtdProvider"
-        },
-        {
-            "name": "mediafilterRtdProvider",
-            "path": "/modules/mediafilterRtdProvider.js",
-            "module": "mediafilterRtdProvider"
-        },
-        {
-            "name": "1plusXRtdProvider",
-            "path": "/modules/1plusXRtdProvider.js",
-            "module": "1plusXRtdProvider"
-        },
-        {
-            "name": "geoedgeRtdProvider",
-            "path": "/modules/geoedgeRtdProvider.js",
-            "module": "geoedgeRtdProvider"
-        },
-        {
-            "name": "timeoutRtdProvider",
-            "path": "/modules/timeoutRtdProvider.js",
-            "module": "timeoutRtdProvider"
-        },
-        {
-            "name": "medianetRtdProvider",
-            "path": "/modules/medianetRtdProvider.js",
-            "module": "medianetRtdProvider"
-        },
-        {
-            "name": "oneKeyRtdProvider",
-            "path": "/modules/oneKeyRtdProvider.js",
-            "module": "oneKeyRtdProvider"
-        },
-        {
-            "name": "sirdataRtdProvider",
-            "path": "/modules/sirdataRtdProvider.js",
-            "module": "sirdataRtdProvider"
-        },
-        {
-            "name": "pubxaiRtdProvider",
-            "path": "/modules/pubxaiRtdProvider.js",
-            "module": "pubxaiRtdProvider"
-        },
-        {
-            "name": "weboramaRtdProvider",
-            "path": "/modules/weboramaRtdProvider.js",
-            "module": "weboramaRtdProvider"
+            "name": "51DegreesRtdProvider",
+            "path": "/modules/51DegreesRtdProvider.js",
+            "module": "51DegreesRtdProvider"
         },
         {
             "name": "greenbidsRtdProvider",
@@ -553,98 +410,348 @@
             "module": "greenbidsRtdProvider"
         },
         {
+            "name": "raynRtdProvider",
+            "path": "/modules/raynRtdProvider.js",
+            "module": "raynRtdProvider"
+        },
+        {
+            "name": "oneKeyRtdProvider",
+            "path": "/modules/oneKeyRtdProvider.js",
+            "module": "oneKeyRtdProvider"
+        },
+        {
             "name": "airgridRtdProvider",
             "path": "/modules/airgridRtdProvider.js",
             "module": "airgridRtdProvider"
         },
         {
-            "name": "neuwoRtdProvider",
-            "path": "/modules/neuwoRtdProvider.js",
-            "module": "neuwoRtdProvider"
+            "name": "adnuntiusRtdProvider",
+            "path": "/modules/adnuntiusRtdProvider.js",
+            "module": "adnuntiusRtdProvider"
+        },
+        {
+            "name": "blueconicRtdProvider",
+            "path": "/modules/blueconicRtdProvider.js",
+            "module": "blueconicRtdProvider"
+        },
+        {
+            "name": "dynamicAdBoostRtdProvider",
+            "path": "/modules/dynamicAdBoostRtdProvider.js",
+            "module": "dynamicAdBoostRtdProvider"
+        },
+        {
+            "name": "growthCodeRtdProvider",
+            "path": "/modules/growthCodeRtdProvider.js",
+            "module": "growthCodeRtdProvider"
+        },
+        {
+            "name": "brandmetricsRtdProvider",
+            "path": "/modules/brandmetricsRtdProvider.js",
+            "module": "brandmetricsRtdProvider"
         }
     ],
-    "Others": [
+    "Analytics Module": [
         {
-            "name": "bidViewability",
-            "path": "/modules/bidViewability.js",
-            "module": "bidViewability"
+            "name": "yieldoneAnalyticsAdapter",
+            "path": "/modules/yieldoneAnalyticsAdapter.js",
+            "module": "yieldoneAnalyticsAdapter"
         },
         {
-            "name": "gptPreAuction",
-            "path": "/modules/gptPreAuction.js",
-            "module": "gptPreAuction"
+            "name": "fintezaAnalyticsAdapter",
+            "path": "/modules/fintezaAnalyticsAdapter.js",
+            "module": "fintezaAnalyticsAdapter"
         },
         {
-            "name": "dchain",
-            "path": "/modules/dchain.js",
-            "module": "dchain"
+            "name": "genericAnalyticsAdapter",
+            "path": "/modules/genericAnalyticsAdapter.js",
+            "module": "genericAnalyticsAdapter"
         },
         {
-            "name": "idImportLibrary",
-            "path": "/modules/idImportLibrary.js",
-            "module": "idImportLibrary"
+            "name": "greenbidsAnalyticsAdapter",
+            "path": "/modules/greenbidsAnalyticsAdapter.js",
+            "module": "greenbidsAnalyticsAdapter"
         },
         {
-            "name": "currency",
-            "path": "/modules/currency.js",
-            "module": "currency"
+            "name": "ucfunnelAnalyticsAdapter",
+            "path": "/modules/ucfunnelAnalyticsAdapter.js",
+            "module": "ucfunnelAnalyticsAdapter"
         },
         {
-            "name": "instreamTracking",
-            "path": "/modules/instreamTracking.js",
-            "module": "instreamTracking"
+            "name": "growthCodeAnalyticsAdapter",
+            "path": "/modules/growthCodeAnalyticsAdapter.js",
+            "module": "growthCodeAnalyticsAdapter"
         },
         {
-            "name": "supplyChainObject",
-            "path": "/modules/schain.js",
-            "module": "schain"
+            "name": "byDataAnalyticsAdapter",
+            "path": "/modules/byDataAnalyticsAdapter.js",
+            "module": "byDataAnalyticsAdapter"
         },
         {
-            "name": "iABCategoryTranslation",
-            "path": "/modules/categoryTranslation.js",
-            "module": "categoryTranslation"
+            "name": "scaleableAnalyticsAdapter",
+            "path": "/modules/scaleableAnalyticsAdapter.js",
+            "module": "scaleableAnalyticsAdapter"
         },
         {
-            "name": "priceFloors",
-            "path": "/modules/priceFloors.js",
-            "module": "priceFloors"
+            "name": "intentIqAnalyticsAdapter",
+            "path": "/modules/intentIqAnalyticsAdapter.js",
+            "module": "intentIqAnalyticsAdapter"
         },
         {
-            "name": "gAMExpress",
-            "path": "/modules/express.js",
-            "module": "express"
+            "name": "adxcgAnalyticsAdapter",
+            "path": "/modules/adxcgAnalyticsAdapter.js",
+            "module": "adxcgAnalyticsAdapter"
         },
         {
-            "name": "konduitAccelerate",
-            "path": "/modules/konduitWrapper.js",
-            "module": "konduitWrapper"
+            "name": "zeta_global_sspAnalyticsAdapter",
+            "path": "/modules/zeta_global_sspAnalyticsAdapter.js",
+            "module": "zeta_global_sspAnalyticsAdapter"
         },
         {
-            "name": "Server-to-Server Testing",
-            "path": "/modules/s2sTesting.js",
-            "module": "s2sTesting"
+            "name": "adWMGAnalyticsAdapter",
+            "path": "/modules/adWMGAnalyticsAdapter.js",
+            "module": "adWMGAnalyticsAdapter"
         },
         {
-            "name": "yieldmoSyntheticInventoryModule",
-            "path": "/modules/yieldmoSyntheticInventoryModule.js",
-            "module": "yieldmoSyntheticInventoryModule"
+            "name": "atsAnalyticsAdapter",
+            "path": "/modules/atsAnalyticsAdapter.js",
+            "module": "atsAnalyticsAdapter"
         },
         {
-            "name": "CCPA",
-            "path": "/modules/consentManagementUsp.js",
-            "module": "consentManagementUsp"
+            "name": "magniteAnalyticsAdapter",
+            "path": "/modules/magniteAnalyticsAdapter.js",
+            "module": "magniteAnalyticsAdapter"
         },
         {
-          "name": "multibid",
-          "path": "/modules/multibid/index.js",
-          "module": "multibid"
+            "name": "pubmaticAnalyticsAdapter",
+            "path": "/modules/pubmaticAnalyticsAdapter.js",
+            "module": "pubmaticAnalyticsAdapter"
+        },
+        {
+            "name": "AsteriobidPbmAnalyticsAdapter",
+            "path": "/modules/AsteriobidPbmAnalyticsAdapter.js",
+            "module": "AsteriobidPbmAnalyticsAdapter"
+        },
+        {
+            "name": "yuktamediaAnalyticsAdapter",
+            "path": "/modules/yuktamediaAnalyticsAdapter.js",
+            "module": "yuktamediaAnalyticsAdapter"
+        },
+        {
+            "name": "malltvAnalyticsAdapter",
+            "path": "/modules/malltvAnalyticsAdapter.js",
+            "module": "malltvAnalyticsAdapter"
+        },
+        {
+            "name": "oxxionAnalyticsAdapter",
+            "path": "/modules/oxxionAnalyticsAdapter.js",
+            "module": "oxxionAnalyticsAdapter"
+        },
+        {
+            "name": "agmaAnalyticsAdapter",
+            "path": "/modules/agmaAnalyticsAdapter.js",
+            "module": "agmaAnalyticsAdapter"
+        },
+        {
+            "name": "medianetAnalyticsAdapter",
+            "path": "/modules/medianetAnalyticsAdapter.js",
+            "module": "medianetAnalyticsAdapter"
+        },
+        {
+            "name": "concertAnalyticsAdapter",
+            "path": "/modules/concertAnalyticsAdapter.js",
+            "module": "concertAnalyticsAdapter"
+        },
+        {
+            "name": "yandexAnalyticsAdapter",
+            "path": "/modules/yandexAnalyticsAdapter.js",
+            "module": "yandexAnalyticsAdapter"
+        },
+        {
+            "name": "hadronAnalyticsAdapter",
+            "path": "/modules/hadronAnalyticsAdapter.js",
+            "module": "hadronAnalyticsAdapter"
+        },
+        {
+            "name": "id5AnalyticsAdapter",
+            "path": "/modules/id5AnalyticsAdapter.js",
+            "module": "id5AnalyticsAdapter"
+        },
+        {
+            "name": "ooloAnalyticsAdapter",
+            "path": "/modules/ooloAnalyticsAdapter.js",
+            "module": "ooloAnalyticsAdapter"
+        },
+        {
+            "name": "kargoAnalyticsAdapter",
+            "path": "/modules/kargoAnalyticsAdapter.js",
+            "module": "kargoAnalyticsAdapter"
+        },
+        {
+            "name": "asteriobidAnalyticsAdapter",
+            "path": "/modules/asteriobidAnalyticsAdapter.js",
+            "module": "asteriobidAnalyticsAdapter"
+        },
+        {
+            "name": "adxpremiumAnalyticsAdapter",
+            "path": "/modules/adxpremiumAnalyticsAdapter.js",
+            "module": "adxpremiumAnalyticsAdapter"
+        },
+        {
+            "name": "liveIntentAnalyticsAdapter",
+            "path": "/modules/liveIntentAnalyticsAdapter.js",
+            "module": "liveIntentAnalyticsAdapter"
+        },
+        {
+            "name": "terceptAnalyticsAdapter",
+            "path": "/modules/terceptAnalyticsAdapter.js",
+            "module": "terceptAnalyticsAdapter"
+        },
+        {
+            "name": "invisiblyAnalyticsAdapter",
+            "path": "/modules/invisiblyAnalyticsAdapter.js",
+            "module": "invisiblyAnalyticsAdapter"
+        },
+        {
+            "name": "adagioAnalyticsAdapter",
+            "path": "/modules/adagioAnalyticsAdapter.js",
+            "module": "adagioAnalyticsAdapter"
+        },
+        {
+            "name": "optimonAnalyticsAdapter",
+            "path": "/modules/optimonAnalyticsAdapter.js",
+            "module": "optimonAnalyticsAdapter"
+        },
+        {
+            "name": "advRedAnalyticsAdapter",
+            "path": "/modules/advRedAnalyticsAdapter.js",
+            "module": "advRedAnalyticsAdapter"
+        },
+        {
+            "name": "pubxaiAnalyticsAdapter",
+            "path": "/modules/pubxaiAnalyticsAdapter.js",
+            "module": "pubxaiAnalyticsAdapter"
+        },
+        {
+            "name": "symitriAnalyticsAdapter",
+            "path": "/modules/symitriAnalyticsAdapter.js",
+            "module": "symitriAnalyticsAdapter"
+        },
+        {
+            "name": "33acrossAnalyticsAdapter",
+            "path": "/modules/33acrossAnalyticsAdapter.js",
+            "module": "33acrossAnalyticsAdapter"
+        },
+        {
+            "name": "appierAnalyticsAdapter",
+            "path": "/modules/appierAnalyticsAdapter.js",
+            "module": "appierAnalyticsAdapter"
+        },
+        {
+            "name": "sharethroughAnalyticsAdapter",
+            "path": "/modules/sharethroughAnalyticsAdapter.js",
+            "module": "sharethroughAnalyticsAdapter"
+        },
+        {
+            "name": "konduitAnalyticsAdapter",
+            "path": "/modules/konduitAnalyticsAdapter.js",
+            "module": "konduitAnalyticsAdapter"
+        },
+        {
+            "name": "pianoDmpAnalyticsAdapter",
+            "path": "/modules/pianoDmpAnalyticsAdapter.js",
+            "module": "pianoDmpAnalyticsAdapter"
+        },
+        {
+            "name": "smartyadsAnalyticsAdapter",
+            "path": "/modules/smartyadsAnalyticsAdapter.js",
+            "module": "smartyadsAnalyticsAdapter"
+        },
+        {
+            "name": "livewrappedAnalyticsAdapter",
+            "path": "/modules/livewrappedAnalyticsAdapter.js",
+            "module": "livewrappedAnalyticsAdapter"
+        },
+        {
+            "name": "pulsepointAnalyticsAdapter",
+            "path": "/modules/pulsepointAnalyticsAdapter.js",
+            "module": "pulsepointAnalyticsAdapter"
+        },
+        {
+            "name": "bidwatchAnalyticsAdapter",
+            "path": "/modules/bidwatchAnalyticsAdapter.js",
+            "module": "bidwatchAnalyticsAdapter"
+        },
+        {
+            "name": "pubstackAnalyticsAdapter",
+            "path": "/modules/pubstackAnalyticsAdapter.js",
+            "module": "pubstackAnalyticsAdapter"
+        },
+        {
+            "name": "datablocksAnalyticsAdapter",
+            "path": "/modules/datablocksAnalyticsAdapter.js",
+            "module": "datablocksAnalyticsAdapter"
+        },
+        {
+            "name": "adkernelAdnAnalyticsAdapter",
+            "path": "/modules/adkernelAdnAnalyticsAdapter.js",
+            "module": "adkernelAdnAnalyticsAdapter"
+        },
+        {
+            "name": "automatadAnalyticsAdapter",
+            "path": "/modules/automatadAnalyticsAdapter.js",
+            "module": "automatadAnalyticsAdapter"
+        },
+        {
+            "name": "pubperfAnalyticsAdapter",
+            "path": "/modules/pubperfAnalyticsAdapter.js",
+            "module": "pubperfAnalyticsAdapter"
+        },
+        {
+            "name": "nobidAnalyticsAdapter",
+            "path": "/modules/nobidAnalyticsAdapter.js",
+            "module": "nobidAnalyticsAdapter"
+        },
+        {
+            "name": "eightPodAnalyticsAdapter",
+            "path": "/modules/eightPodAnalyticsAdapter.js",
+            "module": "eightPodAnalyticsAdapter"
+        },
+        {
+            "name": "conversantAnalyticsAdapter",
+            "path": "/modules/conversantAnalyticsAdapter.js",
+            "module": "conversantAnalyticsAdapter"
+        },
+        {
+            "name": "roxotAnalyticsAdapter",
+            "path": "/modules/roxotAnalyticsAdapter.js",
+            "module": "roxotAnalyticsAdapter"
+        },
+        {
+            "name": "pubwiseAnalyticsAdapter",
+            "path": "/modules/pubwiseAnalyticsAdapter.js",
+            "module": "pubwiseAnalyticsAdapter"
+        },
+        {
+            "name": "rivrAnalyticsAdapter",
+            "path": "/modules/rivrAnalyticsAdapter.js",
+            "module": "rivrAnalyticsAdapter"
+        },
+        {
+            "name": "adlooxAnalyticsAdapter",
+            "path": "/modules/adlooxAnalyticsAdapter.js",
+            "module": "adlooxAnalyticsAdapter"
+        },
+        {
+            "name": "relevantAnalyticsAdapter",
+            "path": "/modules/relevantAnalyticsAdapter.js",
+            "module": "relevantAnalyticsAdapter"
         }
     ],
     "AD Pod": [
         {
-            "name": "targetVideoAdServerVideo",
-            "path": "/modules/targetVideoAdServerVideo.js",
-            "module": "targetVideoAdServerVideo"
+            "name": "adpod",
+            "path": "/modules/adpod.js",
+            "module": "adpod"
         },
         {
             "name": "dfpAdServerVideo",
@@ -652,26 +759,14 @@
             "module": "dfpAdServerVideo"
         },
         {
+            "name": "targetVideoAdServerVideo",
+            "path": "/modules/targetVideoAdServerVideo.js",
+            "module": "targetVideoAdServerVideo"
+        },
+        {
             "name": "adlooxAdServerVideo",
             "path": "/modules/adlooxAdServerVideo.js",
             "module": "adlooxAdServerVideo"
-        }
-    ],
-    "Video": [
-        {
-            "name": "jwplayerVideoProvider",
-            "path": "/modules/jwplayerVideoProvider.js",
-            "module": "jwplayerVideoProvider"
-        },
-        {
-            "name": "adplayerproVideoProvider",
-            "path": "/modules/adplayerproVideoProvider.js",
-            "module": "adplayerproVideoProvider"
-        },
-        {
-            "name": "videojsVideoProvider",
-            "path": "/modules/videojsVideoProvider.js",
-            "module": "videojsVideoProvider"
         }
     ]
 }
