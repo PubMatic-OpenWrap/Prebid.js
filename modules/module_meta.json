@@ -633,6 +633,11 @@
             "name": "CCPA",
             "path": "/modules/consentManagementUsp.js",
             "module": "consentManagementUsp"
+        },
+        {
+          "name": "multibid",
+          "path": "/modules/multibid/index.js",
+          "module": "multibid"
         }
     ],
     "AD Pod": [
