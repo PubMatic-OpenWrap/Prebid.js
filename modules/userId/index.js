@@ -22,8 +22,8 @@
  * It's permissible to return neither, one, or both fields.
  * @callback getId
  * @param {SubmoduleConfig} config
- * @param {ConsentData|undefined} consentData
- * @param {Object|undefined} cacheIdObj
+ * @param {ConsentData|undefined} [consentData]
+ * @param {Object|undefined} [cacheIdObj]
  * @returns {IdResponse|undefined} A response object that contains id and/or callback.
  */
 
@@ -43,7 +43,7 @@
  * Decode a stored value for passing to bid requests
  * @callback decode
  * @param {Object|string} value
- * @param {SubmoduleConfig|undefined} config
+ * @param {SubmoduleConfig|undefined} [config]
  * @returns {Object|undefined}
  */
 
@@ -168,9 +168,6 @@ export const coreStorage = getCoreStorageManager('userId');
 export const dep = {
   isAllowed: isActivityAllowed
 }
-
-/** @type {boolean} */
-let addedUserIdHook = false;
 
 /** @type {SubmoduleContainer[]} */
 let submodules = [];
@@ -713,6 +710,25 @@ export const startAuctionHook = timedAuctionHook('userId', function requestBidsH
 });
 
 /**
+ * Append user id data from config to bids to be accessed in adapters when there are no submodules.
+ * @param {function} fn required; The next function in the chain, used by hook.js
+ * @param {Object} reqBidsConfigObj required; This is the same param that's used in pbjs.requestBids.
+ */
+export const addUserIdsHook = timedAuctionHook('userId', function requestBidsHook(fn, reqBidsConfigObj) {
+  addIdData(reqBidsConfigObj);
+  // calling fn allows prebid to continue processing
+  fn.call(this, reqBidsConfigObj);
+});
+
+/**
+ * Is startAuctionHook added
+ * @returns {boolean}
+ */
+function addedStartAuctionHook() {
+  return !!startAuction.getHooks({hook: startAuctionHook}).length;
+}
+
+/**
  * This function will be exposed in global-name-space so that userIds stored by Prebid UserId module can be used by external codes as well.
  * Simple use case will be passing these UserIds to A9 wrapper solution
  */
@@ -742,7 +758,7 @@ function getUserIdsAsEidBySource(sourceName) {
  * Sample use case is exposing this function to ESP
  */
 function getEncryptedEidsForSource(source, encrypt, customFunction) {
-  return initIdSystem().then(() => {
+  return retryOnCancel().then(() => {
     let eidsSignals = {};
 
     if (isFn(customFunction)) {
@@ -801,6 +817,23 @@ function registerSignalSources() {
   }
 }
 
+function retryOnCancel(initParams) {
+  return initIdSystem(initParams).then(
+    () => getUserIds(),
+    (e) => {
+      if (e === INIT_CANCELED) {
+        // there's a pending refresh - because GreedyPromise runs this synchronously, we are now in the middle
+        // of canceling the previous init, before the refresh logic has had a chance to run.
+        // Use a "normal" Promise to clear the stack and let it complete (or this will just recurse infinitely)
+        return Promise.resolve().then(getUserIdsAsync)
+      } else {
+        logError('Error initializing userId', e)
+        return GreedyPromise.reject(e)
+      }
+    }
+  );
+}
+
 /**
  * Force (re)initialization of ID submodules.
  *
@@ -815,12 +848,12 @@ function refreshUserIds({submoduleNames} = {}, callback, moduleUpdated) {
   if (moduleUpdated !== undefined) {
     initializedSubmodulesUpdated = moduleUpdated;
   }
-  return initIdSystem({refresh: true, submoduleNames})
-    .then(() => {
+  return retryOnCancel({refresh: true, submoduleNames})
+    .then((userIds) => {
       if (callback && isFn(callback)) {
         callback();
       }
-      return getUserIds();
+      return userIds;
     });
 }
 
@@ -836,20 +869,7 @@ function refreshUserIds({submoduleNames} = {}, callback, moduleUpdated) {
  */
 
 function getUserIdsAsync() {
-  return initIdSystem().then(
-    () => getUserIds(),
-    (e) => {
-      if (e === INIT_CANCELED) {
-        // there's a pending refresh - because GreedyPromise runs this synchronously, we are now in the middle
-        // of canceling the previous init, before the refresh logic has had a chance to run.
-        // Use a "normal" Promise to clear the stack and let it complete (or this will just recurse infinitely)
-        return Promise.resolve().then(getUserIdsAsync)
-      } else {
-        logError('Error initializing userId', e)
-        return GreedyPromise.reject(e)
-      }
-    }
-  );
+  return retryOnCancel();
 }
 
 function setUserIdentities(userIdentityData) {
@@ -1261,11 +1281,11 @@ function updateSubmodules() {
     .forEach((sm) => submodules.push(sm));
 
   if (submodules.length) {
-    if (!addedUserIdHook) {
+    if (!addedStartAuctionHook()) {
+      startAuction.getHooks({hook: addUserIdsHook}).remove();
       startAuction.before(startAuctionHook, 100) // use higher priority than dataController / rtd
       adapterManager.callDataDeletionRequest.before(requestDataDeletion);
       coreGetPPID.after((next) => next(getPPID()));
-      addedUserIdHook = true;
     }
     logInfo(`${MODULE_NAME} - usersync config updated for ${submodules.length} submodules: `, submodules.map(a => a.submodule.name));
   }
@@ -1372,8 +1392,10 @@ export function init(config, {delay = GreedyPromise.timeout} = {}) {
   (getGlobal()).refreshUserIds = normalizePromise(refreshUserIds);
   (getGlobal()).getUserIdsAsync = normalizePromise(getUserIdsAsync);
   (getGlobal()).getUserIdsAsEidBySource = getUserIdsAsEidBySource;
-  (getGlobal()).setUserIdentities = setUserIdentities;
-  (getGlobal()).getUserIdentities = getUserIdentities;
+  if (!addedStartAuctionHook()) {
+    // Add ortb2.user.ext.eids even if 0 submodules are added
+    startAuction.before(addUserIdsHook, 100); // use higher priority than dataController / rtd
+  }
 }
 
 // init config update listener to start the application

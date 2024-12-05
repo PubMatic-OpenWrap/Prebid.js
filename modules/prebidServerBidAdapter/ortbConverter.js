@@ -37,7 +37,7 @@ const PBS_CONVERTER = ortbConverter({
       }
     });
     if (Object.values(SUPPORTED_MEDIA_TYPES).some(mtype => imp[mtype])) {
-      imp.secure = context.s2sBidRequest.s2sConfig.secure;
+      imp.secure = proxyBidRequest.ortb2Imp?.secure ?? 1;
       return imp;
     }
   },
@@ -111,7 +111,10 @@ const PBS_CONVERTER = ortbConverter({
         transactionId: context.adUnit.transactionId,
         adUnitId: context.adUnit.adUnitId,
         auctionId: context.bidderRequest.auctionId,
-      }), bidResponse),
+      }), bidResponse, {
+        deferRendering: !!context.adUnit.deferBilling,
+        deferBilling: !!context.adUnit.deferBilling
+      }),
       adUnit: context.adUnit.code
     };
   },
