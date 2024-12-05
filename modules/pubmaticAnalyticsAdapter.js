@@ -376,10 +376,10 @@ function isOWPubmaticBid(adapterName) {
 }
 
 function getFloorsCommonField (floorData) {
-  if(!floorData) return;
+  if (!floorData) return;
   const { location, fetchStatus, floorProvider, modelVersion } = floorData;
   return {
-	  ffs: {
+    ffs: {
       [FLOOR_VALUES.SUCCESS]: 1,
       [FLOOR_VALUES.ERROR]: 2,
       [FLOOR_VALUES.TIMEOUT]: 4,
@@ -395,9 +395,9 @@ function getFloorsCommonField (floorData) {
     mv: modelVersion
   }
 }
-function getFloorValue(floorResponseData) {
-  return floorResponseData ? floorResponseData.floorValue : undefined;
-}
+// function getFloorValue(floorResponseData) {
+//   return floorResponseData ? floorResponseData.floorValue : undefined;
+// }
 
 function getFloorType(floorResponseData) {
   return floorResponseData ? (floorResponseData.enforcements.enforceJS == false ? 0 : 1) : undefined;
@@ -578,21 +578,20 @@ function executeBidsLoggerCall(e, highestCpmBids) {
 
   if (floorData) {
     const floorRootValues = getFloorsCommonField(floorData?.floorRequestData);
-	if(floorRootValues) {
-		const { ffs, fsrc, fp, mv } = floorRootValues;
-		if (floorData?.floorRequestData) {
-			outputObj['ffs'] = ffs;
-			outputObj['fsrc'] = fsrc;
-			outputObj['fp'] = fp;
-		}
-		if (floorFetchStatus) {
-			   outputObj['fmv'] = mv || undefined;
-		}
-	}
-	if (floorFetchStatus) {
-		outputObj['ft'] = getFloorType(floorData?.floorResponseData);
-	}
-    
+    if (floorRootValues) {
+      const { ffs, fsrc, fp, mv } = floorRootValues;
+      if (floorData?.floorRequestData) {
+        outputObj['ffs'] = ffs;
+        outputObj['fsrc'] = fsrc;
+        outputObj['fp'] = fp;
+      }
+      if (floorFetchStatus) {
+        outputObj['fmv'] = mv || undefined;
+      }
+    }
+    if (floorFetchStatus) {
+      outputObj['ft'] = getFloorType(floorData?.floorResponseData);
+    }
   }
 
   window.PWT?.CC?.cc && (outputObj.ctr = window.PWT.CC.cc);
@@ -698,7 +697,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
         pixelURL += `&${key}=${enc(value)}`;
       }
     });
-    const floorType = getFloorType(floorData.floorResponseData); 
+    const floorType = getFloorType(floorData.floorResponseData);
     if (floorType !== undefined) {
       pixelURL += '&ft=' + enc(floorType);
     }

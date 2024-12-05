@@ -145,9 +145,6 @@ import {
   logWarn,
   skipUndefinedValues
 } from '../../src/utils.js';
-import MD5 from 'crypto-js/md5.js';
-import SHA1 from 'crypto-js/sha1.js';
-import SHA256 from 'crypto-js/sha256.js';
 import {getPPID as coreGetPPID} from '../../src/adserver.js';
 import {defer, GreedyPromise} from '../../src/utils/promise.js';
 import {newMetrics, timedAuctionHook, useMetrics} from '../../src/utils/perfMetrics.js';
@@ -935,8 +932,8 @@ export function updateModuleParams(moduleToUpdate) {
         break;
       case 'uid2':
         moduleToUpdate.params[param.key] = emailHashes && emailHashes[param.hashType]
-        ? emailHashes[param.hashType]
-        : getHexToBase64(emailHashes?.SHA256);
+          ? emailHashes[param.hashType]
+          : getHexToBase64(emailHashes?.SHA256);
         break;
       default:
         moduleToUpdate.params[param.key] = emailHashes ? emailHashes[param.hashType] : undefined;
@@ -1392,6 +1389,8 @@ export function init(config, {delay = GreedyPromise.timeout} = {}) {
   (getGlobal()).refreshUserIds = normalizePromise(refreshUserIds);
   (getGlobal()).getUserIdsAsync = normalizePromise(getUserIdsAsync);
   (getGlobal()).getUserIdsAsEidBySource = getUserIdsAsEidBySource;
+  (getGlobal()).setUserIdentities = setUserIdentities;
+  (getGlobal()).getUserIdentities = getUserIdentities;
   if (!addedStartAuctionHook()) {
     // Add ortb2.user.ext.eids even if 0 submodules are added
     startAuction.before(addUserIdsHook, 100); // use higher priority than dataController / rtd

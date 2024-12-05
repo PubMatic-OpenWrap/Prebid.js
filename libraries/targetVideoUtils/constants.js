@@ -6,16 +6,10 @@ const BIDDER_CODE = 'targetVideo';
 const TIME_TO_LIVE = 300;
 const BANNER_ENDPOINT_URL = 'https://ib.adnxs.com/ut/v3/prebid';
 const VIDEO_ENDPOINT_URL = 'https://pbs.prebrid.tv/openrtb2/auction';
-<<<<<<< HEAD
-const VIDEO_PARAMS = [
-  'api', 'linearity', 'maxduration', 'mimes', 'minduration',
-  'plcmt', 'playbackmethod', 'protocols', 'startdelay'
-=======
 const SYNC_URL = 'https://bppb.link/static/';
 const VIDEO_PARAMS = [
   'api', 'linearity', 'maxduration', 'mimes', 'minduration',
   'plcmt', 'playbackmethod', 'protocols', 'startdelay', 'placement'
->>>>>>> prebid_upgrade_9_21_0_20241203141724
 ];
 
 export {
@@ -23,10 +17,7 @@ export {
   GVLID,
   MARGIN,
   BIDDER_CODE,
-<<<<<<< HEAD
-=======
   SYNC_URL,
->>>>>>> prebid_upgrade_9_21_0_20241203141724
   TIME_TO_LIVE,
   BANNER_ENDPOINT_URL,
   VIDEO_ENDPOINT_URL,
