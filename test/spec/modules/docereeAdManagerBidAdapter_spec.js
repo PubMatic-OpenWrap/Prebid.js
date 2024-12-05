@@ -164,7 +164,6 @@ describe('docereeadmanager', function () {
         }
       }
       const payload = getPayload(bid, data, buildRequests);
-
       const payloadData = payload.data;
       expect(payloadData).to.have.all.keys(
         'userid',

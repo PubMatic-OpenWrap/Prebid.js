@@ -83,7 +83,6 @@ export function getPayload(bid, userData, bidderRequest) {
   if (!userData || !bid) {
     return false;
   }
-
   const { bidId, params } = bid;
   const { placementId, publisherUrl } = params;
   const {

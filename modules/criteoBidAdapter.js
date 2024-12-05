@@ -287,6 +287,10 @@ export const spec = {
           if (response.callbacks) {
             response.callbacks.forEach(triggerPixel);
           }
+
+          if (response.callbacks) {
+            response.callbacks.forEach(triggerPixel);
+          }
         }
       }, true);
 

@@ -31,6 +31,11 @@ const storageManager = getStorageManager({
   moduleName: MODULE_NAME,
 });
 
+const storageManager = getStorageManager({
+  moduleType: MODULE_TYPE_RTD,
+  moduleName: MODULE_NAME
+});
+
 let rxApi = null;
 let isFirstBidRequestCall = true;
 

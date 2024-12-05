@@ -46,6 +46,7 @@ const REGION_SUBDOMAIN_SUFFIX = {
 
 export const spec = {
   code: BIDDER_CODE,
+  aliases: ['eskimi'],
   gvlid: GVLID,
   supportedMediaTypes: [BANNER, VIDEO],
   isBidRequestValid,
