@@ -1521,9 +1521,8 @@ export const spec = {
               if (newBid['dealId'] && bid.ext && bid.ext.deal_channel) {
                 newBid['dealChannel'] = dealChannelValues[bid.ext.deal_channel] || null;
               }
-
               prepareMetaObject(newBid, bid, seatbidder.seat);
-              setIBVField(bid, newBid);
+			  setIBVField(bid, newBid);
 
               // adserverTargeting
               if (seatbidder.ext && seatbidder.ext.buyid) {
