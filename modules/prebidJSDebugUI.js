@@ -4,6 +4,8 @@ import { EVENTS } from '../src/constants.js';
 import {isPlainObject, isArray} from '../src/utils.js';
 import { loadExternalScript } from '../src/adloader.js'
 import {getGlobal} from '../src/prebidGlobal.js';
+// Adding Below code due to Prebid PR: 12207 
+import { MODULE_TYPE_RTD } from '../src/activities/modules.js'; 
 
 // const MODULE_NAME = 'Prebid JS Debug UI';
 const UI_LIBRARY_END_POINT = 'https://pm-harshad-mane.github.io/pbjs-debug-ui/bundle.js';
@@ -29,7 +31,7 @@ ToDo:
 function loadUILibIfNotAlreadyLoaded() {
   if (uiLibraryLoaded === false) {
     uiLibraryLoaded = true;
-    loadExternalScript(UI_LIBRARY_END_POINT, 'pbjs-debug-ui');
+    loadExternalScript(UI_LIBRARY_END_POINT, MODULE_TYPE_RTD, 'pbjs-debug-ui');
   }
 }
 
