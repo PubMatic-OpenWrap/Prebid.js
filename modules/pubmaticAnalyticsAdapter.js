@@ -7,6 +7,7 @@ import { config } from '../src/config.js';
 import { getGlobal } from '../src/prebidGlobal.js';
 import { getStorageManager } from '../src/storageManager.js';
 import {getGptSlotInfoForAdUnitCode} from '../libraries/gptUtils/gptUtils.js';
+import { get } from '../src/events.js';
 
 const FLOOR_VALUES = {
   NO_DATA: 'noData',
@@ -533,6 +534,30 @@ function getCDSDataLoggerStr() {
   return enc(cdsStr);
 }
 
+// Logging this information to take informed decision on what consent config to be applied.
+function getConsentInfo() {
+  const { cmConfig } =  window.PWT;
+  if(!cmConfig) return {};
+  return {
+    ccmp: cmConfig.cmpPresent || 0,
+    ccmps: cmConfig.complianceSupport || [],
+    ccmpid: cmConfig.cmpId || 0,
+    cgst: cmConfig.metrics?.timeTakenByGeoService,
+    ccmpt: cmConfig.metrics?.timeTakenByCMP,
+    ctr: cmConfig.geoInfo?.cc,
+    csc: cmConfig.geoInfo?.sc
+  }
+}
+
+function getConsentInfoStr() {
+  let cmInfo = getConsentInfo();
+  return Object.keys(cmInfo).reduce((queryString, key) => {
+    const value = cmInfo[key].value;
+    const encodedValue = value ? enc(value) : '';
+    return `${queryString}&${key}=${encodedValue}`;
+  }, '');
+}
+
 function executeBidsLoggerCall(e, highestCpmBids) {
   const HOSTNAME = window.location.host;
   const storedObject = storage.getDataFromLocalStorage(PREFIX + HOSTNAME);
@@ -619,6 +644,10 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   }, []);
   outputObj.owv = window.PWT?.versionDetails?.openwrap_version || '-1';
   outputObj.cds = getCDSDataLoggerStr();
+  outputObj = {
+    ...outputObj,
+    ...getConsentInfo()
+  };
 
   auctionCache.sent = true;
 
@@ -711,6 +740,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
 
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
   pixelURL += '&cds=' + getCDSDataLoggerStr(); // encoded string is returned from function
+  pixelURL += getConsentInfoStr();
 
   if (isIma) {
     return pixelURL;
