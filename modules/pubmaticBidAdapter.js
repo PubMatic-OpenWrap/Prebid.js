@@ -68,6 +68,12 @@ const dealChannel = {
   6: 'PMPG'
 };
 
+const MEDIATYPE_TTL = {
+	'banner': 360,
+	'video': 1800,
+	'native': 1800
+};
+
 let conf = {};
 let blockedIabCategories = [];
 let allowedIabCategories = [];
@@ -115,6 +121,7 @@ const converter = ortbConverter({
   },
   bidResponse(buildBidResponse, bid, context) {
     const bidResponse = buildBidResponse(bid, context);
+	if (bidResponse.meta) bidResponse.meta.mediaType = bidResponse.mediaType;
     updateResponseWithCustomFields(bidResponse, bid, context);
     const { mediaType, playerWidth, playerHeight } = bidResponse;
     const { params, adUnitCode, mediaTypes } = context?.bidRequest;
@@ -424,6 +431,7 @@ const updateResponseWithCustomFields = (res, bid, ctx) => {
   res.pm_dspid = bid.ext?.dspid ? bid.ext.dspid : null;
   res.pm_seat = seatbid.seat;
   if (!res.creativeId) res.creativeId = bid.id;
+  if (!res.ttl) res.ttl = MEDIATYPE_TTL[res.mediaType];
   if (bid.dealid) {
     res.dealChannel = bid.ext?.deal_channel ? dealChannel[bid.ext.deal_channel] || null : 'PMP';
   }
@@ -443,10 +451,15 @@ const updateResponseWithCustomFields = (res, bid, ctx) => {
   // if (bid.ext.agencyName) res.meta.agencyName = bid.ext.agencyName;
   // if (bid.ext.brandName) res.meta.brandName = bid.ext.brandName;
   if (bid.ext) {
-    const { dspid, dchain, advid: extAdvid, dsa } = bid.ext;
+    const { dspid, dchain, advid: extAdvid, dsa, ibv } = bid.ext;
     if (dspid) res.meta.networkId = res.meta.demandSource = dspid;
     if (dchain) res.meta.dchain = dchain;
     if (dsa && Object.keys(dsa).length) res.meta.dsa = dsa;
+	if (ibv) {
+		res.ext = res.ext || {};
+		res.ext['ibv'] = ibv;
+		res.meta.mediaType = VIDEO;
+	}
   }
 
   const advid = seatbid.seat || bid.ext?.advid;
