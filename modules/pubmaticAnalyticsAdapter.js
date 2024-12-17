@@ -552,7 +552,7 @@ function getConsentInfo() {
 function getConsentInfoStr() {
   let cmInfo = getConsentInfo();
   return Object.keys(cmInfo).reduce((queryString, key) => {
-    const value = cmInfo[key].value;
+    const value = cmInfo[key];
     const encodedValue = value ? enc(value) : '';
     return `${queryString}&${key}=${encodedValue}`;
   }, '');
