@@ -395,9 +395,6 @@ function getFloorsCommonField (floorData) {
     mv: modelVersion
   }
 }
-function getFloorValue(floorResponseData) {
-  return floorResponseData ? floorResponseData.floorValue : undefined;
-}
 
 function getFloorType(floorResponseData) {
   return floorResponseData ? (floorResponseData.enforcements.enforceJS == false ? 0 : 1) : undefined;
