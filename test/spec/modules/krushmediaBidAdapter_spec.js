@@ -80,6 +80,7 @@ describe('KrushmediabBidAdapter', function () {
       }
     },
     params: {
+
     }
   }
 
