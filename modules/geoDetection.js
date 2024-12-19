@@ -13,22 +13,22 @@ getGlobal().detectLocation = function(URL, passBack) {
   const getRegion = function(loc) {
     try {
       let location = JSON.parse(loc);
-      passBack(location);
+      passBack(location, true);
     } catch (e) {
       logInfo('Location data is expected to be an object');
-      passBack({error: e});
+      passBack({error: e}, false);
     }
   }
 
   try {
     ajaxBuilder(TIMEOUT)(
       URL,
-      { success: getRegion, error: function(e) { passBack({error: e}) } },
+      { success: getRegion, error: function(e) { passBack({error: e}, false) } },
       null,
       { contentType: 'application/x-www-form-urlencoded', method: 'GET' }
     );
   } catch (e) {
-    passBack({error: e});
+    passBack({error: e}, false);
   }
 }
 
