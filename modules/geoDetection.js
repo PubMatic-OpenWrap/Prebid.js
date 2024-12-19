@@ -3,8 +3,6 @@ import { ajaxBuilder } from '../src/ajax.js';
 import { getStorageManager } from '../src/storageManager.js';
 import { getGlobal } from '../src/prebidGlobal.js';
 
-const TIMEOUT = 500;
-
 /*
     GeoDetection module is to be used to get the region information.
     This needs to be called with the URL of API and path of region (e.g. location.data.region)
@@ -21,7 +19,7 @@ getGlobal().detectLocation = function(URL, passBack) {
   }
 
   try {
-    ajaxBuilder(TIMEOUT)(
+    ajaxBuilder()(
       URL,
       { success: getRegion, error: function(e) { passBack({error: e}, false) } },
       null,
