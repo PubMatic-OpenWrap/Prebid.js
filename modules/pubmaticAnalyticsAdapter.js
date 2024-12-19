@@ -544,7 +544,7 @@ function getConsentInfo() {
     ccmpid: cmConfig.cmpId || 0,
     cgst: cmConfig.metrics?.timeTakenByGeoService,
     ccmpt: cmConfig.metrics?.timeTakenByCMP,
-    ctr: cmConfig.geoInfo?.cc,
+    // ctr: cmConfig.geoInfo?.cc, already being passed in the request
     csc: cmConfig.geoInfo?.sc
   }
 }
