@@ -539,9 +539,9 @@ function getConsentInfo() {
   const { cmConfig } =  window.PWT;
   if(!cmConfig) return {};
   return {
-    ccmp: cmConfig.cmpPresent || 0,
-    ccmps: cmConfig.complianceSupport || [],
-    ccmpid: cmConfig.cmpId || 0,
+    ccmp: cmConfig.cmpPresent,
+    ccmps: cmConfig.complianceSupport,
+    ccmpid: cmConfig.cmpId,
     cgst: cmConfig.metrics?.timeTakenByGeoService,
     ccmpt: cmConfig.metrics?.timeTakenByCMP,
     // ctr: cmConfig.geoInfo?.cc, already being passed in the request
