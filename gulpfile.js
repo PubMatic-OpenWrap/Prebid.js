@@ -560,7 +560,7 @@ gulp.task('e2e-test', gulp.series(requireNodeVersion(16), clean, 'build-bundle-p
 
 // other tasks
 gulp.task(bundleToStdout);
-gulp.task('bundle', gulpBundle.bind(null, false)); // used for just concatenating pre-built files with no build step
+gulp.task('bundle', gulpBundle.bind(null, argv.mode === 'test-build' ? true : false)); // used for just concatenating pre-built files with no build step
 
 // build task for reviewers, runs test-coverage, serves, without watching
 gulp.task(viewReview);
