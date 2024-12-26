@@ -1,4 +1,4 @@
-import { _each, pick, logWarn, isStr, isArray, logError, isFn, generateUUID } from '../src/utils.js';
+import { _each, pick, logWarn, isStr, isArray, logError, isFn, generateUUID, isPlainObject } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import { BID_STATUS, EVENTS, STATUS, REJECTION_REASON } from '../src/constants.js';
@@ -536,16 +536,32 @@ function getCDSDataLoggerStr() {
 
 // Logging this information to take informed decision on what consent config to be applied.
 function getConsentInfo() {
-  const { cmConfig } =  window.PWT;
-  if(!cmConfig) return {};
+  const { cmConfig } = window.PWT;
+  if (isPlainObject(cmConfig)) return {};
+
+  // When PWT.getDurationOf function available
+  const metrics = isFn(window.PWT?.getDurationOf) ?{
+      trnslt: window.PWT.getDurationOf("TRANSLATOR_CALLING_TIME"),
+      lrt: window.PWT.getDurationOf("LOGGER_CALLING_TIME"),
+      trt: window.PWT.getDurationOf("TRACKER_CALLING_TIME")
+    }: {};
+
+  // When the traffic is from 95% (allStatsAvailable: false) of the traffic we do not have all the stats available
+  if (!cmConfig?.allStatsAvailable) return metrics;
+
+  // Return everything from cmConfig object
   return {
-    ccmp: cmConfig.cmpPresent,
-    ccmps: cmConfig.complianceSupport,
-    ccmpid: cmConfig.cmpId,
-    cgst: cmConfig.metrics?.timeTakenByGeoService,
-    ccmpt: cmConfig.metrics?.timeTakenByCMP,
-    // ctr: cmConfig.geoInfo?.cc, already being passed in the request
-    csc: cmConfig.geoInfo?.sc
+    ccmp: cmConfig?.cmpPresent,
+    ccmps: cmConfig?.complianceSupport,
+    ccmpid: cmConfig?.cmpId,
+    cgst: metricsAvailable("GEO_CALLING_TIME"),
+    ccmpt: metricsAvailable("CMP_CALLING_TIME"),
+    csc: cmConfig?.geoInfo?.sc,
+    ...metrics
+  }
+
+  function metricsAvailable(metricName) {
+    return isFn(window.PWT?.getDurationOf) ? window.PWT.getDurationOf(metricName) : null;
   }
 }
 
@@ -644,6 +660,10 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   }, []);
   outputObj.owv = window.PWT?.versionDetails?.openwrap_version || '-1';
   outputObj.cds = getCDSDataLoggerStr();
+  
+  if(isFn(window.PWT?.recordExitTime)) {
+    window.PWT.recordExitTime("LOGGER_CALLING_TIME");
+  }
   outputObj = {
     ...outputObj,
     ...getConsentInfo()
@@ -740,6 +760,10 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
 
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
   pixelURL += '&cds=' + getCDSDataLoggerStr(); // encoded string is returned from function
+  
+  if(isFn(window.PWT?.recordExitTime)) {
+    window.PWT.recordExitTime("TRACKER_CALLING_TIME");
+  }
   pixelURL += getConsentInfoStr();
 
   if (isIma) {
