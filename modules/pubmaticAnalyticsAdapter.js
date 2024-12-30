@@ -537,7 +537,7 @@ function getCDSDataLoggerStr() {
 // Logging this information to take informed decision on what consent config to be applied.
 function getConsentInfo() {
   const { cmConfig } = window.PWT;
-  if (isPlainObject(cmConfig)) return {};
+  if (!cmConfig || typeof cmConfig != 'object') return {};
 
   // When PWT.getDurationOf function available
   const metrics = isFn(window.PWT?.getDurationOf) ?{
