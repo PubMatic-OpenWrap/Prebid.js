@@ -1444,8 +1444,8 @@ export const spec = {
       }
     }
 
-    if(isFn(window.PWT?.recordExitTime)) {
-      window.PWT.recordExitTime("TRANSLATOR_CALLING_TIME");
+    if (isFn(window.PWT?.recordExitTime)) {
+      window.PWT.recordExitTime('TRANSLATOR_CALLING_TIME');
     }
     return serverRequest;
   },
