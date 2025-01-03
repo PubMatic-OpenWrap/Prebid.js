@@ -534,38 +534,45 @@ function getCDSDataLoggerStr() {
 }
 
 // Logging this information to take informed decision on what consent config to be applied.
-export function getConsentInfo() {
+export function getConsentInfo(skipMetricsField) {
   const { cmConfig } = window.PWT || {};
   if (!cmConfig || typeof cmConfig != 'object') return {};
 
-  // When PWT.getDurationOf function available
-  const metrics = isFn(window.PWT?.getDurationOf) ? {
-    trnslt: window.PWT.getDurationOf('TRANSLATOR_CALLING_TIME'),
-    lrt: window.PWT.getDurationOf('LOGGER_CALLING_TIME'),
-    trt: window.PWT.getDurationOf('TRACKER_CALLING_TIME')
-  } : {};
-
-  // When the traffic is from 95% (allStatsAvailable: false) of the traffic we do not have all the stats available
-  if (!cmConfig?.allStatsAvailable) return metrics;
-
-  // Return everything from cmConfig object
-  return {
+  const dimensions = {
     ccmp: cmConfig?.cmpPresent,
     ccmps: cmConfig?.complianceSupport,
     ccmpid: cmConfig?.cmpId,
-    cgst: metricsAvailable('GEO_CALLING_TIME'),
-    ccmpt: metricsAvailable('CMP_CALLING_TIME'),
-    csc: cmConfig?.geoInfo?.sc,
-    ...metrics
+    csc: cmConfig?.geoInfo?.sc
+  };
+
+  if (skipMetricsField) {
+    return cmConfig.allStatsAvailable ? dimensions : {};
   }
 
-  function metricsAvailable(metricName) {
-    return isFn(window.PWT?.getDurationOf) ? window.PWT.getDurationOf(metricName) : null;
+  const getDurationOf = window.PWT?.getDurationOf;
+  const isGetDurationOfFn = isFn(getDurationOf);
+
+  // When PWT.getDurationOf function available
+  const metrics = isGetDurationOfFn ? {
+    trnslt: getDurationOf('TRANSLATOR_CALLING_TIME'),
+    lrt: getDurationOf('LOGGER_CALLING_TIME'),
+    trt: getDurationOf('TRACKER_CALLING_TIME')
+  } : {};
+
+  if (cmConfig?.allStatsAvailable) {
+    return {
+      ...dimensions,
+      ...metrics,
+      cgst: isGetDurationOfFn ? getDurationOf('GEO_CALLING_TIME') : null,
+      ccmpt: isGetDurationOfFn ? getDurationOf('CMP_CALLING_TIME') : null,
+    };
   }
+
+  return metrics;
 }
 
 export function getConsentInfoStr() {
-  let cmInfo = getConsentInfo();
+  let cmInfo = getConsentInfo(true);
   return Object.keys(cmInfo).reduce((queryString, key) => {
     const value = cmInfo[key];
     const encodedValue = (value != null && value != undefined) ? enc(value) : null;
@@ -664,7 +671,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   }
   outputObj = {
     ...outputObj,
-    ...getConsentInfo()
+    ...getConsentInfo(false)
   };
 
   auctionCache.sent = true;

@@ -2102,10 +2102,10 @@ describe('pubmatic analytics adapter', function () {
 
     it('should return an empty object if cmConfig is not an object', function () {
       window.PWT.cmConfig = null;
-      expect(getConsentInfo()).to.deep.equal({});
+      expect(getConsentInfo(false)).to.deep.equal({});
 
       window.PWT.cmConfig = undefined;
-      expect(getConsentInfo()).to.deep.equal({});
+      expect(getConsentInfo(false)).to.deep.equal({});
     });
 
     it('should return metrics if getDurationOf is a function and allStatsAvailable is false', function () {
@@ -2127,7 +2127,7 @@ describe('pubmatic analytics adapter', function () {
         trt: 300
       };
 
-      expect(getConsentInfo()).to.deep.equal(expectedMetrics);
+      expect(getConsentInfo(false)).to.deep.equal(expectedMetrics);
     });
 
     it('should return cmConfig properties and metrics when allStatsAvailable is true', function () {
@@ -2163,7 +2163,7 @@ describe('pubmatic analytics adapter', function () {
         trt: 300
       };
 
-      expect(getConsentInfo()).to.deep.equal(expectedInfo);
+      expect(getConsentInfo(false)).to.deep.equal(expectedInfo);
     });
 
     it('should return metrics with null values if getDurationOf is not a function', function () {
@@ -2179,7 +2179,7 @@ describe('pubmatic analytics adapter', function () {
         csc: undefined
       };
 
-      expect(getConsentInfo()).to.deep.equal(expectedInfo);
+      expect(getConsentInfo(false)).to.deep.equal(expectedInfo);
     });
   });
 
