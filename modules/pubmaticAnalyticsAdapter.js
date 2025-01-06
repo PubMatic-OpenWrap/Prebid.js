@@ -575,7 +575,7 @@ export function getConsentInfoStr() {
   let cmInfo = getConsentInfo(true);
   return Object.keys(cmInfo).reduce((queryString, key) => {
     const value = cmInfo[key];
-    const encodedValue = (value != null && value != undefined) ? enc(value) : null;
+    const encodedValue = (value != null && value != undefined) ? enc(value) : '';
     return `${queryString}&${key}=${encodedValue}`;
   }, '');
 }
