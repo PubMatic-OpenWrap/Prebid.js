@@ -364,7 +364,7 @@ export function getNativeTargeting(bid, {index = auctionManager.index} = {}) {
   let keyValues = {};
   const adUnit = index.getAdUnit(bid);
 
-  const globalSendTargetingKeys = adUnit?.nativeParams?.ortb == null && deepAccess(
+  const globalSendTargetingKeys = deepAccess(
     adUnit,
     `nativeParams.sendTargetingKeys`
   ) !== false;
