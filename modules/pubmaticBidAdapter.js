@@ -1,4 +1,4 @@
-import { getBidRequest, logWarn, isBoolean, isStr, isArray, inIframe, mergeDeep, deepAccess, isNumber, deepSetValue, logInfo, logError, deepClone, uniques, isPlainObject, isInteger, parseQueryStringParameters, generateUUID } from '../src/utils.js';
+import { getBidRequest, logWarn, isBoolean, isStr, isArray, inIframe, mergeDeep, deepAccess, isNumber, deepSetValue, logInfo, logError, deepClone, uniques, isPlainObject, isInteger, parseQueryStringParameters, generateUUID, isFn } from '../src/utils.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
@@ -1365,6 +1365,11 @@ export const spec = {
       }
     }
 
+    // if present, merge device object from ortb2 into `payload.device`
+    if (bidderRequest?.ortb2?.device) {
+      mergeDeep(payload.device, bidderRequest.ortb2.device);
+    }
+
     if (commonFpd.ext?.prebid?.bidderparams?.[bidderRequest.bidderCode]?.acat) {
       const acatParams = commonFpd.ext.prebid.bidderparams[bidderRequest.bidderCode].acat;
       _allowedIabCategoriesValidation(payload, acatParams);
@@ -1444,6 +1449,9 @@ export const spec = {
       }
     }
 
+    if (isFn(window.PWT?.recordExitTime)) {
+      window.PWT.recordExitTime('TRANSLATOR_CALLING_TIME');
+    }
     return serverRequest;
   },
 
@@ -1509,6 +1517,7 @@ export const spec = {
                   }
                 });
               }
+
               if (newBid['dealId']) {
                 newBid['dealChannel'] = 'PMP';
               }

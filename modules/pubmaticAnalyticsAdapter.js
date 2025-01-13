@@ -376,10 +376,10 @@ function isOWPubmaticBid(adapterName) {
 }
 
 function getFloorsCommonField (floorData) {
-  if(!floorData) return;
+  if (!floorData) return;
   const { location, fetchStatus, floorProvider, modelVersion } = floorData;
   return {
-	  ffs: {
+    ffs: {
       [FLOOR_VALUES.SUCCESS]: 1,
       [FLOOR_VALUES.ERROR]: 2,
       [FLOOR_VALUES.TIMEOUT]: 4,
@@ -395,9 +395,9 @@ function getFloorsCommonField (floorData) {
     mv: modelVersion
   }
 }
-function getFloorValue(floorResponseData) {
-  return floorResponseData ? floorResponseData.floorValue : undefined;
-}
+// function getFloorValue(floorResponseData) {
+//   return floorResponseData ? floorResponseData.floorValue : undefined;
+// }
 
 function getFloorType(floorResponseData) {
   return floorResponseData ? (floorResponseData.enforcements.enforceJS == false ? 0 : 1) : undefined;
@@ -533,6 +533,53 @@ function getCDSDataLoggerStr() {
   return enc(cdsStr);
 }
 
+// Logging this information to take informed decision on what consent config to be applied.
+export function getConsentInfo(skipMetricsField) {
+  const { cmConfig } = window.PWT || {};
+  if (!cmConfig || typeof cmConfig != 'object') return {};
+
+  const dimensions = {
+    ccmp: cmConfig?.cmpPresent,
+    ccmps: cmConfig?.complianceSupport,
+    ccmpid: cmConfig?.cmpId,
+    csc: cmConfig?.geoInfo?.sc
+  };
+
+  if (skipMetricsField) {
+    return cmConfig.allStatsAvailable ? dimensions : {};
+  }
+
+  const getDurationOf = window.PWT?.getDurationOf;
+  const isGetDurationOfFn = isFn(getDurationOf);
+
+  // When PWT.getDurationOf function available
+  const metrics = isGetDurationOfFn ? {
+    trnslt: getDurationOf('TRANSLATOR_CALLING_TIME'),
+    lrt: getDurationOf('LOGGER_CALLING_TIME'),
+    trt: getDurationOf('TRACKER_CALLING_TIME')
+  } : {};
+
+  if (cmConfig?.allStatsAvailable) {
+    return {
+      ...dimensions,
+      ...metrics,
+      cgst: isGetDurationOfFn ? getDurationOf('GEO_CALLING_TIME') : null,
+      ccmpt: isGetDurationOfFn ? getDurationOf('CMP_CALLING_TIME') : null,
+    };
+  }
+
+  return metrics;
+}
+
+export function getConsentInfoStr() {
+  let cmInfo = getConsentInfo(true);
+  return Object.keys(cmInfo).reduce((queryString, key) => {
+    const value = cmInfo[key];
+    const encodedValue = (value != null && value != undefined) ? enc(value) : '';
+    return `${queryString}&${key}=${encodedValue}`;
+  }, '');
+}
+
 function executeBidsLoggerCall(e, highestCpmBids) {
   const HOSTNAME = window.location.host;
   const storedObject = storage.getDataFromLocalStorage(PREFIX + HOSTNAME);
@@ -578,21 +625,20 @@ function executeBidsLoggerCall(e, highestCpmBids) {
 
   if (floorData) {
     const floorRootValues = getFloorsCommonField(floorData?.floorRequestData);
-	if(floorRootValues) {
-		const { ffs, fsrc, fp, mv } = floorRootValues;
-		if (floorData?.floorRequestData) {
-			outputObj['ffs'] = ffs;
-			outputObj['fsrc'] = fsrc;
-			outputObj['fp'] = fp;
-		}
-		if (floorFetchStatus) {
-			   outputObj['fmv'] = mv || undefined;
-		}
-	}
-	if (floorFetchStatus) {
-		outputObj['ft'] = getFloorType(floorData?.floorResponseData);
-	}
-    
+    if (floorRootValues) {
+      const { ffs, fsrc, fp, mv } = floorRootValues;
+      if (floorData?.floorRequestData) {
+        outputObj['ffs'] = ffs;
+        outputObj['fsrc'] = fsrc;
+        outputObj['fp'] = fp;
+      }
+      if (floorFetchStatus) {
+        outputObj['fmv'] = mv || undefined;
+      }
+    }
+    if (floorFetchStatus) {
+      outputObj['ft'] = getFloorType(floorData?.floorResponseData);
+    }
   }
 
   window.PWT?.CC?.cc && (outputObj.ctr = window.PWT.CC.cc);
@@ -619,6 +665,14 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   }, []);
   outputObj.owv = window.PWT?.versionDetails?.openwrap_version || '-1';
   outputObj.cds = getCDSDataLoggerStr();
+
+  if (isFn(window.PWT?.recordExitTime)) {
+    window.PWT.recordExitTime('LOGGER_CALLING_TIME');
+  }
+  outputObj = {
+    ...outputObj,
+    ...getConsentInfo(false)
+  };
 
   auctionCache.sent = true;
 
@@ -698,7 +752,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
         pixelURL += `&${key}=${enc(value)}`;
       }
     });
-    const floorType = getFloorType(floorData.floorResponseData); 
+    const floorType = getFloorType(floorData.floorResponseData);
     if (floorType !== undefined) {
       pixelURL += '&ft=' + enc(floorType);
     }
@@ -711,6 +765,11 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
 
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
   pixelURL += '&cds=' + getCDSDataLoggerStr(); // encoded string is returned from function
+
+  if (isFn(window.PWT?.recordExitTime)) {
+    window.PWT.recordExitTime('TRACKER_CALLING_TIME');
+  }
+  pixelURL += getConsentInfoStr();
 
   if (isIma) {
     return pixelURL;

@@ -286,7 +286,7 @@ describe('Richaudience adapter tests', function () {
       currency: 'USD',
       ttl: 300,
       dealId: 'dealId',
-      adomain: 'richaudience.com'
+      adomain: ['richaudience.com']
     }
   };
 
@@ -302,7 +302,7 @@ describe('Richaudience adapter tests', function () {
       ttl: 300,
       vastXML: '<VAST></VAST>',
       dealId: 'dealId',
-      adomain: 'richaudience.com'
+      adomain: ['richaudience.com']
     }
   };
 
@@ -777,7 +777,7 @@ describe('Richaudience adapter tests', function () {
     expect(bid.currency).to.equal('USD');
     expect(bid.ttl).to.equal(300);
     expect(bid.dealId).to.equal('dealId');
-    expect(bid.meta).to.equal('richaudience.com');
+    expect(bid.meta.advertiserDomains[0]).to.equal('richaudience.com');
   });
 
   it('no banner media response inestream', function () {
@@ -806,7 +806,7 @@ describe('Richaudience adapter tests', function () {
     expect(bid.currency).to.equal('USD');
     expect(bid.ttl).to.equal(300);
     expect(bid.dealId).to.equal('dealId');
-    expect(bid.meta).to.equal('richaudience.com');
+    expect(bid.meta.advertiserDomains[0]).to.equal('richaudience.com');
   });
 
   it('no banner media response outstream', function () {
@@ -882,7 +882,7 @@ describe('Richaudience adapter tests', function () {
 
   it('Verifies bidder aliases', function () {
     expect(spec.aliases).to.have.lengthOf(1);
-    expect(spec.aliases[0]).to.equal('ra');
+    expect(spec.aliases[0]).to.deep.equal({code: 'ra', gvlid: 108});
   });
 
   it('Verifies bidder gvlid', function () {

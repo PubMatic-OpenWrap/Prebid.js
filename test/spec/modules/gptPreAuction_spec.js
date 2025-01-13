@@ -209,6 +209,17 @@ describe('GPT pre-auction module', () => {
       expect(adUnit.ortb2Imp.ext.data.adserver).to.deep.equal({ name: 'gam', adslot: '/12345/slotCode2' });
     });
 
+    it('returns full ad unit path even if mcmEnabled is true', () => {
+      config.setConfig({ gptPreAuction: { enabled: true, mcmEnabled: true } });
+      window.googletag.pubads().setSlots([
+        makeSlot({ code: '/12345,21212/slot', divId: 'div1' }),
+      ]);
+      const adUnit = {code: '/12345,21212/slot'};
+      expect(appendGptSlots([adUnit])).to.eql({
+        '/12345,21212/slot': '/12345,21212/slot'
+      })
+    })
+
     it('will not trim child id if mcmEnabled is not set to true', () => {
       window.googletag.pubads().setSlots([
         makeSlot({ code: '/12345,21212/slotCode1', divId: 'div1' }),
@@ -459,6 +470,33 @@ describe('GPT pre-auction module', () => {
       expect(returnedAdUnits).to.deep.equal(expectedAdUnits);
     });
 
+    it('should pass full slot path to customPreAuction when mcmEnabled is true', () => {
+      const customPreAuction = sinon.stub();
+      config.setConfig({
+        gptPreAuction: {
+          enabled: true,
+          mcmEnabled: true,
+          customPreAuction
+        }
+      });
+      window.googletag.pubads().setSlots([
+        makeSlot({ code: '/12345,21212/slot', divId: 'div1' }),
+      ]);
+      const adUnit = {code: '/12345,21212/slot'};
+      makeBidRequestsHook(sinon.stub(), [adUnit]);
+      sinon.assert.calledWith(customPreAuction, adUnit, '/12345/slot', adUnit.code);
+    });
+
+    it('should not choke if gpt is not available', () => {
+      config.setConfig({
+        gptPreAuction: {
+          enabled: true
+        }
+      });
+      sandbox.stub(window, 'googletag').value(null);
+      makeBidRequestsHook(sinon.stub(), [{}]);
+    })
+
     it('should use useDefaultPreAuction logic', () => {
       config.setConfig({
         gptPreAuction: {
@@ -539,6 +577,71 @@ describe('GPT pre-auction module', () => {
       window.googletag.pubads().setSlots(testSlots);
       runMakeBidRequests(testAdUnits);
       expect(returnedAdUnits).to.deep.equal(expectedAdUnits);
+    });
+
+    it('sets gpid when mcmEnabled: true', () => {
+      config.setConfig({ gptPreAuction: { enabled: true, mcmEnabled: true } });
+      window.googletag.pubads().setSlots([
+        makeSlot({ code: '/12345,21212/slot', divId: 'div1' }),
+      ]);
+      const adUnit = {code: '/12345,21212/slot'};
+      makeBidRequestsHook(sinon.stub(), [adUnit]);
+      expect(adUnit.ortb2Imp.ext.gpid).to.eql('/12345/slot');
+    });
+  });
+
+  describe('pps gpt config', () => {
+    it('should parse segments from fpd', () => {
+      const twoSegments = getSegments(mocksAuctions[0].getFPD().global, ['user.data'], 4);
+      expect(JSON.stringify(twoSegments)).to.equal(JSON.stringify(['1', '2']));
+      const zeroSegments = getSegments(mocksAuctions[0].getFPD().global, ['user.data'], 6);
+      expect(zeroSegments).to.length(0);
+    });
+
+    it('should return signals from fpd', () => {
+      const signals = getSignals(mocksAuctions[0].getFPD().global);
+      const expectedSignals = [{ taxonomy: taxonomies[0], values: ['1', '2'] }];
+      expect(signals).to.eql(expectedSignals);
+    });
+
+    it('should properly get auctions ids from targeting', () => {
+      const auctionsIds = getAuctionsIdsFromTargeting(mockTargeting, mockAuctionManager);
+      expect(auctionsIds).to.eql([mocksAuctions[0].auctionId, mocksAuctions[1].auctionId])
+    });
+
+    it('should filter out adIds that do not map to any auction', () => {
+      const auctionsIds = getAuctionsIdsFromTargeting({
+        ...mockTargeting,
+        'au': {'hb_adid': 'missing'},
+      }, mockAuctionManager);
+      expect(auctionsIds).to.eql([mocksAuctions[0].auctionId, mocksAuctions[1].auctionId]);
+    })
+
+    it('should properly return empty array of auction ids for invalid targeting', () => {
+      let auctionsIds = getAuctionsIdsFromTargeting({}, mockAuctionManager);
+      expect(Array.isArray(auctionsIds)).to.equal(true);
+      expect(auctionsIds).to.length(0);
+      auctionsIds = getAuctionsIdsFromTargeting({'/123456/header-bid-tag-0/bg': {'invalidContent': '123'}}, mockAuctionManager);
+      expect(Array.isArray(auctionsIds)).to.equal(true);
+      expect(auctionsIds).to.length(0);
+    });
+
+    it('should properly get signals from auctions', () => {
+      const signals = getSignalsArrayByAuctionsIds(['1111', '234234', '234324234'], mockAuctionManager.index);
+      const intersection = getSignalsIntersection(signals);
+      const expectedResult = { IAB_AUDIENCE_1_1: { values: ['2'] }, IAB_CONTENT_2_2: { values: [] } };
+      expect(JSON.stringify(intersection)).to.be.equal(JSON.stringify(expectedResult));
+    });
+
+    it('should return empty signals array for empty auctions ids array', () => {
+      const signals = getSignalsArrayByAuctionsIds([], mockAuctionManager.index);
+      expect(Array.isArray(signals)).to.equal(true);
+      expect(signals).to.length(0);
+    });
+
+    it('should return properly formatted object for getSignalsIntersection invoked with empty array', () => {
+      const signals = getSignalsIntersection([]);
+      expect(Object.keys(signals)).to.contain.members(taxonomies);
     });
   });
 

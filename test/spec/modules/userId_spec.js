@@ -8,6 +8,7 @@ import {
   init,
   PBJS_USER_ID_OPTOUT_NAME,
   startAuctionHook,
+  addUserIdsHook,
   requestDataDeletion,
   setStoredValue,
   setSubmoduleRegistry,
@@ -24,11 +25,12 @@ import * as events from 'src/events.js';
 import {EVENTS} from 'src/constants.js';
 import {getGlobal} from 'src/prebidGlobal.js';
 import {resetConsentData, } from 'modules/consentManagementTcf.js';
-import {setEventFiredFlag as liveIntentIdSubmoduleDoNotFireEvent} from 'modules/liveIntentIdSystem.js';
+import {setEventFiredFlag as liveIntentIdSubmoduleDoNotFireEvent} from '../../../libraries/liveIntentId/idSystem.js';
 import {sharedIdSystemSubmodule} from 'modules/sharedIdSystem.js';
 import {pubProvidedIdSubmodule} from 'modules/pubProvidedIdSystem.js';
 import * as mockGpt from '../integration/faker/googletag.js';
 import 'src/prebid.js';
+import {startAuction} from 'src/prebid';
 import {hook} from '../../../src/hook.js';
 import {mockGdprConsent} from '../../helpers/consentData.js';
 import {getPPID} from '../../../src/adserver.js';
@@ -177,6 +179,8 @@ describe('User ID', function () {
   afterEach(() => {
     sandbox.restore();
     config.resetConfig();
+    startAuction.getHooks({hook: startAuctionHook}).remove();
+    startAuction.getHooks({hook: addUserIdsHook}).remove();
   });
 
   after(() => {
@@ -1104,18 +1108,20 @@ describe('User ID', function () {
         });
       });
 
-      it('should still resolve promises returned by getUserIdsAsync', () => {
-        startInit();
-        let result = null;
-        getGlobal().getUserIdsAsync().then((val) => { result = val; });
-        return clearStack().then(() => {
-          expect(result).to.equal(null); // auction has not ended, callback should not have been called
-          mockIdCallback.callsFake((cb) => cb(MOCK_ID));
-          return getGlobal().refreshUserIds().then(clearStack);
-        }).then(() => {
-          expect(result).to.deep.equal(getGlobal().getUserIds()) // auction still not over, but refresh was explicitly forced
+      ['refreshUserIds', 'getUserIdsAsync'].forEach(method => {
+        it(`should still resolve promises returned by ${method}`, () => {
+          startInit();
+          let result = null;
+          getGlobal()[method]().then((val) => { result = val; });
+          return clearStack().then(() => {
+            expect(result).to.equal(null); // auction has not ended, callback should not have been called
+            mockIdCallback.callsFake((cb) => cb(MOCK_ID));
+            return getGlobal().refreshUserIds().then(clearStack);
+          }).then(() => {
+            expect(result).to.deep.equal(getGlobal().getUserIds()) // auction still not over, but refresh was explicitly forced
+          });
         });
-      });
+      })
 
       it('should not stop auctions', (done) => {
         // simulate an infinite `auctionDelay`; refreshing should still allow the auction to continue
@@ -2423,6 +2429,58 @@ describe('User ID', function () {
         })
       })
     });
+
+    describe('submodules not added', () => {
+      const eid = {
+        source: 'example.com',
+        uids: [{id: '1234', atype: 3}]
+      };
+      let adUnits;
+      let startAuctionStub;
+      function saHook(fn, ...args) {
+        return startAuctionStub(...args);
+      }
+      beforeEach(() => {
+        adUnits = [{code: 'au1', bids: [{bidder: 'sampleBidder'}]}];
+        startAuctionStub = sinon.stub();
+        startAuction.before(saHook);
+        config.resetConfig();
+      });
+      afterEach(() => {
+        startAuction.getHooks({hook: saHook}).remove();
+      })
+
+      it('addUserIdsHook', function (done) {
+        addUserIdsHook(function () {
+          adUnits.forEach(unit => {
+            unit.bids.forEach(bid => {
+              expect(bid).to.have.deep.nested.property('userIdAsEids.0.source');
+              expect(bid).to.have.deep.nested.property('userIdAsEids.0.uids.0.id');
+              expect(bid.userIdAsEids[0].source).to.equal('example.com');
+              expect(bid.userIdAsEids[0].uids[0].id).to.equal('1234');
+            });
+          });
+          done();
+        }, {
+          adUnits,
+          ortb2Fragments: {
+            global: {user: {ext: {eids: [eid]}}},
+            bidder: {}
+          }
+        });
+      });
+
+      it('should add userIdAsEids and merge ortb2.user.ext.eids even if no User ID submodules', () => {
+        init(config);
+        config.setConfig({
+          ortb2: {user: {ext: {eids: [eid]}}}
+        })
+        expect(startAuction.getHooks({hook: startAuctionHook}).length).equal(0);
+        expect(startAuction.getHooks({hook: addUserIdsHook}).length).equal(1);
+        $$PREBID_GLOBAL$$.requestBids({adUnits});
+        sinon.assert.calledWith(startAuctionStub, sinon.match.hasNested('adUnits[0].bids[0].userIdAsEids[0]', eid));
+      });
+    });
   });
 
   describe('handles config with ESP configuration in user sync object', function() {
@@ -2882,158 +2940,5 @@ describe('User ID', function () {
         }));
       });
     })
-  describe('Handle SSO Login', function () {
-    var dummyGoogleUserObject = { 'getBasicProfile': getBasicProfile };
-    let sandbox;
-    let auctionSpy;
-    let adUnits;
-
-    function getEmail() {
-      return 'abc@def.com';
-    }
-    function getBasicProfile() {
-      return { 'getEmail': getEmail }
-    }
-    beforeEach(function () {
-      (getGlobal()).setUserIdentities({});
-      window.PWT = window.PWT || {};
-      // sinon.stub($$PREBID_GLOBAL$$, 'refreshUserIds');
-      window.PWT.ssoEnabled = true;
-      sandbox = sinon.createSandbox();
-      adUnits = [getAdUnitMock()];
-      auctionSpy = sandbox.spy();
-    });
-
-    afterEach(function () {
-      // $$PREBID_GLOBAL$$.refreshUserIds.restore();
-      // $$PREBID_GLOBAL$$.requestBids.removeAll();
-      config.resetConfig();
-    });
-
-    xit('Email hashes are not stored in userIdentities Object on SSO login if ssoEnabled is false', function () {
-      window.PWT.ssoEnabled = false;
-
-      expect(typeof (getGlobal()).onSSOLogin).to.equal('function');
-      getGlobal().onSSOLogin({ 'provider': 'google', 'googleUserObject': dummyGoogleUserObject });
-      expect((getGlobal()).getUserIdentities().emailHash).to.not.exist;
-    });
-
-    xit('Email hashes are stored in userIdentities Object on SSO login if ssoEnabled is true', function () {
-      expect(typeof (getGlobal()).onSSOLogin).to.equal('function');
-      getGlobal().onSSOLogin({ 'provider': 'google', 'googleUserObject': dummyGoogleUserObject });
-      expect((getGlobal()).getUserIdentities().emailHash).to.exist;
-    });
-
-    xit('Publisher provided emails are stored in userIdentities.pubProvidedEmailHash if available', function () {
-      getGlobal().setUserIdentities({ 'pubProvidedEmail': 'abc@xyz.com' });
-      expect(getGlobal().getUserIdentities().pubProvidedEmailHash).to.exist;
-    });
-
-    xit('should return encoded string with email hash and userid in id5 format', function () {
-      var emailHashes = {
-        'MD5': '1edeb32aa0ab4b329a41b431050dcf26',
-        'SHA1': '5acb6964c743eff1d4f51b8d57abddc11438e8eb',
-        'SHA256': '722b8c12e7991f0ebbcc2d7caebe8e12479d26d5dd9cb37f442a55ddc190817a'
-      };
-      var outputString = 'MT03MjJiOGMxMmU3OTkxZjBlYmJjYzJkN2NhZWJlOGUxMjQ3OWQyNmQ1ZGQ5Y2IzN2Y0NDJhNTVkZGMxOTA4MTdhJjU9WVdKalpERXlNelE9';
-      var encodedString = getRawPDString(emailHashes, 'abcd1234');
-      expect(encodedString).to.equal(outputString);
-    });
-
-    xit('should return encoded string with only email hash if userID is not available', function () {
-      var emailHashes = {
-        'MD5': '1edeb32aa0ab4b329a41b431050dcf26',
-        'SHA1': '5acb6964c743eff1d4f51b8d57abddc11438e8eb',
-        'SHA256': '722b8c12e7991f0ebbcc2d7caebe8e12479d26d5dd9cb37f442a55ddc190817a'
-      };
-      var outputString = 'MT03MjJiOGMxMmU3OTkxZjBlYmJjYzJkN2NhZWJlOGUxMjQ3OWQyNmQ1ZGQ5Y2IzN2Y0NDJhNTVkZGMxOTA4MTdh';
-      var encodedString = getRawPDString(emailHashes, undefined);
-      expect(encodedString).to.equal(outputString);
-    });
-
-    xit('should set the pd param for id5id if id5id module is configured and pd string is available', function () {
-      var pdString = 'MT03MjJiOGMxMmU3OTkxZjBlYmJjYzJkN2NhZWJlOGUxMjQ3OWQyNmQ1ZGQ5Y2IzN2Y0NDJhNTVkZGMxOTA4MTdh';
-      var moduleToUpdate = {
-        'name': 'id5Id',
-        'params':
-        {
-          'partner': 173,
-          'provider': 'pubmatic-identity-hub'
-        },
-        'storage':
-        {
-          'type': 'cookie',
-          'name': '_myUnifiedId',
-          'expires': '1825'
-        }
-      };
-      getGlobal().setUserIdentities(
-        {
-          'emailHash': {
-            'MD5': '1edeb32aa0ab4b329a41b431050dcf26',
-            'SHA1': '5acb6964c743eff1d4f51b8d57abddc11438e8eb',
-            'SHA256': '722b8c12e7991f0ebbcc2d7caebe8e12479d26d5dd9cb37f442a55ddc190817a'
-          }
-        }
-      );
-      updateModuleParams(moduleToUpdate);
-      expect(moduleToUpdate.params.pd).to.exist;
-      expect(moduleToUpdate.params.pd).to.equal(pdString);
-    });
-
-    xit('should set the e param for publink if publink module is configured and email hashes are available', function () {
-      var emailHash = '1edeb32aa0ab4b329a41b431050dcf26';
-      var moduleToUpdate = {
-        name: 'publinkId',
-        storage: {
-          name: 'pbjs_publink',
-          type: 'cookie',
-          expires: 30
-        },
-        params: {
-          site_id: '214393',
-          api_key: '061065f4-4835-40f4-936e-74e0f3af59b5'
-        }
-      };
-
-      getGlobal().setUserIdentities(
-        {
-          'emailHash': {
-            'MD5': '1edeb32aa0ab4b329a41b431050dcf26',
-            'SHA256': '722b8c12e7991f0ebbcc2d7caebe8e12479d26d5dd9cb37f442a55ddc190817a'
-          }
-        }
-      );
-      updateModuleParams(moduleToUpdate);
-      expect(moduleToUpdate.params.e).to.exist;
-      expect(moduleToUpdate.params.e).to.equal(emailHash);
-    });
-
-    xit('should set the he param for connectId if connectId module is configured and email hashes are available', function() {
-		  var emailHash = '722b8c12e7991f0ebbcc2d7caebe8e12479d26d5dd9cb37f442a55ddc190817a';
-		  var moduleToUpdate = {
-        name: 'connectId',
-        storage: {
-          name: 'connectId',
-          type: 'html',
-          expires: 15
-        },
-        params: {
-          pixelId: '5976',
-        }
-		  };
-
-		  getGlobal().setUserIdentities(
-        {
-          'emailHash': {
-            'MD5': '1edeb32aa0ab4b329a41b431050dcf26',
-            'SHA256': '722b8c12e7991f0ebbcc2d7caebe8e12479d26d5dd9cb37f442a55ddc190817a'
-          }
-        }
-		  );
-		  updateModuleParams(moduleToUpdate);
-		  expect(moduleToUpdate.params.he).to.exist;
-		  expect(moduleToUpdate.params.he).to.equal(emailHash);
-    });
   });
 });
