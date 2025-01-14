@@ -207,7 +207,7 @@ export const eids = {
     }
   },
   'pubmatic': {
-    source: 'pubmatic.com',
+    source: 'ow.pubmatic.com',
     atype: 3,
     getValue: function(data) {
       return data.id;
