@@ -1,5 +1,5 @@
 
-import pubmaticAnalyticsAdapter, { getMetadata } from 'modules/pubmaticAnalyticsAdapter.js';
+import pubmaticAnalyticsAdapter, { getMetadata, getConsentInfo, getConsentInfoStr } from 'modules/pubmaticAnalyticsAdapter.js';
 import adapterManager from 'src/adapterManager.js';
 import { EVENTS, REJECTION_REASON } from 'src/constants.js';
 import {config} from 'src/config.js';
@@ -2087,58 +2087,100 @@ describe('pubmatic analytics adapter', function () {
     });
   });
 
-  describe('Get Metadata function', function () {
-    it('should get the metadata object', function () {
-      const meta = {
-        networkId: 'nwid',
-        advertiserId: 'adid',
-        networkName: 'nwnm',
-        primaryCatId: 'pcid',
-        advertiserName: 'adnm',
-        agencyId: 'agid',
-        agencyName: 'agnm',
-        brandId: 'brid',
-        brandName: 'brnm',
-        dchain: 'dc',
-        demandSource: 'ds',
-        secondaryCatIds: ['secondaryCatIds']
+  // test/spec/getConsentInfo_spec.js
+  describe('getConsentInfo', function () {
+    let sandbox;
+
+    beforeEach(function () {
+      sandbox = sinon.createSandbox();
+      window.PWT = {};
+    });
+
+    afterEach(function () {
+      sandbox.restore();
+      delete window.PWT;
+    });
+
+    it('should return an empty object if cmConfig is not an object', function () {
+      window.PWT.cmConfig = null;
+      expect(getConsentInfo(false)).to.deep.equal({});
+
+      window.PWT.cmConfig = undefined;
+      expect(getConsentInfo(false)).to.deep.equal({});
+    });
+
+    it('should return metrics if getDurationOf is a function and allStatsAvailable is false', function () {
+      const fakeGetDurationOf = sandbox.stub().callsFake((metric) => {
+        const metrics = {
+          'TRANSLATOR_CALLING_TIME': 100,
+          'LOGGER_CALLING_TIME': 200,
+          'TRACKER_CALLING_TIME': 300
+        };
+        return metrics[metric];
+      });
+
+      window.PWT.getDurationOf = fakeGetDurationOf;
+      window.PWT.cmConfig = { allStatsAvailable: false };
+
+      const expectedMetrics = {
+        trnslt: 100,
+        lrt: 200,
+        trt: 300
       };
-      const metadataObj = getMetadata(meta);
 
-      expect(metadataObj.nwid).to.equal('nwid');
-      expect(metadataObj.adid).to.equal('adid');
-      expect(metadataObj.nwnm).to.equal('nwnm');
-      expect(metadataObj.pcid).to.equal('pcid');
-      expect(metadataObj.adnm).to.equal('adnm');
-      expect(metadataObj.agid).to.equal('agid');
-      expect(metadataObj.agnm).to.equal('agnm');
-      expect(metadataObj.brid).to.equal('brid');
-      expect(metadataObj.brnm).to.equal('brnm');
-      expect(metadataObj.dc).to.equal('dc');
-      expect(metadataObj.ds).to.equal('ds');
-      expect(metadataObj.scids).to.be.an('array').with.length.above(0);
-      expect(metadataObj.scids[0]).to.equal('secondaryCatIds');
+      expect(getConsentInfo(false)).to.deep.equal(expectedMetrics);
     });
 
-    it('should return undefined if meta is null', function () {
-      const meta = null;
-      const metadataObj = getMetadata(meta);
-      expect(metadataObj).to.equal(undefined);
-    });
+    it('should return cmConfig properties and metrics when allStatsAvailable is true', function () {
+      const fakeGetDurationOf = sandbox.stub().callsFake((metric) => {
+        const metrics = {
+          'TRANSLATOR_CALLING_TIME': 100,
+          'LOGGER_CALLING_TIME': 200,
+          'TRACKER_CALLING_TIME': 300,
+          'GEO_CALLING_TIME': 400,
+          'CMP_CALLING_TIME': 500
+        };
+        return metrics[metric];
+      });
 
-    it('should return undefined if meta is a empty object', function () {
-      const meta = {};
-      const metadataObj = getMetadata(meta);
-      expect(metadataObj).to.equal(undefined);
-    });
-
-    it('should return undefined if meta object has different properties', function () {
-      const meta = {
-        a: 123,
-        b: 456
+      window.PWT.getDurationOf = fakeGetDurationOf;
+      window.PWT.cmConfig = {
+        allStatsAvailable: true,
+        cmpPresent: 1,
+        complianceSupport: [1, 2],
+        cmpId: 31,
+        geoInfo: { sc: 'US' }
       };
-      const metadataObj = getMetadata(meta);
-      expect(metadataObj).to.equal(undefined);
+
+      const expectedInfo = {
+        ccmp: 1,
+        ccmps: [1, 2],
+        ccmpid: 31,
+        cgst: 400,
+        ccmpt: 500,
+        csc: 'US',
+        trnslt: 100,
+        lrt: 200,
+        trt: 300
+      };
+
+      expect(getConsentInfo(false)).to.deep.equal(expectedInfo);
+    });
+
+    it('should return metrics with null values if getDurationOf is not a function', function () {
+      window.PWT.getDurationOf = null;
+      window.PWT.cmConfig = { allStatsAvailable: true };
+
+      const expectedInfo = {
+        ccmp: undefined,
+        ccmps: undefined,
+        ccmpid: undefined,
+        cgst: null,
+        ccmpt: null,
+        csc: undefined
+      };
+
+      expect(getConsentInfo(false)).to.deep.equal(expectedInfo);
     });
   });
 
