@@ -1339,6 +1339,9 @@ export const spec = {
       payload.site.ref = ref;
     }
     if (user) {
+      if (user.eids === undefined) {
+        delete user.eids;
+      }
       mergeDeep(payload, {user: user});
     }
     if (badv) {
