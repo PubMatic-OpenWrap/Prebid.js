@@ -40,7 +40,7 @@ const VIDEO_PARAMS = {
 export const spec = {
   code: BIDDER_CODE,
   gvlid: 253,
-  aliases: ['id', 'weborama'],
+  aliases: ['id'],
   supportedMediaTypes: [BANNER, NATIVE, VIDEO],
   syncStore: { extendMode: false, placementId: null },
 
