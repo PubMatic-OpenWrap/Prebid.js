@@ -14,7 +14,6 @@ import { getRefererInfo } from '../src/refererDetection.js';
 import { targeting } from '../src/targeting.js';
 import {
   buildUrl,
-  deepAccess,
   formatQS,
   isEmpty,
   isNumber,
@@ -90,7 +89,7 @@ export function buildDfpVideoUrl(options) {
 
   const derivedParams = {
     correlator: Date.now(),
-    sz: parseSizesInput(deepAccess(adUnit, 'mediaTypes.video.playerSize')).join('|'),
+    sz: parseSizesInput(adUnit?.mediaTypes?.video?.playerSize).join('|'),
     url: encodeURIComponent(location.href),
   };
 
@@ -208,7 +207,7 @@ function buildUrlFromAdserverUrlComponents(components, bid, options) {
  * @return {string | undefined} The encoded vast url if it exists, or undefined
  */
 function getDescriptionUrl(bid, components, prop) {
-  return deepAccess(components, `${prop}.description_url`) || encodeURIComponent(dep.ri().page);
+  return components?.[prop]?.description_url || encodeURIComponent(dep.ri().page);
 }
 
 /**

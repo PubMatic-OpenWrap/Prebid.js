@@ -291,6 +291,11 @@ export function getImp(bid, id, mediaTypes) {
     },
   };
 
+  const gpid = bid?.ortb2Imp?.ext?.gpid;
+  const pbadslot = bid?.ortb2Imp?.ext?.data?.pbadslot;
+  if (gpid) imp.ext.gpid = gpid;
+  if (pbadslot) imp.ext.data = { pbadslot };
+
   getImpBanner(imp, banner);
   getImpVideo(imp, video);
 
@@ -419,8 +424,8 @@ function getCurrency(bid = {}) {
 
     if (typeof bid.getFloor === 'function') {
       let floorInfo = bid.getFloor({currency, mediaType, size: '*'});
-      mediaTypes[mediaType].bidfloorcur = floorInfo.currency;
-      mediaTypes[mediaType].bidfloor = floorInfo.floor;
+      mediaTypes[mediaType].bidfloorcur = floorInfo?.currency;
+      mediaTypes[mediaType].bidfloor = floorInfo?.floor;
     } else {
       mediaTypes[mediaType].bidfloorcur = currency;
     };
