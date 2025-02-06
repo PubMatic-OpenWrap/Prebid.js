@@ -1,4 +1,3 @@
-
 import {expect} from 'chai';
 import {config} from '../../../src/config.js';
 import adapterManager from '../../../src/adapterManager.js';

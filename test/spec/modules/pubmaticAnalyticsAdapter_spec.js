@@ -1,4 +1,3 @@
-
 import pubmaticAnalyticsAdapter, { getMetadata, getConsentInfo, getConsentInfoStr } from 'modules/pubmaticAnalyticsAdapter.js';
 import adapterManager from 'src/adapterManager.js';
 import { EVENTS, REJECTION_REASON } from 'src/constants.js';

@@ -26,7 +26,6 @@ import {getGlobal} from '../src/prebidGlobal.js';
 import * as events from '../src/events.js';
 import {EVENTS} from '../src/constants.js';
 import {MODULE_TYPE_RTD} from '../src/activities/modules.js';
-import {setKeyValue as setGptKeyValue} from '../libraries/gptUtils/gptUtils.js';
 
 /**
  * @typedef {import('../modules/rtdModule/index.js').RtdSubmodule} RtdSubmodule
@@ -68,7 +67,14 @@ export function addBrowsiTag(data) {
   return script;
 }
 
-export const setKeyValue = (key) => setGptKeyValue(key, RANDOM.toString());
+export function setKeyValue(key) {
+  if (!key || typeof key !== 'string') return false;
+  window.googletag = window.googletag || {cmd: []};
+  window.googletag.cmd = window.googletag.cmd || [];
+  window.googletag.cmd.push(() => {
+    window.googletag.pubads().setTargeting(key, RANDOM.toString());
+  });
+}
 
 export function sendPageviewEvent(eventType) {
   if (eventType === 'PAGEVIEW') {
