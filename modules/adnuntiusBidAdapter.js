@@ -1,6 +1,6 @@
 import { registerBidder } from '../src/adapters/bidderFactory.js';
-import {BANNER, VIDEO, NATIVE} from '../src/mediaTypes.js';
-import {isStr, isEmpty, deepAccess, getUnixTimestampFromNow, convertObjectToArray, getWindowTop} from '../src/utils.js';
+import {BANNER, VIDEO} from '../src/mediaTypes.js';
+import {isStr, isEmpty, deepAccess, getUnixTimestampFromNow, convertObjectToArray} from '../src/utils.js';
 import { config } from '../src/config.js';
 import { getStorageManager } from '../src/storageManager.js';
 
@@ -12,7 +12,7 @@ const BIDDER_CODE_DEAL_ALIASES = [1, 2, 3, 4, 5].map(num => {
 const ENDPOINT_URL = 'https://ads.adnuntius.delivery/i';
 const ENDPOINT_URL_EUROPE = 'https://europe.delivery.adnuntius.com/i';
 const GVLID = 855;
-const SUPPORTED_MEDIA_TYPES = [BANNER, VIDEO, NATIVE];
+const SUPPORTED_MEDIA_TYPES = [BANNER, VIDEO];
 const MAXIMUM_DEALS_LIMIT = 5;
 const VALID_BID_TYPES = ['netBid', 'grossBid'];
 const METADATA_KEY = 'adn.metaData';
@@ -244,13 +244,6 @@ export const spec = {
       queryParamsAndValues.push('consentString=' + consentString);
       queryParamsAndValues.push('gdpr=' + flag);
     }
-    const win = getWindowTop() || window;
-    if (win.screen && win.screen.availHeight) {
-      queryParamsAndValues.push('screen=' + win.screen.availWidth + 'x' + win.screen.availHeight);
-    }
-    if (win.innerWidth) {
-      queryParamsAndValues.push('viewport=' + win.innerWidth + 'x' + win.innerHeight);
-    }
 
     const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.has('script-override')) {
@@ -319,9 +312,6 @@ export const spec = {
         const adUnit = {...bidTargeting, auId: bid.params.auId, targetId: targetId};
         if (mediaType === VIDEO) {
           adUnit.adType = 'VAST';
-        } else if (mediaType === NATIVE) {
-          adUnit.adType = 'NATIVE';
-          adUnit.nativeRequest = mediaTypeData.ortb;
         }
         const maxDeals = Math.max(0, Math.min(bid.params.maxDeals || 0, MAXIMUM_DEALS_LIMIT));
         if (maxDeals > 0) {
@@ -366,12 +356,10 @@ export const spec = {
     }
 
     function buildAdResponse(bidderCode, ad, adUnit, dealCount) {
-      const advertiserDomains = ad.advertiserDomains || [];
-      if (advertiserDomains.length === 0) {
-        const destinationUrls = ad.destinationUrls || {};
-        for (const value of Object.values(destinationUrls)) {
-          advertiserDomains.push(value.split('/')[2])
-        }
+      const destinationUrls = ad.destinationUrls || {};
+      const advertiserDomains = [];
+      for (const value of Object.values(destinationUrls)) {
+        advertiserDomains.push(value.split('/')[2])
       }
       const adResponse = {
         bidderCode: bidderCode,
@@ -394,13 +382,10 @@ export const spec = {
       const isDeal = dealCount > 0;
       const renderSource = isDeal ? ad : adUnit;
       if (renderSource.vastXml) {
-        adResponse.vastXml = renderSource.vastXml;
-        adResponse.mediaType = VIDEO;
-      } else if (renderSource.nativeJson) {
-        adResponse.mediaType = NATIVE;
-        adResponse.native = renderSource.nativeJson;
+        adResponse.vastXml = renderSource.vastXml
+        adResponse.mediaType = VIDEO
       } else {
-        adResponse.ad = renderSource.html;
+        adResponse.ad = renderSource.html
       }
       return adResponse;
     }

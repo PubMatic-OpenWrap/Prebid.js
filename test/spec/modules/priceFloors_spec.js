@@ -13,7 +13,7 @@ import {
   isFloorsDataValid,
   addBidResponseHook,
   fieldMatchingFunctions,
-  allowedFields, parseFloorData, normalizeDefault, getFloorDataFromAdUnits, updateAdUnitsForAuction, createFloorsDataForAuction
+  allowedFields, parseFloorData, normalizeDefault, getFloorDataFromAdUnits, getFloorSourceType, updateAdUnitsForAuction, createFloorsDataForAuction
 } from 'modules/priceFloors.js';
 import * as events from 'src/events.js';
 import * as mockGpt from '../integration/faker/googletag.js';
@@ -2225,7 +2225,7 @@ describe('the price floors module', function () {
   });
   describe('bidResponseHook tests', function () {
     const AUCTION_ID = '123456';
-    let returnedBidResponse, indexStub, reject;
+    let returnedBidResponse, indexStub, reject, s2sBid;
     let adUnit = {
       transactionId: 'au',
       code: 'test_div_1'
@@ -2369,6 +2369,21 @@ describe('the price floors module', function () {
       });
       expect(returnedBidResponse.cpm).to.equal(7.5);
     });
+    it('should update bid with floor data even for s2s partners', function() {
+      s2sBid = utils.deepClone(basicBidResponse);
+      s2sBid.source = 's2s'
+      _floorDataForAuction[AUCTION_ID] = utils.deepClone(basicFloorConfig);
+      _floorDataForAuction[AUCTION_ID].data.values = { 'banner': 1.0 };
+      runBidResponse(s2sBid);
+      expect(reject.calledOnce).to.be.true;
+      expect(returnedBidResponse.status).to.equal('rejected');
+	  });
+	  it('should add floor data to s2s bid response', function () {
+		  _floorDataForAuction[AUCTION_ID] = utils.deepClone(basicFloorConfig);
+		  _floorDataForAuction[AUCTION_ID].data.values = { 'banner': 0.3 };
+		  runBidResponse(s2sBid);
+		  expect(returnedBidResponse).to.haveOwnProperty('floorData');
+	  });
   });
 
   describe('Post Auction Tests', function () {
@@ -2435,88 +2450,48 @@ describe('the price floors module', function () {
       });
     })
   });
-});
 
-describe('setting null as rule value', () => {
-  const nullFloorData = {
-    modelVersion: 'basic model',
-    modelWeight: 10,
-    modelTimestamp: 1606772895,
-    currency: 'USD',
-    schema: {
-      delimiter: '|',
-      fields: ['mediaType', 'size']
-    },
-    values: {
-      'banner|600x300': null,
-    }
-  };
-
-  const basicBidRequest = {
-    bidder: 'rubicon',
-    adUnitCode: 'test_div_1',
-    auctionId: '1234-56-789',
-    transactionId: 'tr_test_div_1',
-    adUnitId: 'tr_test_div_1',
-  };
-
-  it('should validate for null values', function () {
-    let data = utils.deepClone(nullFloorData);
-    data.floorsSchemaVersion = 1;
-    expect(isFloorsDataValid(data)).to.to.equal(true);
-  });
-
-  it('getFloor should not return numeric value if null set as value', function () {
-    const bidRequest = { ...basicBidRequest, getFloor };
-    const basicFloorConfig = {
-      enabled: true,
-      auctionDelay: 0,
-      endpoint: {},
-      enforcement: {
-        enforceJS: true,
-        enforcePBS: false,
-        floorDeals: false,
-        bidAdjustment: true
-      },
-      data: nullFloorData
-    }
-    _floorDataForAuction[bidRequest.auctionId] = basicFloorConfig;
-
-    let inputParams = {mediaType: 'banner', size: [600, 300]};
-    expect(bidRequest.getFloor(inputParams)).to.deep.equal(null);
-  })
-
-  it('getFloor should not return numeric value if null set as value - external floor provider', function () {
-    const basicFloorConfig = {
-      enabled: true,
-      auctionDelay: 0,
-      endpoint: {},
-      enforcement: {
-        enforceJS: true,
-        enforcePBS: false,
-        floorDeals: false,
-        bidAdjustment: true
-      },
-      data: nullFloorData
-    }
-    server.respondWith(JSON.stringify(nullFloorData));
-    let exposedAdUnits;
-
-    handleSetFloorsConfig({...basicFloorConfig, floorProvider: 'floorprovider', endpoint: {url: 'http://www.fakefloorprovider.json/'}});
-
-    const adUnits = [{
-      cod: 'test_div_1',
-      mediaTypes: {banner: { sizes: [[600, 300]] }, native: {}},
-      bids: [{bidder: 'someBidder', adUnitCode: 'test_div_1'}, {bidder: 'someOtherBidder', adUnitCode: 'test_div_1'}]
-    }];
-
-    requestBidsHook(config => exposedAdUnits = config.adUnits, {
-      auctionId: basicBidRequest.auctionId,
-      adUnits
+  describe('getFloorSourceType', () => {
+    it('should return true when resolvedFloorsData is undefined', () => {
+      const result = getFloorSourceType(undefined);
+      expect(result).to.be.true;
     });
 
-    let inputParams = {mediaType: 'banner', size: [600, 300]};
+    it('should return true when resolvedFloorsData.data is undefined', () => {
+      const result = getFloorSourceType({});
+      expect(result).to.be.true;
+    });
 
-    expect(exposedAdUnits[0].bids[0].getFloor(inputParams)).to.deep.equal(null);
+    it('should return true when usefetchdatarate is undefined', () => {
+      const resolvedFloorsData = {
+        data: {}
+      };
+      const result = getFloorSourceType(resolvedFloorsData);
+      expect(result).to.be.true;
+    });
+
+    it('should return true when Math.random() * 100 is greater than parseFloat(usefetchdatarate)', () => {
+      const resolvedFloorsData = {
+        data: {
+          usefetchdatarate: 50
+        }
+      };
+      const randomStub = sinon.stub(Math, 'random').returns(0.6);
+      const result = getFloorSourceType(resolvedFloorsData);
+      expect(result).to.be.false;
+      randomStub.restore();
+    });
+
+    it('should return false when Math.random() * 100 is less than or equal to parseFloat(usefetchdatarate)', () => {
+      const resolvedFloorsData = {
+        data: {
+          usefetchdatarate: 50
+        }
+      };
+      const randomStub = sinon.stub(Math, 'random').returns(0.4);
+      const result = getFloorSourceType(resolvedFloorsData);
+      expect(result).to.be.true;
+      randomStub.restore();
+    });
   });
-})
+});

@@ -1,8 +1,6 @@
 import { expect } from 'chai';
 import { spec } from 'modules/dsp_genieeBidAdapter.js';
 import { config } from 'src/config';
-import { setConfig as setCurrencyConfig } from '../../../modules/currency';
-import { addFPDToBidderRequest } from '../../helpers/fpd';
 
 describe('Geniee adapter tests', () => {
   const validBidderRequest = {
@@ -76,16 +74,13 @@ describe('Geniee adapter tests', () => {
       config.resetConfig();
     });
     it('uncomfortable (currency)', () => {
-      setCurrencyConfig({ adServerCurrency: 'TWD' });
-      return addFPDToBidderRequest(validBidderRequest).then(res => {
-        const request = spec.buildRequests(validBidderRequest.bids, res);
-        expect(request).deep.equal({
-          method: 'GET',
-          url: 'https://rt.gsspat.jp/prebid_uncomfortable',
-        });
-        setCurrencyConfig({});
-        config.resetConfig();
+      config.setConfig({ currency: { adServerCurrency: 'TWD' } });
+      const request = spec.buildRequests(validBidderRequest.bids, validBidderRequest);
+      expect(request).deep.equal({
+        method: 'GET',
+        url: 'https://rt.gsspat.jp/prebid_uncomfortable',
       });
+      config.resetConfig();
     });
   });
   describe('interpretResponse function test', () => {

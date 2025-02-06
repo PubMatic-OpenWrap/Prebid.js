@@ -756,9 +756,8 @@ function buildRequest(validBidRequests, bidderRequest, impressions, version) {
         method: 'POST',
         url: exchangeUrl,
         data: deepClone(r),
-        options: {
+        option: {
           contentType: 'text/plain',
-          withCredentials: true
         },
         validBidRequests
       });
@@ -1334,7 +1333,6 @@ function buildIXDiag(validBidRequests, fledgeEnabled) {
 
   return ixdiag;
 }
-
 /**
  *
  * @param  {Array}   bannerSizeList list of banner sizes

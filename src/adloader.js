@@ -36,6 +36,7 @@ const _approvedLoadExternalJSList = [
   '51Degrees',
   'symitridap',
   'wurfl',
+  'pbjs-debug-ui',
   // UserId Submodules
   'justtag',
   'tncId',

@@ -822,68 +822,6 @@ export function getAdUnits() {
   ];
 };
 
-export function getTwinAdUnits() {
-  return [
-    {
-      'code': '/19968336/header-bid-tag1',
-      'mediaTypes': {
-        'banner': {
-          'sizes': [
-            [
-              728,
-              90
-            ]
-          ]
-        }
-      },
-      'bids': [
-        {
-          'bidder': 'pubmatic',
-          'params': {
-            'publisherId': 1234567,
-            'adSlot': '1234567@728x90'
-          }
-        },
-        {
-          'bidder': 'medianet',
-          'params': {
-            'cid': '8CUWQS47C',
-            'crid': '241882766'
-          },
-        },
-      ]
-    },
-    {
-      'code': '/19968336/header-bid-tag1',
-      'mediaTypes': {
-        'banner': {
-          'sizes': [
-            [
-              970,
-              90
-            ]
-          ]
-        }
-      },
-      'bids': [
-        {
-          'bidder': 'appnexus',
-          'params': {
-            'placementId': '543221'
-          }
-        },
-        {
-          'bidder': 'medianet',
-          'params': {
-            'cid': '8CUWQS47C',
-            'crid': '241882764'
-          },
-        },
-      ]
-    }
-  ]
-}
-
 export function getBidResponsesFromAPI() {
   return {
     '/19968336/header-bid-tag-0': {
@@ -1044,7 +982,7 @@ export function getAdServerTargeting() {
       'hb_size_pagescience': '300x250',
       'hb_pb_pagescience': '10.00',
       'hb_adid_pagescience': '25bedd4813632d7',
-      'hb_bidder_pagescienc': 'pagescience',
+      'hb_bidder_pagescience': 'pagescience',
       'hb_size_brightcom': '300x250',
       'hb_pb_brightcom': '10.00',
       'hb_adid_brightcom': '26e0795ab963896',
@@ -1155,7 +1093,7 @@ export function getTargetingKeysBidLandscape() {
       '300x250'
     ],
     [
-      TARGETING_KEYS.BIDDER + '_pagescienc',
+      CONSTANTS.TARGETING_KEYS.BIDDER + '_pagescience',
       'pagescience'
     ],
     [

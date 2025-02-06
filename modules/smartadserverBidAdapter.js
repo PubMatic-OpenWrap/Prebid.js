@@ -11,7 +11,6 @@ import { BANNER, VIDEO } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
 import { getBidFloor } from '../libraries/equativUtils/equativUtils.js'
 import { registerBidder } from '../src/adapters/bidderFactory.js';
-import { getCurrencyFromBidderRequest } from '../libraries/ortb2Utils/currency.js';
 
 /**
  * @typedef {import('../src/adapters/bidderFactory.js').BidRequest} BidRequest
@@ -181,7 +180,7 @@ export const spec = {
    */
   buildRequests: function (validBidRequests, bidderRequest) {
     // use bidderRequest.bids[] to get bidder-dependent request info
-    const adServerCurrency = getCurrencyFromBidderRequest(bidderRequest);
+    const adServerCurrency = config.getConfig('currency.adServerCurrency');
     const sellerDefinedAudience = deepAccess(bidderRequest, 'ortb2.user.data', config.getAnyConfig('ortb2.user.data'));
     const sellerDefinedContext = deepAccess(bidderRequest, 'ortb2.site.content.data', config.getAnyConfig('ortb2.site.content.data'));
 
