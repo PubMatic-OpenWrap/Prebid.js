@@ -129,7 +129,7 @@ export function processNativeAdUnitParams(params) {
 export function decorateAdUnitsWithNativeParams(adUnits) {
   adUnits.forEach(adUnit => {
     const nativeParams =
-      adUnit.nativeParams || deepAccess(adUnit, 'mediaTypes.native');
+      adUnit.nativeParams || adUnit?.mediaTypes?.native;
     if (nativeParams) {
       adUnit.nativeParams = processNativeAdUnitParams(nativeParams);
     }
@@ -213,7 +213,7 @@ function typeIsSupported(type) {
  */
 export const nativeAdUnit = adUnit => {
   const mediaType = adUnit.mediaType === 'native';
-  const mediaTypes = deepAccess(adUnit, 'mediaTypes.native');
+  const mediaTypes = adUnit?.mediaTypes?.native;
   return mediaType || mediaTypes;
 }
 export const nativeBidder = bid => includes(nativeAdapters, bid.bidder);
@@ -236,7 +236,7 @@ export function nativeBidIsValid(bid, {index = auctionManager.index} = {}) {
 }
 
 export function isNativeOpenRTBBidValid(bidORTB, bidRequestORTB) {
-  if (!deepAccess(bidORTB, 'link.url')) {
+  if (!bidORTB?.link?.url) {
     logError(`native response doesn't have 'link' property. Ortb response: `, bidORTB);
     return false;
   }
@@ -376,15 +376,15 @@ export function getNativeTargeting(bid, {index = auctionManager.index} = {}) {
 
   Object.keys(flatBidNativeKeys).forEach(asset => {
     const key = nativeKeys[asset];
-    let value = getAssetValue(bid.native[asset]) || getAssetValue(deepAccess(bid, `native.ext.${asset}`));
+    let value = getAssetValue(bid.native[asset]) || getAssetValue(bid?.native?.ext?.[asset]);
 
     if (asset === 'adTemplate' || !key || !value) {
       return;
     }
 
-    let sendPlaceholder = deepAccess(adUnit, `nativeParams.${asset}.sendId`);
+    let sendPlaceholder = adUnit?.nativeParams?.[asset]?.sendId;
     if (typeof sendPlaceholder !== 'boolean') {
-      sendPlaceholder = deepAccess(adUnit, `nativeParams.ext.${asset}.sendId`);
+      sendPlaceholder = adUnit?.nativeParams?.ext?.[asset]?.sendId;
     }
 
     if (sendPlaceholder) {
@@ -392,9 +392,9 @@ export function getNativeTargeting(bid, {index = auctionManager.index} = {}) {
       value = placeholder;
     }
 
-    let assetSendTargetingKeys = deepAccess(adUnit, `nativeParams.${asset}.sendTargetingKeys`);
+    let assetSendTargetingKeys = adUnit?.nativeParams?.[asset]?.sendTargetingKeys;
     if (typeof assetSendTargetingKeys !== 'boolean') {
-      assetSendTargetingKeys = deepAccess(adUnit, `nativeParams.ext.${asset}.sendTargetingKeys`);
+      assetSendTargetingKeys = adUnit?.nativeParams?.ext?.[asset]?.sendTargetingKeys;
     }
 
     const sendTargeting = typeof assetSendTargetingKeys === 'boolean' ? assetSendTargetingKeys : globalSendTargetingKeys;
@@ -440,13 +440,16 @@ function assetsMessage(data, adObject, keys, {index = auctionManager.index} = {}
     message: 'assetResponse',
     adId: data.adId,
   };
-  let renderData = getRenderingData(adObject).native;
+  let {native: renderData, rendererVersion} = getRenderingData(adObject);
   if (renderData) {
     // if we have native rendering data (set up by the nativeRendering module)
     // include it in full ("all assets") together with the renderer.
     // this is to allow PUC to use dynamic renderers without requiring changes in creative setup
-    msg.native = Object.assign({}, renderData);
-    msg.renderer = getCreativeRendererSource(adObject);
+    Object.assign(msg, {
+      native: Object.assign({}, renderData),
+      renderer: getCreativeRendererSource(adObject),
+      rendererVersion,
+    })
     if (keys != null) {
       renderData.assets = renderData.assets.filter(({key}) => keys.includes(key))
     }
@@ -482,7 +485,7 @@ function getAssetValue(value) {
 function getNativeKeys(adUnit) {
   const extraNativeKeys = {}
 
-  if (deepAccess(adUnit, 'nativeParams.ext')) {
+  if (adUnit?.nativeParams?.ext) {
     Object.keys(adUnit.nativeParams.ext).forEach(extKey => {
       extraNativeKeys[extKey] = `hb_native_${extKey}`;
     })
