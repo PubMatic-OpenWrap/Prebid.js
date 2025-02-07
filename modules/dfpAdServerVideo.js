@@ -253,7 +253,6 @@ function getCustParams(bid, options, urlCustParams) {
   const targetingSet = Object.assign({}, adserverTargeting, publisherTargetingSet, customParams);
   return encodeURIComponent(formatQS(targetingSet));
 }
-
 registerVideoSupport('dfp', {
-  buildVideoUrl: buildDfpVideoUrl,
+  buildVideoUrl: buildDfpVideoUrl
 });
