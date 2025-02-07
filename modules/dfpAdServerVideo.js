@@ -14,6 +14,7 @@ import { getRefererInfo } from '../src/refererDetection.js';
 import { targeting } from '../src/targeting.js';
 import {
   buildUrl,
+  deepAccess,
   formatQS,
   isEmpty,
   isNumber,
@@ -247,13 +248,12 @@ function getCustParams(bid, options, urlCustParams) {
   var customParams = {}
   if (window.PWT && window.PWT.getCustomParamsForDFPVideo) {
     customParams = window.PWT.getCustomParamsForDFPVideo(publisherTargetingSet, bid);
-  const publisherTargetingSet = options?.params?.cust_params;
+  }
 
   // Changing PrebidTargetingSet to adServerTargeitn as for OpenWrap we don't want to set Prebid Keys and instead Set the adServerKeys sent from OpenWrap.
   const targetingSet = Object.assign({}, adserverTargeting, publisherTargetingSet, customParams);
   return encodeURIComponent(formatQS(targetingSet));
 }
-
 registerVideoSupport('dfp', {
-  buildVideoUrl: buildDfpVideoUrl,
+  buildVideoUrl: buildDfpVideoUrl
 });
