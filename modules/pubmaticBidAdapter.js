@@ -567,7 +567,7 @@ function _createBannerRequest(bid) {
         bannerObj.format = format;
       }
     }
-    bannerObj.pos = 0;
+    bannerObj.pos = bid?.mediaTypes?.banner?.pos || 0;
     bannerObj.topframe = inIframe() ? 0 : 1;
 
     // Adding Banner custom params
