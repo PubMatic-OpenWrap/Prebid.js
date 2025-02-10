@@ -535,19 +535,31 @@ function getCDSDataLoggerStr() {
 }
 
 // Logging this information to take informed decision on what consent config to be applied.
-export function getConsentInfo(skipMetricsField) {
-  const { cmConfig } = window.PWT || {};
+export function getConsentInfo(loggingFor) {
+  const cmConfig = isFn(window.PWT.getConsentManagementConfig()) ? window.PWT.getConsentManagementConfig() : {};
+  const setLoggedDataByFn = window.PWT?.setLoggedDataBy;
   if (!cmConfig || typeof cmConfig != 'object') return {};
+
+  const baseObj = { ccme : cmConfig.consentManagementEnabled ? 1 : 0 };
+
+  if(!cmConfig.consentManagementEnabled || cmConfig.loggedDataBy[loggingFor]) {
+    return baseObj;
+  }
+
+  if(isFn(setLoggedDataByFn)) setLoggedDataByFn(loggingFor);
 
   const dimensions = {
     ccmp: cmConfig?.cmpPresent,
     ccmps: cmConfig?.complianceSupport,
     ccmpid: cmConfig?.cmpId,
-    csc: cmConfig?.geoInfo?.sc
+    csc: cmConfig?.geoInfo?.sc,
+    cecbo: cmConfig?.enforcedConsentBasisOn,  // Phase 2
+    crgdf: cmConfig?.readGeoDataFrom,
   };
 
-  if (skipMetricsField) {
-    return cmConfig.allStatsAvailable ? dimensions : {};
+  // In case of trackewr we need to log all the dimensions
+  if (loggingFor === "tracker") {
+    return dimensions;
   }
 
   const getDurationOf = window.PWT?.getDurationOf;
@@ -557,23 +569,22 @@ export function getConsentInfo(skipMetricsField) {
   const metrics = isGetDurationOfFn ? {
     trnslt: getDurationOf('TRANSLATOR_CALLING_TIME'),
     lrt: getDurationOf('LOGGER_CALLING_TIME'),
-    trt: getDurationOf('TRACKER_CALLING_TIME')
+    trt: getDurationOf('TRACKER_CALLING_TIME'),
+    ccmt: isGetDurationOfFn ? getDurationOf('CONSENT_MANAGEMENT_TIME') : null,
   } : {};
-
-  if (cmConfig?.allStatsAvailable) {
-    return {
-      ...dimensions,
-      ...metrics,
-      cgst: isGetDurationOfFn ? getDurationOf('GEO_CALLING_TIME') : null,
-      ccmpt: isGetDurationOfFn ? getDurationOf('CMP_CALLING_TIME') : null,
-    };
-  }
-
-  return metrics;
+  
+  return {
+    ...baseObj,
+    ...dimensions,
+    ...metrics,
+    cgst: isGetDurationOfFn ? getDurationOf('GEO_CALLING_TIME') : null,
+    ccmpt: isGetDurationOfFn ? getDurationOf('CMP_CALLING_TIME') : null,
+    cgm: cmConfig?.geoMatchWithCMP
+  };
 }
 
 export function getConsentInfoStr() {
-  let cmInfo = getConsentInfo(true);
+  let cmInfo = getConsentInfo("tracker");
   return Object.keys(cmInfo).reduce((queryString, key) => {
     const value = cmInfo[key];
     const encodedValue = (value != null && value != undefined) ? enc(value) : '';
@@ -672,7 +683,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   }
   outputObj = {
     ...outputObj,
-    ...getConsentInfo(false)
+    ...getConsentInfo("logger")
   };
 
   auctionCache.sent = true;
