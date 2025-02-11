@@ -536,25 +536,25 @@ function getCDSDataLoggerStr() {
 
 // Logging this information to take informed decision on what consent config to be applied.
 export function getConsentInfo(loggingFor) {
-  const cmConfig = isFn(window.PWT.getConsentManagementConfig()) ? window.PWT.getConsentManagementConfig() : {};
+  const crConfig = isFn(window.PWT.getConsentResolverConfig) ? window.PWT.getConsentResolverConfig() : {};
   const setLoggedDataByFn = window.PWT?.setLoggedDataBy;
-  if (!cmConfig || typeof cmConfig != 'object') return {};
+  if (!crConfig || typeof crConfig != 'object') return {};
 
-  const baseObj = { ccme : cmConfig.consentManagementEnabled ? 1 : 0 };
+  const baseObj = { ccme : crConfig.consentManagementEnabled ? 1 : 0 };
 
-  if(!cmConfig.consentManagementEnabled || cmConfig.loggedDataBy[loggingFor]) {
+  if(!crConfig.consentManagementEnabled || crConfig.loggedDataBy[loggingFor]) {
     return baseObj;
   }
 
   if(isFn(setLoggedDataByFn)) setLoggedDataByFn(loggingFor);
 
   const dimensions = {
-    ccmp: cmConfig?.cmpPresent,
-    ccmps: cmConfig?.complianceSupport,
-    ccmpid: cmConfig?.cmpId,
-    csc: cmConfig?.geoInfo?.sc,
-    cecbo: cmConfig?.enforcedConsentBasisOn,  // Phase 2
-    crgdf: cmConfig?.readGeoDataFrom,
+    ccmp: crConfig?.cmpPresent,
+    ccmps: crConfig?.complianceSupport,
+    ccmpid: crConfig?.cmpId,
+    csc: crConfig?.geoInfo?.sc,
+    cecbo: crConfig?.enforcedConsentBasisOn,  // Phase 2
+    crgdf: crConfig?.readGeoDataFrom,
   };
 
   // In case of trackewr we need to log all the dimensions
@@ -579,7 +579,7 @@ export function getConsentInfo(loggingFor) {
     ...metrics,
     cgst: isGetDurationOfFn ? getDurationOf('GEO_CALLING_TIME') : null,
     ccmpt: isGetDurationOfFn ? getDurationOf('CMP_CALLING_TIME') : null,
-    cgm: cmConfig?.geoMatchWithCMP
+    cgm: crConfig?.geoMatchWithCMP
   };
 }
 
