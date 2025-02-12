@@ -1,5 +1,5 @@
 
-import { _each, pick, logWarn, isStr, isArray, logError, isFn, generateUUID } from '../src/utils.js';
+import { _each, pick, logWarn, isStr, isArray, logError, isFn, generateUUID, isEmpty } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import { BID_STATUS, EVENTS, STATUS, REJECTION_REASON } from '../src/constants.js';
@@ -534,20 +534,27 @@ function getCDSDataLoggerStr() {
   return enc(cdsStr);
 }
 
+function setLoggedDataByInConfigResolver(auctionId, loggingFor) {
+  if (isFn(window.PWT?.setLoggedDataBy))
+    window.PWT.setLoggedDataBy(auctionId, loggingFor);
+}
+
 // Logging this information to take informed decision on what consent config to be applied.
-export function getConsentInfo(loggingFor) {
-  const crConfig = isFn(window.PWT.getConsentResolverConfig) ? window.PWT.getConsentResolverConfig() : {};
+export function getConsentInfo(auctionId, loggingFor) {
+  const crConfig = isFn(window.PWT.getConsentResolverConfig) ? window.PWT.getConsentResolverConfig() : null;
   const setLoggedDataByFn = window.PWT?.setLoggedDataBy;
   if (!crConfig || typeof crConfig != 'object') return {};
 
   const baseObj = { ccme : crConfig.consentManagementEnabled ? 1 : 0 };
 
-  if(!crConfig.consentManagementEnabled || crConfig.loggedDataBy[loggingFor]) {
+  if(!crConfig.consentManagementEnabled || !crConfig?.loggedDataBy?.[auctionId] || crConfig?.loggedDataBy?.[auctionId][loggingFor]) {
     return baseObj;
   }
 
-  if(isFn(setLoggedDataByFn)) setLoggedDataByFn(loggingFor);
+  // Setting value to true for specific loggingFor inside loggedDataBy in ConsentResolverConfig of OW
+  setLoggedDataByInConfigResolver(auctionId, loggingFor);
 
+  // In case of trackewr we need to log all the dimensions
   const dimensions = {
     ccmp: crConfig?.cmpPresent,
     ccmps: crConfig?.complianceSupport,
@@ -555,36 +562,33 @@ export function getConsentInfo(loggingFor) {
     csc: crConfig?.geoInfo?.sc,
     cecbo: crConfig?.enforcedConsentBasisOn,  // Phase 2
     crgdf: crConfig?.readGeoDataFrom,
+    cgm: crConfig?.geoMatchWithCMP,
   };
-
-  // In case of trackewr we need to log all the dimensions
   if (loggingFor === "tracker") {
     return dimensions;
   }
 
+  // When PWT.getDurationOf function available
   const getDurationOf = window.PWT?.getDurationOf;
   const isGetDurationOfFn = isFn(getDurationOf);
-
-  // When PWT.getDurationOf function available
   const metrics = isGetDurationOfFn ? {
     trnslt: getDurationOf('TRANSLATOR_CALLING_TIME'),
     lrt: getDurationOf('LOGGER_CALLING_TIME'),
     trt: getDurationOf('TRACKER_CALLING_TIME'),
-    ccmt: isGetDurationOfFn ? getDurationOf('CONSENT_MANAGEMENT_TIME') : null,
+    ccmt: isGetDurationOfFn ? getDurationOf('CONSENT_CONFIG_RESOLVER_TIME') : null,
+    cgst: isGetDurationOfFn ? getDurationOf('GEO_CALLING_TIME') : null,
+    ccmpt: isGetDurationOfFn ? getDurationOf('CMP_CALLING_TIME') : null
   } : {};
   
   return {
     ...baseObj,
     ...dimensions,
     ...metrics,
-    cgst: isGetDurationOfFn ? getDurationOf('GEO_CALLING_TIME') : null,
-    ccmpt: isGetDurationOfFn ? getDurationOf('CMP_CALLING_TIME') : null,
-    cgm: crConfig?.geoMatchWithCMP
   };
 }
 
-export function getConsentInfoStr() {
-  let cmInfo = getConsentInfo("tracker");
+export function getConsentInfoStr(auctionId) {
+  let cmInfo = getConsentInfo(auctionId, "tracker");
   return Object.keys(cmInfo).reduce((queryString, key) => {
     const value = cmInfo[key];
     const encodedValue = (value != null && value != undefined) ? enc(value) : '';
@@ -683,7 +687,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   }
   outputObj = {
     ...outputObj,
-    ...getConsentInfo("logger")
+    ...getConsentInfo(auctionId, "logger")
   };
 
   auctionCache.sent = true;
@@ -781,7 +785,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   if (isFn(window.PWT?.recordExitTime)) {
     window.PWT.recordExitTime('TRACKER_CALLING_TIME');
   }
-  pixelURL += getConsentInfoStr();
+  pixelURL += getConsentInfoStr(auctionId);
 
   if (isIma) {
     return pixelURL;
@@ -800,6 +804,8 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
 /// /////////// ADAPTER EVENT HANDLER FUNCTIONS //////////////
 
 function auctionInitHandler(args) {
+  // Initialize the loggedBy data in consent config resolver of OW
+  setLoggedDataByInConfigResolver(args.auctionId, "");
   s2sBidders = (function () {
     let s2sConf = config.getConfig('s2sConfig');
     let s2sBidders = [];
