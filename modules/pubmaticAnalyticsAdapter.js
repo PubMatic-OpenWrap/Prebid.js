@@ -534,35 +534,36 @@ function getCDSDataLoggerStr() {
   return enc(cdsStr);
 }
 
-function setLoggedDataByInConfigResolver(auctionId, loggingFor) {
-  if (isFn(window.PWT?.setLoggedDataBy))
-    window.PWT.setLoggedDataBy(auctionId, loggingFor);
+function getConsentResolverConfig() {
+  return (window?.PWT?.getConsentResolverConfig && isFn(window.PWT.getConsentResolverConfig))
+    ? window.PWT?.getConsentResolverConfig() 
+    : null;
 }
 
 // Logging this information to take informed decision on what consent config to be applied.
 export function getConsentInfo(auctionId, loggingFor) {
-  const crConfig = isFn(window.PWT.getConsentResolverConfig) ? window.PWT.getConsentResolverConfig() : null;
-  const setLoggedDataByFn = window.PWT?.setLoggedDataBy;
+  const crConfigInstance = getConsentResolverConfig();
+  const crConfig = crConfigInstance?.getProperties();
   if (!crConfig || typeof crConfig != 'object') return {};
 
-  const baseObj = { ccme : crConfig.consentManagementEnabled ? 1 : 0 };
+  const baseObj = { ccme : crConfig.ccme };
 
-  if(!crConfig.consentManagementEnabled || !crConfig?.loggedDataBy?.[auctionId] || crConfig?.loggedDataBy?.[auctionId][loggingFor]) {
+  if(!crConfig.ccme || !crConfig?.cldb?.[auctionId] || crConfig?.cldb?.[auctionId][loggingFor]) {
     return baseObj;
   }
 
   // Setting value to true for specific loggingFor inside loggedDataBy in ConsentResolverConfig of OW
-  setLoggedDataByInConfigResolver(auctionId, loggingFor);
+  crConfigInstance.setLoggedDataBy(auctionId, loggingFor);
 
   // In case of trackewr we need to log all the dimensions
   const dimensions = {
-    ccmp: crConfig?.cmpPresent,
-    ccmps: crConfig?.complianceSupport,
-    ccmpid: crConfig?.cmpId,
-    csc: crConfig?.geoInfo?.sc,
-    cecbo: crConfig?.enforcedConsentBasisOn,  // Phase 2
-    crgdf: crConfig?.readGeoDataFrom,
-    cgm: crConfig?.geoMatchWithCMP,
+    ccmp: crConfig?.ccmp,
+    ccmps: crConfig?.ccmps,
+    ccmpid: crConfig?.ccmpid,
+    csc: crConfig?.csc,
+    cecbo: crConfig?.cecbo,  // Phase 2
+    crgdf: crConfig?.crgdf,
+    cgm: crConfig?.cgm,
   };
   if (loggingFor === "tracker") {
     return dimensions;
@@ -805,7 +806,9 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
 
 function auctionInitHandler(args) {
   // Initialize the loggedBy data in consent config resolver of OW
-  setLoggedDataByInConfigResolver(args.auctionId, "");
+  const crConfigInstance = getConsentResolverConfig();
+  if(crConfigInstance) crConfigInstance.setLoggedDataBy(args.auctionId, "");
+
   s2sBidders = (function () {
     let s2sConf = config.getConfig('s2sConfig');
     let s2sBidders = [];
