@@ -747,7 +747,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   pixelURL += '&orig=' + enc(getDomainFromUrl(referrer));
   pixelURL += '&ss=' + enc(isS2SBidder(winningBid.bidder));
   (fskp != undefined) && (pixelURL += '&fskp=' + enc(fskp));
-  if (floorData && floorFetchStatus) {
+  if (floorData) {
     const floorRootValues = getFloorsCommonField(floorData.floorRequestData);
     const { ffs, fsrc, fp, mv } = floorRootValues;
     const params = { ffs, fsrc, fp, fmv: mv };
