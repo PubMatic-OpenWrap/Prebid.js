@@ -61,6 +61,13 @@ let s2sBidders = [];
 let identityOnly = DEFAULT_ISIDENTITY_ONLY;
 const storage = getStorageManager({bidderCode: ADAPTER_CODE});
 
+const consentFieldsLoggedBy = {                   // This indicates whether the data is logged by tracker or logger for first auction. 
+  // "auction-id" : {             // This property will be set at the time of auction init
+  //   tracker: false,
+  //   logger: false
+  // }
+};
+
 /// /////////// HELPER FUNCTIONS //////////////
 
 function sizeToDimensions(size) {
@@ -534,6 +541,21 @@ function getCDSDataLoggerStr() {
   return enc(cdsStr);
 }
 
+function setConsentFieldsLoggedBy(auctionId, loggingFor) {
+  // Initialize first time at auction Init as we required auction ID
+  if(isEmpty(consentFieldsLoggedBy)) {
+    consentFieldsLoggedBy[auctionId] = {
+      tracker: false,
+      logger: false
+    };
+    return;
+  }
+  // set if same auctionId is present.
+  if(consentFieldsLoggedBy[auctionId]) {
+    consentFieldsLoggedBy[auctionId][loggingFor] = true;
+  }
+}
+
 function getConsentResolverConfig() {
   return (window?.PWT?.getConsentResolverConfig && isFn(window.PWT.getConsentResolverConfig))
     ? window.PWT?.getConsentResolverConfig() 
@@ -542,18 +564,17 @@ function getConsentResolverConfig() {
 
 // Logging this information to take informed decision on what consent config to be applied.
 export function getConsentInfo(auctionId, loggingFor) {
-  const crConfigInstance = getConsentResolverConfig();
-  const crConfig = crConfigInstance?.getProperties();
+  const crConfig = getConsentResolverConfig();
   if (!crConfig || typeof crConfig != 'object') return {};
 
   const baseObj = { ccme : crConfig.ccme };
 
-  if(!crConfig.ccme || !crConfig?.cldb?.[auctionId] || crConfig?.cldb?.[auctionId][loggingFor]) {
+  if(!crConfig.ccme || !consentFieldsLoggedBy?.[auctionId] || consentFieldsLoggedBy?.[auctionId][loggingFor]) {
     return baseObj;
   }
 
   // Setting value to true for specific loggingFor inside loggedDataBy in ConsentResolverConfig of OW
-  crConfigInstance.setLoggedDataBy(auctionId, loggingFor);
+  setConsentFieldsLoggedBy(auctionId, loggingFor);
 
   // In case of trackewr we need to log all the dimensions
   const dimensions = {
@@ -566,7 +587,10 @@ export function getConsentInfo(auctionId, loggingFor) {
     cgm: crConfig?.cgm,
   };
   if (loggingFor === "tracker") {
-    return dimensions;
+    return {
+      ...baseObj,
+      ...dimensions
+    };
   }
 
   // When PWT.getDurationOf function available
@@ -805,9 +829,8 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
 /// /////////// ADAPTER EVENT HANDLER FUNCTIONS //////////////
 
 function auctionInitHandler(args) {
-  // Initialize the loggedBy data in consent config resolver of OW
-  const crConfigInstance = getConsentResolverConfig();
-  if(crConfigInstance) crConfigInstance.setLoggedDataBy(args.auctionId, "");
+  // Initialize the Consent fields loggedBy trcker and logger
+  setConsentFieldsLoggedBy(args.auctionId, "");
 
   s2sBidders = (function () {
     let s2sConf = config.getConfig('s2sConfig');
