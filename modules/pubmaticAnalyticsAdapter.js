@@ -567,7 +567,10 @@ export function getConsentInfo(auctionId, loggingFor) {
   const crConfig = getConsentResolverConfig();
   if (!crConfig || typeof crConfig != 'object') return {};
 
-  const baseObj = { ccme : crConfig.ccme };
+  const baseObj = { 
+    ccmps: crConfig?.ccmps,
+    cecbo: crConfig?.cecbo,
+  };
 
   if(!crConfig.ccme || !consentFieldsLoggedBy?.[auctionId] || consentFieldsLoggedBy?.[auctionId][loggingFor]) {
     return baseObj;
@@ -578,11 +581,10 @@ export function getConsentInfo(auctionId, loggingFor) {
 
   // In case of trackewr we need to log all the dimensions
   const dimensions = {
-    ccmp: crConfig?.ccmp,
-    ccmps: crConfig?.ccmps,
+    ccme : crConfig.ccme,
+    ccmp: crConfig?.ccmp,    
     ccmpid: crConfig?.ccmpid,
     csc: crConfig?.csc,
-    cecbo: crConfig?.cecbo,  // Phase 2
     crgdf: crConfig?.crgdf,
     cgm: crConfig?.cgm,
   };
