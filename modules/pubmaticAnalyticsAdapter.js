@@ -568,8 +568,8 @@ export function getConsentInfo(auctionId, loggingFor) {
   if (!crConfig || typeof crConfig != 'object') return {};
 
   const baseObj = { 
-    ccmps: crConfig?.ccmps,
     cecbo: crConfig?.cecbo,
+    ccmps: crConfig?.ccmps 
   };
 
   if(!crConfig.ccme || !consentFieldsLoggedBy?.[auctionId] || consentFieldsLoggedBy?.[auctionId][loggingFor]) {
