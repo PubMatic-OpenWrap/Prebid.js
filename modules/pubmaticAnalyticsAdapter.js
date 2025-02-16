@@ -61,13 +61,6 @@ let s2sBidders = [];
 let identityOnly = DEFAULT_ISIDENTITY_ONLY;
 const storage = getStorageManager({bidderCode: ADAPTER_CODE});
 
-const consentFieldsLoggedBy = {                   // This indicates whether the data is logged by tracker or logger for first auction. 
-  // "auction-id" : {             // This property will be set at the time of auction init
-  //   tracker: false,
-  //   logger: false
-  // }
-};
-
 /// /////////// HELPER FUNCTIONS //////////////
 
 function sizeToDimensions(size) {
@@ -541,24 +534,44 @@ function getCDSDataLoggerStr() {
   return enc(cdsStr);
 }
 
-function setConsentFieldsLoggedBy(auctionId, loggingFor) {
-  // Initialize first time at auction Init as we required auction ID
-  if(isEmpty(consentFieldsLoggedBy)) {
-    consentFieldsLoggedBy[auctionId] = {
-      tracker: false,
-      logger: false
-    };
-    return;
+export function setConsentFieldsLoggedBy() {
+  let loggedBy = {                  // This indicates whether the data is logged by tracker or logger for first auction.
+    // "auction-id" : {             // This property will be set at the time of auction init
+    //   tracker: false,
+    //   logger: false
+    // }
+  };
+  return {
+    initialize: function(auctionId) {
+      if (isEmpty(loggedBy)) {
+        loggedBy[auctionId] = {
+          tracker: false,
+          logger: false
+        };
+      }
+    },
+    setLoggedBy: function(auctionId, loggingFor) {
+      if (loggedBy[auctionId]) {
+        loggedBy[auctionId][loggingFor] = true;
+      }
+    },
+    reset: function() {
+      loggedBy = {};
+    },
+    getLoggedBy: function() {
+      return loggedBy;
+    }
   }
-  // set if same auctionId is present.
-  if(consentFieldsLoggedBy[auctionId]) {
-    consentFieldsLoggedBy[auctionId][loggingFor] = true;
-  }
+}
+
+let consentFieldsLoggedBy = setConsentFieldsLoggedBy();
+export function getConsentFieldsLoggedBy() {
+  return consentFieldsLoggedBy;
 }
 
 function getConsentResolverConfig() {
   return (window?.PWT?.getConsentResolverConfig && isFn(window.PWT.getConsentResolverConfig))
-    ? window.PWT?.getConsentResolverConfig() 
+    ? window.PWT?.getConsentResolverConfig()
     : null;
 }
 
@@ -567,28 +580,30 @@ export function getConsentInfo(auctionId, loggingFor) {
   const crConfig = getConsentResolverConfig();
   if (!crConfig || typeof crConfig != 'object') return {};
 
-  const baseObj = { 
+  const baseObj = {
     cecbo: crConfig?.cecbo,
-    ccmps: crConfig?.ccmps 
+    ccmps: crConfig?.ccmps
   };
 
-  if(!crConfig.ccme || !consentFieldsLoggedBy?.[auctionId] || consentFieldsLoggedBy?.[auctionId][loggingFor]) {
+  const loggedBy = consentFieldsLoggedBy.getLoggedBy();
+
+  if (!crConfig.ccme || !loggedBy?.[auctionId] || loggedBy?.[auctionId][loggingFor]) {
     return baseObj;
   }
 
   // Setting value to true for specific loggingFor inside loggedDataBy in ConsentResolverConfig of OW
-  setConsentFieldsLoggedBy(auctionId, loggingFor);
+  consentFieldsLoggedBy.setLoggedBy(auctionId, loggingFor);
 
   // In case of trackewr we need to log all the dimensions
   const dimensions = {
-    ccme : crConfig.ccme,
-    ccmp: crConfig?.ccmp,    
+    ccme: crConfig.ccme,
+    ccmp: crConfig?.ccmp,
     ccmpid: crConfig?.ccmpid,
     csc: crConfig?.csc,
     crgdf: crConfig?.crgdf,
     cgm: crConfig?.cgm,
   };
-  if (loggingFor === "tracker") {
+  if (loggingFor === 'tracker') {
     return {
       ...baseObj,
       ...dimensions
@@ -606,7 +621,7 @@ export function getConsentInfo(auctionId, loggingFor) {
     cgst: isGetDurationOfFn ? getDurationOf('GEO_CALLING_TIME') : null,
     ccmpt: isGetDurationOfFn ? getDurationOf('CMP_CALLING_TIME') : null
   } : {};
-  
+
   return {
     ...baseObj,
     ...dimensions,
@@ -615,7 +630,7 @@ export function getConsentInfo(auctionId, loggingFor) {
 }
 
 export function getConsentInfoStr(auctionId) {
-  let cmInfo = getConsentInfo(auctionId, "tracker");
+  let cmInfo = getConsentInfo(auctionId, 'tracker');
   return Object.keys(cmInfo).reduce((queryString, key) => {
     const value = cmInfo[key];
     const encodedValue = (value != null && value != undefined) ? enc(value) : '';
@@ -714,7 +729,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   }
   outputObj = {
     ...outputObj,
-    ...getConsentInfo(auctionId, "logger")
+    ...getConsentInfo(auctionId, 'logger')
   };
 
   auctionCache.sent = true;
@@ -832,7 +847,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
 
 function auctionInitHandler(args) {
   // Initialize the Consent fields loggedBy trcker and logger
-  setConsentFieldsLoggedBy(args.auctionId, "");
+  consentFieldsLoggedBy.initialize(args.auctionId);
 
   s2sBidders = (function () {
     let s2sConf = config.getConfig('s2sConfig');
