@@ -1,7 +1,7 @@
 import {expect} from 'chai';
 import {spec} from 'modules/pubmaticServerBidAdapter';
 import * as utils from 'src/utils';
-const constants = require('src/constants.js');
+const constants = require('src/constants.json');
 
 describe('PubMaticServer adapter', () => {
   let bidRequests, videoBidRequests;

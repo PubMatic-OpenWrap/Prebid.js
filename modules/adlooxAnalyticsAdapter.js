@@ -81,6 +81,8 @@ const PARAMS_DEFAULT = {
   'id11': '$ADLOOX_WEBSITE'
 };
 
+const NOOP = function() {};
+
 let analyticsAdapter = Object.assign(adapter({ analyticsType: 'endpoint' }), {
   track({ eventType, args }) {
     if (!analyticsAdapter[`handle_${eventType}`]) return;
@@ -105,10 +107,6 @@ analyticsAdapter.enableAnalytics = function(config) {
   }
   if (!(config.options.js === undefined || isStr(config.options.js))) {
     logError(MODULE, 'invalid js options value');
-    return;
-  }
-  if (isStr(config.options.js) && !/\.adlooxtracking\.(com|ru)$/.test(parseUrl(config.options.js, { 'noDecodeWholeURL': true }).host)) {
-    logError(MODULE, "invalid js options value, must be a sub-domain of 'adlooxtracking.com'");
     return;
   }
   if (!(config.options.toselector === undefined || isFn(config.options.toselector))) {
@@ -223,24 +221,20 @@ analyticsAdapter.url = function(url, args, bid) {
   return url + a2qs(args);
 }
 
-const preloaded = {};
 analyticsAdapter[`handle_${EVENTS.AUCTION_END}`] = function(auctionDetails) {
   if (!(auctionDetails.auctionStatus == AUCTION_COMPLETED && auctionDetails.bidsReceived.length > 0)) return;
-
-  const uri = parseUrl(analyticsAdapter.url(`${analyticsAdapter.context.js}#`));
-  const href = `${uri.protocol}://${uri.host}${uri.pathname}`;
-  if (preloaded[href]) return;
+  analyticsAdapter[`handle_${EVENTS.AUCTION_END}`] = NOOP;
 
   logMessage(MODULE, 'preloading verification JS');
 
+  const uri = parseUrl(analyticsAdapter.url(`${analyticsAdapter.context.js}#`));
+
   const link = document.createElement('link');
-  link.setAttribute('href', href);
+  link.setAttribute('href', `${uri.protocol}://${uri.host}${uri.pathname}`);
   link.setAttribute('rel', 'preload');
   link.setAttribute('as', 'script');
   // TODO fix rules violation
   insertElement(link);
-
-  preloaded[href] = true;
 }
 
 analyticsAdapter[`handle_${EVENTS.BID_WON}`] = function(bid) {
