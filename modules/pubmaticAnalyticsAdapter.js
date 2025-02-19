@@ -1,4 +1,3 @@
-
 import { _each, pick, logWarn, isStr, isArray, logError, isFn, generateUUID } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
@@ -734,6 +733,10 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   pixelURL += '&rf=' + enc(origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0);
   pixelURL += '&origbidid=' + enc(winningBid?.bidResponse?.partnerImpId || winningBidId);
   pixelURL += '&di=' + enc(winningBid?.bidResponse?.dealId || OPEN_AUCTION_DEAL_ID);
+  const ds = winningBid.bidResponse?.meta ? getMetadata(winningBid.bidResponse.meta)?.ds : undefined;
+  if (ds) {
+    pixelURL += '&ds=' + enc(ds);
+  }
   pg && (pixelURL += '&pb=' + enc(pg));
 
   pixelURL += '&plt=' + enc(getDevicePlatform());
@@ -744,15 +747,17 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   pixelURL += '&orig=' + enc(getDomainFromUrl(referrer));
   pixelURL += '&ss=' + enc(isS2SBidder(winningBid.bidder));
   (fskp != undefined) && (pixelURL += '&fskp=' + enc(fskp));
-  if (floorData && floorFetchStatus) {
+  if (floorData) {
     const floorRootValues = getFloorsCommonField(floorData.floorRequestData);
-    const { fsrc, fp, mv } = floorRootValues;
-    const params = { fsrc, fp, fmv: mv };
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
-        pixelURL += `&${key}=${enc(value)}`;
-      }
-    });
+    if (floorRootValues) {
+      const { ffs, fsrc, fp, mv } = floorRootValues;
+      const params = { ffs, fsrc, fp, fmv: mv };
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          pixelURL += `&${key}=${enc(value)}`;
+        }
+      });
+    }
     const floorType = getFloorType(floorData.floorResponseData);
     if (floorType !== undefined) {
       pixelURL += '&ft=' + enc(floorType);

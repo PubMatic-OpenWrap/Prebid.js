@@ -4278,32 +4278,32 @@ describe('PubMatic adapter', function () {
       expect(response[0].renderer).to.not.exist;
     });
 
-    it('should set ibv field in bid.ext when bid.ext.ibv exists', function() {
-      let request = spec.buildRequests(bidRequests, {
-        auctionId: 'new-auction-id'
+	it('should set ibv field in bid.ext when bid.ext.ibv exists', function() {
+        let request = spec.buildRequests(bidRequests, {
+          auctionId: 'new-auction-id'
+        });
+
+        let copyOfBidResponse = utils.deepClone(bannerBidResponse);
+        let bidExt = utils.deepClone(copyOfBidResponse.body.seatbid[0].bid[0].ext);
+        copyOfBidResponse.body.seatbid[0].bid[0].ext = Object.assign(bidExt, {
+          ibv: true
+        });
+
+        let response = spec.interpretResponse(copyOfBidResponse, request);
+        expect(response[0].ext.ibv).to.equal(true);
+        expect(response[0].meta.mediaType).to.equal('video');
       });
 
-      let copyOfBidResponse = utils.deepClone(bannerBidResponse);
-      let bidExt = utils.deepClone(copyOfBidResponse.body.seatbid[0].bid[0].ext);
-      copyOfBidResponse.body.seatbid[0].bid[0].ext = Object.assign(bidExt, {
-        ibv: true
+      it('should not set ibv field when bid.ext does not exist ', function() {
+        let request = spec.buildRequests(bidRequests, {
+          auctionId: 'new-auction-id'
+        });
+
+        let response = spec.interpretResponse(bannerBidResponse, request);
+        expect(response[0].ext).to.not.exist;
+        expect(response[0].meta).to.exist;
+        expect(response[0].meta.mediaType).to.equal('banner');
       });
-
-      let response = spec.interpretResponse(copyOfBidResponse, request);
-      expect(response[0].ext.ibv).to.equal(true);
-      expect(response[0].meta.mediaType).to.equal('video');
-    });
-
-    it('should not set ibv field when bid.ext does not exist ', function() {
-      let request = spec.buildRequests(bidRequests, {
-        auctionId: 'new-auction-id'
-      });
-
-      let response = spec.interpretResponse(bannerBidResponse, request);
-      expect(response[0].ext).to.not.exist;
-      expect(response[0].meta).to.exist;
-      expect(response[0].meta.mediaType).to.equal('banner');
-    });
 
     it('should assign mediaType by reading bid.ext.mediaType', function() {
       let newvideoRequests = [{
@@ -4624,31 +4624,31 @@ describe('PubMatic adapter', function () {
         done();
       });
 
-      if (FEATURES.VIDEO) {
-        describe('Checking for Video.plcmt property', function() {
-          let sandbox, utilsMock;
-          const adUnit = 'Div1';
-          const msg_placement_missing = 'Video.plcmt param missing for Div1';
-          let videoData = {
-            battr: [6, 7],
-            skipafter: 15,
-            maxduration: 50,
-            context: 'instream',
-            playerSize: [640, 480],
-            skip: 0,
-            connectiontype: [1, 2, 6],
-            skipmin: 10,
-            minduration: 10,
-            mimes: ['video/mp4', 'video/x-flv'],
-          }
-          beforeEach(() => {
-            utilsMock = sinon.mock(utils);
-            sandbox = sinon.sandbox.create();
-            sandbox.spy(utils, 'logWarn');
-          });
-          let newresponse = spec.interpretResponse(newvideoBidResponses, newrequest);
-          expect(newresponse[0].mediaType).to.equal('video')
-        })
+    if (FEATURES.VIDEO) {
+      describe('Checking for Video.plcmt property', function() {
+        let sandbox, utilsMock;
+        const adUnit = 'Div1';
+        const msg_placement_missing = 'Video.plcmt param missing for Div1';
+        let videoData = {
+          battr: [6, 7],
+          skipafter: 15,
+          maxduration: 50,
+          context: 'instream',
+          playerSize: [640, 480],
+          skip: 0,
+          connectiontype: [1, 2, 6],
+          skipmin: 10,
+          minduration: 10,
+          mimes: ['video/mp4', 'video/x-flv'],
+        }
+        beforeEach(() => {
+          utilsMock = sinon.mock(utils);
+          sandbox = sinon.sandbox.create();
+          sandbox.spy(utils, 'logWarn');
+        });
+        let newresponse = spec.interpretResponse(newvideoBidResponses, newrequest);
+        expect(newresponse[0].mediaType).to.equal('video')
+      })
 
         afterEach(() => {
           utilsMock.restore();
@@ -4764,11 +4764,11 @@ describe('PubMatic adapter', function () {
   }
 
   describe('setIBVField', function() {
-    it('should set ibv field in newBid.ext when bid.ext.ibv exists', function() {
+	it('should set ibv field in newBid.ext when bid.ext.ibv exists', function() {
 	  const bid = {
-        ext: {
+		ext: {
 		  ibv: true
-        }
+		}
 	  };
 	  const newBid = {};
 	  setIBVField(bid, newBid);
@@ -4776,43 +4776,43 @@ describe('PubMatic adapter', function () {
 	  expect(newBid.ext.ibv).to.equal(true);
 	  expect(newBid.meta).to.exist;
 	  expect(newBid.meta.mediaType).to.equal('video');
-    });
+	});
 
-    it('should not set ibv field when bid.ext.ibv does not exist', function() {
+	it('should not set ibv field when bid.ext.ibv does not exist', function() {
 	  const bid = {
-        ext: {}
+		ext: {}
 	  };
 	  const newBid = {};
 	  setIBVField(bid, newBid);
 	  expect(newBid.ext).to.not.exist;
 	  expect(newBid.meta).to.not.exist;
-    });
+	});
 
-    it('should not set ibv field when bid.ext does not exist', function() {
+	it('should not set ibv field when bid.ext does not exist', function() {
 	  const bid = {};
 	  const newBid = {};
 	  setIBVField(bid, newBid);
 	  expect(newBid.ext).to.not.exist;
 	  expect(newBid.meta).to.not.exist;
-    });
+	});
 
-    it('should preserve existing newBid.ext properties', function() {
+	it('should preserve existing newBid.ext properties', function() {
 	  const bid = {
-        ext: {
+		ext: {
 		  ibv: true
-        }
+		}
 	  };
 	  const newBid = {
-        ext: {
+		ext: {
 		  existingProp: 'should remain'
-        }
+		}
 	  };
 	  setIBVField(bid, newBid);
 	  expect(newBid.ext.existingProp).to.equal('should remain');
 	  expect(newBid.ext.ibv).to.equal(true);
 	  expect(newBid.meta).to.exist;
 	  expect(newBid.meta.mediaType).to.equal('video');
-    });
+	});
   });
   if (FEATURES.VIDEO) {
     describe('Video request params', function() {
@@ -5059,7 +5059,7 @@ describe('PubMatic adapter', function () {
       };
 
 	  const br = {
-        mediaType: 'video'
+		mediaType: 'video'
 	  };
       prepareMetaObject(br, bid, null);
       expect(br.meta.networkId).to.equal(6); // dspid
