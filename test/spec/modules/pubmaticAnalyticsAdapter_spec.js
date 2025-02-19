@@ -1,3 +1,4 @@
+
 import pubmaticAnalyticsAdapter, { getMetadata, getConsentInfo, getConsentInfoStr } from 'modules/pubmaticAnalyticsAdapter.js';
 import adapterManager from 'src/adapterManager.js';
 import { EVENTS, REJECTION_REASON } from 'src/constants.js';
@@ -77,9 +78,6 @@ const BID = {
     'floorRuleValue': 1.1,
     'floorValue': 1.1
   },
-  'meta': {
-    'demandSource': 1208,
-  },
   getStatusCode() {
     return 1;
   }
@@ -108,8 +106,7 @@ const BID2 = Object.assign({}, BID, {
     'hb_source': 'server'
   },
   meta: {
-    advertiserDomains: ['example.com'],
-    demandSource: 1208
+    advertiserDomains: ['example.com']
   }
 });
 
@@ -733,12 +730,10 @@ describe('pubmatic analytics adapter', function () {
       expect(data.orig).to.equal('www.test.com');
       expect(data.ss).to.equal('1');
       expect(data.fskp).to.equal('0');
-	    expect(data.fmv).to.equal('floorModelTest');
-	    expect(data.fsrc).to.equal(2);
+	  expect(data.fmv).to.equal('floorModelTest');
+	  expect(data.fsrc).to.equal(2);
       expect(data.fp).to.equal('pubmatic');
       expect(data.af).to.equal('video');
-      expect(data.ds).to.equal('1208');
-      expect(data.ffs).to.equal('1');
     });
 
     it('Logger: do not log floor fields when prebids floor shows noData in location property', function() {
