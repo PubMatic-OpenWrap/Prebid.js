@@ -804,7 +804,6 @@ describe('adagio analytics adapter', () => {
 
       expect(server.requests.length).to.equal(5, 'requests count');
       {
-        // the first request is getting cached we expect to see its auction id later when it's re-used
         const { protocol, hostname, pathname, search } = utils.parseUrl(server.requests[0].url);
         expect(protocol).to.equal('https');
         expect(hostname).to.equal('c.4dex.io');
@@ -974,7 +973,7 @@ describe('adagio analytics adapter', () => {
       }
 
       {
-        const { protocol, hostname, pathname, search } = utils.parseUrl(server.requests[7].url);
+        const { protocol, hostname, pathname, search } = utils.parseUrl(server.requests[4].url);
         expect(protocol).to.equal('https');
         expect(hostname).to.equal('c.4dex.io');
         expect(pathname).to.equal('/pba.gif');

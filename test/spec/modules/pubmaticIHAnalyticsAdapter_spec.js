@@ -1,5 +1,5 @@
 import pubmaticIHAnalyticsAdapter, { getMetadata } from 'modules/pubmaticIHAnalyticsAdapter.js';
-import CONSTANTS from 'src/constants.json';
+import CONSTANTS from 'src/constants.js';
 import { config } from 'src/config.js';
 
 let events = require('src/events');

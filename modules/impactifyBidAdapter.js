@@ -1,6 +1,6 @@
 'use strict';
 
-import { deepAccess, deepSetValue, generateUUID } from '../src/utils.js';
+import { deepAccess, deepSetValue, generateUUID, isPlainObject } from '../src/utils.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { config } from '../src/config.js';
 import { ajax } from '../src/ajax.js';
@@ -98,7 +98,7 @@ const helpers = {
       mediaType: '*',
       size: '*'
     });
-    if (typeof floorInfo === 'object' && floorInfo.currency === DEFAULT_CURRENCY && !isNaN(parseFloat(floorInfo.floor))) {
+    if (isPlainObject(floorInfo) && floorInfo.currency === DEFAULT_CURRENCY && !isNaN(parseFloat(floorInfo.floor))) {
       return parseFloat(floorInfo.floor);
     }
     return null;
@@ -243,6 +243,7 @@ export const spec = {
 
     return true;
   },
+
   /**
    * Make a server request from the list of BidRequests.
    *
@@ -269,6 +270,7 @@ export const spec = {
       options
     };
   },
+
   /**
    * Unpack the response from the server into a list of bids.
    *
