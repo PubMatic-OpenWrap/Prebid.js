@@ -1,4 +1,4 @@
-import { _each, isArray, logError, logWarn, pick ,isFn} from '../src/utils.js';
+import { _each, isArray, logError, logWarn, pick, isFn } from '../src/utils.js';
 import adapter from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import { BID_STATUS, STATUS, REJECTION_REASON } from '../src/constants.js';
@@ -80,7 +80,7 @@ function getCDSDataLoggerStr() {
   var cdsData = getCDSData();
   var cdsStr = '';
   if (cdsData) {
-    Object.keys(cdsData).map(function(key) {
+    Object.keys(cdsData).map(function (key) {
       var val = cdsData[key].value;
       val = (!Array.isArray(val) && typeof val !== 'object' &&
         typeof val !== 'function' && typeof val !== 'undefined') ? val : '';
@@ -162,6 +162,7 @@ function transformPayload(currentPayload) {
       Object.assign(newPayload[key], {
         psl: getPSL(),
         ih: identityOnly,
+        owv: window.PWT?.versionDetails?.openwrap_version || '-1',
       });
     }
   }
@@ -253,7 +254,7 @@ function parseBidResponse(bid) {
     'mediaType',
     'params',
     'floorData',
-    'mi',
+    'mi', () => window.matchedimpressions,
     'regexPattern', () => bid.regexPattern || undefined,
     'partnerImpId', // partner impression ID
     'dimensions', () => pick(bid, [
@@ -278,7 +279,7 @@ function isS2SBidder(bidder) {
 
 function isOWPubmaticBid(adapterName) {
   let s2sConf = config.getConfig('s2sConfig');
-  let s2sConfArray = isArray(s2sConf) ? s2sConf : [s2sConf];
+  let s2sConfArray = s2sConf ? (isArray(s2sConf) ? s2sConf : [s2sConf]) : [];
   return s2sConfArray.some(conf => {
     if (adapterName === ADAPTER_CODE && conf.defaultVendor === VENDOR_OPENWRAP &&
       conf.bidders.indexOf(ADAPTER_CODE) > -1) {
@@ -299,9 +300,9 @@ function getTgId() {
   return 0;
 }
 
-function getFeatureLevelDetails(auctionCache){
+function getFeatureLevelDetails(auctionCache) {
   return {
-    flr: Object.assign({},auctionCache?.floorData.floorRequestData,{
+    flr: Object.assign({}, auctionCache?.floorData.floorRequestData, {
       enforcements: auctionCache?.floorData.floorResponseData?.enforcements
     })
   }
@@ -309,12 +310,12 @@ function getFeatureLevelDetails(auctionCache){
 
 
 
-function getRootLevelDetails(auctionCache,auctionId){
+function getRootLevelDetails(auctionCache, auctionId) {
   const referrer = config.getConfig('pageUrl') || auctionCache.referer || '';
   return {
     pubid: `${publisherId}`,
     iid: `${auctionCache?.wiid || auctionId}`,
-    to: parseInt(`${auctionCache.timeout}`),  
+    to: parseInt(`${auctionCache.timeout}`),
     purl: referrer,
     tst: Math.round(Date.now() / 1000),
     pid: `${profileId}`,
@@ -331,10 +332,10 @@ function executeBidsLoggerCall(event) {
 
   if (!auctionCache || auctionCache.sent) return;
 
-  const payload =  {
+  const payload = {
     sd: auctionCache.adUnitCodes,
     fd: getFeatureLevelDetails(auctionCache),
-    rd: getRootLevelDetails(auctionCache,auctionId)
+    rd: getRootLevelDetails(auctionCache, auctionId)
   };
   auctionCache.sent = true;
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
@@ -371,7 +372,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
 
   const payload = {
     fd: getFeatureLevelDetails(auctionCache),
-    rd:getRootLevelDetails(auctionCache,auctionId),
+    rd: getRootLevelDetails(auctionCache, auctionId),
     sd: {
       adapterName,
       adUnitId,
@@ -496,7 +497,7 @@ const eventHandlers = {
 
   bidWon: (args) => {
     let auctionCache = cache.auctions[args.auctionId];
-    auctionCache.adUnitCodes[args.adUnitCode].bidWon = args.originalRequestId || args.requestId;
+    auctionCache.adUnitCodes[args.adUnitCode].wonBidId = args.originalRequestId || args.requestId;
     auctionCache.adUnitCodes[args.adUnitCode].bidWonAdId = args.adId;
     executeBidWonLoggerCall(args.auctionId, args.adUnitCode);
   },
