@@ -390,9 +390,9 @@ function _addImpressionFPD(imp, bid) {
   const ortb2 = {...utils.deepAccess(bid, 'ortb2Imp.ext.data')};
   Object.keys(ortb2).forEach(prop => {
     /**
-     * Prebid AdSlot
-     * @type {(string|undefined)}
-     */
+      * Prebid AdSlot
+      * @type {(string|undefined)}
+    */
     if (prop === 'pbadslot') {
       if (typeof ortb2[prop] === 'string' && ortb2[prop]) utils.deepSetValue(imp, 'ext.data.pbadslot', ortb2[prop]);
     } else if (prop === 'adserver') {
@@ -495,11 +495,11 @@ export const spec = {
   code: BIDDER_CODE,
   supportedMediaTypes: [BANNER, VIDEO],
   /**
-   * Determines whether or not the given bid request is valid. Valid bid request must have placementId and hbid
-   *
-   * @param {BidRequest} bid The bid params to validate.
-   * @return boolean True if this is a valid bid, and false otherwise.
-   */
+  * Determines whether or not the given bid request is valid. Valid bid request must have placementId and hbid
+  *
+  * @param {BidRequest} bid The bid params to validate.
+  * @return boolean True if this is a valid bid, and false otherwise.
+  */
   isBidRequestValid: bid => {
     if (bid && bid.params) {
       return mandatoryParamCheck('publisherId', bid.params.publisherId) &&
@@ -511,11 +511,11 @@ export const spec = {
   },
 
   /**
-   * Make a server request from the list of BidRequests.
-   *
-   * @param {validBidRequests[]} - an array of bids
-   * @return ServerRequest Info describing the request to the server.
-   */
+  * Make a server request from the list of BidRequests.
+  *
+  * @param {validBidRequests[]} - an array of bids
+  * @return ServerRequest Info describing the request to the server.
+  */
   buildRequests: (validBidRequests, bidderRequest) => {
     var startTime = utils.timestamp();
     var refererInfo;
@@ -610,11 +610,11 @@ export const spec = {
   },
 
   /**
-   * Unpack the response from the server into a list of bids.
-   *
-   * @param {*} response A successful response from the server.
-   * @return {Bid[]} An array of bids which were nested inside the server.
-   */
+  * Unpack the response from the server into a list of bids.
+  *
+  * @param {*} response A successful response from the server.
+  * @return {Bid[]} An array of bids which were nested inside the server.
+  */
   interpretResponse: (response, request) => {
     var endTime = utils.timestamp();
     var wiid = JSON.parse(request.data).ext?.wrapper?.wiid;
@@ -742,8 +742,8 @@ export const spec = {
   },
 
   /**
-   * Register User Sync.
-   */
+  * Register User Sync.
+  */
   getUserSyncs: (syncOptions, serverResponses, gdprConsent, uspConsent) => {
     let urls = [];
     var bidders = config.getConfig('userSync.enabledBidders');

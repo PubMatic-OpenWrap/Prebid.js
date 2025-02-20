@@ -1,4 +1,3 @@
-
 import { _each, pick, logWarn, isStr, isArray, logError, isFn, generateUUID } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';

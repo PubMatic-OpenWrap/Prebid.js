@@ -54,7 +54,6 @@ export const EVENTS = {
   AUCTION_DEBUG: 'auctionDebug',
   BID_VIEWABLE: 'bidViewable',
   STALE_RENDER: 'staleRender',
-  EXPIRED_RENDER: 'expiredRender',
   BILLABLE_EVENT: 'billableEvent',
   IH_INIT: 'initIdentityHub',
   BID_ACCEPTED: 'bidAccepted',

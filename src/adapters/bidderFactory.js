@@ -5,7 +5,7 @@ import {createBid} from '../bidfactory.js';
 import {userSync} from '../userSync.js';
 import {nativeBidIsValid} from '../native.js';
 import {isValidVideoBid} from '../video.js';
-import {EVENTS, REJECTION_REASON, STATUS} from '../constants.js';
+import { EVENTS, STATUS, REJECTION_REASON } from '../constants.js';
 import * as events from '../events.js';
 import {includes} from '../polyfill.js';
 import {
@@ -13,11 +13,9 @@ import {
   isArray,
   isPlainObject,
   logError,
-  logWarn,
-  memoize,
+  logWarn, memoize,
   parseQueryStringParameters,
-  parseSizesInput,
-  pick,
+  parseSizesInput, pick,
   uniques
 } from '../utils.js';
 import {hook} from '../hook.js';
@@ -525,9 +523,10 @@ export const processBidderRequests = hook('sync', function (spec, bids, bidderRe
 export const registerSyncInner = hook('async', function(spec, responses, gdprConsent, uspConsent, gppConsent) {
   const aliasSyncEnabled = config.getConfig('userSync.aliasSyncEnabled');
   if (spec.getUserSyncs && (aliasSyncEnabled || !adapterManager.aliasRegistry[spec.code])) {
+    let filterConfig = config.getConfig('userSync.filterSettings');
     let syncs = spec.getUserSyncs({
-      iframeEnabled: userSync.canBidderRegisterSync('iframe', spec.code),
-      pixelEnabled: userSync.canBidderRegisterSync('image', spec.code),
+      iframeEnabled: !!(filterConfig && (filterConfig.iframe || filterConfig.all)),
+      pixelEnabled: !!(filterConfig && (filterConfig.image || filterConfig.all)),
     }, responses, gdprConsent, uspConsent, gppConsent);
     if (syncs) {
       if (!Array.isArray(syncs)) {
