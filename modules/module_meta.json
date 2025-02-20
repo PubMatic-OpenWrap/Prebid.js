@@ -76,9 +76,19 @@
             "module": "sizeMappingV2"
         },
         {
+            "name": "geoDetection",
+            "path": "/modules/geoDetection.js",
+            "module": "geoDetection"
+        },
+        {
             "name": "allowActivities",
             "path": "/modules/allowActivities.js",
             "module": "allowActivities"
+        },
+        {
+            "name": "prebidJSDebugUI",
+            "path": "/modules/prebidJSDebugUI.js",
+            "module": "prebidJSDebugUI"
         },
         {
             "name": "bidViewability",
@@ -91,7 +101,7 @@
             "module": "topLevelPaapi"
         },
         {
-            "name": "bidViewabilityIO",
+            "name": "gppControl_usnat",
             "path": "/modules/gppControl_usnat.js",
             "module": "gppControl_usnat"
         },
@@ -154,6 +164,11 @@
             "name": "sizeMapping",
             "path": "/modules/sizeMapping.js",
             "module": "sizeMapping"
+        },
+        {
+            "name": "pubmaticAutoRefresh",
+            "path": "/modules/pubmaticAutoRefresh.js",
+            "module": "pubmaticAutoRefresh"
         },
         {
             "name": "dfpAdpod",
@@ -280,6 +295,11 @@
             "module": "permutiveRtdProvider"
         },
         {
+            "name": "gameraRtdProvider",
+            "path": "/modules/gameraRtdProvider.js",
+            "module": "gameraRtdProvider"
+        },
+        {
             "name": "geolocationRtdProvider",
             "path": "/modules/geolocationRtdProvider.js",
             "module": "geolocationRtdProvider"
@@ -298,6 +318,11 @@
             "name": "aaxBlockmeterRtdProvider",
             "path": "/modules/aaxBlockmeterRtdProvider.js",
             "module": "aaxBlockmeterRtdProvider"
+        },
+        {
+            "name": "liveIntentRtdProvider",
+            "path": "/modules/liveIntentRtdProvider.js",
+            "module": "liveIntentRtdProvider"
         },
         {
             "name": "mobianRtdProvider",
@@ -680,6 +705,11 @@
             "name": "bidwatchAnalyticsAdapter",
             "path": "/modules/bidwatchAnalyticsAdapter.js",
             "module": "bidwatchAnalyticsAdapter"
+        },
+        {
+            "name": "pubmaticIHAnalyticsAdapter",
+            "path": "/modules/pubmaticIHAnalyticsAdapter.js",
+            "module": "pubmaticIHAnalyticsAdapter"
         },
         {
             "name": "pubstackAnalyticsAdapter",

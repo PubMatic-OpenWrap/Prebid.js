@@ -249,11 +249,11 @@ function getCustParams(bid, options, urlCustParams) {
   if (window.PWT && window.PWT.getCustomParamsForDFPVideo) {
     customParams = window.PWT.getCustomParamsForDFPVideo(publisherTargetingSet, bid);
   }
+
   // Changing PrebidTargetingSet to adServerTargeitn as for OpenWrap we don't want to set Prebid Keys and instead Set the adServerKeys sent from OpenWrap.
   const targetingSet = Object.assign({}, adserverTargeting, publisherTargetingSet, customParams);
   return encodeURIComponent(formatQS(targetingSet));
 }
-
 registerVideoSupport('dfp', {
-  buildVideoUrl: buildDfpVideoUrl,
+  buildVideoUrl: buildDfpVideoUrl
 });
