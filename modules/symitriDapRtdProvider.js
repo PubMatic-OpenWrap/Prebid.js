@@ -663,7 +663,6 @@ export function createRtdProvider(moduleName, moduleCode, headerPrefix) {
       switch (config.api_version) {
         case 'x1':
         case 'x1-dev':
-        case 'x2':
           method = 'POST';
           path = '/data-activation/' + config.api_version + '/domain/' + config.domain + '/identity/tokenize';
           body = JSON.stringify(apiParams);
@@ -686,7 +685,6 @@ export function createRtdProvider(moduleName, moduleCode, headerPrefix) {
           switch (config.api_version) {
             case 'x1':
             case 'x1-dev':
-            case 'x2':
               token = request.getResponseHeader(headerPrefix + '-DAP-Token');
               break;
           }
@@ -746,7 +744,8 @@ export function createRtdProvider(moduleName, moduleCode, headerPrefix) {
         return;
       }
 
-      let path = '/data-activation/x1' +
+      let path = '/data-activation/' +
+        config.api_version +
         '/token/' + token +
         '/membership';
 
@@ -813,7 +812,8 @@ export function createRtdProvider(moduleName, moduleCode, headerPrefix) {
         error: (error, request) => { onError(request, request.status, error, onDone); }
       };
 
-      let path = '/data-activation/x1' +
+      let path = '/data-activation/' +
+        config.api_version +
         '/token/' + token +
         '/membership/encrypt';
 

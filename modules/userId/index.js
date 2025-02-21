@@ -131,6 +131,7 @@ import {
   STORAGE_TYPE_LOCALSTORAGE
 } from '../../src/storageManager.js';
 import {
+  deepAccess,
   deepSetValue,
   delayExecution,
   isArray,
@@ -668,7 +669,7 @@ let initIdSystem;
 function getPPID(eids = getUserIdsAsEids() || []) {
   // userSync.ppid should be one of the 'source' values in getUserIdsAsEids() eg pubcid.org or id5-sync.com
   const matchingUserId = ppidSource && eids.find(userID => userID.source === ppidSource);
-  if (matchingUserId && typeof matchingUserId?.uids?.[0]?.id === 'string') {
+  if (matchingUserId && typeof deepAccess(matchingUserId, 'uids.0.id') === 'string') {
     const ppidValue = matchingUserId.uids[0].id.replace(/[\W_]/g, '');
     if (ppidValue.length >= 32 && ppidValue.length <= 150) {
       return ppidValue;

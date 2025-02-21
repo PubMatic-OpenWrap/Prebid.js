@@ -1,19 +1,18 @@
 import { deepAccess, getWindowTop, isArray, logInfo, logWarn } from '../src/utils.js';
 import { ajax } from '../src/ajax.js';
+import { config } from '../src/config.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, NATIVE, VIDEO } from '../src/mediaTypes.js';
 import { includes as strIncludes } from '../src/polyfill.js';
 import { convertOrtbRequestToProprietaryNative } from '../src/native.js';
-import { getCurrencyFromBidderRequest } from '../libraries/ortb2Utils/currency.js';
 
 const BIDDER_CODE = 'sspBC';
 const BIDDER_URL = 'https://ssp.wp.pl/bidder/';
-const SYNC_URL_IFRAME = 'https://ssp.wp.pl/bidder/usersync';
-const SYNC_URL_IMAGE = 'https://ssp.wp.pl/v1/sync/pixel';
+const SYNC_URL = 'https://ssp.wp.pl/bidder/usersync';
 const NOTIFY_URL = 'https://ssp.wp.pl/bidder/notify';
 const GVLID = 676;
 const TMAX = 450;
-const BIDDER_VERSION = '6.10';
+const BIDDER_VERSION = '6.00';
 const DEFAULT_CURRENCY = 'PLN';
 const W = window;
 const { navigator } = W;
@@ -71,20 +70,7 @@ const getContentLanguage = () => {
     const topWindow = getWindowTop();
     return topWindow.document.body.parentNode.lang;
   } catch (err) {
-    logWarn('Could not read language from top-level html', err);
-  }
-};
-
-/**
- * Get host name of the top level html object
- * @returns {string} host name
- */
-const getTopHost = () => {
-  try {
-    const topWindow = getWindowTop();
-    return topWindow.location.host;
-  } catch (err) {
-    logWarn('Could not read host from top-level window', err);
+    logWarn('Could not read language form top-level html', err);
   }
 };
 
@@ -275,18 +261,18 @@ const getHighestFloor = (slot) => {
           mediaType: 'banner',
           size: next,
           currency
-        }) || {};
+        });
         return prev > currentFloor ? prev : currentFloor;
       }, 0);
     }
 
     const { floor: nativeFloor = 0 } = slot.getFloor({
       mediaType: 'native', currency
-    }) || {};
+    });
 
     const { floor: videoFloor = 0 } = slot.getFloor({
       mediaType: 'video', currency
-    }) || {};
+    });
 
     result.floor = Math.max(bannerFloor, nativeFloor, videoFloor);
   }
@@ -298,7 +284,7 @@ const getHighestFloor = (slot) => {
  * Get currency (either default or adserver)
  * @returns {string} currency name
  */
-const getCurrency = (bidderRequest) => getCurrencyFromBidderRequest(bidderRequest) || DEFAULT_CURRENCY;
+const getCurrency = () => config.getConfig('currency.adServerCurrency') || DEFAULT_CURRENCY;
 
 /**
  * Get value for first occurence of key within the collection
@@ -618,9 +604,7 @@ const spec = {
     const pbver = '$prebid.version$';
     const testMode = setOnAny(validBidRequests, 'params.test') ? 1 : undefined;
     const ref = bidderRequest.refererInfo.ref;
-    const { source = {}, regs = {} } = ortb2 || {};
-
-    source.schain = setOnAny(validBidRequests, 'schain');
+    const { regs = {} } = ortb2 || {};
 
     const payload = {
       id: bidderRequest.bidderRequestId,
@@ -633,11 +617,10 @@ const spec = {
         content: { language: getContentLanguage() },
       },
       imp: validBidRequests.map(slot => mapImpression(slot)),
-      cur: [getCurrency(bidderRequest)],
+      cur: [getCurrency()],
       tmax,
       user: {},
       regs,
-      source,
       device: {
         language: getBrowserLanguage(),
         w: screen.width,
@@ -781,22 +764,14 @@ const spec = {
 
     return fledgeAuctionConfigs.length ? { bids, fledgeAuctionConfigs } : bids;
   },
-
-  getUserSyncs(syncOptions, _, gdprConsent = {}) {
-    const {iframeEnabled, pixelEnabled} = syncOptions;
-    const {gdprApplies, consentString = ''} = gdprConsent;
+  getUserSyncs(syncOptions) {
     let mySyncs = [];
-    if (iframeEnabled) {
+    if (syncOptions.iframeEnabled) {
       mySyncs.push({
         type: 'iframe',
-        url: `${SYNC_URL_IFRAME}?tcf=2&pvid=${pageView.id}&sn=${pageView.sn}`,
+        url: `${SYNC_URL}?tcf=2&pvid=${pageView.id}&sn=${pageView.sn}`,
       });
-    } else if (pixelEnabled) {
-      mySyncs.push({
-        type: 'image',
-        url: `${SYNC_URL_IMAGE}?inver=0&platform=wpartner&host=${getTopHost() || ''}&gdpr=${gdprApplies ? 1 : 0}&gdpr_consent=${consentString}`,
-      });
-    }
+    };
     return mySyncs;
   },
 
