@@ -33,7 +33,7 @@ const DEFAULT_PUBLISHER_ID = 0;
 const DEFAULT_PROFILE_ID = 0;
 const DEFAULT_PROFILE_VERSION_ID = 0;
 const DEFAULT_ISIDENTITY_ONLY = 0;
-const PREFIX = 'PROFILE_AUCTION_INFO_'
+const PREFIX = 'PROFILE_AUCTION_INFO_';
 /// /////////// VARIABLES //////////////
 let publisherId = DEFAULT_PUBLISHER_ID; // int: mandatory
 let profileId = DEFAULT_PROFILE_ID; // int: optional
@@ -188,6 +188,8 @@ function copyRequiredBidDetails(bid) {
     'bidderCode',
     'adapterCode',
     'bidId',
+    'adUnitId', () => bid.adUnitCode,
+    'owAdUnitId', () => getGptSlotInfoForAdUnitCode(bid.adUnitCode)?.gptSlot || bid.adUnitCode,
     'status', () => NO_BID, // default a bid to NO_BID until response is received or bid is timed out
     'finalSource as source',
     'params',
@@ -359,7 +361,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
 
   let winningBid = winningBids[0];
   if (winningBids.length > 1) {
-    winningBids.find(bid => bid.adId === cache.auctions[auctionId]?.adUnitCodes[adUnitId]?.bidWonAdId) || winningBid;
+    winningBid =  winningBids.find(bid => bid.adId === cache.auctions[auctionId]?.adUnitCodes[adUnitId]?.bidWonAdId) || winningBid;
   }
 
   const adapterName = getAdapterNameForAlias(winningBid.adapterCode || winningBid.bidder);
@@ -475,7 +477,7 @@ const eventHandlers = {
     if (args.rejectionReason === REJECTION_REASON.FLOOR_NOT_MET) {
       args.cpm = 0;
       args.status = BID_STATUS.BID_REJECTED;
-      bidResponseHandler(args);
+      eventHandlers['bidResponse'](args);
     }
   },
 
