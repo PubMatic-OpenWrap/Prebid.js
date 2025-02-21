@@ -101,7 +101,7 @@
             "module": "topLevelPaapi"
         },
         {
-            "name": "bidViewabilityIO",
+            "name": "gppControl_usnat",
             "path": "/modules/gppControl_usnat.js",
             "module": "gppControl_usnat"
         },
