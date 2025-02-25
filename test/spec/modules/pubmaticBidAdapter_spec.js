@@ -635,7 +635,7 @@ describe('PubMatic adapter', () => {
         it('should have url with post method', () => {
           const request = spec.buildRequests(validBidRequests, bidderRequest);
           expect(request).to.have.property('method').to.equal('POST');
-          expect(request).to.have.property('url').to.equal('https://hbopenbid.pubmatic.com/translator?source=prebid-client');
+          expect(request).to.have.property('url').to.equal('https://hbopenbid.pubmatic.com/translator?source=ow-client');
         });
       });
 
