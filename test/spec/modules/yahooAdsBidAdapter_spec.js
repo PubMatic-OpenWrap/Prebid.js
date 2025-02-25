@@ -968,7 +968,7 @@ describe('Yahoo Advertising Bid Adapter:', () => {
   });
 
   describe('User data', () => {
-    xit('should set the allowed sources user eids', () => {
+    it('should set the allowed sources user eids', () => {
       const { validBidRequests, bidderRequest } = generateBuildRequestMock({});
       validBidRequests[0].userIdAsEids = [
         {source: 'yahoo.com', uids: [{id: 'connectId_FROM_USER_ID_MODULE', atype: 3}]},

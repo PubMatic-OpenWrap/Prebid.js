@@ -163,4 +163,4 @@ export let init = () => {
     frequencyDepth = auctionBidWonHandler(bid);
   });
 }
-init()
+init();

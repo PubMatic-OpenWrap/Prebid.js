@@ -256,7 +256,7 @@ describe('sharethrough adapter spec', function () {
 
     describe('buildRequests', function () {
       describe('top level object', () => {
-        xit('should build openRTB request', () => {
+        it('should build openRTB request', () => {
           const builtRequests = spec.buildRequests(bidRequests, bidderRequest);
 
           const expectedImpValues = [
@@ -297,6 +297,7 @@ describe('sharethrough adapter spec', function () {
               'criteo.com': { id: 'fake-criteo' },
               'britepool.com': { id: 'fake-britepool' },
               'liveintent.com': { id: 'fake-lipbid' },
+              'intentiq.com': { id: 'fake-intentiq' },
               'crwdcntrl.net': { id: 'fake-lotame' },
               'parrable.com': { id: 'fake-parrable' },
               'netid.de': { id: 'fake-netid' },

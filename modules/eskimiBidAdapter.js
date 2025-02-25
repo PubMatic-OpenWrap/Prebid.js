@@ -46,7 +46,6 @@ const REGION_SUBDOMAIN_SUFFIX = {
 
 export const spec = {
   code: BIDDER_CODE,
-  aliases: ['eskimi'],
   gvlid: GVLID,
   supportedMediaTypes: [BANNER, VIDEO],
   isBidRequestValid,
@@ -233,7 +232,10 @@ function createRequest(bidRequests, bidderRequest, mediaType) {
     method: 'POST',
     url: getBidRequestUrlByRegion(),
     data: data,
-    options: {contentType: 'application/json;charset=UTF-8', withCredentials: false}
+    options: {
+      withCredentials: true,
+      contentType: 'application/json;charset=UTF-8',
+    }
   }
 }
 
