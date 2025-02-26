@@ -1,5 +1,4 @@
-
-import { _each, pick, logWarn, isStr, isArray, logError, isFn, generateUUID } from '../src/utils.js';
+import { _each, pick, logWarn, isStr, isArray, logError, isFn, generateUUID, isEmpty } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import { BID_STATUS, EVENTS, STATUS, REJECTION_REASON } from '../src/constants.js';
@@ -534,46 +533,103 @@ function getCDSDataLoggerStr() {
   return enc(cdsStr);
 }
 
-// Logging this information to take informed decision on what consent config to be applied.
-export function getConsentInfo(skipMetricsField) {
-  const { cmConfig } = window.PWT || {};
-  if (!cmConfig || typeof cmConfig != 'object') return {};
+export function setConsentFieldsLoggedBy() {
+  let loggedBy = {                  // This indicates whether the data is logged by tracker or logger for first auction.
+    // "auction-id" : {             // This property will be set at the time of auction init
+    //   tracker: false,
+    //   logger: false
+    // }
+  };
+  return {
+    initialize: function(auctionId) {
+      if (isEmpty(loggedBy)) {
+        loggedBy[auctionId] = {
+          tracker: false,
+          logger: false
+        };
+      }
+    },
+    setLoggedBy: function(auctionId, loggingFor) {
+      if (loggedBy[auctionId]) {
+        loggedBy[auctionId][loggingFor] = true;
+      }
+    },
+    reset: function() {
+      loggedBy = {};
+    },
+    getLoggedBy: function() {
+      return loggedBy;
+    }
+  }
+}
+let consentFieldsLoggedBy = setConsentFieldsLoggedBy();
 
-  const dimensions = {
-    ccmp: cmConfig?.cmpPresent,
-    ccmps: cmConfig?.complianceSupport,
-    ccmpid: cmConfig?.cmpId,
-    csc: cmConfig?.geoInfo?.sc
+export function getConsentFieldsLoggedBy() {
+  return consentFieldsLoggedBy;
+}
+
+function getConsentResolverConfig() {
+  return (window?.PWT?.getConsentResolverConfig && isFn(window.PWT.getConsentResolverConfig))
+    ? window.PWT?.getConsentResolverConfig()
+    : null;
+}
+
+// Logging this information to take informed decision on what consent config to be applied.
+export function getConsentInfo(auctionId, loggingFor) {
+  const crConfig = getConsentResolverConfig();
+  if (!crConfig || typeof crConfig != 'object') return {};
+
+  const baseObj = {
+    cecbo: crConfig?.cecbo,
+    ccmps: crConfig?.ccmps
   };
 
-  if (skipMetricsField) {
-    return cmConfig.allStatsAvailable ? dimensions : {};
+  const loggedBy = consentFieldsLoggedBy.getLoggedBy();
+
+  if (!crConfig.ccme || !loggedBy?.[auctionId] || loggedBy?.[auctionId][loggingFor]) {
+    return baseObj;
   }
 
-  const getDurationOf = window.PWT?.getDurationOf;
-  const isGetDurationOfFn = isFn(getDurationOf);
+  // Setting value to true for specific loggingFor inside loggedDataBy in ConsentResolverConfig of OW
+  consentFieldsLoggedBy.setLoggedBy(auctionId, loggingFor);
 
-  // When PWT.getDurationOf function available
-  const metrics = isGetDurationOfFn ? {
-    trnslt: getDurationOf('TRANSLATOR_CALLING_TIME'),
-    lrt: getDurationOf('LOGGER_CALLING_TIME'),
-    trt: getDurationOf('TRACKER_CALLING_TIME')
-  } : {};
-
-  if (cmConfig?.allStatsAvailable) {
+  // In case of trackewr we need to log all the dimensions
+  const dimensions = {
+    ccme: crConfig.ccme,
+    ccmp: crConfig?.ccmp,
+    ccmpid: crConfig?.ccmpid,
+    csc: crConfig?.csc,
+    crgdf: crConfig?.crgdf,
+    cgm: crConfig?.cgm,
+  };
+  if (loggingFor === 'tracker') {
     return {
-      ...dimensions,
-      ...metrics,
-      cgst: isGetDurationOfFn ? getDurationOf('GEO_CALLING_TIME') : null,
-      ccmpt: isGetDurationOfFn ? getDurationOf('CMP_CALLING_TIME') : null,
+      ...baseObj,
+      ...dimensions
     };
   }
 
-  return metrics;
+  // When PWT.getDurationOf function available
+  const getDurationOf = window.PWT?.getDurationOf;
+  const isGetDurationOfFn = isFn(getDurationOf);
+  const metrics = isGetDurationOfFn ? {
+    trnslt: getDurationOf('TRANSLATOR_CALLING_TIME'),
+    lrt: getDurationOf('LOGGER_CALLING_TIME'),
+    trt: getDurationOf('TRACKER_CALLING_TIME'),
+    ccmt: isGetDurationOfFn ? getDurationOf('CONSENT_CONFIG_RESOLVER_TIME') : null,
+    cgst: isGetDurationOfFn ? getDurationOf('GEO_CALLING_TIME') : null,
+    ccmpt: isGetDurationOfFn ? getDurationOf('CMP_CALLING_TIME') : null
+  } : {};
+
+  return {
+    ...baseObj,
+    ...dimensions,
+    ...metrics,
+  };
 }
 
-export function getConsentInfoStr() {
-  let cmInfo = getConsentInfo(true);
+export function getConsentInfoStr(auctionId) {
+  let cmInfo = getConsentInfo(auctionId, 'tracker');
   return Object.keys(cmInfo).reduce((queryString, key) => {
     const value = cmInfo[key];
     const encodedValue = (value != null && value != undefined) ? enc(value) : '';
@@ -672,7 +728,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   }
   outputObj = {
     ...outputObj,
-    ...getConsentInfo(false)
+    ...getConsentInfo(auctionId, 'logger')
   };
 
   auctionCache.sent = true;
@@ -776,7 +832,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   if (isFn(window.PWT?.recordExitTime)) {
     window.PWT.recordExitTime('TRACKER_CALLING_TIME');
   }
-  pixelURL += getConsentInfoStr();
+  pixelURL += getConsentInfoStr(auctionId);
 
   if (isIma) {
     return pixelURL;
@@ -795,6 +851,8 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
 /// /////////// ADAPTER EVENT HANDLER FUNCTIONS //////////////
 
 function auctionInitHandler(args) {
+  // Initialize the Consent fields loggedBy trcker and logger
+  consentFieldsLoggedBy.initialize(args.auctionId);
   s2sBidders = (function () {
     let s2sConf = config.getConfig('s2sConfig');
     let s2sBidders = [];
