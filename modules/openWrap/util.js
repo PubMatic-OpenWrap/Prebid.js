@@ -1190,13 +1190,13 @@ export function getAdUnitConfig(sizes, currentSlot) {
   const adUnitConfig = {};
   const mediaTypeObject = {};
   var slotConfig = CONFIG.getSlotConfiguration();
+  let config;
   if (slotConfig) {
     if ((slotConfig.configPattern && slotConfig.configPattern.trim() != '') || (slotConfig['configPattern'] = '_AU_')) {
       const kgp = slotConfig.configPattern;
       let isVideo = true;
       let isNative = true;
-      let isBanner = true;
-      let config;
+      let isBanner = true;      
 			var defaultFloor = undefined;
       var divId = isFunction(currentSlot.getDivID) ? currentSlot.getDivID() : currentSlot.getSlotId().getDomId();
 
@@ -1282,6 +1282,10 @@ export function getAdUnitConfig(sizes, currentSlot) {
   mediaTypeObject['banner'] = {
     sizes
   };
+  let bannerConfig = (config && config.banner && config.banner.config) || {};
+  Object.keys(bannerConfig).map(function (configKey) {
+    mediaTypeObject["banner"][configKey] = bannerConfig[configKey];
+  });
   mediaTypeConfig[divId] = mediaTypeObject;
   adUnitConfig['mediaTypeObject'] = mediaTypeObject
   return adUnitConfig;

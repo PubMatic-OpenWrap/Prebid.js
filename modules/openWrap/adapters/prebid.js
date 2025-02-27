@@ -898,7 +898,7 @@ function assignCurrencyConfigIfRequired(prebidConfig) {
 export {assignCurrencyConfigIfRequired};
 
 function assignSchainConfigIfRequired(prebidConfig) {
-  if (CONFIG.isSchainEnabled()) {
+  if (CONFIG.isSchainEnabled() && CONFIG.getSchainObject()) {
     prebidConfig['schain'] = CONFIG.getSchainObject();
   }
 }
@@ -1045,6 +1045,14 @@ function setPrebidConfig() {
       },
       testGroupId: parseInt(window.PWT.testGroupId || 0)
     };
+
+    if(CONFIG.isBidPoolingEnabled()) {
+			prebidConfig[CONSTANTS.COMMON.USE_BID_CACHE] = true; 
+			prebidConfig.bidCacheFilterFunction = function(bid) {
+				return bid.mediaType !== 'video';
+			}
+		}
+
     if (CONFIG.getPriceGranularity()) {
       prebidConfig['priceGranularity'] = CONFIG.getPriceGranularity();
     }
@@ -1429,11 +1437,11 @@ function initPbjsConfig() {
   configureBidderAliasesIfAvailable();
   enablePrebidPubMaticAnalyticIfRequired();
   setPbjsBidderSettingsIfRequired();
-  util.getGeoInfo();
+  // util.getGeoInfo();
 }
 export {initPbjsConfig};
 
-function fetchBids(activeSlots) {
+function fetchBids(activeSlots, callback) {
   const impressionID = util.generateUUID();
   // todo:
   //  Accept a call back function, pass it from controllers only if pbjs-analytics is enabled
@@ -1489,6 +1497,9 @@ function fetchBids(activeSlots) {
 							window[pbNameSpace].setPAAPIConfigForGPT();
 						};
             pbjsBidsBackHandler(bidResponses, activeSlots);
+            if(util.isFunction(callback)){
+							callback(bidResponses);
+						}
           },
           timeout: CONFIG.getTimeout() - CONSTANTS.CONFIG.TIMEOUT_ADJUSTMENT
         });

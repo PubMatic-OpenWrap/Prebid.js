@@ -248,7 +248,7 @@ export function getCCPATimeout() {
 }
 
 export function getSchainObject() {
-  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.SCHAINOBJECT] || {};
+  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.SCHAINOBJECT] || null;
 }
 
 export function isSchainEnabled() {
@@ -326,6 +326,10 @@ export function getPriceGranularityBuckets() {
   return transformedBuckets;
 }
 
+export function isBidPoolingEnabled() {
+	return parseInt(config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.BID_POOLING_ENABLED]) === 1;
+};
+
 export function getGranularityMultiplier() {
   return parseFloat(config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.GRANULARITY_MULTIPLIER]) || 1;
 }
@@ -358,6 +362,7 @@ export function updateABTestConfig() {
     if (testGroupDetails && testGroupDetails.testGroupSize && randomNumberBelow100 < testGroupDetails.testGroupSize) {
       updatePWTConfig();
       config.adapters = updatePartnerConfig(getTestPartnerConfig(), config.adapters);
+      enableBidpoolingIfApplicable(testGroupDetails);
       if (getTestIdentityPartners() && getIdentityPartners()) {
         if (Object.keys(getTestIdentityPartners()).length > 0 && Object.keys(getIdentityPartners()).length == 0) {
           util.log(CONSTANTS.MESSAGES.M31, JSON.stringify(getTestIdentityPartners()));
@@ -372,6 +377,11 @@ export function updateABTestConfig() {
       window.PWT.testGroupId = 1;
     }
   }
+}
+
+export function enableBidpoolingIfApplicable(testGroupDetails) {
+  testGroupDetails.testType == CONSTANTS.COMMON.BID_POOLING &&
+    (config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.BID_POOLING_ENABLED] = CONSTANTS.COMMON.ENABLED_BID_POOLING);
 }
 
 export function updatePWTConfig() {

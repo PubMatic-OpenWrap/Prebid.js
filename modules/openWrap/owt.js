@@ -3,10 +3,15 @@ import * as bidManager from './bidManager.js';
 import * as CONSTANTS from './constants.js';
 import * as CONFIG from './config.js';
 import * as conf from './conf.js';
-var ucTag = require("prebid-universal-creative");
+import * as timeMetrics from './modules/timeMetrics.js';
+import * as consentConfigResolver from './modules/consentConfigResolver.js';
 const metaInfo = util.getMetaInfo(window);
 
 window.PWT = window.PWT || {};
+
+timeMetrics.init();
+timeMetrics.recordEntryTime(["CMP_CALLING_TIME", "TRANSLATOR_CALLING_TIME", "LOGGER_CALLING_TIME", "TRACKER_CALLING_TIME"]);
+
 window.PWT.bidMap = window.PWT.bidMap || {};
 window.PWT.bidIdMap = window.PWT.bidIdMap || {};
 window.PWT.adUnits = window.PWT.adUnits || {};
@@ -190,6 +195,7 @@ window.PWT.getAdapterNameForAlias = CONFIG.getAdapterNameForAlias;
 
 window.PWT.browserMapping = bidManager.getBrowser();
 
-export function init() {
+// Calling the consent management config resolver
+consentConfigResolver.init();
 
-}
+export function init() {}
