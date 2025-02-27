@@ -1386,7 +1386,7 @@ export const spec = {
     if (bidderRequest?.timeout) {
       payload.tmax = bidderRequest.timeout;
     } else {
-      payload.tmax = window?.PWT?.versionDetails?.timeout;
+      payload.tmax = window?.PWT?.versionDetails()?.timeout;
     }
 
     // Sending epoch timestamp in request.ext object

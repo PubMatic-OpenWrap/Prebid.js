@@ -664,7 +664,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     slotsArray.push(slotObject);
     return slotsArray;
   }, []);
-  outputObj.owv = window.PWT?.versionDetails?.openwrap_version || '-1';
+  outputObj.owv = window.PWT?.versionDetails()?.openwrap_version || '-1';
   outputObj.cds = getCDSDataLoggerStr();
 
   if (isFn(window.PWT?.recordExitTime)) {
