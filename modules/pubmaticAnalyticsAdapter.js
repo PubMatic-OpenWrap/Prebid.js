@@ -303,12 +303,16 @@ function getTgId() {
 }
 
 function getFeatureLevelDetails(auctionCache) {
-  return {
-    flr: Object.assign({}, auctionCache?.floorData.floorRequestData, {
-      enforcements: auctionCache?.floorData.floorResponseData?.enforcements
-    })
-  }
+
+  if (!auctionCache?.floorData?.floorRequestData) return {};
+  const flrData = {
+    ...auctionCache.floorData.floorRequestData,
+    ...(auctionCache.floorData.floorResponseData?.enforcements && { enforcements: auctionCache.floorData.floorResponseData.enforcements })
+  };
+  return { flr: flrData };
+
 }
+
 
 
 
@@ -333,7 +337,14 @@ function executeBidsLoggerCall(event) {
   const auctionCache = cache.auctions[auctionId];
 
   if (!auctionCache || auctionCache.sent) return;
-
+  // Fetching slotinfo at event level results to undefined so Running loop over the codes to get the GPT slot name.
+  Object.values(auctionCache?.adUnitCodes).forEach(adUnit => {
+    Object.values(adUnit?.bids).forEach(bidArray => {
+        bidArray.forEach(bid => {
+            bid['owAdUnitId'] = getGptSlotInfoForAdUnitCode(bid?.adUnit?.adUnitCode)?.gptSlot || bid.adUnit?.adUnitCode
+        });
+    });
+  });
   const payload = {
     sd: auctionCache.adUnitCodes,
     fd: getFeatureLevelDetails(auctionCache),
@@ -361,7 +372,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
 
   let winningBid = winningBids[0];
   if (winningBids.length > 1) {
-    winningBid =  winningBids.find(bid => bid.adId === cache.auctions[auctionId]?.adUnitCodes[adUnitId]?.bidWonAdId) || winningBid;
+    winningBid = winningBids.find(bid => bid.adId === cache.auctions[auctionId]?.adUnitCodes[adUnitId]?.bidWonAdId) || winningBid;
   }
 
   const adapterName = getAdapterNameForAlias(winningBid.adapterCode || winningBid.bidder);
@@ -469,6 +480,8 @@ const eventHandlers = {
     bid.partnerTimeToRespond = latency > (auctionTime + 150) ? (auctionTime + 150) : latency;
     bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
     bid.bidResponse = parseBidResponse(args);
+    bid.bidderCode =  args.bidderCode;
+    bid.adapterName = getAdapterNameForAlias(args.adapterCode || bid.bidderCode);
   },
 
   bidRejected: (args) => {
