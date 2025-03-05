@@ -480,7 +480,7 @@ const eventHandlers = {
     bid.partnerTimeToRespond = latency > (auctionTime + 150) ? (auctionTime + 150) : latency;
     bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
     bid.bidResponse = parseBidResponse(args);
-    bid.bidderCode =  args.bidderCode;
+    bid.bidderCode =  args.bidderCode || bid.bidderCode;;
     bid.adapterName = getAdapterNameForAlias(args.adapterCode || bid.bidderCode);
   },
 
@@ -495,7 +495,9 @@ const eventHandlers = {
   },
 
   bidderDone: (args) => {
-    cache.auctions[args.auctionId].bidderDonePendingCount--;
+    if(cache.auctions[args.auctionId]?.bidderDonePendingCount){
+      cache.auctions[args.auctionId].bidderDonePendingCount--;
+    }
     args.bids.forEach(bid => {
       let cachedBid = cache.auctions[bid.auctionId].adUnitCodes[bid.adUnitCode].bids[bid.bidId || bid.originalRequestId || bid.requestId];
       if (typeof bid.serverResponseTimeMs !== 'undefined') {
