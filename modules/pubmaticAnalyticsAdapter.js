@@ -622,7 +622,8 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['tis'] = frequencyDepth?.impressionServed;
   outputObj['lip'] = frequencyDepth?.lip;
   outputObj['tgid'] = getTgId();
-  outputObj['pbv'] = '$prebid.version$' || '-1';
+  outputObj['dm'] = 'Prebid.js';
+  outputObj['dmv'] = '$prebid.version$' || '-1';
 
   if (floorData) {
     const floorRootValues = getFloorsCommonField(floorData?.floorRequestData);
@@ -728,6 +729,8 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   pixelURL += '&au=' + enc(owAdUnitId);
   pixelURL += '&pn=' + enc(adapterName);
   pixelURL += '&bc=' + enc(winningBid.bidderCode || winningBid.bidder);
+  pixelURL += '&dm=' + 'Prebid.js';
+  pixelURL += '&dmv=' + '$prebid.version$' || '-1';
   pixelURL += '&en=' + enc(winningBid.bidResponse.bidPriceUSD);
   pixelURL += '&eg=' + enc(winningBid.bidResponse.bidGrossCpmUSD);
   pixelURL += '&kgpv=' + enc(getValueForKgpv(winningBid, adUnitId));
