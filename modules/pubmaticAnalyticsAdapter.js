@@ -766,7 +766,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   pixelURL += '&rf=' + enc(origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0);
   pixelURL += '&origbidid=' + enc(winningBid?.bidResponse?.partnerImpId || winningBidId);
   pixelURL += '&di=' + enc(winningBid?.bidResponse?.dealId || OPEN_AUCTION_DEAL_ID);
-  const ds = winningBid.bidResponse?.meta ? getMetadata(winningBid.bidResponse.meta).ds : undefined;
+  const ds = winningBid.bidResponse?.meta ? getMetadata(winningBid.bidResponse.meta)?.ds : undefined;
   if (ds) {
     pixelURL += '&ds=' + enc(ds);
   }
