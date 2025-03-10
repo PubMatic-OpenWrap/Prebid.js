@@ -18,6 +18,8 @@ const setUADefault = () => { window.navigator.__defineGetter__('userAgent', func
 const setUAMobile = () => { window.navigator.__defineGetter__('userAgent', function () { return MOBILE_USER_AGENT }) };
 const setUANull = () => { window.navigator.__defineGetter__('userAgent', function () { return null }) };
 
+const DISPLAY_MANAGER = 'Prebid.js';
+
 const {
   AUCTION_INIT,
   AUCTION_END,
@@ -628,7 +630,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.ffs).to.equal(1);
 	    expect(data.fsrc).to.equal(2);
 	    expect(data.fp).to.equal('pubmatic');
-      expect(data.dm).to.equal('Prebid.js');
+      expect(data.dm).to.equal(DISPLAY_MANAGER);
       expect(data.dmv).to.equal('$prebid.version$' || '-1');
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);
@@ -741,7 +743,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.af).to.equal('video');
       expect(data.ds).to.equal('1208');
       expect(data.ffs).to.equal('1');
-      expect(data.dm).to.equal('Prebid.js');
+      expect(data.dm).to.equal(DISPLAY_MANAGER);
       expect(data.dmv).to.equal('$prebid.version$' || '-1');
     });
 
@@ -962,7 +964,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.it).to.equal('hybrid');
       expect(data.fmv).to.equal('floorModelTest');
       expect(data.ft).to.equal(1);
-      expect(data.dm).to.equal('Prebid.js');
+      expect(data.dm).to.equal(DISPLAY_MANAGER);
       expect(data.dmv).to.equal('$prebid.version$' || '-1');
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);
