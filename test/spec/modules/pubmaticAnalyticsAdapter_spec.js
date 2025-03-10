@@ -628,11 +628,12 @@ describe('pubmatic analytics adapter', function () {
       expect(data.ffs).to.equal(1);
 	    expect(data.fsrc).to.equal(2);
 	    expect(data.fp).to.equal('pubmatic');
-      expect(data.pbv).to.equal('$prebid.version$' || '-1');
+      expect(data.dm).to.equal('Prebid.js');
+      expect(data.dmv).to.equal('$prebid.version$' || '-1');
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);
       expect(data.owv).to.equal(window?.PWT?.versionDetails?.openwrap_version || '-1');
-      expect(data.pbv).to.equal(getGlobal()?.version || '-1');
+      expect(data.dmv).to.equal(getGlobal()?.version || '-1');
 
       // slot 1
       expect(data.s[0].sn).to.equal('/19968336/header-bid-tag-0');
@@ -740,6 +741,8 @@ describe('pubmatic analytics adapter', function () {
       expect(data.af).to.equal('video');
       expect(data.ds).to.equal('1208');
       expect(data.ffs).to.equal('1');
+      expect(data.dm).to.equal('Prebid.js');
+      expect(data.dmv).to.equal('$prebid.version$' || '-1');
     });
 
     it('Logger: do not log floor fields when prebids floor shows noData in location property', function() {
@@ -870,7 +873,7 @@ describe('pubmatic analytics adapter', function () {
 	    expect(data.ffs).to.equal(1);
 	    expect(data.fsrc).to.equal(2);
 	    expect(data.fp).to.equal('pubmatic');
-      expect(data.pbv).to.equal('$prebid.version$' || '-1');
+      expect(data.dmv).to.equal('$prebid.version$' || '-1');
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);
 	    expect(data.bm).not.to.be.null;
@@ -959,7 +962,8 @@ describe('pubmatic analytics adapter', function () {
       expect(data.it).to.equal('hybrid');
       expect(data.fmv).to.equal('floorModelTest');
       expect(data.ft).to.equal(1);
-      expect(data.pbv).to.equal('$prebid.version$' || '-1');
+      expect(data.dm).to.equal('Prebid.js');
+      expect(data.dmv).to.equal('$prebid.version$' || '-1');
       expect(data.s).to.be.an('array');
       expect(data.s.length).to.equal(2);
       // slot 1
@@ -1555,7 +1559,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.tgid).to.equal(15);
       expect(data.it).to.equal('hybrid');
       expect(data.fmv).to.equal('floorModelTest');
-      expect(data.pbv).to.equal('$prebid.version$' || '-1');
+      expect(data.dmv).to.equal('$prebid.version$' || '-1');
       expect(data.ft).to.equal(1);
 	  expect(data.ffs).to.equal(1);
 	  expect(data.fsrc).to.equal(2);
@@ -1695,7 +1699,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.tgid).to.equal(15);
       expect(data.it).to.equal('hybrid');
       expect(data.fmv).to.equal('floorModelTest');
-      expect(data.pbv).to.equal('$prebid.version$' || '-1');
+      expect(data.dmv).to.equal('$prebid.version$' || '-1');
       expect(data.ffs).to.equal(1);
 	    expect(data.fsrc).to.equal(2);
 	    expect(data.fp).to.equal('pubmatic');
