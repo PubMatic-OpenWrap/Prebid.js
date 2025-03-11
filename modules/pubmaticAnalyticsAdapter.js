@@ -466,6 +466,7 @@ const eventHandlers = {
     cacheEntry.floorData = {};
     cacheEntry.origAdUnits = args.adUnits;
     cacheEntry.referer = args.bidderRequests[0].refererInfo.topmostLocation;
+    cacheEntry.ortb2 = args.bidderRequests[0].ortb2;
     cache.auctions[args.auctionId] = cacheEntry;
   },
 
