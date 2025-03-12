@@ -18,6 +18,7 @@ export function initializeModule(customUtils){
 
   //usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
   // isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
+  customUtils.consentConfigResolver.init();
   init(window);
 }
 

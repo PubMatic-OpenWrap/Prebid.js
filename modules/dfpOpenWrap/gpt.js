@@ -16,10 +16,10 @@ export function initializeModule(gptUtils){
   SLOT = gptUtils.SLOT;
   prebid = gptUtils.prebid;
   // IdHub = idhubUtils.IdHub;
-  consentConfigResolver = gptUtils.consentConfigResolver;
 
   //usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
   //isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
+  gptUtils.consentConfigResolver.init();
   init(window);
 }
 
