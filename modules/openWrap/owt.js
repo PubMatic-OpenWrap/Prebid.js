@@ -4,7 +4,6 @@ import * as CONSTANTS from './constants.js';
 import * as CONFIG from './config.js';
 import * as conf from './conf.js';
 import * as timeMetrics from './modules/timeMetrics.js';
-import * as consentConfigResolver from './modules/consentConfigResolver.js';
 const metaInfo = util.getMetaInfo(window);
 
 window.PWT = window.PWT || {};
@@ -194,8 +193,5 @@ window.PWT.versionDetails = util.getOWConfig;
 window.PWT.getAdapterNameForAlias = CONFIG.getAdapterNameForAlias;
 
 window.PWT.browserMapping = bidManager.getBrowser();
-
-// Calling the consent management config resolver
-consentConfigResolver.init();
 
 export function init() {}

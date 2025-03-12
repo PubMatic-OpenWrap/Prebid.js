@@ -1,6 +1,7 @@
 import { module } from "../../src/hook";
 import * as CONSTANTS from './constants.js';
 import { isPlainObject, logError } from '../../src/utils.js';
+import * as consentConfigResolver from './modules/consentConfigResolver.js';
 
 import * as owt from './owt.js';
 import * as CONFIG from './config.js';
@@ -23,7 +24,8 @@ const sharedMethods  = {
     "util": util,
     "bidManager": bidManager,
     "SLOT": SLOT,
-    "prebid": prebid
+    "prebid": prebid,
+    "consentConfigResolver" : consentConfigResolver
   },
   "IDHUB": {
     "idhubInit": idhubInit.init,
