@@ -4,6 +4,7 @@ import * as CONSTANTS from './constants.js';
 import * as CONFIG from './config.js';
 import * as conf from './conf.js';
 import * as timeMetrics from './modules/timeMetrics.js';
+import * as consentConfigResolver from './modules/consentConfigResolver.js';
 const metaInfo = util.getMetaInfo(window);
 
 window.PWT = window.PWT || {};
@@ -194,4 +195,6 @@ window.PWT.getAdapterNameForAlias = CONFIG.getAdapterNameForAlias;
 
 window.PWT.browserMapping = bidManager.getBrowser();
 
-export function init() {}
+export function init() {
+  consentConfigResolver.init();
+}

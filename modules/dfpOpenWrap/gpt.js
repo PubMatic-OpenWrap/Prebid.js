@@ -20,7 +20,6 @@ export function initializeModule(gptUtils){
 
   //usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
   //isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
-  consentConfigResolver.init();
   init(window);
 }
 
