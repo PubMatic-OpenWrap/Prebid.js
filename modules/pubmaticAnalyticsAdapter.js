@@ -172,7 +172,7 @@ function getBrowserType() {
   return browserIndex;
 }
 
-function transformPayload(currentPayload) {
+function transformPayload(currentPayload,auctionId) {
   const HOSTNAME = window.location.host;
   const storage = getStorageManager({ bidderCode: ADAPTER_CODE });
   const storedObject = storage.getDataFromLocalStorage(PREFIX + HOSTNAME);
@@ -393,7 +393,7 @@ function executeBidsLoggerCall(event) {
   auctionCache.sent = true;
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
   const queryParams = `v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}${urlParams.get('pmad') === '1' ? '&debug=1' : ''}`;
-  const owPayLoad = transformPayload(payload);
+  const owPayLoad = transformPayload(payload,auctionId);
   sendAjaxRequest({
     endpoint: END_POINT_BID_LOGGER,
     method: 'POST',
@@ -435,7 +435,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   };
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
   const queryParams = `v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}${urlParams.get('pmad') === '1' ? '&debug=1' : ''}`;
-  const owPayLoad = transformPayload(payload);
+  const owPayLoad = transformPayload(payload,auctionId);
   sendAjaxRequest({
     endpoint: END_POINT_WIN_BID_LOGGER,
     method: 'POST',
