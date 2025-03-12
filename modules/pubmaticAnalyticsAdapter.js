@@ -172,7 +172,7 @@ function getBrowserType() {
   return browserIndex;
 }
 
-function transformPayload(currentPayload,auctionId) {
+function transformPayload(currentPayload,adUnitInfo,bidWon=false) {
   const HOSTNAME = window.location.host;
   const storage = getStorageManager({ bidderCode: ADAPTER_CODE });
   const storedObject = storage.getDataFromLocalStorage(PREFIX + HOSTNAME);
@@ -198,12 +198,17 @@ function transformPayload(currentPayload,auctionId) {
         });
       }
     } else if (key === 'sd'){
-      Object.keys(newPayload[key]).map(slotName => {
+      if(bidWon) {
+        newPayload[key].rf = adUnitInfo?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0; 
+        newPayload[key] = Object.assign({},newPayload[key])
+      } else {
+        Object.keys(newPayload[key]).map(slotName => {
 
-        let origAdUnit = getAdUnit(cache.auctions[auctionId]?.origAdUnits, slotName) || {};  
-        newPayload[key][slotName].rf = origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0; 
-        newPayload[key][slotName] = Object.assign({},newPayload[key][slotName]);
-      }); 
+          let origAdUnit = getAdUnit(cache.auctions[adUnitInfo]?.origAdUnits, slotName) || {};  
+          newPayload[key][slotName].rf = origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0; 
+          newPayload[key][slotName] = Object.assign({},newPayload[key][slotName]);
+        }); 
+      }
     }
   }
   return newPayload;
@@ -435,7 +440,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   };
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
   const queryParams = `v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}${urlParams.get('pmad') === '1' ? '&debug=1' : ''}`;
-  const owPayLoad = transformPayload(payload,auctionId);
+  const owPayLoad = transformPayload(payload,origAdUnit,true);
   sendAjaxRequest({
     endpoint: END_POINT_WIN_BID_LOGGER,
     method: 'POST',
