@@ -123,12 +123,22 @@ export function getConsentInfo(skipMetricsField) {
   }
   const getDurationOf = window.PWT?.getDurationOf;
   const isGetDurationOfFn = isFn(getDurationOf);
+
   // When PWT.getDurationOf function available
-  const metrics = isGetDurationOfFn ? {
-    trnslt: getDurationOf('TRANSLATOR_CALLING_TIME'),
-    lrt: getDurationOf('LOGGER_CALLING_TIME'),
-    trt: getDurationOf('TRACKER_CALLING_TIME')
-  } : {};
+  const createMetrics = () => {
+    const durations = {
+      trnslt: getDurationOf('TRANSLATOR_CALLING_TIME'),
+      lrt: getDurationOf('LOGGER_CALLING_TIME'),
+      trt: getDurationOf('TRACKER_CALLING_TIME')
+    };
+  
+    // Remove properties where the value is null
+    return Object.fromEntries(
+      Object.entries(durations).filter(([key, value]) => value !== null)
+    );
+  };
+  
+  const metrics = isGetDurationOfFn ? createMetrics() : {};
   if (cmConfig?.allStatsAvailable) {
     return {
       ...dimensions,
@@ -181,8 +191,9 @@ function transformPayload(currentPayload,adUnitInfo,bidWon=false) {
 
   for (const key in newPayload) {
     if (key === 'fd') {
+      const cdsValue = getCDSDataLoggerStr();
       Object.assign(newPayload[key], {
-        cds: getCDSDataLoggerStr(),
+        ...(cdsValue && { cds: cdsValue }), 
         bdv: frequencyDepth,
         cmp: getConsentInfo(false),
       });
@@ -205,7 +216,7 @@ function transformPayload(currentPayload,adUnitInfo,bidWon=false) {
         Object.keys(newPayload[key]).map(slotName => {
 
           let origAdUnit = getAdUnit(cache.auctions[adUnitInfo]?.origAdUnits, slotName) || {};  
-          newPayload[key][slotName].rf = origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0; 
+          newPayload[key][slotName].pubmaticAutoRefresh.autoRefresh =  origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0; 
           newPayload[key][slotName] = Object.assign({},newPayload[key][slotName]);
         }); 
       }
@@ -346,6 +357,11 @@ function getTgId() {
   return 0;
 }
 
+function getIntegrationType() {
+  let s2sConfig = config.getConfig('s2sConfig');
+  return s2sConfig?.bidders?.length ? 'hybrid' : 'web';
+}
+
 function getFeatureLevelDetails(auctionCache) {
 
   if (!auctionCache?.floorData?.floorRequestData) return {};
@@ -374,7 +390,8 @@ function getRootLevelDetails(auctionCache, auctionId) {
     ortb2: auctionCache.ortb2,
     tgid: getTgId(),
     s2sls: s2sBidders,
-    bm: getBrowserType()
+    bm: getBrowserType(),
+    it: getIntegrationType()
   }
 }
 function executeBidsLoggerCall(event) {
