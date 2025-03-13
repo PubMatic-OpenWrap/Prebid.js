@@ -623,11 +623,10 @@ gulp.task('webpack-creative', gulp.series(clean, function() {
 }));
 
 gulp.task('bundle-creative', function () {
-
   //console.log("Executing creative-build");
   return gulp.src(['./build/dist/*.js'])
       .pipe(concat(getBundleName()))
-      .pipe(gulp.dest('build'));
+      .pipe(gulp.dest('build/dist'));
 });
 
 gulp.task('ow-tasks', gulp.series('append-footer','update-namespace', 'bundle-pwt-keys', 'bundle-native-keys'));

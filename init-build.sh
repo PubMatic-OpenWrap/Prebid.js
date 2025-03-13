@@ -101,7 +101,7 @@ if [ "$platform" = "$PLATFORM_DISPLAY" ] || [ -z $platform ]
 elif [ "$platform" = "$PLATFORM_AMP" ]
    then
     echo "Building for AMP"
-    time ./build.sh --mode=$mode --platform=$platform
+    time ./build.sh --mode=$mode --platform=$platform --bundleName=$bundleName
 else
   echo "None"
 fi
