@@ -216,7 +216,9 @@ function transformPayload(currentPayload,adUnitInfo,bidWon=false) {
         Object.keys(newPayload[key]).map(slotName => {
 
           let origAdUnit = getAdUnit(cache.auctions[adUnitInfo]?.origAdUnits, slotName) || {};  
-          newPayload[key][slotName].pubmaticAutoRefresh.autoRefresh =  origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0; 
+          newPayload[key][slotName].pubmaticAutoRefresh = {
+            autoRefresh: origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0
+          };
           newPayload[key][slotName] = Object.assign({},newPayload[key][slotName]);
         }); 
       }
