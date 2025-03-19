@@ -182,7 +182,7 @@ function getBrowserType() {
   return browserIndex;
 }
 
-function transformPayload(currentPayload,adUnitInfo,bidWon=false) {
+function transformPayload(auctionId,currentPayload,adUnitInfo,bidWon=false) {
   const HOSTNAME = window.location.host;
   const storage = getStorageManager({ bidderCode: ADAPTER_CODE });
   const storedObject = storage.getDataFromLocalStorage(PREFIX + HOSTNAME);
@@ -199,7 +199,7 @@ function transformPayload(currentPayload,adUnitInfo,bidWon=false) {
       });
     } else if (key === 'rd') {
       Object.assign(newPayload[key], {
-        psl: getPSL(),
+        psl: getPSL(auctionId),
         ih: identityOnly,
         owv: window.PWT?.versionDetails?.openwrap_version || '-1',
       });
@@ -313,7 +313,7 @@ function parseBidResponse(bid) {
     'mediaType',
     'params',
     'floorData',
-    'mi', () => window.matchedimpressions,
+    'mi', () => bid.bidResponse ? bid.bidResponse.mi : (window.matchedimpressions && window.matchedimpressions[bid.bidder]),
     'regexPattern', () => bid.regexPattern || undefined,
     'partnerImpId', // partner impression ID
     'dimensions', () => pick(bid, [
@@ -396,7 +396,7 @@ function getRootLevelDetails(auctionCache, auctionId) {
     it: getIntegrationType()
   }
 }
-function executeBidsLoggerCall(event) {
+function executeBidsLoggerCall(event,highestCpmBids) {
   const { auctionId } = event;
   const auctionCache = cache.auctions[auctionId];
 
@@ -405,7 +405,9 @@ function executeBidsLoggerCall(event) {
   Object.values(auctionCache?.adUnitCodes).forEach(adUnit => {
     Object.values(adUnit?.bids).forEach(bidArray => {
         bidArray.forEach(bid => {
-            bid['owAdUnitId'] = getGptSlotInfoForAdUnitCode(bid?.adUnit?.adUnitCode)?.gptSlot || bid.adUnit?.adUnitCode
+            bid['owAdUnitId'] = getGptSlotInfoForAdUnitCode(bid?.adUnit?.adUnitCode)?.gptSlot || bid.adUnit?.adUnitCode;
+            const winBid =  highestCpmBids.filter(cpmbid =>cpmbid.adId === bid?.adId)[0]?.adId;
+            auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId = auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId ? auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId : winBid;
         });
     });
   });
@@ -417,7 +419,7 @@ function executeBidsLoggerCall(event) {
   auctionCache.sent = true;
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
   const queryParams = `v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}${urlParams.get('pmad') === '1' ? '&debug=1' : ''}`;
-  const owPayLoad = transformPayload(payload,auctionId);
+  const owPayLoad = transformPayload(auctionId,payload,auctionId);
   sendAjaxRequest({
     endpoint: END_POINT_BID_LOGGER,
     method: 'POST',
@@ -459,7 +461,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   };
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
   const queryParams = `v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}${urlParams.get('pmad') === '1' ? '&debug=1' : ''}`;
-  const owPayLoad = transformPayload(payload,origAdUnit,true);
+  const owPayLoad = transformPayload(auctionId,payload,origAdUnit,true);
   sendAjaxRequest({
     endpoint: END_POINT_WIN_BID_LOGGER,
     method: 'POST',
