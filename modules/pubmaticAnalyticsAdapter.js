@@ -528,6 +528,9 @@ const eventHandlers = {
     }
 
     if ((bid.bidder && args.bidderCode && bid.bidder !== args.bidderCode) || (bid.bidder === args.bidderCode && bid.status === SUCCESS)) {
+      if (bid.params) {
+        args.params = bid.params;
+      }
       bid = copyRequiredBidDetails(args);
       cache.auctions[args.auctionId].adUnitCodes[args.adUnitCode].bids[requestId].push(bid);
     } else if (args.originalRequestId) {
