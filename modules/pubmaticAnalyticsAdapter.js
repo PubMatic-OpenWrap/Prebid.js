@@ -131,13 +131,11 @@ export function getConsentInfo(skipMetricsField) {
       lrt: getDurationOf('LOGGER_CALLING_TIME'),
       trt: getDurationOf('TRACKER_CALLING_TIME')
     };
-  
     // Remove properties where the value is null
     return Object.fromEntries(
       Object.entries(durations).filter(([key, value]) => value !== null)
     );
   };
-  
   const metrics = isGetDurationOfFn ? createMetrics() : {};
   if (cmConfig?.allStatsAvailable) {
     return {
@@ -193,7 +191,7 @@ function transformPayload(auctionId,currentPayload,adUnitInfo,bidWon=false) {
     if (key === 'fd') {
       const cdsValue = getCDSDataLoggerStr();
       Object.assign(newPayload[key], {
-        ...(cdsValue && { cds: cdsValue }), 
+       ...(cdsValue && { cds: cdsValue }),
         bdv: frequencyDepth,
         cmp: getConsentInfo(false),
       });
@@ -205,22 +203,22 @@ function transformPayload(auctionId,currentPayload,adUnitInfo,bidWon=false) {
       });
       if(window.PWT?.CC?.cc){
         Object.assign(newPayload[key], {
-        ctr:window.PWT?.CC?.cc
+          ctr:window.PWT?.CC?.cc
         });
       }
     } else if (key === 'sd'){
       if(bidWon) {
-        newPayload[key].rf = adUnitInfo?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0; 
+        newPayload[key].rf = adUnitInfo?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0;
         newPayload[key] = Object.assign({},newPayload[key])
       } else {
         Object.keys(newPayload[key]).map(slotName => {
 
-          let origAdUnit = getAdUnit(cache.auctions[adUnitInfo]?.origAdUnits, slotName) || {};  
+          let origAdUnit = getAdUnit(cache.auctions[adUnitInfo]?.origAdUnits, slotName) || {};
           newPayload[key][slotName].pubmaticAutoRefresh = {
             autoRefresh: origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0
           };
           newPayload[key][slotName] = Object.assign({},newPayload[key][slotName]);
-        }); 
+        });
       }
     }
   }
@@ -403,13 +401,14 @@ function executeBidsLoggerCall(event,highestCpmBids) {
   if (!auctionCache || auctionCache.sent) return;
   // Fetching slotinfo at event level results to undefined so Running loop over the codes to get the GPT slot name.
   Object.values(auctionCache?.adUnitCodes).forEach(adUnit => {
-    Object.values(adUnit?.bids).forEach(bidArray => {
-        bidArray.forEach(bid => {
-            bid['owAdUnitId'] = getGptSlotInfoForAdUnitCode(bid?.adUnit?.adUnitCode)?.gptSlot || bid.adUnit?.adUnitCode;
-            const winBid =  highestCpmBids.filter(cpmbid =>cpmbid.adId === bid?.adId)[0]?.adId;
-            auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId = auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId ? auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId : winBid;
-        });
-    });
+    for (let bidId in adUnit?.bids) {
+      adUnit?.bids[bidId].forEach(bid => {
+        bid['owAdUnitId'] =  getGptSlotInfoForAdUnitCode(bid?.adUnit?.adUnitCode)?.gptSlot || bid.adUnit?.adUnitCode;
+        const winBid = highestCpmBids.filter(cpmbid => cpmbid.adId === bid?.adId)[0]?.adId;
+        auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId = auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId ? auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId : winBid;
+        bid.bidId = bidId;
+      })
+    }
   });
   const payload = {
     sd: auctionCache.adUnitCodes,
@@ -419,7 +418,7 @@ function executeBidsLoggerCall(event,highestCpmBids) {
   auctionCache.sent = true;
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
   const queryParams = `v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}${urlParams.get('pmad') === '1' ? '&debug=1' : ''}`;
-  const owPayLoad = transformPayload(auctionId,payload,auctionId);
+  const owPayLoad = transformPayload(auctionId, payload, auctionId);
   sendAjaxRequest({
     endpoint: END_POINT_BID_LOGGER,
     method: 'POST',
@@ -547,7 +546,7 @@ const eventHandlers = {
     bid.partnerTimeToRespond = latency > (auctionTime + 150) ? (auctionTime + 150) : latency;
     bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
     bid.bidResponse = parseBidResponse(args);
-    bid.bidderCode =  args.bidderCode || bid.bidderCode;;
+    bid.bidderCode =  args.bidderCode || bid.bidderCode;
     bid.adapterName = getAdapterNameForAlias(args.adapterCode || bid.bidderCode);
   },
 
