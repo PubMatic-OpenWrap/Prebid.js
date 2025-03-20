@@ -180,7 +180,7 @@ function getBrowserType() {
   return browserIndex;
 }
 
-function transformPayload(auctionId,currentPayload,adUnitInfo,bidWon=false) {
+function transformPayload(auctionId, currentPayload, adUnitInfo, bidWon = false) {
   const HOSTNAME = window.location.host;
   const storage = getStorageManager({ bidderCode: ADAPTER_CODE });
   const storedObject = storage.getDataFromLocalStorage(PREFIX + HOSTNAME);
@@ -191,7 +191,7 @@ function transformPayload(auctionId,currentPayload,adUnitInfo,bidWon=false) {
     if (key === 'fd') {
       const cdsValue = getCDSDataLoggerStr();
       Object.assign(newPayload[key], {
-       ...(cdsValue && { cds: cdsValue }),
+        ...(cdsValue && { cds: cdsValue }),
         bdv: frequencyDepth,
         cmp: getConsentInfo(false),
       });
@@ -201,15 +201,15 @@ function transformPayload(auctionId,currentPayload,adUnitInfo,bidWon=false) {
         ih: identityOnly,
         owv: window.PWT?.versionDetails?.openwrap_version || '-1',
       });
-      if(window.PWT?.CC?.cc){
+      if (window.PWT?.CC?.cc) {
         Object.assign(newPayload[key], {
-          ctr:window.PWT?.CC?.cc
+          ctr: window.PWT?.CC?.cc
         });
       }
-    } else if (key === 'sd'){
-      if(bidWon) {
+    } else if (key === 'sd') {
+      if (bidWon) {
         newPayload[key].rf = adUnitInfo?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0;
-        newPayload[key] = Object.assign({},newPayload[key])
+        newPayload[key] = Object.assign({}, newPayload[key])
       } else {
         Object.keys(newPayload[key]).map(slotName => {
 
@@ -217,7 +217,7 @@ function transformPayload(auctionId,currentPayload,adUnitInfo,bidWon=false) {
           newPayload[key][slotName].pubmaticAutoRefresh = {
             autoRefresh: origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0
           };
-          newPayload[key][slotName] = Object.assign({},newPayload[key][slotName]);
+          newPayload[key][slotName] = Object.assign({}, newPayload[key][slotName]);
         });
       }
     }
@@ -311,7 +311,7 @@ function parseBidResponse(bid) {
     'mediaType',
     'params',
     'floorData',
-    'mi', () => bid.bidResponse ? bid.bidResponse.mi : (window.matchedimpressions && window.matchedimpressions[bid.bidder]),
+    'mi',
     'regexPattern', () => bid.regexPattern || undefined,
     'partnerImpId', // partner impression ID
     'dimensions', () => pick(bid, [
@@ -394,7 +394,7 @@ function getRootLevelDetails(auctionCache, auctionId) {
     it: getIntegrationType()
   }
 }
-function executeBidsLoggerCall(event,highestCpmBids) {
+function executeBidsLoggerCall(event, highestCpmBids) {
   const { auctionId } = event;
   const auctionCache = cache.auctions[auctionId];
 
@@ -403,10 +403,11 @@ function executeBidsLoggerCall(event,highestCpmBids) {
   Object.values(auctionCache?.adUnitCodes).forEach(adUnit => {
     for (let bidId in adUnit?.bids) {
       adUnit?.bids[bidId].forEach(bid => {
-        bid['owAdUnitId'] =  getGptSlotInfoForAdUnitCode(bid?.adUnit?.adUnitCode)?.gptSlot || bid.adUnit?.adUnitCode;
+        bid['owAdUnitId'] = getGptSlotInfoForAdUnitCode(bid?.adUnit?.adUnitCode)?.gptSlot || bid.adUnit?.adUnitCode;
         const winBid = highestCpmBids.filter(cpmbid => cpmbid.adId === bid?.adId)[0]?.adId;
         auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId = auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId ? auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId : winBid;
         bid.bidId = bidId;
+        bid.mi = bid?.bidResponse ? bid.bidResponse.mi : (window.matchedimpressions && window.matchedimpressions[bid.bidder]);
       })
     }
   });
@@ -460,7 +461,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   };
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
   const queryParams = `v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}${urlParams.get('pmad') === '1' ? '&debug=1' : ''}`;
-  const owPayLoad = transformPayload(auctionId,payload,origAdUnit,true);
+  const owPayLoad = transformPayload(auctionId, payload, origAdUnit, true);
   sendAjaxRequest({
     endpoint: END_POINT_WIN_BID_LOGGER,
     method: 'POST',
@@ -546,7 +547,7 @@ const eventHandlers = {
     bid.partnerTimeToRespond = latency > (auctionTime + 150) ? (auctionTime + 150) : latency;
     bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
     bid.bidResponse = parseBidResponse(args);
-    bid.bidderCode =  args.bidderCode || bid.bidderCode;
+    bid.bidderCode = args.bidderCode || bid.bidderCode;
     bid.adapterName = getAdapterNameForAlias(args.adapterCode || bid.bidderCode);
   },
 
@@ -561,7 +562,7 @@ const eventHandlers = {
   },
 
   bidderDone: (args) => {
-    if(cache.auctions[args.auctionId]?.bidderDonePendingCount){
+    if (cache.auctions[args.auctionId]?.bidderDonePendingCount) {
       cache.auctions[args.auctionId].bidderDonePendingCount--;
     }
     args.bids.forEach(bid => {
