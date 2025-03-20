@@ -3,6 +3,7 @@ import * as bidManager from './bidManager.js';
 import * as CONSTANTS from './constants.js';
 import * as CONFIG from './config.js';
 import * as conf from './conf.js';
+import * as ucTag from "prebid-universal-creative";  // Do Not Remove, it required in case of SafeFrame rendering
 import * as timeMetrics from './modules/timeMetrics.js';
 const metaInfo = util.getMetaInfo(window);
 
