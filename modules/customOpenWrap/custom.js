@@ -103,22 +103,6 @@ export { defineWrapperTargetingKeys };
 
 /* end-test-block */
 
-// removeIf(removeLegacyAnalyticsRelatedCode)
-function initSafeFrameListener(theWindow) {
-  if (!theWindow.PWT.safeFrameMessageListenerAdded) {
-    util.addMessageEventListenerForSafeFrame(theWindow);
-    theWindow.PWT.safeFrameMessageListenerAdded = true;
-  }
-}
-
-// endRemoveIf(removeLegacyAnalyticsRelatedCode)
-
-// removeIf(removeLegacyAnalyticsRelatedCode)
-/* start-test-block */
-export { initSafeFrameListener };
-
-/* end-test-block */
-// endRemoveIf(removeLegacyAnalyticsRelatedCode)
 
 function validateAdUnitObject(anAdUnitObject) {
   if (!util.isObject(anAdUnitObject)) {
@@ -203,21 +187,11 @@ function findWinningBidAndGenerateTargeting(divId) {
   if (CONFIG.isPrebidPubMaticAnalyticsEnabled() === true) {
     data = prebid.getBid(divId);
     // todo: we might need to change some proprty names in wb (from PBJS)
-  } else {
-    // removeIf(removeLegacyAnalyticsRelatedCode)
-    data = bidManager.getBid(divId);
-    // endRemoveIf(removeLegacyAnalyticsRelatedCode)
   }
   const winningBid = data.wb || null;
   const keyValuePairs = data.kvp || null;
   const ignoreTheseKeys = !CONFIG.isUsePrebidKeysEnabled() ? CONSTANTS.IGNORE_PREBID_KEYS : {};
 
-  // removeIf(removeLegacyAnalyticsRelatedCode)
-  /* istanbul ignore else */
-  if (CONFIG.isPrebidPubMaticAnalyticsEnabled() === false && winningBid && winningBid.getNetEcpm() > 0) {
-    bidManager.setStandardKeys(winningBid, keyValuePairs);
-  }
-  // endRemoveIf(removeLegacyAnalyticsRelatedCode)
 
   // attaching keyValuePairs from adapters
   util.forEachOnObject(keyValuePairs, key => {
@@ -585,9 +559,6 @@ export function init(win) {
   if (util.isObject(win)) {
     setWindowReference(win);
 
-    // removeIf(removeLegacyAnalyticsRelatedCode)
-    initSafeFrameListener(win);
-    // endRemoveIf(removeLegacyAnalyticsRelatedCode)
     prebid.initPbjsConfig();
     win.PWT.requestBids = customServerExposedAPI;
     win.PWT.generateConfForGPT = generateConfForGPT;

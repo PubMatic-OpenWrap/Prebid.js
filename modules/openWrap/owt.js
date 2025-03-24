@@ -37,10 +37,6 @@ window.PWT.displayCreative = function(theDocument, bidID) {
   util.log('In displayCreative for: ' + bidID);
   if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
     window[CONSTANTS.COMMON.PREBID_NAMESPACE].renderAd(theDocument, bidID);
-  } else {
-    // removeIf(removeLegacyAnalyticsRelatedCode)
-    bidManager.displayCreative(theDocument, bidID);
-    // endRemoveIf(removeLegacyAnalyticsRelatedCode)
   }
 };
 
@@ -50,10 +46,6 @@ window.PWT.displayPMPCreative = function(theDocument, values, priorityArray) {
   if (bidID) {
     if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
       window[CONSTANTS.COMMON.PREBID_NAMESPACE].renderAd(theDocument, bidID);
-    } else {
-      // removeIf(removeLegacyAnalyticsRelatedCode)
-      bidManager.displayCreative(theDocument, bidID);
-      // endRemoveIf(removeLegacyAnalyticsRelatedCode)
     }
   }
 };
@@ -65,15 +57,6 @@ window.PWT.sfDisplayCreative = function(theDocument, bidID) {
   ucTag = window.ucTag || {};
   if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
     ucTag.renderAd(theDocument, {adId: bidID, pubUrl: document.referrer});
-  } else {
-    window.parent.postMessage(
-      JSON.stringify({
-        pwt_type: '1',
-        pwt_bidID: bidID,
-        pwt_origin: CONSTANTS.COMMON.PROTOCOL + window.location.hostname
-      }),
-      '*'
-    );
   }
 };
 
@@ -85,15 +68,6 @@ window.PWT.sfDisplayPMPCreative = function(theDocument, values, priorityArray) {
   if (bidID) {
     if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
       ucTag.renderAd(theDocument, {adId: bidID, pubUrl: document.referrer});
-    } else {
-      window.parent.postMessage(
-        JSON.stringify({
-          pwt_type: '1',
-          pwt_bidID: bidID,
-          pwt_origin: CONSTANTS.COMMON.PROTOCOL + window.location.hostname
-        }),
-        '*'
-      );
     }
   }
 };
@@ -140,12 +114,6 @@ window.OWT.notifyExternalBiddingComplete = function(notifyId) {
     }
   });
 };
-
-// removeIf(removeLegacyAnalyticsRelatedCode)
-window.PWT.UpdateVastWithTracker = function(bid, vast) {
-  return util.UpdateVastWithTracker(bid, vast);
-};
-// endRemoveIf(removeLegacyAnalyticsRelatedCode)
 
 // removeIf(removeInStreamRelatedCode)
 window.PWT.generateDFPURL = function(adUnit, cust_params) {

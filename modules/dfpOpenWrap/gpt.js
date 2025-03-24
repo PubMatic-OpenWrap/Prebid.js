@@ -326,8 +326,6 @@ function findWinningBidAndApplyTargeting(divID, parentArgs) { // TDD, i/o : done
   let data;
   if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
     data = prebid.getBid(divID);
-  } else {
-    data = bidManager.getBid(divID);
   }
   const winningBid = data.wb || null;
   const keyValuePairs = data.kvp || {};
@@ -336,12 +334,6 @@ function findWinningBidAndApplyTargeting(divID, parentArgs) { // TDD, i/o : done
 
   util.log(`DIV: ${divID} winningBid: `);
   util.log(winningBid);
-
-  /* istanbul ignore else */
-  if (CONFIG.isPrebidPubMaticAnalyticsEnabled() === false && winningBid && winningBid.getNetEcpm() > 0) {
-    slotsMap[divID].setStatus(CONSTANTS.SLOT_STATUS.TARGETING_ADDED);
-    bidManager.setStandardKeys(winningBid, keyValuePairs);
-  };
 
   // Hook to modify key-value-pairs generated, google-slot object is passed so that consumer can get details about the AdSlot
   // this hook is not needed in custom controller
