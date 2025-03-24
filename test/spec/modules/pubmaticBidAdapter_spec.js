@@ -328,13 +328,20 @@ describe('PubMatic adapter', function () {
     bannerAndVideoBidRequests = [
       {
         code: 'div-banner-video',
+        ortb2Imp: {
+          banner: {
+            pos: 1
+          }
+        },
         mediaTypes: {
           video: {
             playerSize: [640, 480],
-            context: 'instream'
+            context: 'instream',
+            pos: 2
           },
           banner: {
-            sizes: [[300, 250], [300, 600]]
+            sizes: [[300, 250], [300, 600]],
+            pos: 1
           }
         },
         bidder: 'pubmatic',

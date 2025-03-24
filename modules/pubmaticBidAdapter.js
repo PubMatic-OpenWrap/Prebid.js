@@ -73,7 +73,7 @@ const NATIVE_ASSET_IMAGE_TYPE = {
 
 const BANNER_CUSTOM_PARAMS = {
   'battr': DATA_TYPES.ARRAY,
-  'pos': DATA_TYPES.NUMBER
+  'pos': DATA_TYPES.NUMBER,
 }
 
 const NET_REVENUE = true;
