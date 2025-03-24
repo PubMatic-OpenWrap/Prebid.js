@@ -1,4 +1,5 @@
 import {
+  deepAccess,
   deepClone, getDefinedParams,
   insertHtmlIntoIframe,
   isArray,
@@ -344,7 +345,10 @@ export function getNativeTargeting(bid, {index = auctionManager.index} = {}) {
   let keyValues = {};
   const adUnit = index.getAdUnit(bid);
 
-  const globalSendTargetingKeys = adUnit?.nativeParams?.ortb == null && adUnit?.nativeParams?.sendTargetingKeys !== false;
+  const globalSendTargetingKeys = deepAccess(
+    adUnit,
+    `nativeParams.sendTargetingKeys`
+  ) !== false;
 
   const nativeKeys = getNativeKeys(adUnit);
 

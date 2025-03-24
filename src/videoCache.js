@@ -14,6 +14,7 @@ import {config} from './config.js';
 import {auctionManager} from './auctionManager.js';
 import {logError, logWarn} from './utils.js';
 import {addBidToAuction} from './auction.js';
+import {getGlobal} from '../src/prebidGlobal.js';
 
 /**
  * Might be useful to be configurable in the future
@@ -72,8 +73,12 @@ function wrapURI(uri, impTrackerURLs) {
  * @return {Object|null} - The payload to be sent to the prebid-server endpoints, or null if the bid can't be converted cleanly.
  */
 function toStorageRequest(bid, {index = auctionManager.index} = {}) {
-  const vastValue = bid.vastXml ? bid.vastXml : wrapURI(bid.vastUrl, bid.vastImpUrl);
+  let vastValue = bid.vastXml ? bid.vastXml : wrapURI(bid.vastUrl, bid.vastImpUrl);
   const auction = index.getAuction(bid);
+  /* istanbul ignore next */
+  if (window && window.ima) {
+    vastValue = getGlobal().injectTrackerForIMA(bid, vastValue);
+  }
   const ttlWithBuffer = Number(bid.ttl) + ttlBufferInSeconds;
   let payload = {
     type: 'xml',
