@@ -59,8 +59,8 @@ const BROWSER_MAP = [
   { value: /(firefox)\/([\w\.]+)/i, key: 12 }, // Firefox
   { value: /\b(?:crios)\/([\w\.]+)/i, key: 1 }, // Chrome for iOS
   { value: /edg(?:e|ios|a)?\/([\w\.]+)/i, key: 2 }, // Edge
-  { value: /(opera)(?:.+version\/|[\/ ]+)([\w\.]+)/i, key: 3 }, // Opera
-  { value: /(?:ms|\()(ie) ([\w\.]+)/i, key: 4 }, // Internet Explorer
+  { regex: /(opera|opr)(?:.+version\/|[\/ ]+)([\w\.]+)/i, id: 3 }, // Opera
+  { regex: /(?:ms|\()(ie) ([\w\.]+)|(?:trident\/[\w\.]+)/i, id: 4 }, // Internet Explorer
   { value: /fxios\/([-\w\.]+)/i, key: 5 }, // Firefox for iOS
   { value: /((?:fban\/fbios|fb_iab\/fb4a)(?!.+fbav)|;fbav\/([\w\.]+);)/i, key: 6 }, // Facebook In-App Browser
   { value: / wv\).+(chrome)\/([\w\.]+)/i, key: 7 }, // Chrome WebView
