@@ -11,6 +11,7 @@ import { getStorageManager } from '../src/storageManager.js';
 /// /////////// CONSTANTS //////////////
 const ADAPTER_CODE = 'pubmatic';
 const VENDOR_OPENWRAP = 'openwrap';
+const DISPLAY_MANAGER = 'Prebid.js';
 const SEND_TIMEOUT = 2000;
 const END_POINT_HOST = 'https://t.pubmatic.com/';
 const END_POINT_BID_LOGGER = END_POINT_HOST + 'wl?';
@@ -375,7 +376,6 @@ function getFeatureLevelDetails(auctionCache) {
 
 
 
-
 function getRootLevelDetails(auctionCache, auctionId) {
   const referrer = config.getConfig('pageUrl') || auctionCache.referer || '';
   return {
@@ -391,7 +391,9 @@ function getRootLevelDetails(auctionCache, auctionId) {
     tgid: getTgId(),
     s2sls: s2sBidders,
     bm: getBrowserType(),
-    it: getIntegrationType()
+    it: getIntegrationType(),
+    dm: DISPLAY_MANAGER,
+    dmv:'$prebid.version$' || '-1'
   }
 }
 function executeBidsLoggerCall(event, highestCpmBids) {
