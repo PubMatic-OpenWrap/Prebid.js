@@ -35,23 +35,9 @@ const DEFAULT_PROFILE_ID = 0;
 const DEFAULT_PROFILE_VERSION_ID = 0;
 const DEFAULT_ISIDENTITY_ONLY = 0;
 const PREFIX = 'PROFILE_AUCTION_INFO_';
+const enc = window.encodeURIComponent;
 
 
-// TODO : Remove - Once BM calculation moves to Server Side
-const BROWSER_MAP = [
-  { value: /(firefox)\/([\w\.]+)/i, key: 12 }, // Firefox
-  { value: /\b(?:crios)\/([\w\.]+)/i, key: 1 }, // Chrome for iOS
-  { value: /edg(?:e|ios|a)?\/([\w\.]+)/i, key: 2 }, // Edge
-  { value: /(opera)(?:.+version\/|[\/ ]+)([\w\.]+)/i, key: 3 }, // Opera
-  { value: /(?:ms|\()(ie) ([\w\.]+)/i, key: 4 }, // Internet Explorer
-  { value: /fxios\/([-\w\.]+)/i, key: 5 }, // Firefox for iOS
-  { value: /((?:fban\/fbios|fb_iab\/fb4a)(?!.+fbav)|;fbav\/([\w\.]+);)/i, key: 6 }, // Facebook In-App Browser
-  { value: / wv\).+(chrome)\/([\w\.]+)/i, key: 7 }, // Chrome WebView
-  { value: /droid.+ version\/([\w\.]+)\b.+(?:mobile safari|safari)/i, key: 8 }, // Android Browser
-  { value: /(chrome|chromium|crios)\/v?([\w\.]+)/i, key: 9 }, // Chrome
-  { value: /version\/([\w\.\,]+) .*mobile\/\w+ (safari)/i, key: 10 }, // Safari Mobile
-  { value: /version\/([\w(\.|\,)]+) .*(mobile ?safari|safari)/i, key: 11 }, // Safari
-];
 /// /////////// VARIABLES //////////////
 let publisherId = DEFAULT_PUBLISHER_ID; // int: mandatory
 let profileId = DEFAULT_PROFILE_ID; // int: optional
@@ -106,7 +92,7 @@ function getCDSDataLoggerStr() {
     });
     cdsStr = cdsStr.slice(0, -1);
   }
-  return cdsStr;
+  return enc(cdsStr);
 }
 
 // Logging this information to take informed decision on what consent config to be applied.
@@ -170,16 +156,7 @@ function getPSL(auctionId) {
   return pslTime;
 }
 
-// TODO : Remove - Once BM calculation moves to Server Side
-function getBrowserType() {
-  const userAgent = navigator?.userAgent;
-  let browserIndex = userAgent == null ? -1 : 0;
 
-  if (userAgent) {
-    browserIndex = BROWSER_MAP.find(({ value }) => value.test(userAgent))?.key || 0;
-  }
-  return browserIndex;
-}
 
 function transformPayload(auctionId, currentPayload, adUnitInfo, bidWon = false) {
   const HOSTNAME = window.location.host;
@@ -305,7 +282,7 @@ function parseBidResponse(bid) {
     'originalCurrency',
     'adserverTargeting',
     'dealChannel',
-    'meta',
+    'meta',() => (bid.meta && Object.keys(bid.meta).length > 0 ? bid.meta : undefined),
     'status',
     'error',
     'bidId',
@@ -386,11 +363,9 @@ function getRootLevelDetails(auctionCache, auctionId) {
     tst: Math.round(Date.now() / 1000),
     pid: `${profileId}`,
     pdvid: `${profileVersionId}`,
-    pbv: '$prebid.version$' || '-1',
     ortb2: auctionCache.ortb2,
     tgid: getTgId(),
     s2sls: s2sBidders,
-    bm: getBrowserType(),
     it: getIntegrationType(),
     dm: DISPLAY_MANAGER,
     dmv:'$prebid.version$' || '-1'
@@ -410,6 +385,8 @@ function executeBidsLoggerCall(event, highestCpmBids) {
         auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId = auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId ? auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId : winBid;
         bid.bidId = bidId;
         bid.mi = bid?.bidResponse ? bid.bidResponse.mi : (window.matchedimpressions && window.matchedimpressions[bid.bidder]);
+        let adapterName = getAdapterNameForAlias(bid.adapterCode || bid.bidder);
+        bid.bidder = adapterName;
       })
     }
   });
@@ -551,6 +528,9 @@ const eventHandlers = {
     // Check if latency is greater than auctiontime+150, then log auctiontime+150 to avoid large numbers
     bid.partnerTimeToRespond = latency > (auctionTime + 150) ? (auctionTime + 150) : latency;
     bid.clientLatencyTimeMs = Date.now() - cache.auctions[args.auctionId].timestamp;
+    if (window.PWT && !!isFn(window.PWT.HookForBidReceived)) {
+      window.PWT.HookForBidReceived(args.adUnitCode, args);
+    }
     bid.bidResponse = parseBidResponse(args);
     bid.bidderCode = args.bidderCode || bid.bidderCode;
     bid.adapterName = getAdapterNameForAlias(args.adapterCode || bid.bidderCode);
