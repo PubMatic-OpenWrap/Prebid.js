@@ -117,6 +117,29 @@ class Bid {
     this.regexPattern = pattern;
     return this;
   }
+  setDefaultBidStatus(status) {
+    this.defaultBid = status;
+    return this;
+  }
+
+  getDefaultBidStatus() {
+    return this.defaultBid;
+  }
+
+  getGrossEcpm(forAnalytics) {
+    // Check config if currency module is enabled.
+    if (CONFIG.getAdServerCurrency() && this.analyticsGrossCpm && forAnalytics) {
+      return this.analyticsGrossCpm;
+    }
+    return this.grossEcpm;
+  }
+  
+  getNetEcpm(forAnalytics) {
+    if (CONFIG.getAdServerCurrency() && this.analyticsNetCpm && forAnalytics) {
+      return this.analyticsNetCpm;
+    }
+    return this.netEcpm;
+  }
 }
 
   /* start-test-block */
@@ -127,6 +150,7 @@ export {Bid};
 export function createBid(adapterID, kgpv) {
   return new Bid(adapterID, kgpv);
 }
+
 
 // todo:
 // add validations

@@ -667,8 +667,7 @@ function newDisplayFunction(theObject, originalFunction) { // TDD, i/o : done
         const divID = args[0];
         /* istanbul ignore next */
         setTimeout(() => {
-          util.realignVLogInfoPanel(divID);
-          bidManager.executeAnalyticsPixel();
+          util.realignVLogInfoPanel(divID);          
         }, 2000 + CONFIG.getTimeout());
 
         // return originalFunction.apply(theObject, arguments);
@@ -916,26 +915,12 @@ function addHooksIfPossible(win) { // TDD, i/o : done
 
 /* start-test-block */
 export { addHooksIfPossible };
-
-/* end-test-block */
-
-function initSafeFrameListener(theWindow) { // TDD, i/o : done
-  if (!theWindow.PWT.safeFrameMessageListenerAdded) {
-    util.addMessageEventListenerForSafeFrame(theWindow);
-    theWindow.PWT.safeFrameMessageListenerAdded = true;
-  }
-}
-
-/* start-test-block */
-export { initSafeFrameListener };
-
 /* end-test-block */
 
 export function init(win) { // TDD, i/o : done
   CONFIG.initConfig();
   if (util.isObject(win)) {
     setWindowReference(win);
-    initSafeFrameListener(win);
     prebid.initPbjsConfig();
     wrapperTargetingKeys = defineWrapperTargetingKeys(CONSTANTS.WRAPPER_TARGETING_KEYS);
     defineGPTVariables(win);
