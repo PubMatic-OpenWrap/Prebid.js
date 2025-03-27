@@ -145,23 +145,6 @@ export { resetBid };
 /* end-test-block */
 
 
-// removeIf(removeNativeRelatedCode)
-function updateNativeTargtingKeys(keyValuePairs) {
-  for (const key in keyValuePairs) {
-    if (key.includes('native') && key.split('_').length === 3) {
-      delete keyValuePairs[key];
-    }
-  }
-}
-
-// endRemoveIf(removeNativeRelatedCode)
-
-// removeIf(removeNativeRelatedCode)
-/* start-test-block */
-export { updateNativeTargtingKeys };
-
-/* end-test-block */
-// endRemoveIf(removeNativeRelatedCode)
 
 // Returns property from localstorages slotlevel object
 export function getSlotLevelFrequencyDepth(frequencyDepth, prop, adUnit) {
@@ -216,45 +199,6 @@ export function getAllPartnersBidStatuses(bidMaps, divIds) {
   return status;
 }
 
-// removeIf(removeNativeRelatedCode)
-/**
- * This function is used to execute trackers on event
- * in case of native. On click of native create element
- * @param {*} event
- */
-export function loadTrackers(event) {
-  const bidId = util.getBidFromEvent(event);
-  window.parent.postMessage(
-    JSON.stringify({
-      pwt_type: '3',
-      pwt_bidID: bidId,
-      pwt_origin: CONSTANTS.COMMON.PROTOCOL + window.location.hostname,
-      pwt_action: 'click'
-    }),
-    '*'
-  );
-}
-
-// endRemoveIf(removeNativeRelatedCode)
-
-// removeIf(removeNativeRelatedCode)
-/**
- * function takes bidID and post a message to parent pwt.js to execute monetization pixels.
- * @param {*} bidID
- */
-export function executeTracker(bidID) {
-  window.parent.postMessage(
-    JSON.stringify({
-      pwt_type: '3',
-      pwt_bidID: bidID,
-      pwt_origin: CONSTANTS.COMMON.PROTOCOL + window.location.hostname,
-      pwt_action: 'imptrackers'
-    }),
-    '*'
-  );
-}
-
-// endRemoveIf(removeNativeRelatedCode)
 
 // removeIf(removeNativeRelatedCode)
 /**
@@ -303,5 +247,25 @@ export function fireTracker(bidDetails, action) {
 
 // endRemoveIf(removeNativeRelatedCode)
 
+// removeIf(removeLegacyAnalyticsRelatedCode)
+exports.getBrowser = function() {
+  var regExBrowsers = CONSTANTS.REGEX_BROWSERS;
+  var browserMapping = CONSTANTS.BROWSER_MAPPING;
+
+  var userAgent = navigator.userAgent;
+  var browserName = userAgent == null ? -1 : 0;
+  if(userAgent) {
+    for(var i = 0; i < regExBrowsers.length; i++) {
+      if(userAgent.match(regExBrowsers[i])) {
+        browserName = browserMapping[i];
+        break;
+      }
+    }
+  }
+  return browserName;
+}
+// endRemoveIf(removeLegacyAnalyticsRelatedCode)
+
 // this function generates all satndard key-value pairs for a given bid and setup, set these key-value pairs in an object
 // todo: write unit test cases
+
