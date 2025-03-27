@@ -318,7 +318,7 @@ function generatePbConf(adapterID, adapterConfig, activeSlots, adUnits, impressi
     impressionID,
     [],
     activeSlots,
-    CONFIG.isPrebidPubMaticAnalyticsEnabled() ? generatedKeyCallbackForPbAnalytics : generatedKeyCallback,
+    generatedKeyCallbackForPbAnalytics,
     // generatedKeyCallback,
     // serverSideEabled: do not set default bids as we do not want to throttle them at client-side
     true // !CONFIG.isServerSideAdapter(adapterID)

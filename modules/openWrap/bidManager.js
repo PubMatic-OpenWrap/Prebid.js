@@ -247,16 +247,15 @@ export function fireTracker(bidDetails, action) {
 
 // endRemoveIf(removeNativeRelatedCode)
 
-// removeIf(removeLegacyAnalyticsRelatedCode)
-exports.getBrowser = function() {
-  var regExBrowsers = CONSTANTS.REGEX_BROWSERS;
-  var browserMapping = CONSTANTS.BROWSER_MAPPING;
+export function getBrowser() {
+  const regExBrowsers = CONSTANTS.REGEX_BROWSERS;
+  const browserMapping = CONSTANTS.BROWSER_MAPPING;
 
-  var userAgent = navigator.userAgent;
-  var browserName = userAgent == null ? -1 : 0;
-  if(userAgent) {
-    for(var i = 0; i < regExBrowsers.length; i++) {
-      if(userAgent.match(regExBrowsers[i])) {
+  const userAgent = navigator.userAgent;
+  let browserName = userAgent == null ? -1 : 0;
+  if (userAgent) {
+    for (let i = 0; i < regExBrowsers.length; i++) {
+      if (userAgent.match(regExBrowsers[i])) {
         browserName = browserMapping[i];
         break;
       }

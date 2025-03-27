@@ -72,13 +72,6 @@ window.PWT.sfDisplayPMPCreative = function(theDocument, values, priorityArray) {
   }
 };
 
-// removeIf(removeNativeRelatedCode)
-window.PWT.initNativeTrackers = function(theDocument, bidID) {
-  util.log('In startTrackers for: ' + bidID);
-  util.addEventListenerForClass(window, 'click', CONSTANTS.COMMON.OW_CLICK_NATIVE, bidManager.loadTrackers);
-  bidManager.executeTracker(bidID);
-};
-// endRemoveIf(removeNativeRelatedCode)
 
 window.PWT.getUserIds = function() {
   return util.getUserIds();
