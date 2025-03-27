@@ -554,11 +554,24 @@ export { removeKeyValuePairsFromGPTSlots };
 
 /* end-test-block */
 
+function initSafeFrameListener(theWindow) {
+  if (!theWindow.PWT.safeFrameMessageListenerAdded) {
+    util.addMessageEventListenerForSafeFrame(theWindow);
+    theWindow.PWT.safeFrameMessageListenerAdded = true;
+  }
+}
+
+// removeIf(removeLegacyAnalyticsRelatedCode)
+/* start-test-block */
+export { initSafeFrameListener };
+
+/* end-test-block */
+
 export function init(win) {
   CONFIG.initConfig();
   if (util.isObject(win)) {
     setWindowReference(win);
-
+    initSafeFrameListener(win);
     prebid.initPbjsConfig();
     win.PWT.requestBids = customServerExposedAPI;
     win.PWT.generateConfForGPT = generateConfForGPT;

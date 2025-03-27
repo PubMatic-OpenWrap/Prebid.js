@@ -247,6 +247,22 @@ export function fireTracker(bidDetails, action) {
 
 // endRemoveIf(removeNativeRelatedCode)
 
+// removeIf(removeNativeRelatedCode)
+function updateNativeTargtingKeys(keyValuePairs) {
+  for (const key in keyValuePairs) {
+    if (key.includes('native') && key.split('_').length === 3) {
+      delete keyValuePairs[key];
+    }
+  }
+}
+
+// endRemoveIf(removeNativeRelatedCode)
+
+// removeIf(removeNativeRelatedCode)
+/* start-test-block */
+export { updateNativeTargtingKeys };
+// endRemoveIf(removeNativeRelatedCode)
+
 export function getBrowser() {
   const regExBrowsers = CONSTANTS.REGEX_BROWSERS;
   const browserMapping = CONSTANTS.BROWSER_MAPPING;

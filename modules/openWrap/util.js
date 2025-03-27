@@ -1024,6 +1024,49 @@ export function findElementsByClass(theWindow, theClass) {
 // endRemoveIf(removeNativeRelatedCode)
 
 // removeIf(removeNativeRelatedCode)
+export function addMessageEventListener(theWindow, eventHandler) {
+  /* istanbul ignore else */
+  if (typeof eventHandler !== 'function') {
+    log('EventHandler should be a function');
+    return false;
+  }
+
+  if (theWindow.addEventListener) {
+    theWindow.addEventListener('message', eventHandler, false);
+  } else {
+    theWindow.attachEvent('onmessage', eventHandler);
+  }
+  return true;
+}
+// endRemoveIf(removeNativeRelatedCode)
+
+
+// removeIf(removeNativeRelatedCode)
+export function safeFrameCommunicationProtocol(msg) {
+  try {
+    let msgData = window.JSON.parse(msg.data);
+    /* istanbul ignore else */
+    if (!msgData.pwt_type) {
+      return;
+    }
+    switch (window.parseInt(msgData.pwt_type)) {
+      case 3:
+        msg = { message: 'Prebid Native', adId: msgData.pwt_bidID, action: msgData.pwt_action };
+        window.postMessage(JSON.stringify(msg), '*');
+        break;
+    }
+  } catch (e) { }
+}
+// endRemoveIf(removeNativeRelatedCode)
+
+// removeIf(removeNativeRelatedCode)
+export function addMessageEventListenerForSafeFrame(theWindow) {
+  addMessageEventListener(theWindow, safeFrameCommunicationProtocol);
+}
+
+// endRemoveIf(removeNativeRelatedCode)
+
+// removeIf(removeNativeRelatedCode)
 export function getBidFromEvent(theEvent) {
   return (theEvent && theEvent.target && theEvent.target.attributes && theEvent.target.attributes[CONSTANTS.COMMON.BID_ID] && theEvent.target.attributes[CONSTANTS.COMMON.BID_ID].value) || '';
 }
