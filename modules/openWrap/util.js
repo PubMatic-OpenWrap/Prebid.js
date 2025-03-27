@@ -1624,3 +1624,22 @@ export function getCDSTargetingData(obj) {
     });
 	return obj;
 }
+
+export function getDevicePlatform() {
+  let deviceType = 3;
+  try {
+    let ua = navigator.userAgent;
+    if (ua && isString(ua) && ua.trim() != '') {
+      ua = ua.toLowerCase().trim();
+      const isMobileRegExp = new RegExp('(mobi|tablet|ios).*');
+      if (ua.match(isMobileRegExp)) {
+        deviceType = 2;
+      } else {
+        deviceType = 1;
+      }
+    }
+  } catch (ex) {
+    logError('Unable to get device platform', ex);
+  }
+  return deviceType;
+}

@@ -736,7 +736,6 @@ function postRederingChores(divID, dmSlot) {
       util.log("Could not find slot in postRederingChores");
   }
   util.realignVLogInfoPanel(divID);
-  bidManager.executeAnalyticsPixel();
 }
 
 /* start-test-block */

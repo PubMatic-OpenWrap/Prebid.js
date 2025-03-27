@@ -72,6 +72,12 @@ window.PWT.sfDisplayPMPCreative = function(theDocument, values, priorityArray) {
   }
 };
 
+window.PWT.initNativeTrackers = function(theDocument, bidID) {
+  util.log('In startTrackers for: ' + bidID);
+  util.addEventListenerForClass(window, 'click', CONSTANTS.COMMON.OW_CLICK_NATIVE, bidManager.loadTrackers);
+  bidManager.executeTracker(bidID);
+};
+
 
 window.PWT.getUserIds = function() {
   return util.getUserIds();

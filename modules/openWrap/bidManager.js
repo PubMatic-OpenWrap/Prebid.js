@@ -263,8 +263,39 @@ export function getBrowser() {
   }
   return browserName;
 }
-// endRemoveIf(removeLegacyAnalyticsRelatedCode)
 
+
+// removeIf(removeNativeRelatedCode)
 // this function generates all satndard key-value pairs for a given bid and setup, set these key-value pairs in an object
 // todo: write unit test cases
+export function loadTrackers(event) {
+  const bidId = util.getBidFromEvent(event);
+  window.parent.postMessage(
+    JSON.stringify({
+      pwt_type: '3',
+      pwt_bidID: bidId,
+      pwt_origin: CONSTANTS.COMMON.PROTOCOL + window.location.hostname,
+      pwt_action: 'click'
+    }),
+    '*'
+  );
+}
 
+// endRemoveIf(removeNativeRelatedCode)
+
+// removeIf(removeNativeRelatedCode)
+/**
+ * function takes bidID and post a message to parent pwt.js to execute monetization pixels.
+ * @param {*} bidID
+ */
+export function executeTracker(bidID) {
+  window.parent.postMessage(
+    JSON.stringify({
+      pwt_type: '3',
+      pwt_bidID: bidID,
+      pwt_origin: CONSTANTS.COMMON.PROTOCOL + window.location.hostname,
+      pwt_action: 'imptrackers'
+    }),
+    '*'
+  );
+}
