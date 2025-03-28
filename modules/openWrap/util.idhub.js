@@ -627,9 +627,9 @@ export function updateUserIds(bid) {
 export function applyDataTypeChangesIfApplicable(params) {
   let value;
   if (params.name in CONSTANTS.SPECIAL_CASE_ID_PARTNERS) {
-    for (partnerName in CONSTANTS.SPECIAL_CASE_ID_PARTNERS) {
+    for (const partnerName in CONSTANTS.SPECIAL_CASE_ID_PARTNERS) {
       if (partnerName === params.name) {
-        for (key in CONSTANTS.SPECIAL_CASE_ID_PARTNERS[partnerName]) {
+        for (const key in CONSTANTS.SPECIAL_CASE_ID_PARTNERS[partnerName]) {
           const paramValue = params[key];
           switch (CONSTANTS.SPECIAL_CASE_ID_PARTNERS[partnerName][key]) {
             case 'number':
