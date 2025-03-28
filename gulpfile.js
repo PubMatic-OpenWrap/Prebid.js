@@ -17,7 +17,6 @@ const standaloneDebuggingConfig = require('./webpack.debugging.js');
 var helpers = require('./gulpHelpers.js');
 var concat = require('gulp-concat');
 var replace = require('gulp-replace');
-var insert = require('gulp-insert');
 var shell = require('gulp-shell');
 var eslint = require('gulp-eslint');
 var gulpif = require('gulp-if');
@@ -625,8 +624,7 @@ gulp.task('webpack-creative', gulp.series(clean, function() {
 
 gulp.task('bundle-creative', function () {
   //console.log("Executing creative-build");
-  return gulp.src(['./build/dist/*.js'])
-      .pipe(insert.append(' \\n '))
+  return gulp.src(['./build/dist/*.js'])      
       .pipe(concat(getBundleName()))
       .pipe(gulp.dest('build/dist'));
 });
