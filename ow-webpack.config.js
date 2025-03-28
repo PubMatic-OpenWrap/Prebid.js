@@ -6,7 +6,7 @@ module.exports = {
     output: {
         filename: 'prebid.js'
     },
-    devtool: 'source-map',
+    devtool: false,
     resolve: {
 				modules: [path.resolve('./node_modules'), path.resolve('./src')]
     },
