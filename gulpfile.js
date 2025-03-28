@@ -572,7 +572,7 @@ gulp.task('append-footer', function () {
 
 gulp.task('update-namespace', function (done) { 
   var patternsToReplace = getPatternsToReplace();
-  //console.log("Patterns to replace => ", patternsToReplace);
+  console.log("Patterns to replace => ", patternsToReplace);
   if(patternsToReplace.length > 0){
     return gulp.src(['build/*/'+ getBundleName()], {allowEmpty: true})
     .pipe(replace(patternsToReplace[0].match, patternsToReplace[0].replacement))
