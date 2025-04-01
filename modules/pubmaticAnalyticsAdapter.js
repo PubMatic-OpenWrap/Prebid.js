@@ -622,8 +622,8 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   let outputObj = { s: [] };
   let pixelURL = END_POINT_BID_LOGGER;
 
-  const user = e.bidderRequests?.length > 0
-    ? e.bidderRequests.find(bidder => bidder?.bidderCode === ADAPTER_CODE)?.ortb2?.user?.ext || {}
+  const country = e.bidderRequests?.length > 0
+    ? e.bidderRequests.find(bidder => bidder?.bidderCode === ADAPTER_CODE)?.ortb2?.user?.ext?.ctr || {}
     : {};
 
   if (!auctionCache) {
@@ -675,7 +675,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     }
   }
 
-  outputObj['ctr'] = Object.keys(user)?.length ? user.ctr : window.PWT?.CC?.cc ? window.PWT.CC.cc : '';
+  outputObj['ctr'] = country !== '' ? country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '';
 
   outputObj.s = Object.keys(auctionCache.adUnitCodes).reduce(function(slotsArray, adUnitId) {
     let adUnit = auctionCache.adUnitCodes[adUnitId];
