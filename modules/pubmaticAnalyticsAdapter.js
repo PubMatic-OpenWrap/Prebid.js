@@ -394,6 +394,7 @@ function executeBidsLoggerCall(event, highestCpmBids) {
         const prebidBidId = bid.bidResponse && bid.bidResponse.prebidBidId;
         bid.bidId = prebidBidId || bid.bidId || bidId;
         let adapterName = getAdapterNameForAlias(bid.adapterCode || bid.bidder);
+        bid.bidderCode = bid.bidderCode || bid.bidder;
         bid.bidder = adapterName;
       })
     }
