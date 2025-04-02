@@ -196,6 +196,7 @@ function transformPayload(auctionId, currentPayload, adUnitInfo, bidWon = false)
             autoRefresh: origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0
           };
           newPayload[key][slotName] = Object.assign({}, newPayload[key][slotName]);
+          newPayload[key][slotName].adUnitId = origAdUnit.owAdUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId;     
         });
       }
     }
@@ -205,6 +206,12 @@ function transformPayload(auctionId, currentPayload, adUnitInfo, bidWon = false)
 
 /// /////////// HELPER FUNCTIONS //////////////
 
+function sizeToDimensions(size) {
+  return {
+    width: size.w || size[0],
+    height: size.h || size[1]
+  };
+}
 
 function formatSource(src = 'client') {
   return (src === 's2s' ? 'server' : src).toLowerCase();
@@ -214,7 +221,7 @@ function sendAjaxRequest({ endpoint, method, queryParams = '', body = null }) {
   const url = queryParams ? `${endpoint}${queryParams}` : endpoint;
   return ajax(url, null, body, { method });
 };
-
+   
 function copyRequiredBidDetails(bid) {
   return pick(bid, [
     'bidder',
@@ -229,7 +236,7 @@ function copyRequiredBidDetails(bid) {
     'adUnit', () => pick(bid, [
       'adUnitCode',
       'transactionId',
-      'sizes as dimensions',
+      'sizes as dimensions',sizes => sizes && sizes.map(sizeToDimensions),
       'mediaTypes'
     ])
   ]);
@@ -380,11 +387,12 @@ function executeBidsLoggerCall(event, highestCpmBids) {
   Object.values(auctionCache?.adUnitCodes).forEach(adUnit => {
     for (let bidId in adUnit?.bids) {
       adUnit?.bids[bidId].forEach(bid => {
-        bid['owAdUnitId'] = getGptSlotInfoForAdUnitCode(bid?.adUnit?.adUnitCode)?.gptSlot || bid.adUnit?.adUnitCode;
+        bid['owAdUnitId'] = getGptSlotInfoForAdUnitCode(bid?.adUnit?.adUnitCode)?.gptSlot || bid.adUnit?.adUnitCode;   
         const winBid = highestCpmBids.filter(cpmbid => cpmbid.adId === bid?.adId)[0]?.adId;
         auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId = auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId ? auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId : winBid;
-        bid.bidId = bidId;
         bid.mi = bid?.bidResponse ? bid.bidResponse.mi : (window.matchedimpressions && window.matchedimpressions[bid.bidder]);
+        const prebidBidId = bid.bidResponse && bid.bidResponse.prebidBidId;
+        bid.bidId = prebidBidId || bid.bidId || bidId;
         let adapterName = getAdapterNameForAlias(bid.adapterCode || bid.bidder);
         bid.bidder = adapterName;
       })
