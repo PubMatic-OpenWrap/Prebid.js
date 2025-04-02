@@ -393,9 +393,7 @@ function executeBidsLoggerCall(event, highestCpmBids) {
         bid.mi = bid?.bidResponse ? bid.bidResponse.mi : (window.matchedimpressions && window.matchedimpressions[bid.bidder]);
         const prebidBidId = bid.bidResponse && bid.bidResponse.prebidBidId;
         bid.bidId = prebidBidId || bid.bidId || bidId;
-        let adapterName = getAdapterNameForAlias(bid.adapterCode || bid.bidder);
         bid.bidderCode = bid.bidderCode || bid.bidder;
-        bid.bidder = adapterName;
       })
     }
   });
