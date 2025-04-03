@@ -206,13 +206,6 @@ function transformPayload(auctionId, currentPayload, adUnitInfo, bidWon = false)
 
 /// /////////// HELPER FUNCTIONS //////////////
 
-function sizeToDimensions(size) {
-  return {
-    width: size.w || size[0],
-    height: size.h || size[1]
-  };
-}
-
 function formatSource(src = 'client') {
   return (src === 's2s' ? 'server' : src).toLowerCase();
 }
@@ -236,7 +229,7 @@ function copyRequiredBidDetails(bid) {
     'adUnit', () => pick(bid, [
       'adUnitCode',
       'transactionId',
-      'sizes as dimensions',sizes => sizes && sizes.map(sizeToDimensions),
+      'sizes as dimensions',
       'mediaTypes'
     ])
   ]);
