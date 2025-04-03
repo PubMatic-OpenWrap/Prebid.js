@@ -1,5 +1,5 @@
 import { _each, isArray, logError, logWarn, pick, isFn } from '../src/utils.js';
-import {adapter,setDebounceDelay} from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
+import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import { BID_STATUS, STATUS, REJECTION_REASON } from '../src/constants.js';
 import { ajax } from '../src/ajax.js';
