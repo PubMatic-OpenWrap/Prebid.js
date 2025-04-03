@@ -559,16 +559,18 @@ const eventHandlers = {
       cache.auctions[args.auctionId].bidderDonePendingCount--;
     }
     args.bids.forEach(bid => {
-      let cachedBid = cache.auctions[bid.auctionId].adUnitCodes[bid.adUnitCode].bids[bid.bidId || bid.originalRequestId || bid.requestId];
-      if (typeof bid.serverResponseTimeMs !== 'undefined') {
-        cachedBid.serverLatencyTimeMs = bid.serverResponseTimeMs;
-      }
-      if (!cachedBid.status) {
-        cachedBid.status = NO_BID;
-      }
-      if (!cachedBid.clientLatencyTimeMs) {
-        cachedBid.clientLatencyTimeMs = Date.now() - cache.auctions[bid.auctionId].timestamp;
-      }
+      let cachedBids = cache.auctions[bid.auctionId].adUnitCodes[bid.adUnitCode].bids[bid.bidId || bid.originalRequestId || bid.requestId];
+      cachedBids.forEach(cachedBid=>{
+        if (typeof bid.serverResponseTimeMs !== 'undefined') {
+          cachedBid.serverLatencyTimeMs = bid.serverResponseTimeMs;
+        }
+        if (!cachedBid.status) {
+          cachedBid.status = NO_BID;
+        }
+        if (!cachedBid.clientLatencyTimeMs) {
+          cachedBid.clientLatencyTimeMs = Date.now() - cache.auctions[bid.auctionId].timestamp;
+        }
+      });
     });
   },
 
