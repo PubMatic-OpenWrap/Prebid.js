@@ -414,6 +414,7 @@ function getFeatureLevelDetails(auctionCache) {
 
 function getRootLevelDetails(auctionCache, auctionId) {
   const referrer = config.getConfig('pageUrl') || auctionCache.referer || '';
+  
   return {
     pubid: `${publisherId}`,
     iid: `${auctionCache?.wiid || auctionId}`,
@@ -435,6 +436,9 @@ function executeBidsLoggerCall(event, highestCpmBids) {
   const auctionCache = cache.auctions[auctionId];
 
   if (!auctionCache || auctionCache.sent) return;
+  const country = event.bidderRequests?.length > 0
+    ? event.bidderRequests.find(bidder => bidder?.bidderCode === ADAPTER_CODE)?.ortb2?.user?.ext?.ctr || ''
+    : '';
    // Fetching slotinfo at event level results to undefined so Running loop over the codes to get the GPT slot name.
    Object.entries(auctionCache?.adUnitCodes || {}).forEach(([adUnitCode, adUnit]) => {
     let origAdUnit = getAdUnit(cache.auctions[auctionId]?.origAdUnits, adUnitCode) || {};
@@ -457,7 +461,7 @@ function executeBidsLoggerCall(event, highestCpmBids) {
   const payload = {
     sd: auctionCache.adUnitCodes,
     fd: getFeatureLevelDetails(auctionCache),
-    rd: getRootLevelDetails(auctionCache, auctionId)
+    rd: {ctr:country, ...getRootLevelDetails(auctionCache, auctionId)}
   };
   auctionCache.sent = true;
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
