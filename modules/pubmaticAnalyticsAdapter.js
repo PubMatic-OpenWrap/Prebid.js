@@ -195,8 +195,7 @@ function transformPayload(auctionId, currentPayload, adUnitInfo, bidWon = false)
           newPayload[key][slotName].pubmaticAutoRefresh = {
             autoRefresh: origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0
           };
-          newPayload[key][slotName] = Object.assign({}, newPayload[key][slotName]);
-          newPayload[key][slotName].adUnitId = origAdUnit.owAdUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId;     
+          newPayload[key][slotName] = Object.assign({}, newPayload[key][slotName]);  
         });
       }
     }
@@ -436,14 +435,16 @@ function executeBidsLoggerCall(event, highestCpmBids) {
   const auctionCache = cache.auctions[auctionId];
 
   if (!auctionCache || auctionCache.sent) return;
-  // Fetching slotinfo at event level results to undefined so Running loop over the codes to get the GPT slot name.
-  Object.values(auctionCache?.adUnitCodes).forEach(adUnit => {
+   // Fetching slotinfo at event level results to undefined so Running loop over the codes to get the GPT slot name.
+   Object.entries(auctionCache?.adUnitCodes || {}).forEach(([adUnitCode, adUnit]) => {
+    let origAdUnit = getAdUnit(cache.auctions[auctionId]?.origAdUnits, adUnitCode) || {};
+    auctionCache.adUnitCodes[adUnitCode].adUnitId = origAdUnit.owAdUnitId || getGptSlotInfoForAdUnitCode(adUnitCode)?.gptSlot || adUnitCode;
+    
     for (let bidId in adUnit?.bids) {
       adUnit?.bids[bidId].forEach(bid => {
         bid['owAdUnitId'] = getGptSlotInfoForAdUnitCode(bid?.adUnit?.adUnitCode)?.gptSlot || bid.adUnit?.adUnitCode;   
         const winBid = highestCpmBids.filter(cpmbid => cpmbid.adId === bid?.adId)[0]?.adId;
         auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId = auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId ? auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId : winBid;
-        bid.mi = bid?.bidResponse ? bid.bidResponse.mi : (window.matchedimpressions && window.matchedimpressions[bid.bidder]);
         const prebidBidId = bid.bidResponse && bid.bidResponse.prebidBidId;
         bid.bidId = prebidBidId || bid.bidId || bidId;
         bid.bidderCode = bid.bidderCode || bid.bidder;
