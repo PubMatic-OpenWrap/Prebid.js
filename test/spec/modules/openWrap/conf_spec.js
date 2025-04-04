@@ -1,8 +1,6 @@
-import { expect } from 'chai';
 import * as conf from '../../../../modules/openWrap/conf.js';
 import { config } from '../../../../src/config.js';
 import * as utils from '../../../../src/utils.js';
-import sinon from 'sinon';
 
 describe('OpenWrap Configuration Module', function () {
   let sandbox;
