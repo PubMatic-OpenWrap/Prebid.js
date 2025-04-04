@@ -437,11 +437,7 @@ function executeBidsLoggerCall(event, highestCpmBids) {
 
   if (!auctionCache || auctionCache.sent) return;
   // Fetching slotinfo at event level results to undefined so Running loop over the codes to get the GPT slot name.
-  Object.entries(auctionCache?.adUnitCodes || {}).forEach(([adUnitCode, adUnit]) => {
-    
-    let origAdUnit = getAdUnit(cache.auctions[auctionId]?.origAdUnits, adUnitCode) || {};
-    auctionCache.adUnitCodes[adUnitCode].adUnitId = origAdUnit.owAdUnitId || getGptSlotInfoForAdUnitCode(adUnitCode)?.gptSlot || adUnitCode;
-
+  Object.values(auctionCache?.adUnitCodes).forEach(adUnit => {
     for (let bidId in adUnit?.bids) {
       adUnit?.bids[bidId].forEach(bid => {
         bid['owAdUnitId'] = getGptSlotInfoForAdUnitCode(bid?.adUnit?.adUnitCode)?.gptSlot || bid.adUnit?.adUnitCode;   
