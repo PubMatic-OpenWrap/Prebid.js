@@ -1,6 +1,9 @@
 import * as commonUtil from '../common.util.js';
 
-const metrics = {};
+let metrics = {};
+export function resetMetricsObject() {
+  metrics = {};
+}
 // Get a metrics object within PWT
 export function getMetricsObject() {
   return metrics;
