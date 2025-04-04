@@ -48,45 +48,6 @@ class Bid {
     return this.bidID;
   }
 
-  // endRemoveIf(removeLegacyAnalyticsRelatedCode)
-  setGrossEcpm(ecpm, origCurrency, displayCurrency, bidStatus) {
-    /* istanbul ignore else */
-    if (ecpm === null) {
-      UTIL.log(CONSTANTS.MESSAGES.M10);
-      UTIL.log(this);
-      return this;
-    }
-    /* istanbul ignore else */
-    if (UTIL.isString(ecpm)) {
-      ecpm = ecpm.replace(/\s/g, '');
-      /* istanbul ignore else */
-      if (ecpm.length === 0) {
-        UTIL.log(CONSTANTS.MESSAGES.M20);
-        UTIL.log(this);
-        return this;
-      }
-      ecpm = window.parseFloat(ecpm);
-    }
-
-    /* istanbul ignore else */
-    if (window.isNaN(ecpm)) {
-      UTIL.log(CONSTANTS.MESSAGES.M11 + ecpm);
-      UTIL.log(this);
-      return this;
-    }
-
-    if (CONFIG.getAdServerCurrency() && origCurrency && displayCurrency && (UTIL.isFunction(window[CONSTANTS.COMMON.PREBID_NAMESPACE].convertCurrency) || typeof window[CONSTANTS.COMMON.PREBID_NAMESPACE].convertCurrency == 'function')) {
-      ecpm = window[CONSTANTS.COMMON.PREBID_NAMESPACE].convertCurrency(ecpm, origCurrency, displayCurrency)
-    }
-
-    ecpm = window.parseFloat(ecpm.toFixed(CONSTANTS.COMMON.BID_PRECISION));
-
-    this.grossEcpm = ecpm;
-    this.netEcpm = bidStatus == CONSTANTS.BID_STATUS.BID_REJECTED ? 0 : getNetECPM(this.grossEcpm, this.getAdapterID());
-
-    return this;
-  }
-
   getHeight() {
     return this.height;
   }
