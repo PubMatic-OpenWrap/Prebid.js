@@ -2,7 +2,7 @@ import * as conf from '../../../../modules/openWrap/conf.js';
 import { config } from '../../../../src/config.js';
 import * as utils from '../../../../src/utils.js';
 
-describe('OpenWrap Configuration Module', function () {
+describe('OpenWrap Core Module: conf.js', function () {
   let sandbox;
 
   beforeEach(function () {
