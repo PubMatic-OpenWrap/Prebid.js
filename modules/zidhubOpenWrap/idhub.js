@@ -96,22 +96,22 @@ export function initIdHub(win) {
     // TODO : Check for Prebid loaded and debug logs
     setConfig();
     if (CONFIG.isIdentityOnly()) {
-      if (CONFIG.getIdentityConsumers().includes(CONSTANTS.COMMON.PREBID) && !util.isUndefined(win[CONFIG.PBJS_NAMESPACE]) && !util.isUndefined(win[CONFIG.PBJS_NAMESPACE].que)) {
-        win[CONFIG.PBJS_NAMESPACE].que.unshift(() => {
-          const vdetails = win[CONFIG.PBJS_NAMESPACE].version.split('.');
+      if (CONFIG.getIdentityConsumers().includes(CONSTANTS.COMMON.PREBID) && !util.isUndefined(win[CONFIG.getPBJSNamespace()]) && !util.isUndefined(win[CONFIG.getPBJSNamespace()].que)) {
+        win[CONFIG.getPBJSNamespace()].que.unshift(() => {
+          const vdetails = win[CONFIG.getPBJSNamespace()].version.split('.');
           // todo: check the oldest pbjs version in use, do we still need this check?
           if (vdetails.length === 3 && (+vdetails[0].split('v')[1] > 3 || (vdetails[0] === 'v3' && +vdetails[1] >= 3))) {
-            util.log(`Adding On Event ${win[CONFIG.PBJS_NAMESPACE]}.addAddUnits()`);
-            win[CONFIG.PBJS_NAMESPACE].onEvent('addAdUnits', () => {
-              util.updateAdUnits(win[CONFIG.PBJS_NAMESPACE]['adUnits']);
+            util.log(`Adding On Event ${win[CONFIG.getPBJSNamespace()]}.addAddUnits()`);
+            win[CONFIG.getPBJSNamespace()].onEvent('addAdUnits', () => {
+              util.updateAdUnits(win[CONFIG.getPBJSNamespace()]['adUnits']);
             });
-            win[CONFIG.PBJS_NAMESPACE].onEvent('beforeRequestBids', adUnits => {
+            win[CONFIG.getPBJSNamespace()].onEvent('beforeRequestBids', adUnits => {
               util.updateAdUnits(adUnits);
             });
           } else {
             // todo: check the oldest pbjs version in use, do we still need this check?
-            util.log(`Adding Hook on${win[CONFIG.PBJS_NAMESPACE]}.addAddUnits()`);
-            const theObject = win[CONFIG.PBJS_NAMESPACE];
+            util.log(`Adding Hook on${win[CONFIG.getPBJSNamespace()]}.addAddUnits()`);
+            const theObject = win[CONFIG.getPBJSNamespace()];
             const functionName = 'addAdUnits';
             util.addHookOnFunction(theObject, false, functionName, newAddAdUnitFunction);
           }

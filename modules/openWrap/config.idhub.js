@@ -105,7 +105,9 @@ export function getIHAnalyticsAdapterExpiry() {
   return parseInt(config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.IH_ANALYTICS_ADAPTER_EXPIRY]) || CONSTANTS.COMMON.IH_ANALYTICS_ADAPTER_DEFAULT_EXPIRY;
 }
 
-export const PBJS_NAMESPACE = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBJS_NAMESPACE] || 'pbjs';
+export function getPBJSNamespace() {
+  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBJS_NAMESPACE] || 'pbjs';
+}
 
 export function getOwVersion() {
   return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.OWVERSION];
