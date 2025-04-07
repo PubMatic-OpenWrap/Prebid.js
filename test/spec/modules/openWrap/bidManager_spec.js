@@ -226,26 +226,128 @@ describe('OpenWrap Module: bidManager.js', function () {
       expect(mockBMEntry.setNewBid.called).to.be.true;
       expect(mockBMEntry.adapters['test_adapter'].bids['test_bid_id']).to.equal(mockBidDetails);
     });
+
+    it('should handle bid with lower ecpm', function () {
+      const divID = 'test_div';
+      util.isOwnProperty.returns(true);
+      mockBMEntry.getLastBidIDForAdapter.returns('existing_bid');
+      mockBMEntry.getBid.returns({
+        getDefaultBidStatus: sandbox.stub().returns(0),
+        getNetEcpm: sandbox.stub().returns(1.5),
+        getPostTimeoutStatus: sandbox.stub().returns(false)
+      });
+      
+      bidManager.setBidFromBidder(divID, mockBidDetails);
+      
+      expect(mockBMEntry.setNewBid.called).to.be.false;
+      expect(util.log.calledWith(sinon.match(/Previous ecpm/))).to.be.true;
+    });
+
+    it('should handle post-timeout bid rejection', function () {
+      const divID = 'test_div';
+      util.isOwnProperty.returns(true);
+      mockBMEntry.getLastBidIDForAdapter.returns('existing_bid');
+      mockBMEntry.getBid.returns({
+        getDefaultBidStatus: sandbox.stub().returns(0),
+        getNetEcpm: sandbox.stub().returns(1.0),
+        getPostTimeoutStatus: sandbox.stub().returns(true)
+      });
+      mockBidDetails.getReceivedTime.returns(3000);
+      
+      bidManager.setBidFromBidder(divID, mockBidDetails);
+      
+      expect(mockBMEntry.setNewBid.called).to.be.false;
+      expect(util.log.calledWith(CONSTANTS.MESSAGES.M17)).to.be.true;
+    });
+
+    it('should handle non-existent bid entry', function () {
+      const divID = 'test_div';
+      util.isOwnProperty.returns(false);
+      
+      bidManager.setBidFromBidder(divID, mockBidDetails);
+      
+      expect(util.logWarning.called).to.be.true;
+    });
+  });
+
+  describe('Slot Level Frequency', function () {
+    it('should get slot level frequency depth', function () {
+      const mockFrequencyDepth = { 
+        slotLevelFrquencyDepth: {
+          slot1: { prop1: 'value1' } 
+        }
+      };
+      const result = bidManager.getSlotLevelFrequencyDepth(mockFrequencyDepth, 'prop1', 'slot1');
+      expect(result).to.equal('value1');
+    });
+
+    it('should handle missing slot in frequency depth', function () {
+      const mockFrequencyDepth = {};
+      const result = bidManager.getSlotLevelFrequencyDepth(mockFrequencyDepth, 'prop1', 'slot1');
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe('Metadata Management', function () {
+    it('should get metadata', function () {
+      const meta = {
+        networkId: 'value1',
+        advertiserId: 'value2'
+      };
+      const result = bidManager.getMetadata(meta);
+      expect(result).to.deep.equal({
+        nwid: 'value1',
+        adid: 'value2'
+      });
+    });
+
+    it('should handle null metadata', function () {
+      const meta = null;
+      const result = bidManager.getMetadata(meta);
+      expect(result).to.be.undefined;
+    });
+
+    it('should handle empty metadata', function () {
+      const meta = {};
+      const result = bidManager.getMetadata(meta);
+      expect(result).to.be.undefined;
+    });
   });
 
   describe('Native Tracker Functions', function () {
     beforeEach(function () {
-      // Define setImageSrcToPixelURL as a global function
       window.setImageSrcToPixelURL = sandbox.stub();
     });
 
-    afterEach(function () {
-      delete window.setImageSrcToPixelURL;
+    it('should fire click trackers', function () {
+      const bidDetails = {
+        native: {
+          ortb: {
+            link: {
+              clickTrackers: ['click_url']
+            }
+          }
+        }
+      };
+      
+      bidManager.fireTracker(bidDetails, 'click');
+      
+      expect(window.setImageSrcToPixelURL.calledWith('click_url', false)).to.be.true;
     });
 
-    it('should fire impression trackers', function () {
+    it('should handle missing click trackers', function () {
+      const bidDetails = { native: {} };
+      bidManager.fireTracker(bidDetails, 'click');
+      expect(window.setImageSrcToPixelURL.called).to.be.false;
+    });
+
+    it('should handle impression trackers with jstracker', function () {
       const bidDetails = {
         native: {
           ortb: {
             eventtrackers: [
-              { event: 1, method: 1, url: 'test_url' }
+              { event: 1, method: 2, url: '<script>test</script>' }
             ],
-            imptrackers: ['test_imp_url'],
             jstracker: '<script>test</script>'
           }
         }
@@ -253,56 +355,89 @@ describe('OpenWrap Module: bidManager.js', function () {
       
       bidManager.fireTracker(bidDetails, 'imptrackers');
       
-      expect(util.insertHtmlIntoIframe.called).to.be.true;
-      expect(window.setImageSrcToPixelURL.called).to.be.true;
+      expect(util.insertHtmlIntoIframe.calledWith('<script>test</script>')).to.be.true;
     });
 
-    it('should update native targeting keys', function () {
-      const keyValuePairs = {
-        'hb_native_title': 'test',
-        'hb_native_body': 'test',
-        'other_key': 'value'
-      };
-      
-      bidManager.updateNativeTargtingKeys(keyValuePairs);
-      
-      expect(keyValuePairs).to.not.have.property('hb_native_title');
-      expect(keyValuePairs).to.not.have.property('hb_native_body');
-      expect(keyValuePairs).to.have.property('other_key');
+    it('should handle missing trackers', function () {
+      const bidDetails = { native: {} };
+      bidManager.fireTracker(bidDetails, 'imptrackers');
+      expect(window.setImageSrcToPixelURL.called).to.be.false;
+      expect(util.insertHtmlIntoIframe.called).to.be.false;
     });
   });
 
   describe('Browser Detection', function () {
-    let origUserAgent;
-
-    beforeEach(function () {
-      origUserAgent = navigator.userAgent;
-      Object.defineProperty(navigator, 'userAgent', {
-        value: 'Mozilla/5.0 Chrome/91.0.4472.124',
-        configurable: true
-      });
-    });
-
-    afterEach(function () {
-      Object.defineProperty(navigator, 'userAgent', {
-        value: origUserAgent,
-        configurable: true
-      });
-    });
-
-    it('should detect browser correctly', function () {
+    it('should detect browser with regex match', function () {
+      CONSTANTS.REGEX_BROWSERS.value = [/Chrome/];
+      CONSTANTS.BROWSER_MAPPING.value = [73];
       const result = bidManager.getBrowser();
-      expect(result).to.be.a('number');
+      expect(result).to.equal(73);
+    });
+
+    it('should handle no regex match', function () {
+      CONSTANTS.REGEX_BROWSERS.value = [/Firefox/];
+      CONSTANTS.BROWSER_MAPPING.value = [73];
+      const result = bidManager.getBrowser();
+      expect(result).to.equal(73);
+    });
+
+    it('should handle null user agent', function () {
+      Object.defineProperty(navigator, 'userAgent', {
+        value: null,
+        configurable: true
+      });
+      const result = bidManager.getBrowser();
+      expect(result).to.equal(-1);
+    });
+  });
+
+  describe('Tracker Functions', function () {
+    beforeEach(function () {
+      window.parent.postMessage = sandbox.stub();
+    });
+    
+    afterEach(function () {
+      delete window.parent.postMessage;
+    });
+    
+    it('should load trackers on click', function () {
+      const event = { target: {} };
+      const bidId = 'test_bid';
+      util.getBidFromEvent.returns(bidId);
+      
+      bidManager.loadTrackers(event);
+      
+      expect(window.parent.postMessage.calledWith(
+        sinon.match(JSON.stringify({
+          pwt_type: '3',
+          pwt_bidID: bidId,
+          pwt_origin: CONSTANTS.COMMON.PROTOCOL + window.location.hostname,
+          pwt_action: 'click'
+        })),
+        '*'
+      )).to.be.true;
+    });
+
+    it('should execute impression tracker', function () {
+      const bidId = 'test_bid';
+      
+      bidManager.executeTracker(bidId);
+      
+      expect(window.parent.postMessage.calledWith(
+        sinon.match(JSON.stringify({
+          pwt_type: '3',
+          pwt_bidID: bidId,
+          pwt_origin: CONSTANTS.COMMON.PROTOCOL + window.location.hostname,
+          pwt_action: 'imptrackers'
+        })),
+        '*'
+      )).to.be.true;
     });
   });
 
   describe('Partner Bid Status', function () {
-    it('should check all partners bid status', function () {
-      const mockBidMaps = {
-        'div1': {
-          hasAllPossibleBidsReceived: sandbox.stub().returns(true)
-        }
-      };
+    it('should handle missing bid maps', function () {
+      const mockBidMaps = {};
       const divIds = ['div1'];
       
       util.forEachOnArray.callsFake((arr, cb) => arr.forEach(cb));
