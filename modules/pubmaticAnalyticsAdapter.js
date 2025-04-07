@@ -112,18 +112,11 @@ export function getConsentInfo(skipMetricsField) {
   const isGetDurationOfFn = isFn(getDurationOf);
 
   // When PWT.getDurationOf function available
-  const createMetrics = () => {
-    const durations = {
-      trnslt: getDurationOf('TRANSLATOR_CALLING_TIME'),
-      lrt: getDurationOf('LOGGER_CALLING_TIME'),
-      trt: getDurationOf('TRACKER_CALLING_TIME')
-    };
-    // Remove properties where the value is null
-    return Object.fromEntries(
-      Object.entries(durations).filter(([key, value]) => value !== null)
-    );
-  };
-  const metrics = isGetDurationOfFn ? createMetrics() : {};
+  const metrics = isGetDurationOfFn ? {
+    trnslt: getDurationOf('TRANSLATOR_CALLING_TIME'),
+    lrt: getDurationOf('LOGGER_CALLING_TIME'),
+    trt: getDurationOf('TRACKER_CALLING_TIME')
+  } : {};
   if (cmConfig?.allStatsAvailable) {
     return {
       ...dimensions,
@@ -135,14 +128,6 @@ export function getConsentInfo(skipMetricsField) {
   return metrics;
 }
 
-export function getConsentInfoStr() {
-  let cmInfo = getConsentInfo(true);
-  return Object.keys(cmInfo).reduce((queryString, key) => {
-    const value = cmInfo[key];
-    const encodedValue = (value != null && value != undefined) ? enc(value) : '';
-    return `${queryString}&${key}=${encodedValue}`;
-  }, '');
-}
 
 function getPSL(auctionId) {
   let latency = window.pbsLatency;
@@ -444,6 +429,7 @@ function executeBidsLoggerCall(event, highestCpmBids) {
         bid['owAdUnitId'] = getGptSlotInfoForAdUnitCode(bid?.adUnit?.adUnitCode)?.gptSlot || bid.adUnit?.adUnitCode;   
         const winBid = highestCpmBids.filter(cpmbid => cpmbid.adId === bid?.adId)[0]?.adId;
         auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId = auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId ? auctionCache.adUnitCodes[bid?.adUnitId].bidWonAdId : winBid;
+        bid.mi = bid?.bidResponse ? bid.bidResponse.mi : (window.matchedimpressions && window.matchedimpressions[bid.bidder]);
         const prebidBidId = bid.bidResponse && bid.bidResponse.prebidBidId;
         bid.bidId = prebidBidId || bid.bidId || bidId;
         bid.bidderCode = bid.bidderCode || bid.bidder;
@@ -461,6 +447,9 @@ function executeBidsLoggerCall(event, highestCpmBids) {
   auctionCache.sent = true;
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
   const queryParams = `v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}${urlParams.get('pmad') === '1' ? '&debug=1' : ''}`;
+  if (isFn(window.PWT?.recordExitTime)) {
+    window.PWT.recordExitTime('LOGGER_CALLING_TIME');
+  }
   const owPayLoad = transformPayload(auctionId, payload, auctionId);
   sendAjaxRequest({
     endpoint: END_POINT_BID_LOGGER,
@@ -491,7 +480,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   let origAdUnit = getAdUnit(cache.auctions[auctionId]?.origAdUnits, adUnitId) || {};
   let owAdUnitId = origAdUnit.owAdUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId;
   let auctionCache = cache.auctions[auctionId];
-
+ 
   const payload = {
     fd: getFeatureLevelDetails(auctionCache),
     rd: getRootLevelDetails(auctionCache, auctionId),
@@ -505,6 +494,9 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
   const queryParams = `v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}${urlParams.get('pmad') === '1' ? '&debug=1' : ''}`;
   const owPayLoad = transformPayload(auctionId, payload, origAdUnit, true);
+  if (isFn(window.PWT?.recordExitTime)) {
+    window.PWT.recordExitTime('TRACKER_CALLING_TIME');
+  }
   sendAjaxRequest({
     endpoint: END_POINT_WIN_BID_LOGGER,
     method: 'POST',
