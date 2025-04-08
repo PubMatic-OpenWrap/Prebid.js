@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import * as UTIL from '../../../../modules/openWrap/common.util.js';
 
-describe('COMMON UTIL', () => {
+describe('OpenWrap Core Module: common.util.js', () => {
     describe('#getGeoInfo', () => {
         let pbNameSpace;
 

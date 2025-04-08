@@ -26,7 +26,7 @@ const typeFunction = 'Function';
 const typeNumber = 'Number';
 const toString = Object.prototype.toString;
 // const refThis = this;
-function getPbNameSpace() { 
+export function getPbNameSpace() { 
   return CONFIG.isIdentityOnly() ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
 }
 // const idsAppendedToAdUnits = false;

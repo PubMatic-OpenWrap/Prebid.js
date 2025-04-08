@@ -3,7 +3,7 @@ import * as CONSTANTS from '../../../../modules/openWrap/constants.js';
 import * as COMMON_CONFIG from '../../../../modules/openWrap/common.config.js';
 import { expect } from 'chai';
 
-describe('COMMON CONFIG FILE', function () {
+describe('OpenWrap Core Module: common.config.js', function () {
   describe('#getGdprActionTimeout', function () {
     it('is a function', function () {
       expect(COMMON_CONFIG.getGdprActionTimeout).to.be.a('function');
