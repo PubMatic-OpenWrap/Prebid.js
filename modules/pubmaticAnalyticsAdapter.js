@@ -463,7 +463,7 @@ function executeBidsLoggerCall(event, highestCpmBids) {
   });
 }
 
-function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
+function executeBidWonLoggerCall(auctionId, adUnitId, isIma=false) {
   const winningBidId = cache.auctions[auctionId]?.adUnitCodes[adUnitId]?.wonBidId;
   const winningBids = cache.auctions[auctionId]?.adUnitCodes[adUnitId]?.bids[winningBidId];
   if (!winningBids) {
