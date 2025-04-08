@@ -47,32 +47,36 @@ let identityOnly = DEFAULT_ISIDENTITY_ONLY;
 
 // ///////////// OPENWRAP CODE /////////////////////
 
-getGlobal().injectTrackerForIMA = function (args, vast) {
+getGlobal().injectTrackerForIMA = async function (args, vast) {
+
   var bid = cache.auctions[args.auctionId].adUnitCodes[args.adUnitCode].bids[args.requestId][0];
-  if (!bid) {
-    logError(LOG_PRE_FIX + 'Could not find associated bid request for bid response with requestId: ', args.requestId);
-    return;
-  }
-  bid.adId = args.adId;
-  bid.auctionId = args.auctionId;
-  bid.adUnitCode = args.adUnitCode;
-  bid.requestId = args.requestId;
-  bid.bidResponse = parseBidResponse(args);
-  try {
-    var domParser = new DOMParser();
-    var parsedVast = domParser.parseFromString(vast, 'application/xml');
-    var impEle = parsedVast.createElement('Impression');
-    impEle.innerHTML = '<![CDATA[' + generateBidWonLogger(bid, true) + ']]>';
-    if (parsedVast.getElementsByTagName('Wrapper').length == 1) {
-      parsedVast.getElementsByTagName('Wrapper')[0].appendChild(impEle);
-    } else if (parsedVast.getElementsByTagName('InLine').length == 1) {
-      parsedVast.getElementsByTagName('InLine')[0].appendChild(impEle);
+  var auctionCache = cache.auctions[args.auctionId];
+  auctionCache.adUnitCodes[args.adUnitCode].wonBidId = args.requestId;
+  auctionCache.adUnitCodes[args.adUnitCode].bidWonAdId = args.adId;
+
+ const result = await executeBidWonLoggerCall(args.auctionId,args.adUnitCode,true);
+   
+    if (!bid) {
+      logError(LOG_PRE_FIX + 'Could not find associated bid request for bid response with requestId: ', args.requestId);
+      return;
     }
-    return new XMLSerializer().serializeToString(parsedVast);
-  } catch (ex) {
-    logError(LOG_PRE_FIX + ' Exception in injecting tracker for IMA ', ex);
-    return vast;
-  }
+
+    try {
+      var domParser = new DOMParser();
+      var parsedVast = domParser.parseFromString(vast, 'application/xml');
+      var impEle = parsedVast.createElement('Impression');
+      impEle.innerHTML = '<![CDATA[' + END_POINT_WIN_BID_LOGGER + result + ']]>';
+      if (parsedVast.getElementsByTagName('Wrapper').length == 1) {
+        parsedVast.getElementsByTagName('Wrapper')[0].appendChild(impEle);
+      } else if (parsedVast.getElementsByTagName('InLine').length == 1) {
+        parsedVast.getElementsByTagName('InLine')[0].appendChild(impEle);
+      }
+      return new XMLSerializer().serializeToString(parsedVast);
+    } catch (ex) {
+      logError(LOG_PRE_FIX + ' Exception in injecting tracker for IMA ', ex);
+      return vast;
+    }
+  
 };
 
 function getCDSData() {
@@ -459,7 +463,7 @@ function executeBidsLoggerCall(event, highestCpmBids) {
   });
 }
 
-function executeBidWonLoggerCall(auctionId, adUnitId) {
+function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   const winningBidId = cache.auctions[auctionId]?.adUnitCodes[adUnitId]?.wonBidId;
   const winningBids = cache.auctions[auctionId]?.adUnitCodes[adUnitId]?.bids[winningBidId];
   if (!winningBids) {
@@ -492,18 +496,28 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
     }
   };
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
-  const queryParams = `v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}${urlParams.get('pmad') === '1' ? '&debug=1' : ''}`;
+  const queryParams = isIma ? `debug=1`:`v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}${urlParams.get('pmad') === '1' ? '&debug=1' : ''}`;
   const owPayLoad = transformPayload(auctionId, payload, origAdUnit, true);
   if (isFn(window.PWT?.recordExitTime)) {
     window.PWT.recordExitTime('TRACKER_CALLING_TIME');
   }
-  sendAjaxRequest({
+  if(isIma) {
+    const url = END_POINT_WIN_BID_LOGGER + `&pmad=1&isIma=1&`+`v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}`;
+     
+    return new Promise((resolve,reject)=>{
+      ajax(url, (response,xhr)=>{
+        resolve(response);
+      }, JSON.stringify(owPayLoad), 'POST');
+    })
+ 
+  }
+   sendAjaxRequest({
     endpoint: END_POINT_WIN_BID_LOGGER,
     method: 'POST',
     queryParams: queryParams,
     body: JSON.stringify(owPayLoad)
   });
-
+  return ;
 }
 
 
