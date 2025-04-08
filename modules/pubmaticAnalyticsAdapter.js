@@ -437,6 +437,14 @@ function executeBidsLoggerCall(event, highestCpmBids) {
         const prebidBidId = bid.bidResponse && bid.bidResponse.prebidBidId;
         bid.bidId = prebidBidId || bid.bidId || bidId;
         bid.bidderCode = bid.bidderCode || bid.bidder;
+        const prebidBidsReceived = event?.bidsReceived;
+        if (isArray(prebidBidsReceived) && prebidBidsReceived.length > 0) {
+          prebidBidsReceived.forEach(function(iBid) {
+            if (iBid.adId === bid.adId) {
+              bid.bidderCode = iBid.bidderCode;
+            }
+          });
+        }
         let adapterName = getAdapterNameForAlias(bid.adapterCode || bid.bidder);
         bid.adapterName = adapterName;
         bid.bidder = adapterName;
@@ -608,8 +616,7 @@ const eventHandlers = {
     bid.params.regexPattern = kgpvAndRegexOfBid.responseRegex;
     let adapterName = getAdapterNameForAlias(bid.adapterCode || bid.bidder);
     bid.bidder = adapterName;
-
-    bid.adapterName = getAdapterNameForAlias(args.adapterCode || bid.bidderCode);
+    bid.adapterName = adapterName;
   },
 
   bidRejected: (args) => {
