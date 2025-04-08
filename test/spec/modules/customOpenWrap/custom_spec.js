@@ -688,8 +688,7 @@ describe('Custom OpenWrap Module: custom.js', function() {
       });
       
       const result = custom.findWinningBidAndGenerateTargeting(divId);
-      
-      console.log("NS1: ", JSON.stringify(result));
+            
       expect(result).to.be.an('object');
       expect(result.wb).to.be.an('object');
       expect(result.wb.adapterID).to.equal('pubmatic');

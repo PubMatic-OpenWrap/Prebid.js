@@ -3,7 +3,7 @@ import * as commonUtil from '../../../../modules/openWrap/common.util.js';
 import * as util from '../../../../modules/openWrap/util.js';
 import * as timeMetrics from '../../../../modules/openWrap/modules/timeMetrics.js';
 
-describe('Consent Config Resolver Module', function() {
+describe('OpenWrap Core Module: ConsentConfigResolver.js', function() {
   let sandbox;
   let origGetGlobalOwObject;
   let origGetGeoInfo;
