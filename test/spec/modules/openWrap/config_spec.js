@@ -421,4 +421,607 @@ describe('OpenWrap Core Module: config.js', function () {
       });
     });
   });
+
+  describe('Basic Configuration', function () {
+    it('getSendAllBidsStatus should return correct status', function () {
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.CONFIG.SEND_ALL_BIDS]: '1'
+        }
+      });
+      expect(configModule.getSendAllBidsStatus()).to.equal(1);
+      
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.CONFIG.SEND_ALL_BIDS]: '0'
+        }
+      });
+      expect(configModule.getSendAllBidsStatus()).to.equal(0);
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getSendAllBidsStatus()).to.equal(0);
+    });
+    
+    it('getDisableAjaxTimeout should return correct status', function () {
+      conf.setOWConfig({
+        pwt: {
+          [CONSTANTS.CONFIG.DISABLE_AJAX_TIMEOUT]: true
+        }
+      });
+      expect(configModule.getDisableAjaxTimeout()).to.be.true;
+      
+      conf.setOWConfig({
+        pwt: {
+          [CONSTANTS.CONFIG.DISABLE_AJAX_TIMEOUT]: false
+        }
+      });
+      expect(configModule.getDisableAjaxTimeout()).to.be.false;
+      
+      // Test default value
+      conf.setOWConfig({
+        pwt: {}
+      });
+      expect(configModule.getDisableAjaxTimeout()).to.be.true;
+    });
+    
+    it('forEachAdapter should iterate over adapters', function () {
+      conf.setOWConfig({
+        adapters: {
+          adapter1: { config: 'value1' },
+          adapter2: { config: 'value2' }
+        }
+      });
+      
+      const adapters = {};
+      configModule.forEachAdapter((adapterID, adapterConfig) => {
+        adapters[adapterID] = adapterConfig;
+      });
+      
+      expect(adapters).to.deep.equal({
+        adapter1: { config: 'value1' },
+        adapter2: { config: 'value2' }
+      });
+    });
+  });
+
+  describe('Feature Configuration', function () {
+    
+    it('getAdServerCurrency should return correct currency', function () {
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.COMMON.AD_SERVER_CURRENCY]: 'USD'
+        }
+      });
+      
+      expect(configModule.getAdServerCurrency()).to.equal('USD');
+    });
+    
+    it('isSingleImpressionSettingEnabled should return correct status', function () {
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.COMMON.SINGLE_IMPRESSION]: '1'
+        }
+      });
+      expect(configModule.isSingleImpressionSettingEnabled()).to.equal(1);
+      
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.COMMON.SINGLE_IMPRESSION]: '0'
+        }
+      });
+      expect(configModule.isSingleImpressionSettingEnabled()).to.equal(0);
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.isSingleImpressionSettingEnabled()).to.equal(
+        parseInt(CONSTANTS.CONFIG.DEFAULT_SINGLE_IMPRESSION)
+      );
+    });
+    
+    it('isUserIdModuleEnabled should return correct status', function () {
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.COMMON.ENABLE_USER_ID]: '1'
+        }
+      });
+      expect(configModule.isUserIdModuleEnabled()).to.equal(1);
+      
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.COMMON.ENABLE_USER_ID]: '0'
+        }
+      });
+      expect(configModule.isUserIdModuleEnabled()).to.equal(0);
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.isUserIdModuleEnabled()).to.equal(
+        parseInt(CONSTANTS.CONFIG.DEFAULT_USER_ID_MODULE)
+      );
+    });
+    
+    it('getIdentityConsumers should return correct consumers', function () {
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.COMMON.IDENTITY_CONSUMERS]: 'PREBID,GAM'
+        }
+      });
+      expect(configModule.getIdentityConsumers()).to.equal('prebid,gam');
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getIdentityConsumers()).to.equal('');
+    });
+    
+    it('getSlotConfiguration should return correct configuration', function () {
+      const slotConfig = { 
+        div1: { sizes: [[300, 250]] },
+        div2: { sizes: [[728, 90]] }
+      };
+      
+      conf.setOWConfig({
+        [CONSTANTS.COMMON.SLOT_CONFIG]: slotConfig
+      });
+      
+      expect(configModule.getSlotConfiguration()).to.deep.equal(slotConfig);
+    });
+  });
+
+
+  describe('CCPA Configuration', function () {
+    beforeEach(function () {
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.CONFIG.CCPA_CONSENT]: '1',
+          [CONSTANTS.CONFIG.CCPA_CMPAPI]: 'iab',
+          [CONSTANTS.CONFIG.CCPA_TIMEOUT]: '1000'
+        }
+      });
+    });
+
+    it('getCCPA should return correct consent status', function () {
+      expect(configModule.getCCPA()).to.be.true;
+      
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.CONFIG.CCPA_CONSENT]: '0'
+        }
+      });
+      expect(configModule.getCCPA()).to.be.false;
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getCCPA()).to.equal(CONSTANTS.CONFIG.DEFAULT_CCPA_CONSENT === '1');
+    });
+
+    it('getCCPACmpApi should return configured CMP API', function () {
+      expect(configModule.getCCPACmpApi()).to.equal('iab');
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getCCPACmpApi()).to.equal(CONSTANTS.CONFIG.DEFAULT_CCPA_CMPAPI);
+    });
+
+    it('getCCPATimeout should return configured timeout', function () {
+      expect(configModule.getCCPATimeout()).to.equal(1000);
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getCCPATimeout()).to.equal(CONSTANTS.CONFIG.DEFAULT_CCPA_TIMEOUT);
+    });
+  });
+
+  describe('Floor Price Configuration', function () {
+    beforeEach(function () {
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.CONFIG.FLOOR_PRICE_MODULE_ENABLED]: '1',
+          [CONSTANTS.CONFIG.FLOOR_SOURCE]: 'nofloors',
+          [CONSTANTS.CONFIG.FLOOR_JSON_URL]: 'https://example.com/floors.json',
+          [CONSTANTS.CONFIG.FLOOR_AUCTION_DELAY]: '200',
+          [CONSTANTS.CONFIG.FLOOR_ENFORCE_JS]: CONSTANTS.COMMON.HARD_FLOOR
+        }
+      });
+    });
+
+    it('isFloorPriceModuleEnabled should return correct status', function () {
+      expect(configModule.isFloorPriceModuleEnabled()).to.be.true;
+      
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.CONFIG.FLOOR_PRICE_MODULE_ENABLED]: '0'
+        }
+      });
+      expect(configModule.isFloorPriceModuleEnabled()).to.be.false;
+    });
+
+    it('getFloorSource should return correct source', function () {
+      expect(configModule.getFloorSource()).to.equal('nofloors');
+    });
+
+    it('getFloorJsonUrl should return correct URL', function () {
+      expect(configModule.getFloorJsonUrl()).to.equal('https://example.com/floors.json');
+    });
+
+    it('getFloorAuctionDelay should return correct delay', function () {
+      expect(configModule.getFloorAuctionDelay()).to.equal(200);
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getFloorAuctionDelay()).to.equal(CONSTANTS.CONFIG.DEFAULT_FLOOR_AUCTION_DELAY);
+    });
+
+    it('getFloorType should return correct type', function () {
+      expect(configModule.getFloorType()).to.be.true;
+      
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.CONFIG.FLOOR_ENFORCE_JS]: 'soft'
+        }
+      });
+      expect(configModule.getFloorType()).to.be.false;
+      
+      // Test with missing configuration
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getFloorType()).to.be.false;
+    });
+  });
+
+  describe('Analytics and Prebid Configuration', function () {
+    beforeEach(function () {
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.CONFIG.ENABLE_PB_PM_ANALYTICS]: '1',
+          [CONSTANTS.CONFIG.USE_PREBID_KEYS]: '1',
+          [CONSTANTS.COMMON.PBJS_NAMESPACE]: 'customPbjs',
+          [CONSTANTS.COMMON.PRICE_GRANULARITY]: 'medium',
+          [CONSTANTS.COMMON.GRANULARITY_MULTIPLIER]: '2.5'
+        }
+      });
+    });
+
+    it('isPrebidPubMaticAnalyticsEnabled should return correct status', function () {
+      expect(configModule.isPrebidPubMaticAnalyticsEnabled()).to.be.true;
+      
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.CONFIG.ENABLE_PB_PM_ANALYTICS]: '0'
+        }
+      });
+      expect(configModule.isPrebidPubMaticAnalyticsEnabled()).to.be.false;
+    });
+
+    it('isUsePrebidKeysEnabled should return correct status', function () {
+      expect(configModule.isUsePrebidKeysEnabled()).to.be.true;
+      
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.CONFIG.USE_PREBID_KEYS]: '0'
+        }
+      });
+      expect(configModule.isUsePrebidKeysEnabled()).to.be.false;
+    });
+
+    it('getPBJSNamespace should return correct namespace', function () {
+      expect(configModule.getPBJSNamespace()).to.equal('customPbjs');
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getPBJSNamespace()).to.equal('pbjs');
+    });
+
+    it('getPriceGranularityBuckets should return correct buckets', function () {
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.COMMON.PRICE_GRANULARITY_BUCKETS]: {
+            ranges: [
+              { max: 5, increment: 0.05 },
+              { max: 20, increment: 0.1 }
+            ]
+          }
+        }
+      });
+      
+      const result = configModule.getPriceGranularityBuckets();
+      expect(result).to.deep.equal({
+        buckets: [
+          { max: 5, increment: 0.05 },
+          { max: 20, increment: 0.1 }
+        ]
+      });
+      
+      // Test null case
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getPriceGranularityBuckets()).to.be.null;
+    });
+
+    it('getGranularityMultiplier should return correct multiplier', function () {
+      expect(configModule.getGranularityMultiplier()).to.equal(2.5);
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getGranularityMultiplier()).to.equal(1);
+    });
+  });
+
+  describe('PBS and Server Configuration', function () {
+    beforeEach(function () {
+      conf.setOWConfig({
+        pwt: {
+          usePBSAdapter: '1',
+          marketplaceBidders: 'bidder1,bidder2'
+        }
+      });
+    });
+
+    it('usePBSAdapter should return correct status', function () {
+      expect(configModule.usePBSAdapter()).to.be.true;
+      
+      conf.setOWConfig({
+        pwt: {
+          usePBSAdapter: '0'
+        }
+      });
+      expect(configModule.usePBSAdapter()).to.be.false;
+    });
+
+    it('getMarketplaceBidders should return correct bidders', function () {
+      expect(configModule.getMarketplaceBidders()).to.deep.equal(['bidder1', 'bidder2']);
+      
+      // Test with no marketplaceBidders
+      conf.setOWConfig({
+        pwt: {}
+      });
+      expect(configModule.getMarketplaceBidders()).to.be.false;
+    });
+
+    it('getSchainObject should return correct object', function () {
+      const schainObj = {
+        ver: '1.0',
+        complete: 1,
+        nodes: [{ asi: 'example.com', sid: '123' }]
+      };
+      
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.COMMON.SCHAINOBJECT]: schainObj
+        }
+      });
+      
+      expect(configModule.getSchainObject()).to.deep.equal(schainObj);
+      
+      // Test null case
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getSchainObject()).to.be.null;
+    });
+
+    it('isSchainEnabled should return correct status', function () {
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.COMMON.SCHAIN]: '1'
+        }
+      });
+      expect(configModule.isSchainEnabled()).to.equal(1);
+      
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.COMMON.SCHAIN]: '0'
+        }
+      });
+      expect(configModule.isSchainEnabled()).to.equal(0);
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.isSchainEnabled()).to.equal(0);
+    });
+  });
+
+  describe('AB Testing Implementation', function () {
+
+    it('updateABTestConfig should not apply test configuration when random number exceeds group size', function () {
+      sandbox.stub(configModule, 'isAbTestEnabled').returns(true);
+      sandbox.stub(util, 'getRandomNumberBelow100').returns(30);
+      
+      const testGroupDetails = { testGroupSize: 20 };
+      sandbox.stub(configModule, 'getTestGroupDetails').returns(testGroupDetails);
+      
+      sandbox.stub(configModule, 'updatePWTConfig');
+      
+      configModule.updateABTestConfig();
+      
+      expect(configModule.updatePWTConfig.called).to.be.false;
+    });
+  });
+
+  describe('GPP Configuration', function () {
+    beforeEach(function () {
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.CONFIG.GPP_CONSENT]: '1',
+          [CONSTANTS.CONFIG.GPP_CMPAPI]: 'iab',
+          [CONSTANTS.CONFIG.GPP_TIMEOUT]: '1500'
+        }
+      });
+    });
+
+    it('getGppConsent should return correct consent status', function () {
+      expect(configModule.getGppConsent()).to.be.true;
+      
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.CONFIG.GPP_CONSENT]: '0'
+        }
+      });
+      expect(configModule.getGppConsent()).to.be.false;
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getGppConsent()).to.equal(CONSTANTS.CONFIG.DEFAULT_GPP_CONSENT === "1");
+    });
+
+    it('getGppCmpApi should return configured CMP API', function () {
+      expect(configModule.getGppCmpApi()).to.equal('iab');
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getGppCmpApi()).to.equal(CONSTANTS.CONFIG.DEFAULT_GPP_CMPAPI);
+    });
+
+    it('getGppTimeout should return configured timeout', function () {
+      expect(configModule.getGppTimeout()).to.equal(1500);
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.getGppTimeout()).to.equal(CONSTANTS.CONFIG.DEFAULT_GPP_TIMEOUT);
+    });
+  });
+
+  describe('Identity Configuration', function () {
+    it('isIdentityOnly should return correct status', function () {
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.COMMON.IDENTITY_ONLY]: '1'
+        }
+      });
+      expect(configModule.isIdentityOnly()).to.equal(1);
+      
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {
+          [CONSTANTS.COMMON.IDENTITY_ONLY]: '0'
+        }
+      });
+      expect(configModule.isIdentityOnly()).to.equal(0);
+      
+      // Test default value
+      conf.setOWConfig({
+        [CONSTANTS.CONFIG.COMMON]: {}
+      });
+      expect(configModule.isIdentityOnly()).to.equal(
+        parseInt(CONSTANTS.CONFIG.DEFAULT_IDENTITY_ONLY)
+      );
+    });
+  });
+
+  describe('Partner Configuration Update', function () {
+
+    it('updatePartnerConfig should handle empty test configuration', function () {
+      const testConfig = null;
+      const controlConfig = { adapter1: { key1: 'value1' } };
+      
+      const result = configModule.updatePartnerConfig(testConfig, controlConfig);
+      
+      expect(result).to.equal(controlConfig);
+    });
+
+    it('updatePartnerConfig should handle empty control configuration', function () {
+      const testConfig = { adapter1: { key1: 'value1' } };
+      const controlConfig = null;
+      
+      const result = configModule.updatePartnerConfig(testConfig, controlConfig);
+      
+      expect(result).to.equal(controlConfig);
+    });
+  });
+
+  describe('Merged Configuration', function () {
+    it('getMergedConfig should correctly merge objects', function () {
+      const toObject = {
+        key1: 'value1',
+        key2: { nested1: 'old' }
+      };
+      
+      const fromObject = {
+        key3: 'value3',
+        key4: { nested2: 'new' },
+        key5: ['array']
+      };
+      
+      sandbox.stub(util, 'isObject')
+        .withArgs(fromObject.key4).returns(true)
+        .withArgs(fromObject.key5).returns(false);
+      
+      sandbox.stub(util, 'isArray')
+        .withArgs(fromObject.key5).returns(true);
+      
+      const result = configModule.getMergedConfig(toObject, fromObject);
+      
+      expect(result).to.deep.equal({
+        key1: 'value1',
+        key2: { nested1: 'old' },
+        key3: 'value3',
+        key4: { nested2: 'new' },
+        key5: ['array']
+      });
+    });
+  });
+
+  describe('Additional Configuration Tests', function () {
+    
+    it('isServerSideAdapter should handle missing adapter', function () {
+      expect(configModule.isServerSideAdapter('nonexistentAdapter')).to.be.false;
+    });
+    
+    it('isServerSideAdapter should handle adapter without serverSideEnabled property', function () {
+      conf.setOWConfig({
+        adapters: {
+          testAdapter: {
+            rev_share: '20'
+          }
+        }
+      });
+      
+      expect(configModule.isServerSideAdapter('testAdapter')).to.be.false;
+    });
+    
+    it('getBidPassThroughStatus should handle missing adapter', function () {
+      expect(configModule.getBidPassThroughStatus('nonexistentAdapter')).to.equal(0);
+    });
+    
+    it('getBidPassThroughStatus should handle adapter without pt property', function () {
+      conf.setOWConfig({
+        adapters: {
+          testAdapter: {
+            rev_share: '20'
+          }
+        }
+      });
+      
+      expect(configModule.getBidPassThroughStatus('testAdapter')).to.equal(0);
+    });
+  });
 });
