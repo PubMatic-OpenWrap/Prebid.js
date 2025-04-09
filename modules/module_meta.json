@@ -184,6 +184,11 @@
             "name": "fanAdapter",
             "path": "/modules/fanAdapter.js",
             "module": "fanAdapter"
+        },
+        {
+            "name": "previousAuctionInfo",
+            "path": "/modules/previousAuctionInfo.js",
+            "module": "previousAuctionInfo"
         }
     ],
     "Video": [
