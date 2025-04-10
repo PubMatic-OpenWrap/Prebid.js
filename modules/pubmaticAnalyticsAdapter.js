@@ -504,13 +504,13 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma=false) {
     }
   };
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
-  const queryParams = isIma ? `debug=1`:`v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}${urlParams.get('pmad') === '1' ? '&debug=1' : ''}`;
+  const queryParams =`v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}${urlParams.get('pmad') === '1' ? '&debug=1' : ''}`;
   const owPayLoad = transformPayload(auctionId, payload, origAdUnit, true);
   if (isFn(window.PWT?.recordExitTime)) {
     window.PWT.recordExitTime('TRACKER_CALLING_TIME');
   }
   if(isIma) {
-    const url = END_POINT_WIN_BID_LOGGER + `&pmad=1&isIma=1&`+`v=${END_POINT_VERSION}&psrc=${INTEGRATION_TYPE}`;
+    const url = END_POINT_WIN_BID_LOGGER + queryParams + '&ima=1';
      
     return new Promise((resolve,reject)=>{
       ajax(url, (response,xhr)=>{
