@@ -52,7 +52,7 @@ function initializeCMConfig(allStatsAvailable, cmpPresent = 0, complianceSupport
  * Set the time taken by CMP to load
  * @param {*} timeExceeded : If time exceeded then set the default timeout value
  */
-function setCMPTime(timeExceeded) {
+export function setCMPTime(timeExceeded) {
   const globalObj = commonUtil.getGlobalOwObject();
   if (!globalObj.getDurationOf("CMP_CALLING_TIME")) {
     timeExceeded
@@ -60,12 +60,22 @@ function setCMPTime(timeExceeded) {
       : timeMetrics.recordExitTime("CMP_CALLING_TIME");
   }
 }
-function gdprHandler(pingReturnData) {
+
+/**
+ * Handler for GDPR CMP
+ * @param {Object} pingReturnData 
+ */
+export function gdprHandler(pingReturnData) {
   if (pingReturnData && pingReturnData.cmpId) {
     getCMConfigObject().cmpId = pingReturnData.cmpId;
   }
 }
-function gppHandler(pingReturnData) {
+
+/**
+ * Handler for GPP CMP
+ * @param {Object} pingReturnData 
+ */
+export function gppHandler(pingReturnData) {
   if (pingReturnData?.pingData?.cmpId) {
     getCMConfigObject().cmpId = pingReturnData.pingData.cmpId;
   }
@@ -75,7 +85,7 @@ function gppHandler(pingReturnData) {
  * 
  * @returns Object : CMPs present on the page
  */
-function getCMPsPresentOnPage() {
+export function getCMPsPresentOnPage() {
   const cmps = {};
   let currentWindow = window;
   const cmConfig = getCMConfigObject();
