@@ -50,6 +50,12 @@ let identityOnly = DEFAULT_ISIDENTITY_ONLY;
 getGlobal().injectTrackerForIMA = async function (args, vast) {
 
   var bid = cache.auctions[args.auctionId].adUnitCodes[args.adUnitCode].bids[args.requestId][0];
+  bid.adId = args.adId;
+  bid.auctionId = args.auctionId;
+  bid.adUnitCode = args.adUnitCode;
+  bid.requestId = args.requestId;
+  bid.bidResponse = parseBidResponse(args);
+  
   var auctionCache = cache.auctions[args.auctionId];
   auctionCache.adUnitCodes[args.adUnitCode].wonBidId = args.requestId;
   auctionCache.adUnitCodes[args.adUnitCode].bidWonAdId = args.adId;
