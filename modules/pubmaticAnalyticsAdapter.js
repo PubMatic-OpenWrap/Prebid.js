@@ -106,7 +106,7 @@ function getCDSDataLoggerStr() {
 }
 
 // Logging this information to take informed decision on what consent config to be applied.
-export function getConsentInfo(skipMetricsField) {
+export function getConsentInfo() {
   const { cmConfig } = window.PWT || {};
   if (!cmConfig || typeof cmConfig != 'object') return {};
   const dimensions = {
@@ -115,9 +115,7 @@ export function getConsentInfo(skipMetricsField) {
     ccmpid: cmConfig?.cmpId,
     csc: cmConfig?.geoInfo?.sc
   };
-  if (skipMetricsField) {
-    return cmConfig.allStatsAvailable ? dimensions : {};
-  }
+ 
   const getDurationOf = window.PWT?.getDurationOf;
   const isGetDurationOfFn = isFn(getDurationOf);
 
@@ -166,7 +164,7 @@ function transformPayload(auctionId, currentPayload, adUnitInfo, bidWon = false)
       Object.assign(newPayload[key], {
         ...(cdsValue && { cds: cdsValue }),
         bdv: frequencyDepth,
-        cmp: getConsentInfo(false),
+        cmp: getConsentInfo(),
       });
     } else if (key === 'rd') {
       Object.assign(newPayload[key], {
@@ -446,7 +444,7 @@ function executeBidsLoggerCall(event, highestCpmBids) {
         const prebidBidsReceived = event?.bidsReceived;
         if (isArray(prebidBidsReceived) && prebidBidsReceived.length > 0) {
           prebidBidsReceived.forEach(function(iBid) {
-            if (iBid.adId === bid.adId) {
+           if (iBid.adId === bid.adId) {
               bid.bidderCode = iBid.bidderCode;
             }
           });
