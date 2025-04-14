@@ -1297,3 +1297,45 @@ export function triggerNurlWithCpm(bid, cpm) {
     triggerPixel(bid.nurl);
   }
 }
+
+// To ensure that isGzipCompressionSupported() doesn’t become an overhead, we have used memoization to cache the result after the first execution.
+// This way, even if the function is called multiple times, it will only perform the actual check once and return the cached result in subsequent calls.
+export const isGzipCompressionSupported = (function () {
+  let cachedResult; // Store the result
+
+  return function () {
+    if (cachedResult !== undefined) {
+      return cachedResult; // Return cached result if already computed
+    }
+
+    try {
+      if (typeof window.CompressionStream === 'undefined') {
+        cachedResult = false;
+      } else {
+        // eslint-disable-next-line no-unused-vars
+        let newCompressionStream = new window.CompressionStream('gzip'); // Will throw an error if unsupported
+        cachedResult = true;
+      }
+    } catch (error) {
+      cachedResult = false;
+    }
+
+    return cachedResult;
+  };
+})();
+
+// Make sure to use isGzipCompressionSupported before calling this function
+export async function compressDataWithGZip(data) {
+  const encoder = new TextEncoder();
+  const encodedData = encoder.encode(data); // Convert to Uint8Array
+  // eslint-disable-next-line no-unused-vars
+  const originalSize = encodedData.length; // Get original data size in bytes
+
+  const compressedStream = new Blob([encodedData])
+    .stream()
+    .pipeThrough(new window.CompressionStream('gzip'));
+
+  const compressedBlob = await new Response(compressedStream).blob();
+  const compressedArrayBuffer = await compressedBlob.arrayBuffer();
+  return new Uint8Array(compressedArrayBuffer);
+}

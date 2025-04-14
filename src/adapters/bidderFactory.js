@@ -5,7 +5,7 @@ import {createBid} from '../bidfactory.js';
 import {userSync} from '../userSync.js';
 import {nativeBidIsValid} from '../native.js';
 import {isValidVideoBid} from '../video.js';
-import {EVENTS, REJECTION_REASON, STATUS} from '../constants.js';
+import {EVENTS, REJECTION_REASON, STATUS, DEBUG_MODE} from '../constants.js';
 import * as events from '../events.js';
 import {includes} from '../polyfill.js';
 import {
@@ -18,7 +18,15 @@ import {
   parseQueryStringParameters,
   parseSizesInput,
   pick,
-  uniques
+  uniques,
+  // eslint-disable-next-line no-unused-vars
+  isStr,
+  // eslint-disable-next-line no-unused-vars
+  isJsonObject,
+  isGzipCompressionSupported,
+  compressDataWithGZip,
+  getParameterByName,
+  debugTurnedOn
 } from '../utils.js';
 import {hook} from '../hook.js';
 import {auctionManager} from '../auctionManager.js';
@@ -493,19 +501,55 @@ export const processBidderRequests = hook('sync', function (spec, bids, bidderRe
         );
         break;
       case 'POST':
-        ajax(
-          request.url,
-          {
-            success: onSuccess,
-            error: onFailure
-          },
-          typeof request.data === 'string' ? request.data : JSON.stringify(request.data),
-          getOptions({
-            method: 'POST',
-            contentType: 'text/plain',
-            withCredentials: true
-          })
-        );
+        const enableGZipCompression = bidderSettings.get(spec.code, 'endpointCompression');
+        const debugMode = getParameterByName(DEBUG_MODE).toUpperCase() === 'TRUE' || debugTurnedOn();
+
+        if (enableGZipCompression && debugMode) {
+          logWarn(`Skipping GZIP compression for ${spec.code} as debug mode is enabled`);
+        }
+
+        if (enableGZipCompression && !debugMode && isGzipCompressionSupported()) {
+          compressDataWithGZip(request.data).then(compressedPayload => {
+            const url = new URL(request.url, window.location.origin);
+            if (!url.searchParams.has('gzip')) {
+              url.searchParams.set('gzip', '1');
+            }
+
+            ajax(
+              url.href,
+              {
+                success: onSuccess,
+                error: onFailure
+              },
+              compressedPayload,
+              getOptions({
+                method: 'POST',
+                contentType: 'text/plain',
+                // adding below header creates a CORS preflight request so we should not pass it
+                // instead of adding this header we can pass a query parmeter (gzip=1) to let server know that the payload is compressed
+                // TODO: update URL to include query parameter gzip=1
+                // customHeaders: {
+                //  'Content-Encoding': 'gzip',
+                // },
+                withCredentials: true
+              })
+            );
+          });
+        } else {
+          ajax(
+            request.url,
+            {
+              success: onSuccess,
+              error: onFailure
+            },
+            typeof request.data === 'string' ? request.data : JSON.stringify(request.data),
+            getOptions({
+              method: 'POST',
+              contentType: 'text/plain',
+              withCredentials: true
+            })
+          );
+        }
         break;
       default:
         logWarn(`Skipping invalid request from ${spec.code}. Request type ${request.type} must be GET or POST`);
