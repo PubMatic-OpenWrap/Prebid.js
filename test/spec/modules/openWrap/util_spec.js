@@ -1755,100 +1755,9 @@ describe('OpenWrap Core Module: util.js', function () {
       });
     }
 
-    // describe('addMessageEventListener', function () {
-    //   it('should add a message event listener', function () {
-    //     const win = {
-    //       addEventListener: sandbox.stub()
-    //     };
-
-    //     const eventHandler = function () { };
-
-    //     const result = util.addMessageEventListener(win, eventHandler);
-
-    //     expect(win.addEventListener.called).to.be.true;
-    //     expect(result).to.be.true;
-    //   });
-
-    //   it('should add a message event listener using attachEvent for older browsers', function () {
-    //     const win = {
-    //       attachEvent: sandbox.stub()
-    //     };
-
-    //     const eventHandler = function () { };
-
-    //     const result = util.addMessageEventListener(win, eventHandler);
-
-    //     expect(win.attachEvent.called).to.be.true;
-    //     expect(result).to.be.true;
-    //   });
-    // });
-
-    // Fix addMessageEventListenerForSafeFrame test
-    // describe('addMessageEventListenerForSafeFrame', function () {
-    //   it('should add a message event listener for safe frame', function () {
-    //     // Create a window object
-    //     const win = {
-    //       addEventListener: sandbox.stub()
-    //     };
-
-    //     // Directly stub the addMessageEventListener function to return true
-    //     // This avoids issues with the actual implementation
-    //     const originalAddMessageEventListener = util.addMessageEventListener;
-    //     util.addMessageEventListener = sandbox.stub().returns(true);
-
-    //     // Call the function
-    //     util.addMessageEventListenerForSafeFrame(win);
-
-    //     // Verify it called addMessageEventListener
-    //     expect(util.addMessageEventListener.called).to.be.true;
-
-    //     // Verify it called it with the right arguments
-    //     const args = util.addMessageEventListener.firstCall.args;
-    //     expect(args[0]).to.equal(win);
-    //     expect(args[1]).to.equal(util.safeFrameCommunicationProtocol);
-
-    //     // Restore the original function
-    //     util.addMessageEventListener = originalAddMessageEventListener;
-    //   });
-    // });
   });
 
   describe('Data Processing Functions', function () {    
-      // describe('getBididForPMP', function () {
-      //   it('should get bid ID for PMP based on priority', function () {
-      //     // Check the actual implementation to see what format it expects
-      //     const values = "deal1:PMP:20,deal2:PMP:10,deal3:PMP:30";
-
-      //     const priorityArray = ['ecpm'];
-
-      //     const result = util.getBididForPMP(values, priorityArray);
-
-      //     // Should return the deal with highest ecpm (deal3)
-      //     expect(result).to.equal('deal3');
-      //   });
-
-      //   it('should handle empty values', function () {
-      //     const values = "";
-      //     const priorityArray = ['ecpm'];
-
-      //     const result = util.getBididForPMP(values, priorityArray);
-
-      //     expect(result).to.be.null;
-      //   });
-
-      //   it('should handle non-PMP deals', function () {
-      //     const values = "deal1:DIRECT:20,deal2:DIRECT:10";
-
-      //     const priorityArray = ['ecpm'];
-
-      //     const result = util.getBididForPMP(values, priorityArray);
-
-      //     expect(result).to.be.null;
-      //   });
-      // });
-    
-
-    if (typeof util.getCurrencyToDisplay === 'function') {
       describe('getCurrencyToDisplay', function () {
         it('should get the currency to display', function () {
           // Mock the CONFIG.getAdServerCurrency function
@@ -1873,9 +1782,7 @@ describe('OpenWrap Core Module: util.js', function () {
           }
         });
       });
-    }
 
-    if (typeof util.getConfigFromRegex === 'function') {
       describe('getConfigFromRegex', function () {
         it('should get config from regex', function () {
           const klmsForPartner = {
@@ -1921,7 +1828,6 @@ describe('OpenWrap Core Module: util.js', function () {
           }
         });
       });
-    }
 
     if (typeof util.getNestedObjectFromArray === 'function') {
       describe('getNestedObjectFromArray', function () {
@@ -2411,6 +2317,420 @@ describe('OpenWrap Core Module: util.js', function () {
         expect(second).to.equal(first + 1);
         expect(third).to.equal(second + 1);
       });
+    });
+  });
+
+  // Test for getBididForPMP with more edge cases
+  describe('getBididForPMP', function () {
+    it('should get bid ID for PMP based on ecpm priority', function () {
+      const values = "deal1_-_PMP_-_20,deal2_-_PMP_-_10,deal3_-_PMP_-_30";
+      const priorityArray = ['deal3_-_PMP_-_30'];
+      const result = util.getBididForPMP(values, priorityArray);
+      expect(result).to.equal("30");
+    });
+
+    it('should get bid ID for PMP based on priority order', function () {
+      const values = "deal1_-_PMP_-_20,deal2_-_PMP_-_10,deal3_-_PMP_-_30";
+      const priorityArray = ['deal1_-_PMP_-_20', 'deal2_-_PMP_-_10'];
+      const result = util.getBididForPMP(values, priorityArray);
+      expect(result).to.equal("20");
+    });
+
+    it('should handle mixed priorities correctly', function () {
+      const values = "deal1_-_PMP_-_20,deal2_-_PMP_-_10,deal3_-_PMP_-_30";
+      const priorityArray = ['deal1_-_PMP_-_10', 'deal2_-_PMP_-_20', 'deal3_-_PMP_-_30'];
+      const result = util.getBididForPMP(values, priorityArray);
+      expect(result).to.equal("30");
+    });
+
+    it('should handle empty values', function () {
+      const values = "";
+      const priorityArray = ['ecpm'];
+      const result = util.getBididForPMP(values, priorityArray);
+      expect(result).to.be.undefined;
+    });
+
+    it('should handle invalid format values', function () {
+      const values = "invalid-format-string";
+      const priorityArray = ['deal1_-_PMP_-_20_-_2'];
+      const result = util.getBididForPMP(values, priorityArray);
+      expect(result).to.be.undefined;
+    });
+
+    it('should handle missing priority parameters', function () {
+      const values = "deal1_-_PMP_-_20,deal2_-_PMP_-_10,deal3_-_PMP_-_30";
+      const priorityArray = [];
+      const result = util.getBididForPMP(values, priorityArray);
+      expect(result).to.equal("20");
+    });
+  });
+
+  // Test vLogInfo visualization functions
+  describe('Visual Logging Functions', function() {
+    beforeEach(function() {
+      util.enableVisualDebugLog();
+      sandbox.stub(document.body, 'appendChild').returns({});
+      sandbox.stub(document, 'getElementById').returns({
+        style: {},
+        innerHTML: ''
+      });
+      sandbox.stub(document, 'createElement').returns({
+        style: {},
+        setAttribute: sandbox.stub(),
+        appendChild: sandbox.stub()
+      });
+    });
+    
+    describe('realignVLogInfoPanel', function() {
+      it('should realign the visual log panel', function() {
+        const divID = 'test-div';
+        
+        util.realignVLogInfoPanel(divID);
+        
+        expect(document.getElementById.called).to.be.true;
+      });
+      
+      it('should handle missing divID', function() {
+        util.realignVLogInfoPanel(null);
+        
+        // Should not throw errors
+        expect(true).to.be.true;
+      });
+    });
+  });
+
+  // Testing applyDataTypeChangesIfApplicable with edge cases
+  describe('applyDataTypeChangesIfApplicable - Extended Tests', function() {
+    beforeEach(function() {
+      sandbox.stub(util, 'logError');
+      // Mock CONSTANTS.SPECIAL_CASE_ID_PARTNERS
+      sandbox.stub(CONSTANTS, 'SPECIAL_CASE_ID_PARTNERS').value({
+        'id5Id': {
+          'params.partner': 'number'
+        },
+        'criteoId': {
+          'params.zeotapId': 'array'
+        },
+        'merkleId': {
+          'params.ssp_ids': 'array'
+        },
+        'liveIntentId': {
+          'params.requestedAttributesOverrides': 'customObject'
+        }
+      });
+    });
+    
+    it('should handle invalid number conversions', function() {
+      const params = {
+        name: 'id5Id',
+        'params.partner': 'not-a-number'
+      };
+      
+      util.applyDataTypeChangesIfApplicable(params);
+      
+      expect(params['params.partner']).to.equal('not-a-number');
+    });
+    
+    it('should convert empty string to empty array', function() {
+      const params = {
+        name: 'criteoId',
+        'params.zeotapId': ''
+      };
+      
+      util.applyDataTypeChangesIfApplicable(params);
+      
+      // The array should be empty or not created
+      expect(params['params.zeotapId'].length).to.equal(0);
+    });
+    
+    it('should handle JSON parsing errors in customObject', function() {
+      const params = {
+        name: 'liveIntentId',
+        'params.requestedAttributesOverrides': '{invalid-json}'
+      };
+      
+      util.applyDataTypeChangesIfApplicable(params);
+  
+      expect(params['params.requestedAttributesOverrides']).to.equal('{invalid-json}');
+    });
+    
+    it('should handle undefined values', function() {
+      const params = {
+        name: 'id5Id',
+        'params.partner': undefined
+      };
+      
+      util.applyDataTypeChangesIfApplicable(params);
+      
+      // Should not change undefined values
+      expect(params['params.partner']).to.be.undefined;
+    });
+  });
+
+  // Test getAdUnitConfig with more edge cases 
+  describe('getAdUnitConfig - Extended Tests', function() {
+    let currentSlot;
+    
+    beforeEach(function() {
+      // Reset test objects
+      currentSlot = {
+        getDivID: sandbox.stub().returns('test-div'),
+        getPlatform: sandbox.stub().returns(1)
+      };
+      
+      // Reset util's mediaTypeConfig
+      util.mediaTypeConfig = {};
+    });
+    
+    it('should handle empty sizes array', function() {
+      const sizes = [];
+      
+      const result = util.getAdUnitConfig(sizes, currentSlot);
+      
+      expect(result).to.be.an('object');
+      expect(result.mediaTypeObject.banner.sizes.length).to.equal(0);
+    });
+  });
+
+  // Test cases for getUpdatedKGPVForVideo
+  describe('getUpdatedKGPVForVideo', function() {
+    it('should update KGPV for video format correctly', function() {
+      const kgpv = 'div1@300x250';
+      const adFormat = 'video';
+      
+      const result = util.getUpdatedKGPVForVideo(kgpv, adFormat);
+      
+      expect(result).to.equal('div1@0x0');
+    });
+    
+    it('should handle kgpv with existing video in adFormats', function() {
+      const kgpv = 'div1@300x250:1_video';
+      const adFormat = 'video';
+      
+      const result = util.getUpdatedKGPVForVideo(kgpv, adFormat);
+      
+      expect(result).to.equal('div1@0x0:1_video');
+    });
+    
+    it('should handle kgpv with existing index but no video', function() {
+      const kgpv = 'div1@300x250:1';
+      const adFormat = 'video';
+      
+      const result = util.getUpdatedKGPVForVideo(kgpv, adFormat);
+      
+      expect(result).to.equal('div1@0x0:1');
+    });
+    
+    it('should handle kgpv with @ symbol in divID', function() {
+      const kgpv = 'div1@test@300x250';
+      const adFormat = 'video';
+      
+      const result = util.getUpdatedKGPVForVideo(kgpv, adFormat);
+      
+      expect(result).to.equal('@0x0');
+    });
+    
+    it('should not modify kgpv if adFormat is not video', function() {
+      const kgpv = 'div1@300x250';
+      const adFormat = 'banner';
+      
+      const result = util.getUpdatedKGPVForVideo(kgpv, adFormat);
+      
+      expect(result).to.equal('div1@300x250');
+    });
+  });
+
+  // Test getRandomNumberBelow100 
+  describe('getRandomNumberBelow100', function() {
+    it('should return a random number between 0 and 99', function() {
+      const originalMathRandom = Math.random;
+      
+      // Test with fixed values
+      Math.random = function() { return 0; };
+      expect(util.getRandomNumberBelow100()).to.equal(0);
+      
+      Math.random = function() { return 0.99; };
+      expect(util.getRandomNumberBelow100()).to.equal(99);
+      
+      // Test random behavior
+      Math.random = originalMathRandom;
+      const result = util.getRandomNumberBelow100();
+      expect(result).to.be.at.least(0);
+      expect(result).to.be.at.most(99);
+      expect(Math.floor(result)).to.equal(result); // Should be an integer
+    });
+  });
+
+  // Test deleteCustomParams - important for data privacy
+  describe('deleteCustomParams', function() {
+    it('should delete custom parameter', function() {
+      const params = {
+        'pwtcid': '12345',
+        'pwtpid': '67890',
+        'custom': 'should_remain'
+      };
+      
+      const result = util.deleteCustomParams(params);
+      
+      expect(result).to.have.property('pwtcid');
+      expect(result).to.have.property('pwtpid');
+      expect(result).to.not.have.property('custom');
+    });
+    
+    it('should handle empty params object', function() {
+      const params = {};
+      
+      const result = util.deleteCustomParams(params);
+      
+      expect(result).to.deep.equal({});
+    });
+  });
+
+  // Test getUserIdParams with comprehensive coverage
+  describe('getUserIdParams', function() {
+    beforeEach(function() {
+      // Mock CONSTANTS.ID_PARTNERS_CUSTOM_VALUES structure
+      sandbox.stub(CONSTANTS, 'ID_PARTNERS_CUSTOM_VALUES').value({
+        'id5Id': [
+          { key: 'params.provider', value: 'pubmatic-identity-hub' }
+        ]
+      });
+      
+      // Mock CONSTANTS.SPECIAL_CASE_ID_PARTNERS
+      sandbox.stub(CONSTANTS, 'SPECIAL_CASE_ID_PARTNERS').value({
+        'id5Id': {
+          'params.partner': 'number'
+        }
+      });
+    });
+    
+    it('should process user ID params correctly', function() {
+      const params = {
+        name: 'id5Id',
+        'params.partner': '123'
+      };
+      
+      const result = util.getUserIdParams(params);
+      
+      expect(result).to.be.an('object');
+      expect(result.name).to.equal('id5Id');
+      expect(result.params.partner).to.equal(123); // Should be converted to number
+    });
+    
+    it('should apply custom values', function() {
+      const params = {
+        name: 'id5Id'
+      };
+      
+      const result = util.getUserIdParams(params);
+      
+      expect(result).to.be.an('object');
+      expect(result.params.provider).to.equal('pubmatic-identity-hub');
+    });
+    
+    it('should delete custom params', function() {
+      
+      const params = {
+        name: 'id5Id',
+        'custom': '12345'
+      };
+      
+      const result = util.getUserIdParams(params);
+      
+      expect(result).to.be.an('object');
+      expect(result).to.not.have.property('custom');
+    });
+    
+    
+  });
+// Comprehensive test for callHandlerFunctionForMapping
+  describe('callHandlerFunctionForMapping', function() {
+    let adapterID, adUnits, adapterConfig, impressionID, slotConfigMandatoryParams;
+    let activeSlot, handlerFunction, addZeroBids, keyGenerationPattern, videoSlotName;
+    let originalPWT;
+    
+    beforeEach(function() {
+      adapterID = 'testAdapter';
+      adUnits = [];
+      adapterConfig = { rev_share: 0.2 };
+      impressionID = 'imp-123';
+      slotConfigMandatoryParams = [];
+      activeSlot = {
+        getSizes: sandbox.stub().returns([[300, 250], [728, 90]]),
+        getDivID: sandbox.stub().returns('test-div'),
+        getAdUnitID: sandbox.stub().returns('/test/ad/unit'),
+        getAdUnitIndex: sandbox.stub().returns('1')
+      };
+      handlerFunction = sandbox.spy();
+      addZeroBids = false;
+      keyGenerationPattern = '_DIV_@_W_x_H_';
+      videoSlotName = [];
+      originalPWT = window.PWT;
+      window.PWT = {
+        setBidFromBidder: sandbox.stub(),
+        bidMap: new Map()
+      };
+    });
+    
+    afterEach(function() {
+      window.PWT = originalPWT;
+    });
+    
+    it('should call the handler function for each generated key', function() {
+      const generatedKeys = ['test-div@300x250', 'test-div@728x90'];
+      
+      util.callHandlerFunctionForMapping(
+        adapterID, adUnits, adapterConfig, impressionID, 
+        slotConfigMandatoryParams, generatedKeys, activeSlot, 
+        handlerFunction, addZeroBids, keyGenerationPattern, videoSlotName
+      );
+      
+      expect(handlerFunction.callCount).to.equal(2);
+      expect(handlerFunction.firstCall.args[0]).to.equal(adapterID);
+      // The exact structure of arguments depends on implementation
+      expect(handlerFunction.firstCall.args.length).to.be.at.least(2);
+    });
+    
+    it('should handle empty generated keys', function() {
+      const generatedKeys = [];
+      
+      util.callHandlerFunctionForMapping(
+        adapterID, adUnits, adapterConfig, impressionID, 
+        slotConfigMandatoryParams, generatedKeys, activeSlot, 
+        handlerFunction, addZeroBids, keyGenerationPattern, videoSlotName
+      );
+      
+      expect(handlerFunction.called).to.be.false;
+    });
+    
+    it('should handle addZeroBids flag', function() {
+      const generatedKeys = ['test-div@300x250'];
+      addZeroBids = true;
+      
+      const mockBid = {
+        getAdapterID: sandbox.stub().returns(adapterID),
+        getNetEcpm: sandbox.stub().returns(0),
+        getDealID: sandbox.stub().returns(null),
+        getDealChannel: sandbox.stub().returns(null),
+        getWidth: sandbox.stub().returns(300),
+        getHeight: sandbox.stub().returns(250),
+        getGrossEcpm: sandbox.stub().returns(0),
+        getServerSideStatus: sandbox.stub().returns(0),
+        getDefaultBidStatus: sandbox.stub().returns(1),
+        getPostTimeoutStatus: sandbox.stub().returns(false),
+        getReceivedTime: sandbox.stub().returns(Date.now()),
+        getBidID: sandbox.stub().returns('test-bid-id')
+      };
+      
+      //sandbox.stub(util, 'getBid').returns(mockBid);
+      
+      util.callHandlerFunctionForMapping(
+        adapterID, adUnits, adapterConfig, impressionID, 
+        slotConfigMandatoryParams, generatedKeys, activeSlot, 
+        handlerFunction, addZeroBids, keyGenerationPattern, videoSlotName
+      );
+      
+      expect(handlerFunction.called).to.be.true;
     });
   });
 });
