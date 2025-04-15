@@ -86,15 +86,48 @@ const BID = {
     'floorRuleValue': 1.1,
     'floorValue': 1.1
   },
-  'meta': {
-    'demandSource': 1208,
-  },
+  'params':{
+    "video": {
+        "battr": [
+            6,
+            7
+        ],
+        "plcmt": 1,
+        "skipafter": 15,
+        "maxduration": 50,
+        "context": "instream",
+        "playerSize": [
+            640,
+            480
+        ],
+        "skip": 1,
+        "connectiontype": [
+            1,
+            2,
+            6
+        ],
+        "skipmin": 10,
+        "minduration": 1,
+        "mimes": [
+            "video/mp4",
+            "video/x-flv"
+        ]
+    },
+    "kgpv": "/43743431/QAVideo@640x480:0",
+    "publisherId": "164392",
+    "adSlot": "/43743431/QAVideo@640x480:0",
+    "wiid": "d0303288-6ff1-4e45-a0b4-925809d5fdd1-dnuee",
+    "profId": "37878",
+    "verId": "1"
+},
+'status':'success',
   getStatusCode() {
     return 1;
   },
-  getCpmInNewCurrency() {
-    return this.cpm;
+  getCpmInNewCurrency(){
+    return 'USD';
   }
+
 };
 
 const BID2 = Object.assign({}, BID, {
@@ -892,8 +925,35 @@ describe('pubmatic analytics adapter', function () {
       let request = requests[0];
       let data = getLoggerJsonFromRequest(request.requestBody);
       
-      // Verify that bidderCode was updated from prebidBidsReceived
       expect(data.sd['/19968336/header-bid-tag-0'].bids['2ecff0db240757'][0].bidderCode).to.equal('pubmatic');
+    });
+
+    it('should update bidderCode from prebidBidsReceived', function () {
+      const mockBidRequested = {
+        ...MOCK.BID_REQUESTED,
+        bids: [{
+          ...MOCK.BID_REQUESTED.bids[0],
+          bidderCode: 'pub2'
+        }]
+      };
+
+      const mockBidResponse = {
+        ...MOCK.BID_RESPONSE[0],
+        bidderCode: 'pub2'
+      };
+
+      events.emit(AUCTION_INIT, MOCK.AUCTION_INIT);
+      events.emit(BID_REQUESTED, mockBidRequested);
+      events.emit(BID_RESPONSE, mockBidResponse);
+      events.emit(AUCTION_END, MOCK.AUCTION_END);
+
+      clock.tick(2000 + 1000);
+
+      expect(requests.length).to.equal(1);
+      let request = requests[0];
+      let data = getLoggerJsonFromRequest(request.requestBody);
+      
+      expect(data.sd[mockBidResponse.adUnitCode].bids[mockBidResponse.requestId][0].bidderCode).to.equal('pub2');
     });
 
     it('Logger: when bid is not submitted, default bid status 1 check: pubmatic set as s2s', function () {
