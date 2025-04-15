@@ -429,6 +429,12 @@ describe('pubmatic analytics adapter', function () {
           timeout: 500
         }
       });
+      window.pbsLatency = {
+     '25c6d7f5-699a-4bfc-87c9-996f915341fa':{
+      'endTime':1519767,
+      'startTime':1519700
+     }
+      };
     });
 
     this.afterEach(function () {
