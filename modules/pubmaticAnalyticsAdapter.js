@@ -54,6 +54,7 @@ getGlobal().injectTrackerForIMA = async function (args, vast) {
   bid.auctionId = args.auctionId;
   bid.adUnitCode = args.adUnitCode;
   bid.requestId = args.requestId;
+  bid.bidderCode = args.bidderCode;
   bid.bidResponse = parseBidResponse(args);
   
   var auctionCache = cache.auctions[args.auctionId];
