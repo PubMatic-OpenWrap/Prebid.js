@@ -52,6 +52,22 @@ const MEDIATYPE = {
   VIDEO: 1,
   NATIVE: 2
 }
+
+const BROWSER_MAP = [
+  { value: /(firefox)\/([\w\.]+)/i, key: 12 }, // Firefox
+  { value: /\b(?:crios)\/([\w\.]+)/i, key: 1 }, // Chrome for iOS
+  { value: /edg(?:e|ios|a)?\/([\w\.]+)/i, key: 2 }, // Edge
+  { value: /(opera|opr)(?:.+version\/|[\/ ]+)([\w\.]+)/i, key: 3 }, // Opera
+  { value: /(?:ms|\()(ie) ([\w\.]+)|(?:trident\/[\w\.]+)/i, key: 4 }, // Internet Explorer
+  { value: /fxios\/([-\w\.]+)/i, key: 5 }, // Firefox for iOS
+  { value: /((?:fban\/fbios|fb_iab\/fb4a)(?!.+fbav)|;fbav\/([\w\.]+);)/i, key: 6 }, // Facebook In-App Browser
+  { value: / wv\).+(chrome)\/([\w\.]+)/i, key: 7 }, // Chrome WebView
+  { value: /droid.+ version\/([\w\.]+)\b.+(?:mobile safari|safari)/i, key: 8 }, // Android Browser
+  { value: /(chrome|chromium|crios)\/v?([\w\.]+)/i, key: 9 }, // Chrome
+  { value: /version\/([\w\.\,]+) .*mobile\/\w+ (safari)/i, key: 10 }, // Safari Mobile
+  { value: /version\/([\w(\.|\,)]+) .*(mobile ?safari|safari)/i, key: 11 }, // Safari
+];
+
 const PREFIX = 'PROFILE_AUCTION_INFO_'
 
 /// /////////// VARIABLES //////////////
@@ -214,6 +230,16 @@ function getDevicePlatform() {
     }
   } catch (ex) {}
   return deviceType;
+}
+
+function getBrowserType() {
+  const userAgent = navigator?.userAgent;
+  let browserIndex = userAgent == null ? -1 : 0;
+
+  if (userAgent) {
+    browserIndex = BROWSER_MAP.find(({ value }) => value.test(userAgent))?.key || 0;
+  }
+  return browserIndex;
 }
 
 function getValueForKgpv(bid, adUnitId) {
@@ -614,7 +640,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['pdvid'] = '' + profileVersionId;
   outputObj['psl'] = getPSL(auctionId);
   outputObj['dvc'] = {'plt': getDevicePlatform()};
-  outputObj['bm'] = window.PWT && window.PWT.browserMapping;
+  outputObj['bm'] = getBrowserType();
   outputObj['ih'] = identityOnly;
   outputObj['it'] = getIntegrationType()
   outputObj['tpv'] = frequencyDepth?.pageView;
