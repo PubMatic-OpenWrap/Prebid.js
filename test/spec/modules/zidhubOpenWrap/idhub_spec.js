@@ -477,133 +477,95 @@ describe('ZidHub OpenWrap Module: idhub.js', function() {
   });
   
   describe('initIdHub', function() {
+    let newAddAdUnitFunction;
+    
     beforeEach(function() {
       // We need to actually call initializeModule to set up the variables
       const realInitializeModule = origInitializeModule;
       idhub.initializeModule = realInitializeModule;
       idhub.initializeModule(mockIdhubUtils);
+      
+      // Restore the original initIdHub function for these tests
+      idhub.initIdHub = origInitIdHub;
+      
+      // Define newAddAdUnitFunction which is needed by the actual implementation
+      newAddAdUnitFunction = function(args) {
+        util.updateAdUnits(args);
+        return args;
+      };
+      
+      // Add it to the global scope since the actual function might reference it
+      window.newAddAdUnitFunction = newAddAdUnitFunction;
     });
     
     afterEach(function() {
       // Restore the stubbed initializeModule
       idhub.initializeModule = origInitializeModule;
+      
+      // Clean up the global function
+      delete window.newAddAdUnitFunction;
     });
     
-    it('should not proceed when isUserIdModuleEnabled returns false', function() {
-      mockIdhubUtils.CONFIG.isUserIdModuleEnabled.returns(false);
-      mockPbjs.setConfig.called = false;
-      // Create a custom implementation for this test
-      const customInitIdHub = function(win) {
-        if (mockIdhubUtils.CONFIG.isUserIdModuleEnabled()) {
-          // Simulate setConfig being called
-          mockPbjs.setConfig.called = true;
-        }
-      };
-      
-      // Call our custom implementation
-      customInitIdHub(window);
-      
-      // Verify the CONFIG function was called but setConfig was not
-      expect(mockIdhubUtils.CONFIG.isUserIdModuleEnabled.called).to.be.true;
-      expect(mockPbjs.setConfig.called).to.be.false;
-    });
     
-    it('should handle Prebid integration when conditions are met', function() {
-      // Create a custom implementation for this test
-      const customInitIdHub = function(win) {
-        if (mockIdhubUtils.CONFIG.isUserIdModuleEnabled()) {
-          if (mockIdhubUtils.CONFIG.isIdentityOnly()) {
-            if (mockIdhubUtils.CONFIG.getIdentityConsumers().includes(mockIdhubUtils.CONSTANTS.COMMON.PREBID) && 
-                !mockIdhubUtils.util.isUndefined(win[mockIdhubUtils.CONFIG.getPBJSNamespace()]) && 
-                !mockIdhubUtils.util.isUndefined(win[mockIdhubUtils.CONFIG.getPBJSNamespace()].que)) {
-              
-              win[mockIdhubUtils.CONFIG.getPBJSNamespace()].que.unshift(() => {
-                const vdetails = win[mockIdhubUtils.CONFIG.getPBJSNamespace()].version.split('.');
-                if (vdetails.length === 3 && (+vdetails[0].split('v')[1] > 3 || (vdetails[0] === 'v3' && +vdetails[1] >= 3))) {
-                  mockIdhubUtils.util.log(`Adding On Event ${win[mockIdhubUtils.CONFIG.getPBJSNamespace()]}.addAddUnits()`);
-                  // Simulate onEvent being called
-                  win[mockIdhubUtils.CONFIG.getPBJSNamespace()].onEvent.called = true;
-                } else {
-                  mockIdhubUtils.util.log(`Adding Hook on${win[mockIdhubUtils.CONFIG.getPBJSNamespace()]}.addAddUnits()`);
-                  // Simulate addHookOnFunction being called
-                  mockIdhubUtils.util.addHookOnFunction.called = true;
-                }
-              });
-              mockIdhubUtils.util.log('Identity Only Enabled and setting config');
-            }
-          }
-        }
-      };
-      
-      // Make sure the conditions for Prebid integration are met
+    
+    it('should handle Prebid integration when conditions are met with modern Prebid version', function() {
+      // Set up conditions for the test
       mockIdhubUtils.CONFIG.isUserIdModuleEnabled.returns(true);
       mockIdhubUtils.CONFIG.isIdentityOnly.returns(true);
       mockIdhubUtils.CONFIG.getIdentityConsumers.returns(['prebid']);
       mockIdhubUtils.util.isUndefined.returns(false);
       
-      // Call our custom implementation
-      customInitIdHub(window);
+      // Set up window with modern Prebid version
+      window.pbjs.version = 'v4.0.0';
+      
+      // Call the actual implementation
+      idhub.initIdHub(window);
+      
+      // Verify the expected functions were called
+      expect(mockIdhubUtils.CONFIG.isUserIdModuleEnabled.called).to.be.true;
+      expect(mockIdhubUtils.CONFIG.isIdentityOnly.called).to.be.true;
+      expect(mockIdhubUtils.CONFIG.getIdentityConsumers.called).to.be.true;
       
       // Execute the queued function
       window.pbjs.que[0]();
       
-      // Verify log was called
-      expect(mockIdhubUtils.util.log.calledWith('Identity Only Enabled and setting config')).to.be.true;
-      expect(window.pbjs.onEvent.called).to.be.true;
+      // Verify that onEvent was called for both events with modern Prebid
+      expect(window.pbjs.onEvent.calledWith('addAdUnits')).to.be.true;
+      expect(window.pbjs.onEvent.calledWith('beforeRequestBids')).to.be.true;
+      expect(mockIdhubUtils.util.log.called).to.be.true;
     });
     
     it('should use addHookOnFunction for older Prebid versions', function() {
-      // Create a custom implementation for this test
-      const customInitIdHub = function(win) {
-        if (mockIdhubUtils.CONFIG.isUserIdModuleEnabled() && mockIdhubUtils.CONFIG.isIdentityOnly()) {
-          win[mockIdhubUtils.CONFIG.getPBJSNamespace()].que.unshift(() => {
-            const vdetails = ['v3', '2', '0']; // Simulate older version
-            if (vdetails.length === 3 && (+vdetails[0].split('v')[1] > 3 || (vdetails[0] === 'v3' && +vdetails[1] >= 3))) {
-              // This branch should not be taken
-              win[mockIdhubUtils.CONFIG.getPBJSNamespace()].onEvent.called = true;
-            } else {
-              mockIdhubUtils.util.log(`Adding Hook on${win[mockIdhubUtils.CONFIG.getPBJSNamespace()]}.addAddUnits()`);
-              mockIdhubUtils.util.addHookOnFunction.called = true;
-            }
-          });
-        }
-      };
-      
-      // Set up conditions for older Prebid version
+      // Set up conditions for the test
       mockIdhubUtils.CONFIG.isUserIdModuleEnabled.returns(true);
       mockIdhubUtils.CONFIG.isIdentityOnly.returns(true);
+      mockIdhubUtils.CONFIG.getIdentityConsumers.returns(['prebid']);
+      mockIdhubUtils.util.isUndefined.returns(false);
+      
+      // Set up window with older Prebid version
       window.pbjs.version = 'v3.2.0';
       
-      // Call our custom implementation
-      customInitIdHub(window);
+      // Call the actual implementation
+      idhub.initIdHub(window);
       
       // Execute the queued function
       window.pbjs.que[0]();
       
-      // Verify addHookOnFunction was called
+      // Verify that addHookOnFunction was called for older Prebid
       expect(mockIdhubUtils.util.addHookOnFunction.called).to.be.true;
-      expect(window.pbjs.onEvent.called).to.be.false;
+      expect(mockIdhubUtils.util.addHookOnFunction.calledWith(window.pbjs, false, 'addAdUnits')).to.be.true;
+      expect(mockIdhubUtils.util.log.called).to.be.true;
     });
     
     it('should log warning when pbjs is undefined', function() {
-      // Create a custom implementation for this test
-      const customInitIdHub = function(win) {
-        if (mockIdhubUtils.CONFIG.isUserIdModuleEnabled() && mockIdhubUtils.CONFIG.isIdentityOnly()) {
-          if (mockIdhubUtils.CONFIG.getIdentityConsumers().includes(mockIdhubUtils.CONSTANTS.COMMON.PREBID) && 
-              mockIdhubUtils.util.isUndefined(win[mockIdhubUtils.CONFIG.getPBJSNamespace()])) {
-            mockIdhubUtils.util.logWarning('window.pbjs is undefined');
-          }
-        }
-      };
-      
-      // Set up conditions for undefined pbjs
+      // Set up conditions for the test
       mockIdhubUtils.CONFIG.isUserIdModuleEnabled.returns(true);
       mockIdhubUtils.CONFIG.isIdentityOnly.returns(true);
       mockIdhubUtils.CONFIG.getIdentityConsumers.returns(['prebid']);
       mockIdhubUtils.util.isUndefined.returns(true);
       
-      // Call our custom implementation
-      customInitIdHub(window);
+      // Call the actual implementation
+      idhub.initIdHub(window);
       
       // Verify warning was logged
       expect(mockIdhubUtils.util.logWarning.calledWith('window.pbjs is undefined')).to.be.true;
