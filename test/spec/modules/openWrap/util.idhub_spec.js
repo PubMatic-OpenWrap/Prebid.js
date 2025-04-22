@@ -771,6 +771,17 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       
       expect(params['params.ssp_ids']).to.deep.equal(['1', '2', '3']);
     });
+
+    it('applyDataTypeChangesIfApplicable should handle array type conversion when paramValue is single number', function() {
+      const params = {
+        name: 'merkleId',
+        'params.ssp_ids': 1
+      };
+      
+      utilIdhub.applyDataTypeChangesIfApplicable(params);
+      
+      expect(params['params.ssp_ids']).to.deep.equal([1]);
+    });
     
     it('applyDataTypeChangesIfApplicable should handle invalid number conversion', function() {
       const params = {
