@@ -536,7 +536,11 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         'identityLink': {
           'name': 'identityLink',
           'params.pid': '12345',
-          'params.notifyData': '{"foo":"bar"}'
+          'params.notifyData': '{"foo":"bar"}',
+          'params.storageType': 'cookie',
+          'storage.type': 'cookie',
+          'storage.name': 'idl_env',
+          'storage.expires': 30
         }
       });
     });
@@ -643,6 +647,28 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       ]);
 
       delete window.ihowpbjs;
+    });
+
+    it('getUserIdsAsEids should call logWarning when function is not available in namespace', function() {
+      // Enable debug logging to ensure warnings are logged
+      utilIdhub.debugLogIsEnabled = true;
+      
+      // Stub console.warn to capture the warning
+      const consoleWarnStub = sandbox.stub(console, 'warn');
+      
+      // Set up a scenario where the getUserIdsAsEids function doesn't exist in the namespace
+      CONFIG.isIdentityOnly.returns(false);
+      window.owpbjs = {}; // Create an empty object without getUserIdsAsEids
+      
+      // Call the function that should trigger the warning
+      const result = utilIdhub.getUserIdsAsEids();
+      
+      // Verify that the result is undefined (not an empty array)
+      expect(result).to.be.undefined;
+      
+      // Verify console.warn was called with a message containing our expected text
+      expect(consoleWarnStub.called).to.be.true;
+      expect(consoleWarnStub.args[0][0]).to.include('getUserIdsAsEids function is not available');
     });
 
     it('getEmailHashes should return email hashes', function() {
@@ -1034,7 +1060,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
     let scriptElement;
     
     beforeEach(function() {
-      // Create a script element mock
+      // Create a script element mock with proper onload handling
       scriptElement = {
         setAttribute: sandbox.stub(),
         src: '',
@@ -1042,7 +1068,14 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         crossorigin: '',
         async: false,
         style: {},
-        appendChild: sandbox.stub()
+        appendChild: sandbox.stub(),
+        _onloadHandler: null, // Private property to store the handler
+        set onload(handler) {
+          this._onloadHandler = handler;
+        },
+        get onload() {
+          return this._onloadHandler;
+        }
       };
       
       // Mock document.createElement only, don't double-stub document
@@ -1192,23 +1225,24 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(scriptElement.src).to.contain('ats.rlcdn.com/ats.js');
     });
     
-    it('initLiveRampLaunchPad should initialize LiveRamp LaunchPad', function() {
+    it('initLiveRampLaunchPad should initialize LiveRamp LaunchPad with proper script setup', function() {
       const params = {
         custom: {
-          accountId: '123',
-          domain: 'example.com'
-        },
-        params: {
-          cssSelectors: 'div1,div2' // String with comma separated values
+          configurationId: 'test-config-id'
         }
       };
       
       utilIdhub.initLiveRampLaunchPad(params);
       
+      // Verify script element creation and configuration
       expect(document.createElement.calledOnce).to.be.true;
       expect(document.createElement.firstCall.args[0]).to.equal('script');
       expect(document.body.appendChild.calledOnce).to.be.true;
       expect(scriptElement.src).to.contain('launchpad-wrapper.privacymanager.io');
+      expect(scriptElement.src).to.contain('test-config-id');
+      
+      // Verify onload handler is set
+      expect(scriptElement._onloadHandler).to.be.a('function');
     });
     
     it('initLauncherJs should initialize Launcher.js', function() {
@@ -1370,6 +1404,8 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
     it('getUserIdParams should not call initLiveRampAts when loadATS is not true', function() {
       // Create a direct replacement for getUserIdParams that doesn't call initLiveRampAts
       const origGetUserIdParams = utilIdhub.getUserIdParams;
+
+      // Spy on initLiveRampAts
       const initLiveRampAtsSpy = sandbox.spy(utilIdhub, 'initLiveRampAts');
 
       // Replace getUserIdParams with our own implementation for this test
@@ -1670,7 +1706,10 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           'name': 'identityLink',
           'params.pid': '12345',
           'params.notifyData': '{"foo":"bar"}',
-          'storage.refreshInSeconds': '1800'
+          'params.storageType': 'cookie',
+          'storage.type': 'cookie',
+          'storage.name': 'idl_env',
+          'storage.expires': 30
         },
         'id5Id': {
           'name': 'id5Id',
