@@ -377,6 +377,24 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       
       expect(result).to.equal('original test');
     });
+
+    it('addHookOnFunction should call logWarning when function does not exist', function() {
+      // Enable debug logging to ensure warnings are logged
+      utilIdhub.debugLogIsEnabled = true;
+      
+      // Stub console.warn to capture the warning
+      const consoleWarnStub = sandbox.stub(console, 'warn');
+      
+      // Create an object without the target function
+      const obj = { someOtherProperty: 'value' };
+      
+      // Try to add a hook to a non-existent function
+      utilIdhub.addHookOnFunction(obj, false, 'nonExistentFunction', () => {});
+      
+      // Verify console.warn was called with a message containing our expected text
+      expect(consoleWarnStub.called).to.be.true;
+      expect(consoleWarnStub.args[0][0]).to.include('in assignNewDefination: oldReference is not a function');
+    });
   });
   
   describe('Object and array iteration functions', function() {
