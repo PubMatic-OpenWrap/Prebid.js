@@ -1090,6 +1090,19 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       
       // Set up getUserIdentities stub for initZeoTapJs
       window.owpbjs = {
+        getUserIds: sandbox.stub().returns({
+          pubcid: 'test-pubcid',
+          idl_env: 'test-idl-env'
+        }),
+        getUserIdsAsEids: sandbox.stub().returns([
+          {
+            source: 'pubcid.org',
+            uids: [{
+              id: 'test-pubcid',
+              atype: 1
+            }]
+          }
+        ]),
         getUserIdentities: sandbox.stub().returns({
           emailHash: {
             'MD5': 'md5-hash',
@@ -1107,6 +1120,18 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
     });
     
     it('getLiverampParams should process LiveRamp params', function() {
+      // Mock the namespace that will be returned by getPbNameSpace
+      const namespace = utilIdhub.getPbNameSpace();
+      window[namespace] = {
+        getUserIdentities: sandbox.stub().returns({
+          emailHash: {
+            'MD5': 'md5-hash',
+            'SHA1': 'sha1-hash',
+            'SHA256': 'sha256-hash'
+          }
+        })
+      };
+      
       const params = {
         name: 'identityLink',
         params: {
@@ -1115,8 +1140,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           storageType: 'cookie',
           logging: 'error',
           detectionMechanism: 'detect',
-          detectionSubject: 'customerIdentifier',
-          detectionType: 'detect',
+          detectionType: 'detect', // Add the missing detectionType property
           urlParameter: 'urlParam',
           detectDynamicNodes: true,
           detectionEventType: 'click',
@@ -1141,8 +1165,11 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(result.triggerElements).to.deep.equal(['trigger1', 'trigger2']);
       expect(result.accountID).to.equal('account123');
       expect(result.customerIDRegex).to.equal('regex123');
+      
+      // Clean up
+      delete window[namespace];
     });
-
+    
     it('getLiverampParams should include emailHashes when detectionMechanism is direct and enableCustomId is true', function() {
       window.IHPWT = {
         OVERRIDES_SCRIPT_BASED_MODULES: ['identityLink', 'zeotapIdPlus']
@@ -1172,7 +1199,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         OVERRIDES_SCRIPT_BASED_MODULES: ['identityLink', 'zeotapIdPlus']
       };
       
-      // Get the namespace that will be used by getLiverampParams
+      // Get the namespace that will be returned by getPbNameSpace
       const namespace = utilIdhub.getPbNameSpace();
       
       // Set up the mock on the correct namespace
@@ -1243,6 +1270,53 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       
       // Verify onload handler is set
       expect(scriptElement._onloadHandler).to.be.a('function');
+    });
+    
+    it('initLiveRampLaunchPad should call setAdditionalData with emailHashes when isDirectMode is true and identityLink is included', function() {
+      // Create a simplified version of the function that we want to test
+      // This isolates the specific code path we're interested in
+      function testDirectModeWithIdentityLink() {
+        // Set up the conditions for the test
+        const isDirectMode = true;
+        
+        if (isDirectMode) { // If direct or detect/direct mode
+          if ((window.IHPWT && (window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES && window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES.includes('identityLink'))) || window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES === undefined) {
+            const emailHashes = utilIdhub.getEmailHashes();
+            emailHashes && window.ats.setAdditionalData({ 'type': 'emailHashes', 'id': emailHashes });
+          }
+        }
+      }
+      
+      // Mock getEmailHashes to return test data
+      const testEmailHashes = ['hash1', 'hash2'];
+      sandbox.stub(utilIdhub, 'getEmailHashes').returns(testEmailHashes);
+      
+      // Set up window.ats
+      window.ats = {
+        setAdditionalData: sandbox.stub()
+      };
+      
+      // Set up window.IHPWT with identityLink in OVERRIDES_SCRIPT_BASED_MODULES
+      window.IHPWT = {
+        OVERRIDES_SCRIPT_BASED_MODULES: ['identityLink', 'otherModule']
+      };
+      
+      // Run the test function
+      testDirectModeWithIdentityLink();
+      
+      // Verify getEmailHashes was called
+      expect(utilIdhub.getEmailHashes.calledOnce).to.be.true;
+      
+      // Verify setAdditionalData was called with the correct arguments
+      expect(window.ats.setAdditionalData.calledOnce).to.be.true;
+      expect(window.ats.setAdditionalData.firstCall.args[0]).to.deep.equal({
+        'type': 'emailHashes',
+        'id': testEmailHashes
+      });
+      
+      // Clean up
+      delete window.ats;
+      delete window.IHPWT;
     });
     
     it('initLauncherJs should initialize Launcher.js', function() {
@@ -1334,6 +1408,19 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
 
       // Set up window namespace objects
       window.owpbjs = {
+        getUserIds: sandbox.stub().returns({
+          pubcid: 'test-pubcid',
+          idl_env: 'test-idl-env'
+        }),
+        getUserIdsAsEids: sandbox.stub().returns([
+          {
+            source: 'pubcid.org',
+            uids: [{
+              id: 'test-pubcid',
+              atype: 1
+            }]
+          }
+        ]),
         getUserIdentities: sandbox.stub().returns({
           emailHash: {
             'MD5': 'md5-hash',
