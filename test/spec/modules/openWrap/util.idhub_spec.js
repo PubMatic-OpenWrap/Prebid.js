@@ -1105,6 +1105,47 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       delete window.IHPWT;
     });
     
+    it('getLiverampParams should set atsObject.customerID when detectionMechanism is direct and enableCustomId is true', function() {
+      window.IHPWT = {
+        OVERRIDES_SCRIPT_BASED_MODULES: ['identityLink', 'zeotapIdPlus']
+      };
+      
+      // Get the namespace that will be used by getLiverampParams
+      const namespace = utilIdhub.getPbNameSpace();
+      
+      // Set up the mock on the correct namespace
+      window[namespace] = {
+        getUserIdentities: sandbox.stub().returns({
+          customerID: 'test-customer-id',
+          emailHash: {
+            'MD5': 'md5-hash',
+            'SHA1': 'sha1-hash',
+            'SHA256': 'sha256-hash'
+          }
+        })
+      };
+      
+      const params = {
+        name: 'identityLink',
+        params: {
+          pid: '12345',          
+          detectionMechanism: 'direct',
+          enableCustomId: 'true'
+        }
+      };
+      
+      const result = utilIdhub.getLiverampParams(params);
+      
+      expect(result).to.be.an('object');
+      expect(result.placementID).to.equal('12345');
+      expect(result.customerID).to.equal('test-customer-id');
+      expect(result.emailHashes).to.deep.equal(['md5-hash', 'sha1-hash', 'sha256-hash']);
+      
+      // Clean up
+      delete window.IHPWT;
+      delete window[namespace];
+    });
+    
     it('initLiveRampAts should initialize LiveRamp ATS', function() {
       const params = {
         name: 'identityLink',
