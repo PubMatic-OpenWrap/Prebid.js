@@ -1080,6 +1080,30 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(result.accountID).to.equal('account123');
       expect(result.customerIDRegex).to.equal('regex123');
     });
+
+    it('getLiverampParams should include emailHashes when detectionMechanism is direct and enableCustomId is true', function() {
+      window.IHPWT = {
+        OVERRIDES_SCRIPT_BASED_MODULES: ['identityLink', 'zeotapIdPlus']
+      };
+      
+      const params = {
+        name: 'identityLink',
+        params: {
+          pid: '12345',          
+          detectionMechanism: 'direct',
+          enableCustomId: true
+        }
+      };
+      
+      const result = utilIdhub.getLiverampParams(params);
+      
+      expect(result).to.be.an('object');
+      expect(result.placementID).to.equal('12345');
+      expect(result.emailHashes).to.deep.equal(['md5-hash', 'sha1-hash', 'sha256-hash']);
+      
+      // Clean up
+      delete window.IHPWT;
+    });
     
     it('initLiveRampAts should initialize LiveRamp ATS', function() {
       const params = {
