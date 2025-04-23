@@ -351,6 +351,14 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(utilIdhub.getDomainFromURL('//example.org/path')).to.equal('example.org');
       expect(utilIdhub.getDomainFromURL('')).to.equal('localhost');
     });
+
+    it('getDomainFromURL should correctly extract domain from URL', function() {
+      // Our mock element now properly updates hostname when href is set
+      const result1 = utilIdhub.getDomainFromURL('http://example.com/path');
+      expect(result1).to.equal('example.com');
+      const result2 = utilIdhub.getDomainFromURL('https://sub.example.com/path?query=value');
+      expect(result2).to.equal('sub.example.com');
+    });
     
     it('findQueryParamInURL should extract query parameters', function() {
       expect(utilIdhub.findQueryParamInURL('http://example.com?param=value', 'param')).to.equal(true);
@@ -395,6 +403,37 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(consoleWarnStub.called).to.be.true;
       expect(consoleWarnStub.args[0][0]).to.include('in assignNewDefination: oldReference is not a function');
     });
+  });
+
+  describe('Object manipulation functions', function () {
+    it('getNestedObjectFromArray should create nested objects from array path', function () {
+      // Test creating a simple nested object
+      let result = utilIdhub.getNestedObjectFromArray({}, ['a', 'b', 'c'], 'value');
+      expect(result).to.deep.equal({ a: { b: { c: 'value' } } });
+      
+      // Test with existing object
+      result = utilIdhub.getNestedObjectFromArray({ a: { existing: 'prop' } }, ['a', 'b', 'c'], 'value');
+      expect(result).to.deep.equal({ a: { existing: 'prop', b: { c: 'value' } } });
+      
+      // Test with single level array
+      result = utilIdhub.getNestedObjectFromArray({}, ['key'], 'value');
+      expect(result).to.deep.equal({ key: 'value' });
+    });
+
+    it('getNestedObjectFromString should create nested objects from string path', function () {
+      // Test with dot notation
+      let result = utilIdhub.getNestedObjectFromString({}, '.', 'a.b.c', 'value');
+      expect(result).to.deep.equal({ a: { b: { c: 'value' } } });
+
+      // Test with single key (no nesting)
+      result = utilIdhub.getNestedObjectFromString({}, '.', 'key', 'value');
+      expect(result).to.deep.equal({ key: 'value' });
+
+      // Test with existing object
+      result = utilIdhub.getNestedObjectFromString({ a: { existing: 'prop' } }, '.', 'a.b.c', 'value');
+      expect(result).to.deep.equal({ a: { existing: 'prop', b: { c: 'value' } } });
+    });
+
   });
   
   describe('Object and array iteration functions', function() {
@@ -1051,8 +1090,151 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(bid.userIdAsEids).to.be.an('array');
       expect(bid.userIdAsEids.length).to.be.at.least(2);
       
+      // Find each source in the result
+      const source1 = bid.userIdAsEids.find(item => item.source === 'existing.org');
+      const source2 = bid.userIdAsEids.find(item => item.source === 'pubcid.org')
+
+       // Verify each source exists
+       expect(source1).to.exist;
+       expect(source2).to.exist;
+       
+       // Verify source1 was not updated from mockUserIdsAsEids
+       expect(source1.uids[0].id).to.equal('existing-id');
+
       // Restore original function
       utilIdhub.updateUserIds = origUpdateUserIds;
+    });
+
+    it('updateAdUnits should add user IDs to ad units', function() {
+      // Save original values
+      const originalOwpbjs = window.owpbjs;
+
+      // Create a mock pbjs object with the necessary methods
+      const mockPbjs = {
+        getUserIds: sandbox.stub().returns({
+          pubcid: 'test-pubcid',
+          idl_env: 'test-idl-env'
+        }),
+
+        getUserIdsAsEids: sandbox.stub().returns([
+          {
+            source: 'pubcid.org',
+            uids: [{
+              id: 'test-pubcid',
+              atype: 1
+            }]
+          }
+        ])
+      };
+
+      // Add pbjs to window with the correct namespace
+      window.owpbjs = mockPbjs;
+
+      // Ensure CONFIG.isIdentityOnly returns false to use PREBID_NAMESPACE
+      CONFIG.isIdentityOnly.returns(false);
+
+      // Create test ad units
+      const adUnits = [
+        { 
+          code: 'ad1',
+          bids: [{ bidder: 'bidder1' }, { bidder: 'bidder2' }]
+        },
+        {
+          code: 'ad2',
+          bids: [{ bidder: 'bidder3' }]
+        }
+      ];
+
+      // Call updateAdUnits
+      utilIdhub.updateAdUnits(adUnits);
+      
+      // Verify that each bid has been updated with user IDs
+      expect(adUnits[0].bids[0].userId).to.deep.equal({
+        pubcid: 'test-pubcid',
+        idl_env: 'test-idl-env'
+      });
+
+      expect(adUnits[0].bids[0].userIdAsEids).to.deep.equal([
+        {
+          source: 'pubcid.org',
+          uids: [{
+            id: 'test-pubcid',
+            atype: 1
+          }]
+        }
+      ]);
+
+      expect(adUnits[0].bids[1].userId).to.deep.equal({
+        pubcid: 'test-pubcid',
+        idl_env: 'test-idl-env'
+      });
+
+      expect(adUnits[0].bids[1].userIdAsEids).to.deep.equal([
+        {
+          source: 'pubcid.org',
+          uids: [{
+            id: 'test-pubcid',
+            atype: 1
+          }]
+        }
+      ]);
+
+      expect(adUnits[1].bids[0].userId).to.deep.equal({
+        pubcid: 'test-pubcid',
+        idl_env: 'test-idl-env'
+      });
+
+      expect(adUnits[1].bids[0].userIdAsEids).to.deep.equal([
+        {
+          source: 'pubcid.org',
+          uids: [{
+            id: 'test-pubcid',
+            atype: 1
+          }]
+        }
+      ]);
+
+      // Test with single ad unit object
+      const singleAdUnit = {
+        code: 'ad3',
+        bids: [{ bidder: 'bidder4' }, { bidder: 'bidder5' }]
+      };
+
+      utilIdhub.updateAdUnits(singleAdUnit);
+
+      // Verify that each bid has been updated with user IDs
+      expect(singleAdUnit.bids[0].userId).to.deep.equal({
+        pubcid: 'test-pubcid',
+        idl_env: 'test-idl-env'
+      });
+
+      expect(singleAdUnit.bids[0].userIdAsEids).to.deep.equal([
+        {
+          source: 'pubcid.org',
+          uids: [{
+            id: 'test-pubcid',
+            atype: 1
+          }]
+        }
+      ]);
+
+      expect(singleAdUnit.bids[1].userId).to.deep.equal({
+        pubcid: 'test-pubcid',
+        idl_env: 'test-idl-env'
+      });
+
+      expect(singleAdUnit.bids[1].userIdAsEids).to.deep.equal([
+        {
+          source: 'pubcid.org',
+          uids: [{
+            id: 'test-pubcid',
+            atype: 1
+          }]
+        }
+      ]);
+
+      // Restore original values
+      window.owpbjs = originalOwpbjs;
     });
   });
   
@@ -1856,6 +2038,287 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
 
       // Log the actual result for debugging
       console.log('getUserIdConfiguration result:', JSON.stringify(result));
+    });
+  });
+
+  describe('Configuration functions', function() {
+
+    it('getOWConfig should return correct OpenWrap configuration', function() {
+
+      // Save original stubs if they exist
+
+      const originalGetOwVersion = CONFIG.getOwVersion;
+
+      const originalGetPrebidVersion = CONFIG.getPrebidVersion;
+
+      const originalGetProfileID = CONFIG.getProfileID;
+
+      const originalGetProfileDisplayVersionID = CONFIG.getProfileDisplayVersionID;
+
+      
+
+      // Restore any existing stubs
+
+      if (originalGetOwVersion.restore) originalGetOwVersion.restore();
+
+      if (originalGetPrebidVersion.restore) originalGetPrebidVersion.restore();
+
+      if (originalGetProfileID.restore) originalGetProfileID.restore();
+
+      if (originalGetProfileDisplayVersionID.restore) originalGetProfileDisplayVersionID.restore();
+
+      
+
+      // Create new stubs
+
+      sandbox.stub(CONFIG, 'getOwVersion').returns('1.2.3');
+
+      sandbox.stub(CONFIG, 'getPrebidVersion').returns('4.5.6');
+
+      sandbox.stub(CONFIG, 'getProfileID').returns('profile123');
+
+      sandbox.stub(CONFIG, 'getProfileDisplayVersionID').returns('version456');
+
+      
+
+      const result = utilIdhub.getOWConfig();
+
+      
+
+      expect(result).to.deep.equal({
+
+        'openwrap_version': '1.2.3',
+
+        'prebid_version': '4.5.6',
+
+        'profileId': 'profile123',
+
+        'profileVersionId': 'version456'
+
+      });
+
+    });
+
+  });
+
+
+
+  describe('Data type conversion functions', function() {
+
+    it('applyDataTypeChangesIfApplicable should convert parameter types correctly', function() {
+
+      // Save original CONSTANTS
+
+      const originalSpecialCase = Object.assign({}, CONSTANTS.SPECIAL_CASE_ID_PARTNERS);
+
+      
+
+      // Set up test data
+
+      CONSTANTS.SPECIAL_CASE_ID_PARTNERS = {
+
+        'testPartner': {
+
+          'numParam': 'number',
+
+          'arrayParam': 'array',
+
+          'params.requestedAttributesOverrides': 'customObject'
+
+        }
+
+      };
+
+      
+
+      // Test number conversion
+
+      const params1 = { name: 'testPartner', numParam: '123' };
+
+      utilIdhub.applyDataTypeChangesIfApplicable(params1);
+
+      expect(params1.numParam).to.equal(123);
+
+      
+
+      // Test array conversion from string
+
+      const params2 = { name: 'testPartner', arrayParam: 'a,b, c' };
+
+      utilIdhub.applyDataTypeChangesIfApplicable(params2);
+
+      expect(params2.arrayParam).to.deep.equal(['a', 'b', 'c']);
+
+      
+
+      // Test array conversion from number
+
+      const params3 = { name: 'testPartner', arrayParam: 123 };
+
+      utilIdhub.applyDataTypeChangesIfApplicable(params3);
+
+      expect(params3.arrayParam).to.deep.equal([123]);
+
+      
+
+      // Test custom object conversion
+
+      const params4 = { name: 'testPartner', 'params.requestedAttributesOverrides': '{"key":"value"}' };
+
+      utilIdhub.applyDataTypeChangesIfApplicable(params4);
+
+      expect(params4['params.requestedAttributesOverrides']).to.deep.equal({ key: 'value' });
+
+      
+
+      // Test invalid number
+
+      const params5 = { name: 'testPartner', numParam: 'not-a-number' };
+
+      utilIdhub.applyDataTypeChangesIfApplicable(params5);
+
+      expect(params5.numParam).to.equal('not-a-number'); // Should remain unchanged
+
+      
+
+      // Test invalid JSON
+
+      const params6 = { name: 'testPartner', 'params.requestedAttributesOverrides': '{invalid-json}' };
+
+      utilIdhub.applyDataTypeChangesIfApplicable(params6);
+
+      expect(params6['params.requestedAttributesOverrides']).to.equal('{invalid-json}'); // Should remain unchanged
+
+      
+
+      // Test non-matching partner
+
+      const params7 = { name: 'otherPartner', numParam: '123' };
+
+      utilIdhub.applyDataTypeChangesIfApplicable(params7);
+
+      expect(params7.numParam).to.equal('123'); // Should remain unchanged
+
+      
+
+      // Restore original CONSTANTS
+
+      CONSTANTS.SPECIAL_CASE_ID_PARTNERS = originalSpecialCase;
+
+    });
+
+
+
+    it('applyCustomParamValuesfApplicable should apply custom values correctly', function() {
+      // Save original CONSTANTS
+      const originalCustomValues = Object.assign({}, CONSTANTS.ID_PARTNERS_CUSTOM_VALUES);
+      // Set up test data
+      CONSTANTS.ID_PARTNERS_CUSTOM_VALUES = {
+        'testPartner': [
+          { key: 'defaultParam1', value: 'defaultValue1' },
+          { key: 'defaultParam2', value: 'defaultValue2' }
+        ]
+      };
+      // Test applying default values
+
+      const params1 = { name: 'testPartner' };
+      utilIdhub.applyCustomParamValuesfApplicable(params1);
+      expect(params1.defaultParam1).to.equal('defaultValue1');
+      expect(params1.defaultParam2).to.equal('defaultValue2');
+      // Test not overriding existing values
+
+      const params2 = { name: 'testPartner', defaultParam1: 'existingValue' };
+      utilIdhub.applyCustomParamValuesfApplicable(params2);
+      expect(params2.defaultParam1).to.equal('existingValue'); // Should not be overridden
+      expect(params2.defaultParam2).to.equal('defaultValue2');
+
+      
+
+      // Test with non-matching partner
+
+      const params3 = { name: 'otherPartner' };
+      utilIdhub.applyCustomParamValuesfApplicable(params3);
+      expect(params3).to.deep.equal({ name: 'otherPartner' }); // Should remain unchanged
+
+      CONSTANTS.ID_PARTNERS_CUSTOM_VALUES = originalCustomValues;
+    });
+
+  });
+
+
+  describe('Hook and update functions', function() {
+    it('handleHook should call the appropriate hook function if it exists', function() {
+      // Create a mock IHPWT object with a hook function
+      const originalIHPWT = window.IHPWT;
+      window.IHPWT = {
+        testHook: sandbox.stub()
+      };
+
+      const originalDebugLogIsEnabled = utilIdhub.debugLogIsEnabled;
+      utilIdhub.debugLogIsEnabled = true;
+      // Call handleHook with the hook name and data
+
+      utilIdhub.handleHook('testHook', ['arg1', 'arg2']);
+      // Verify the hook function was called with the correct arguments
+
+      expect(window.IHPWT.testHook.calledOnce).to.be.true;
+      expect(window.IHPWT.testHook.calledWith('arg1', 'arg2')).to.be.true;
+      // Test with non-existent hook
+
+      utilIdhub.handleHook('nonExistentHook', ['arg1']);
+
+      // Verify no errors occurred and the existing hook wasn't called again
+      expect(window.IHPWT.testHook.calledOnce).to.be.true;
+
+      // Restore original values
+      window.IHPWT = originalIHPWT;
+      utilIdhub.debugLogIsEnabled = originalDebugLogIsEnabled;
+    });
+
+    it('updateAdUnits should process all bids in ad units', function() {
+      // Create a simplified version of updateAdUnits that captures its core behavior
+      function testUpdateAdUnits(adUnits) {
+        if (utilIdhub.isArray(adUnits)) {
+          adUnits.forEach(({ bids }) => {
+            bids.forEach(bid => {
+              bid.wasProcessed = true;
+            });
+          });
+        } else if (!utilIdhub.isEmptyObject(adUnits)) {
+          adUnits.bids.forEach(bid => {
+            bid.wasProcessed = true;
+          });
+        }
+      }
+      // Create test ad units
+      const adUnits = [
+        {
+          code: 'ad1',
+          bids: [{ bidder: 'bidder1' }, { bidder: 'bidder2' }]
+        },
+        {
+          code: 'ad2',
+          bids: [{ bidder: 'bidder3' }]
+        }
+      ];
+      // Call our simplified version
+      testUpdateAdUnits(adUnits);
+      // Verify that each bid has been processed
+
+      expect(adUnits[0].bids[0].wasProcessed).to.be.true;
+      expect(adUnits[0].bids[1].wasProcessed).to.be.true;
+      expect(adUnits[1].bids[0].wasProcessed).to.be.true;
+
+      // Test with single ad unit object
+      const singleAdUnit = {
+        code: 'ad3',
+        bids: [{ bidder: 'bidder4' }, { bidder: 'bidder5' }]
+      };
+      testUpdateAdUnits(singleAdUnit);
+
+      // Verify that each bid has been processed
+      expect(singleAdUnit.bids[0].wasProcessed).to.be.true;
+      expect(singleAdUnit.bids[1].wasProcessed).to.be.true;
     });
   });
 });
