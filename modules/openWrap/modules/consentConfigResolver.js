@@ -35,7 +35,7 @@ export function getCMConfigObject() {
 /**
  * Initializes the consent management configuration object.
  */
-function initializeCMConfig(allStatsAvailable, cmpPresent = 0, complianceSupport = [], cmpId = 0) {
+export function initializeCMConfig(allStatsAvailable, cmpPresent = 0, complianceSupport = [], cmpId = 0) {
   const cmConf = {
     allStatsAvailable,
     cmpPresent,
