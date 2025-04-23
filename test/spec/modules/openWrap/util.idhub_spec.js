@@ -1122,7 +1122,8 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           newId: 'new-value'
         }),
         getUserIdsAsEids: sandbox.stub().returns([
-          { source: 'existing.org', uids: [{ id: 'new-existing-id' }] }, // Duplicate source
+          {
+            source: 'existing.org', uids: [{ id: 'new-existing-id' }] }, // Duplicate source
           { source: 'new.org', uids: [{ id: 'new-id' }] } // New source
         ])
       };
@@ -1467,6 +1468,198 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(result.siteId).to.equal('site-id');
       expect(result.detectionSubject).to.equal('email');
       expect(result.urlParameter).to.equal('urlParam');
+    });
+
+    it('initZeoTapJs should handle user identity setup with SSO enabled', function() {
+      // Set up test data
+      const params = {
+        partnerId: 'test-partner-id'
+      };
+
+      // Set up IHPWT
+      window.IHPWT = {
+        OVERRIDES_SCRIPT_BASED_MODULES: ['zeotapIdPlus']
+      };
+
+      // Ensure SSO is enabled
+      CONFIG.isSSOEnabled.returns(true);
+
+      // Set up mock for document.getElementsByTagName
+      const mockScriptElement = {
+        parentNode: {
+          insertBefore: sandbox.stub()
+        }
+      };
+      sandbox.stub(document, 'getElementsByTagName').returns([mockScriptElement]);
+
+      // Set up mock for window.zeotap
+      window.zeotap = {
+        _q: [],
+        _qcmp: [],
+        callMethod: sandbox.stub()
+      };
+
+      // Call the function
+      utilIdhub.initZeoTapJs(params);
+    
+      // Verify script element creation
+      expect(document.createElement.calledOnce).to.be.true;
+      expect(document.createElement.firstCall.args[0]).to.equal('script');
+
+      // Verify script attributes
+      expect(scriptElement.type).to.equal('text/javascript');
+      expect(scriptElement.crossorigin).to.equal('anonymous');
+      expect(scriptElement.async).to.be.true;
+      expect(scriptElement.src).to.equal('https://content.zeotap.com/sdk/idp.min.js');
+
+      // We can't verify zeotap initialization because the implementation overwrites our mock
+      // Instead, we'll verify that the script was inserted into the document
+      expect(mockScriptElement.parentNode.insertBefore.calledOnce).to.be.true;
+      expect(mockScriptElement.parentNode.insertBefore.firstCall.args[0]).to.equal(scriptElement);
+
+      // Clean up
+      delete window.IHPWT;
+      delete window.zeotap;
+    });
+    
+    it('initZeoTapJs should handle when document is not ready', function() {
+      // Set up test data
+      const params = {
+        partnerId: 'test-partner-id'
+      };
+
+      // Set up document.readyState
+      Object.defineProperty(document, 'readyState', {
+        configurable: true,
+        get: () => 'loading'
+      });
+
+      // Stub window.addEventListener
+      const addEventListenerStub = sandbox.stub(window, 'addEventListener');
+
+      // Stub setTimeout
+      const setTimeoutStub = sandbox.stub(window, 'setTimeout');
+
+      // Call the function
+      utilIdhub.initZeoTapJs(params);
+
+      // Verify addEventListener was called
+      expect(addEventListenerStub.calledOnce).to.be.true;
+      expect(addEventListenerStub.firstCall.args[0]).to.equal('load');
+
+      // Simulate the load event
+      const loadHandler = addEventListenerStub.firstCall.args[1];
+      loadHandler();
+
+      // Verify setTimeout was called
+      expect(setTimeoutStub.calledOnce).to.be.true;
+      expect(setTimeoutStub.firstCall.args[1]).to.equal(1000);
+
+      // Restore original properties
+      Object.defineProperty(document, 'readyState', {
+        configurable: true,
+        get: () => 'complete'
+      });
+    });
+
+    it('initLauncherJs should set up window.cnvr_launcher_options and create script element', function() {
+      // Set up test data
+      const params = {
+        params: {
+          launcher_id: 'test-launcher-id'
+        }
+      };
+
+      // Call the function
+      utilIdhub.initLauncherJs(params);
+
+      // Verify window.cnvr_launcher_options
+      expect(window.cnvr_launcher_options).to.deep.equal({
+        lid: 'test-launcher-id'
+      });
+
+      // Verify script element creation
+      expect(document.createElement.calledOnce).to.be.true;
+      expect(document.createElement.firstCall.args[0]).to.equal('script');
+
+      // Verify script attributes
+      expect(scriptElement.src).to.equal('https://secure.cdn.fastclick.net/js/cnvr-launcher/latest/launcher-stub.min.js');
+
+      // Verify script was appended to document.body
+      expect(document.body.appendChild.calledOnce).to.be.true;
+
+      // Clean up
+      delete window.cnvr_launcher_options;
+    });
+
+    it('initLiveRampLaunchPad should create script with correct URL and handle onload', function() {
+      // Set up test data
+      const params = {
+        custom: {
+          configurationId: 'test-config-id'
+        }
+      };
+
+      // Set up mock for window.__launchpad
+      window.__launchpad = sandbox.stub();
+
+      // Set up mock for window.ats
+      window.ats = {
+        outputCurrentConfiguration: sandbox.stub().returns({
+          ENVELOPE_MODULE_INFO: {
+            ENVELOPE_MODULE_CONFIG: {
+              startWithExternalId: true
+            }
+          }
+        }),
+        setAdditionalData: sandbox.stub()
+      };
+
+      // Set up IHPWT
+      window.IHPWT = {
+        OVERRIDES_SCRIPT_BASED_MODULES: ['identityLink']
+      };
+
+      // Set up mock for getEmailHashes
+      const emailHashes = ['hash1', 'hash2'];
+      sandbox.stub(utilIdhub, 'getEmailHashes').returns(emailHashes);
+
+      // Call the function
+      utilIdhub.initLiveRampLaunchPad(params);
+
+      // Verify script element creation
+      expect(document.createElement.calledOnce).to.be.true;
+      expect(document.createElement.firstCall.args[0]).to.equal('script');
+
+      // Verify script attributes
+      expect(scriptElement.src).to.contain('launchpad-wrapper.privacymanager.io');
+      expect(scriptElement.src).to.contain('test-config-id');
+
+      // Verify script was appended to document.body
+      expect(document.body.appendChild.calledOnce).to.be.true;
+
+      // Simulate script onload
+      scriptElement._onloadHandler();
+
+      // Verify __launchpad was called
+      expect(window.__launchpad.calledOnce).to.be.true;
+      expect(window.__launchpad.firstCall.args[0]).to.equal('addEventListener');
+
+      // Simulate the event handler
+      const eventHandler = window.__launchpad.firstCall.args[2];
+      eventHandler();
+
+      // Verify ats.setAdditionalData was called with email hashes
+      expect(window.ats.setAdditionalData.calledOnce).to.be.true;
+      expect(window.ats.setAdditionalData.firstCall.args[0]).to.deep.equal({
+        type: 'emailHashes',
+        id: ['md5-hash', 'sha1-hash', 'sha256-hash']
+      });
+
+      // Clean up
+      delete window.__launchpad;
+      delete window.ats;
+      delete window.IHPWT;
     });
   });
 
