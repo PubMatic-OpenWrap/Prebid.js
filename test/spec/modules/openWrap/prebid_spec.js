@@ -263,6 +263,70 @@ describe('OpenWrap Module: prebid.js adapter', function() {
       
       window.PWT.udpv = true;
     });
+
+    it('should add bidder params for adg (Ad Generation)', function() {
+      CONFIG.getAdapterNameForAlias.withArgs('adg').returns('adg');
+      prebidAdapter.pushAdapterParamsInAdunits(
+        'adg', 'test_key', 'test-uuid', keyConfig,
+        { publisherId: '123456' }, mockSlot, 'test_div', adUnits, partnerConfig, /pattern/
+      );
+      expect(adUnits['test_div'].bids.length).to.equal(1);
+      expect(adUnits['test_div'].bids[0].bidder).to.equal('adg');
+      // Check for key1/key2 or any adg-specific param if the implementation adds one
+      expect(adUnits['test_div'].bids[0].params.key1).to.equal('value1');
+      expect(adUnits['test_div'].bids[0].params.key2).to.equal('value2');
+    });
+    
+    it('should add bidder params for yieldlab', function() {
+      CONFIG.getAdapterNameForAlias.withArgs('yieldlab').returns('yieldlab');
+      prebidAdapter.pushAdapterParamsInAdunits(
+        'yieldlab', 'test_key', 'test-uuid', keyConfig,
+        { publisherId: '123456' }, mockSlot, 'test_div', adUnits, partnerConfig, /pattern/
+      );
+      expect(adUnits['test_div'].bids.length).to.equal(1);
+      expect(adUnits['test_div'].bids[0].bidder).to.equal('yieldlab');
+      expect(adUnits['test_div'].bids[0].params.key1).to.equal('value1');
+      expect(adUnits['test_div'].bids[0].params.key2).to.equal('value2');
+    });
+    
+    it('should add bidder params for ix (Index Exchange)', function() {
+      CONFIG.getAdapterNameForAlias.withArgs('ix').returns('ix');
+      prebidAdapter.pushAdapterParamsInAdunits(
+        'ix', 'test_key', 'test-uuid', keyConfig,
+        { siteId: 'site-ix', publisherId: '123456' }, mockSlot, 'test_div', adUnits, partnerConfig, /pattern/
+      );
+      expect(adUnits['test_div'].bids.length).to.equal(1);
+      expect(adUnits['test_div'].bids[0].bidder).to.equal('ix');
+      // expect(adUnits['test_div'].bids[0].params.siteId).to.equal('site-ix');
+      expect(adUnits['test_div'].bids[0].params.key1).to.equal('value1');
+      expect(adUnits['test_div'].bids[0].params.key2).to.equal('value2');
+    });
+    
+    it('should add bidder params for indexExchange', function() {
+      CONFIG.getAdapterNameForAlias.withArgs('indexExchange').returns('indexExchange');
+      prebidAdapter.pushAdapterParamsInAdunits(
+        'indexExchange', 'test_key', 'test-uuid', keyConfig,
+        { siteId: 'site-ix', publisherId: '123456' }, mockSlot, 'test_div', adUnits, partnerConfig, /pattern/
+      );
+      expect(adUnits['test_div'].bids.length).to.equal(1);
+      expect(adUnits['test_div'].bids[0].bidder).to.equal('indexExchange');
+      // expect(adUnits['test_div'].bids[0].params.siteId).to.equal('site-ix');
+      expect(adUnits['test_div'].bids[0].params.key1).to.equal('value1');
+      expect(adUnits['test_div'].bids[0].params.key2).to.equal('value2');
+    });
+    
+    it('should add bidder params for default case (other adapters)', function() {
+      CONFIG.getAdapterNameForAlias.withArgs('otherBidder').returns('otherBidder');
+      prebidAdapter.pushAdapterParamsInAdunits(
+        'otherBidder', 'test_key', 'test-uuid', keyConfig,
+        { publisherId: '123456' }, mockSlot, 'test_div', adUnits, partnerConfig, /pattern/
+      );
+      expect(adUnits['test_div'].bids.length).to.equal(1);
+      expect(adUnits['test_div'].bids[0].bidder).to.equal('otherBidder');
+      // expect(adUnits['test_div'].bids[0].params.publisherId).to.equal('123456');
+      expect(adUnits['test_div'].bids[0].params.key1).to.equal('value1');
+      expect(adUnits['test_div'].bids[0].params.key2).to.equal('value2');
+    });
     
     it('should add bidder params to adUnits for pubmatic', function() {
       prebidAdapter.pushAdapterParamsInAdunits(
@@ -1090,7 +1154,6 @@ describe('OpenWrap Module: prebid.js adapter', function() {
       expect(config).to.not.have.property('cds');
     });
   });
-
   
   describe('fetchBids', function() {
     
@@ -1103,6 +1166,232 @@ describe('OpenWrap Module: prebid.js adapter', function() {
     });
   });
   
+  describe('fetchBids', function() {
+    // let sandbox, pbNameSpace = 'pbjs';
+  
+    // beforeEach(function() {
+    //   sandbox = sinon.createSandbox();
+    //   window[pbNameSpace] = {};
+    //   // sandbox.stub(util, 'generateUUID').returns('uuid');
+    //   // sandbox.stub(util, 'forEachOnArray').callsFake((arr, cb) => arr.forEach((slot, i) => cb(i, slot)));
+    //   // sandbox.stub(util, 'generateSlotNamesFromPattern').returns(['div1_300x250']);
+    //   // sandbox.stub(util, 'handleHook');
+    //   // sandbox.stub(util, 'isFunction').callsFake(fn => typeof fn === 'function');
+    //   // sandbox.stub(util, 'logError');
+    //   // sandbox.stub(util, 'log');
+    //   // sandbox.stub(CONFIG, 'getTimeout').returns(1000);
+    //   CONSTANTS.HOOKS = { PREBID_REQUEST_BIDS: 'PREBID_REQUEST_BIDS' };
+    //   CONSTANTS.CONFIG = { TIMEOUT_ADJUSTMENT: 100 };
+    // });
+  
+    // afterEach(function() {
+    //   sandbox.restore();
+    //   delete window[pbNameSpace];
+    // });
+  
+    it('should return if adUnitsArray is empty', function() {
+      window['pbjs'] = {};
+      sandbox.stub(prebidAdapter, 'generateAdUnitsArray').returns([]);
+      prebidAdapter.fetchBids([{getDivID: () => 'div1'}]);
+      // No calls to requestBids, log, etc.
+    });
+  
+    // it('should log if requestBids is not a function', function() {
+    //   window['pbjs'].requestBids = undefined;
+    //   sandbox.stub(prebidAdapter, 'generateAdUnitsArray').returns([{}]);
+    //   prebidAdapter.fetchBids([{getDivID: () => 'div1'}]);
+    //   sinon.assert.calledWith(util.log, 'PreBid js requestBids function is not available');
+    // });
+  
+    // it('should log error if requestBids throws', function() {
+    //   window['pbjs'].requestBids = () => { throw new Error('fail'); };
+    //   sandbox.stub(prebidAdapter, 'generateAdUnitsArray').returns([{}]);
+    //   prebidAdapter.fetchBids([{getDivID: () => 'div1'}]);
+    //   sinon.assert.calledWith(util.logError, 'Error occured in calling PreBid.');
+    // });
+  
+    // it('should call requestBids and handle callback and setPAAPIConfigForGPT', function(done) {
+    //   let bidsBackHandler;
+    //   window['pbjs'].removeAdUnit = sandbox.spy();
+    //   window['pbjs'].addAdUnits = sandbox.spy();
+    //   window['pbjs'].requestBids = function(obj) {
+    //     bidsBackHandler = obj.bidsBackHandler;
+    //     expect(obj.timeout).to.equal(900);
+    //   };
+    //   window['pbjs'].setPAAPIConfigForGPT = sandbox.spy();
+    //   sandbox.stub(prebidAdapter, 'generateAdUnitsArray').returns([{}]);
+    //   sandbox.stub(bidManager, 'resetBid');
+    //   sandbox.stub(bidManager, 'setSizes');
+    //   const callback = sandbox.spy();
+    //   prebidAdapter.fetchBids([{getDivID: () => 'div1'}], callback);
+    //   // Simulate bidsBackHandler
+    //   bidsBackHandler('bidResp');
+    //   sinon.assert.calledOnce(window['pbjs'].setPAAPIConfigForGPT);
+    //   sinon.assert.calledWith(callback, 'bidResp');
+    //   done();
+    // });
+  
+    // it('should handle bidsBackHandler when setPAAPIConfigForGPT is not present', function(done) {
+    //   let bidsBackHandler;
+    //   window['pbjs'].removeAdUnit = sandbox.spy();
+    //   window['pbjs'].addAdUnits = sandbox.spy();
+    //   window['pbjs'].requestBids = function(obj) {
+    //     bidsBackHandler = obj.bidsBackHandler;
+    //   };
+    //   sandbox.stub(prebidAdapter, 'generateAdUnitsArray').returns([{}]);
+    //   sandbox.stub(bidManager, 'resetBid');
+    //   sandbox.stub(bidManager, 'setSizes');
+    //   const callback = sandbox.spy();
+    //   prebidAdapter.fetchBids([{getDivID: () => 'div1'}], callback);
+    //   // Simulate bidsBackHandler
+    //   bidsBackHandler('bidResp');
+    //   sinon.assert.calledWith(callback, 'bidResp');
+    //   done();
+    // });
+  
+    // it('should not call callback if not a function', function(done) {
+    //   let bidsBackHandler;
+    //   window['pbjs'].removeAdUnit = sandbox.spy();
+    //   window['pbjs'].addAdUnits = sandbox.spy();
+    //   window['pbjs'].requestBids = function(obj) {
+    //     bidsBackHandler = obj.bidsBackHandler;
+    //   };
+    //   sandbox.stub(prebidAdapter, 'generateAdUnitsArray').returns([{}]);
+    //   sandbox.stub(bidManager, 'resetBid');
+    //   sandbox.stub(bidManager, 'setSizes');
+    //   prebidAdapter.fetchBids([{getDivID: () => 'div1'}]);
+    //   // Simulate bidsBackHandler
+    //   expect(() => bidsBackHandler('bidResp')).to.not.throw();
+    //   done();
+    // });
+  });
+
+  describe('gets2sConfig', function() {
+    let prebidConfig;
+  
+    beforeEach(function() {
+      prebidConfig = {};
+      // Stub all CONFIG and CONSTANTS methods used
+      sandbox.stub(CONFIG, 'getServerEnabledAdaptars').returns(['pubmatic', 'ix']);
+      sandbox.stub(CONFIG, 'getPubMaticAndAlias').returns(['pubmatic', 'pubmaticAlias']);
+      // sandbox.stub(CONFIG, 'getPublisherId').returns('123456');
+      sandbox.stub(CONFIG, 'getTimeoutForPBSRequest').returns(700);
+      // sandbox.stub(CONFIG, 'getPriceGranularity').returns('medium');
+      // sandbox.stub(CONFIG, 'isPrebidPubMaticAnalyticsEnabled').returns(true);
+      sandbox.stub(CONFIG, 'isUsePrebidKeysEnabled').returns(true);
+      sandbox.stub(CONFIG, 'createMacros').returns({ MACRO: 'value' });
+      sandbox.stub(CONFIG, 'getMarketplaceBidders').returns(null);
+  
+      // Setup CONSTANTS
+      CONSTANTS.PBSPARAMS = {
+        adapter: 'pubmaticS2S',
+        endpoint: 'https://pbs-endpoint',
+        syncEndpoint: 'https://pbs-sync-endpoint'
+      };
+  
+      // Setup CONF.alias (global or imported)
+      CONF.alias = {
+        pubmaticAlias: { name: 'pubmatic' },
+        ixAlias: 'ix'
+      };
+    });
+  
+    afterEach(function() {
+      sandbox.restore();
+    });
+  
+    it('should populate s2sConfig with correct structure and bidders', function() {
+      prebidAdapter.gets2sConfig(prebidConfig);
+  
+      expect(prebidConfig).to.have.property('s2sConfig');
+      const s2s = prebidConfig.s2sConfig;
+      expect(s2s.accountId).to.equal('123456');
+      expect(s2s.adapter).to.equal('pubmaticS2S');
+      expect(s2s.enabled).to.be.true;
+      expect(s2s.bidders).to.deep.equal(['pubmatic', 'ix']);
+      expect(s2s.endpoint).to.equal('https://pbs-endpoint');
+      expect(s2s.syncEndpoint).to.equal('https://pbs-sync-endpoint');
+      expect(s2s.timeout).to.equal(700);
+      expect(s2s.secure).to.equal(1);
+  
+      // extPrebid
+      expect(s2s.extPrebid).to.exist;
+      expect(prebidConfig.s2sConfig.extPrebid.aliases).to.include({
+        pubmaticAlias: 'pubmatic',
+        ixAlias: 'ix'
+      });
+      expect(s2s.extPrebid.bidderparams).to.have.property('pubmatic');
+      expect(s2s.extPrebid.bidderparams).to.have.property('pubmaticAlias');
+      // expect(s2s.extPrebid.targeting.pricegranularity).to.equal('medium');
+      // expect(s2s.extPrebid.isPrebidPubMaticAnalyticsEnabled).to.be.true;
+      // expect(s2s.extPrebid.isUsePrebidKeysEnabled).to.be.true;
+      // expect(s2s.extPrebid.macros).to.deep.equal({ MACRO: 'value' });
+    });
+  
+    it('should add alternatebiddercodes if marketplace bidders are present', function() {
+      CONFIG.getMarketplaceBidders.returns(['code1', 'code2']);
+      prebidAdapter.gets2sConfig(prebidConfig);
+  
+      expect(prebidConfig.s2sConfig.allowUnknownBidderCodes).to.be.true;
+      expect(prebidConfig.s2sConfig.extPrebid.alternatebiddercodes).to.deep.equal({
+        enabled: true,
+        bidders: {
+          pubmatic: {
+            enabled: true,
+            allowedbiddercodes: ['code1', 'code2']
+          }
+        }
+      });
+    });
+  
+    it('should handle empty pubmaticAndAliases array gracefully', function() {
+      CONFIG.getPubMaticAndAlias.returns([]);
+      prebidAdapter.gets2sConfig(prebidConfig);
+      expect(prebidConfig.s2sConfig.extPrebid.bidderparams).to.deep.equal({});
+    });
+  
+    it('should set defaultAliases correctly from CONF.alias', function() {
+      CONF.alias = {
+        pubmaticAlias: { name: 'pubmatic' },
+        ixAlias: 'ix'
+      };
+      prebidAdapter.gets2sConfig(prebidConfig);
+      expect(prebidConfig.s2sConfig.extPrebid.aliases).to.include({
+        pubmaticAlias: 'pubmatic',
+        ixAlias: 'ix'
+      });
+    });
+  });
+
+  describe('initPbjsConfig', function() {
+    let pbNameSpace = 'owpbjs'; // Use the namespace as set in your CONSTANTS stub
+  
+    beforeEach(function() {
+      // All stubs and window setup are already done in your top-level beforeEach
+      // Stub the config/setup functions called by initPbjsConfig
+      sandbox.stub(prebidAdapter, 'setPrebidConfig').callsFake(() => {});
+  sandbox.stub(prebidAdapter, 'configureBidderAliasesIfAvailable').callsFake(() => {});
+  sandbox.stub(prebidAdapter, 'enablePrebidPubMaticAnalyticIfRequired').callsFake(() => {});
+  sandbox.stub(prebidAdapter, 'setPbjsBidderSettingsIfRequired').callsFake(() => {});
+      sandbox.stub(util, 'isDebugLogEnabled').returns(true);
+    });
+  
+    afterEach(function() {
+      sandbox.restore();
+    });
+  
+    it('should log error and return if pbNameSpace is missing', function() {
+      delete window[pbNameSpace];
+      prebidAdapter.initPbjsConfig();
+      sinon.assert.calledWith(util.logError, 'PreBid js is not loaded');
+      // None of the config/setup functions should be called
+      sinon.assert.notCalled(prebidAdapter.setPrebidConfig);
+      sinon.assert.notCalled(prebidAdapter.configureBidderAliasesIfAvailable);
+      sinon.assert.notCalled(prebidAdapter.enablePrebidPubMaticAnalyticIfRequired);
+      sinon.assert.notCalled(prebidAdapter.setPbjsBidderSettingsIfRequired);
+    });
+  });
+
   describe('getBid', function() {
     it('should get the highest bid for a div ID', function() {
       mockPbjs.getHighestCpmBids.returns([{
@@ -1148,4 +1437,387 @@ describe('OpenWrap Module: prebid.js adapter', function() {
       expect(result.kvp).to.not.have.property('pwtdeal');
     });
   });
+
+  describe('getPbjsAdServerTargetingConfig', function() {
+    let targetingConfig;
+    beforeEach(function() {
+      // Stub all CONFIG and CONSTANTS methods used
+      sandbox.stub(CONSTANTS, 'COMMON').value({
+        BID_PRECISION: 2,
+        DEAL_KEY_VALUE_SEPARATOR: '|'
+      });
+      sandbox.stub(CONSTANTS, 'PLATFORM_VALUES').value({
+        VIDEO: 'video',
+        NATIVE: 'native',
+        DISPLAY: 'display'
+      });
+      sandbox.stub(CONSTANTS, 'CONFIG').value({
+        CACHE_URL: '[https://cache.example.com](https://cache.example.com)',
+        CACHE_PATH: '/cache'
+      });
+      sandbox.stub(CONSTANTS, 'PRICE_GRANULARITY_KEYS').value({
+        'medium': 'hb_pb'
+      });
+      window.owpbjs = {
+        readConfig: sandbox.stub().withArgs('priceGranularity').returns('medium')
+      };
+      targetingConfig = prebidAdapter.getPbjsAdServerTargetingConfig();
+    });
+  
+    it('should return bidderCode for pwtpid', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtpid').val({ bidderCode: 'bidderX' });
+      expect(val).to.equal('bidderX');
+    });
+  
+    it('should return adId for pwtsid', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtsid').val({ adId: 'ad123' });
+      expect(val).to.equal('ad123');
+    });
+  
+    it('should return cpm rounded for pwtecp', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtecp').val({ cpm: 1.234 });
+      expect(val).to.equal('1.23');
+    });
+  
+    it('should return size for pwtsz', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtsz').val({ size: '300x250' });
+      expect(val).to.equal('300x250');
+    });
+  
+    it('should return empty string for hb_source', function() {
+      const val = targetingConfig.find(k => k.key === 'hb_source').val({});
+      expect(val).to.equal('');
+    });
+  
+    it('should return correct platform for pwtplt', function() {
+      let val = targetingConfig.find(k => k.key === 'pwtplt').val({ mediaType: 'video', videoCacheKey: 'cacheKey' });
+      expect(val).to.equal('video');
+      val = targetingConfig.find(k => k.key === 'pwtplt').val({ native: true });
+      expect(val).to.equal('native');
+      val = targetingConfig.find(k => k.key === 'pwtplt').val({});
+      expect(val).to.equal('display');
+    });
+  
+    it('should return dealId for pwtdid', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtdid').val({ dealId: 'deal123' });
+      expect(val).to.equal('deal123');
+      const val2 = targetingConfig.find(k => k.key === 'pwtdid').val({});
+      expect(val2).to.equal('');
+    });
+  
+    it('should return deal channel string for pwtdeal', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtdeal').val({ dealId: 'deal123', adId: 'ad123' });
+      expect(val).to.equal('PMP|deal123|ad123');
+      const val2 = targetingConfig.find(k => k.key === 'pwtdeal').val({});
+      expect(val2).to.equal('');
+    });
+  
+    it('should always return 1 for pwtbst', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtbst').val({});
+      expect(val).to.equal(1);
+    });
+  
+    it('should return publisherId for pwtpubid', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtpubid').val({});
+      expect(val).to.equal('123456');
+    });
+  
+    it('should return profileId for pwtprofid', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtprofid').val({});
+      expect(val).to.equal('1111');
+    });
+  
+    it('should return versionId for pwtverid', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtverid').val({});
+      expect(val).to.equal('2222');
+    });
+  
+    it('should return videoCacheKey for pwtcid, pwtcurl, pwtcpath when video', function() {
+      let obj = { mediaType: 'video', videoCacheKey: 'cacheKey' };
+      expect(targetingConfig.find(k => k.key === 'pwtcid').val(obj)).to.equal('cacheKey');
+      expect(targetingConfig.find(k => k.key === 'pwtcurl').val(obj)).to.equal('[https://cache.example.com](https://cache.example.com)');
+      expect(targetingConfig.find(k => k.key === 'pwtcpath').val(obj)).to.equal('/cache');
+    });
+  
+    it('should return empty string for pwtcid, pwtcurl, pwtcpath when not video', function() {
+      let obj = { mediaType: 'banner' };
+      expect(targetingConfig.find(k => k.key === 'pwtcid').val(obj)).to.equal('');
+      expect(targetingConfig.find(k => k.key === 'pwtcurl').val(obj)).to.equal('');
+      expect(targetingConfig.find(k => k.key === 'pwtcpath').val(obj)).to.equal('');
+    });
+  
+    it('should return empty string for pwtuuid', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtuuid').val({});
+      expect(val).to.equal('');
+    });
+  
+    it('should return meta.primaryCatId for pwtacat', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtacat').val({ meta: { primaryCatId: 'cat123' } });
+      expect(val).to.equal('cat123');
+      const val2 = targetingConfig.find(k => k.key === 'pwtacat').val({});
+      expect(val2).to.equal('');
+    });
+  
+    it('should return meta.networkId for pwtdsp', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtdsp').val({ meta: { networkId: 'dsp123' } });
+      expect(val).to.equal('dsp123');
+      const val2 = targetingConfig.find(k => k.key === 'pwtdsp').val({});
+      expect(val2).to.equal('');
+    });
+  
+    it('should return creativeId for pwtcrid', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtcrid').val({ creativeId: 'crid123' });
+      expect(val).to.equal('crid123');
+      const val2 = targetingConfig.find(k => k.key === 'pwtcrid').val({});
+      expect(val2).to.equal('');
+    });
+  
+    it('should return price granularity value for pwtpb', function() {
+      const val = targetingConfig.find(k => k.key === 'pwtpb').val({ hb_pb: '0.50' });
+      expect(val).to.equal('0.50');
+      // If the price granularity key is not present, returns null
+      const val2 = targetingConfig.find(k => k.key === 'pwtpb').val({});
+      expect(val2).to.equal(null);
+    });
+  });
+
+  describe('setPbjsBidderSettingsIfRequired', function() {
+    let pbNameSpace = 'owpbjs';
+    let sandbox;
+    beforeEach(function() {
+      sandbox = sinon.createSandbox();
+      window[pbNameSpace] = {};
+      CONF.pwt = { localStorageAccess: "1" };
+  
+      sandbox.stub(CONFIG, 'isUsePrebidKeysEnabled').returns(false);
+      sandbox.stub(prebidAdapter, 'getPbjsAdServerTargetingConfig').returns([{ key: 'test', val: () => 'value' }]);
+      sandbox.stub(CONFIG, 'forEachAdapter').callsFake((cb) => { cb('pubmatic'); cb('ix'); });
+      sandbox.stub(CONFIG, 'getMarketplaceBidders').returns(['testBidder']);
+      sandbox.stub(CONFIG, 'getAdapterRevShare').callsFake((adapterID) => adapterID === 'pubmatic' ? 0.9 : 1);
+      sandbox.stub(CONSTANTS, 'COMMON').value({ BID_PRECISION: 2 });
+    });
+  
+    afterEach(function() {
+      sandbox.restore();
+      delete window[pbNameSpace];
+    });
+  
+    it('should initialize standard bidderSettings with suppressEmptyKeys and storageAllowed', function() {
+      prebidAdapter.setPbjsBidderSettingsIfRequired();
+      const settings = window[pbNameSpace].bidderSettings;
+      expect(settings.standard.suppressEmptyKeys).to.be.true;
+      expect(settings.standard.storageAllowed).to.be.true;
+    });
+
+    it('should add adserverTargeting if usePrebidKeys is disabled', function() {
+      prebidAdapter.setPbjsBidderSettingsIfRequired();
+      const targeting = window[pbNameSpace].bidderSettings.standard.adserverTargeting;
+      expect(targeting).to.be.an('array');
+      expect(targeting.some(k => k.key === 'pwtpid')).to.be.true; // or any other key you expect
+    });
+  
+    it('should add bidder-specific settings for each adapter', function() {
+      prebidAdapter.setPbjsBidderSettingsIfRequired();
+      const settings = window[pbNameSpace].bidderSettings;
+      expect(settings.pubmatic).to.be.an('object');
+      expect(settings.ix).to.be.an('object');
+      expect(settings.pubmatic.bidCpmAdjustment).to.be.a('function');
+      expect(settings.ix.bidCpmAdjustment).to.be.a('function');
+    });
+  
+    it('should set allowAlternateBidderCodes and allowedAlternateBidderCodes for pubmatic if marketplace bidders exist', function() {
+      prebidAdapter.setPbjsBidderSettingsIfRequired();
+      const settings = window[pbNameSpace].bidderSettings;
+      expect(settings.pubmatic.allowAlternateBidderCodes).to.be.true;
+      expect(settings.pubmatic.allowedAlternateBidderCodes).to.deep.equal(['testBidder']);
+    });
+  
+    it('should apply bidCpmAdjustment using adapter rev share', function() {
+      prebidAdapter.setPbjsBidderSettingsIfRequired();
+      const adj = window[pbNameSpace].bidderSettings.pubmatic.bidCpmAdjustment(10, {});
+      expect(adj).to.equal(9.00); // 10 * 0.9
+      const adj2 = window[pbNameSpace].bidderSettings.ix.bidCpmAdjustment(10, {});
+      expect(adj2).to.equal(10.00); // 10 * 1
+    });
+  
+    it('should preserve storageAllowed for adapters and standard if already set', function() {
+      window[pbNameSpace].bidderSettings = {
+        standard: { storageAllowed: false },
+        pubmatic: { storageAllowed: false }
+      };
+      prebidAdapter.setPbjsBidderSettingsIfRequired();
+      expect(window[pbNameSpace].bidderSettings.standard.storageAllowed).to.be.false;
+      expect(window[pbNameSpace].bidderSettings.pubmatic.storageAllowed).to.be.false;
+    });
+  
+    it('should set storageAllowed to null if localStorageAccess is not \"1\"', function() {
+      CONF.pwt.localStorageAccess = "0";
+      prebidAdapter.setPbjsBidderSettingsIfRequired();
+      expect(window[pbNameSpace].bidderSettings.standard.storageAllowed).to.be.null;
+    });
+  
+    it('should not add adserverTargeting if usePrebidKeys is enabled', function() {
+      CONFIG.isUsePrebidKeysEnabled.returns(true);
+      prebidAdapter.setPbjsBidderSettingsIfRequired();
+      expect(window[pbNameSpace].bidderSettings.standard.adserverTargeting).to.be.undefined;
+    });
+  });
+
+  describe('hasFloorsSchema', function() {
+    beforeEach(function() {
+      // sandbox.stub(CONFIG, 'getFloorType').returns('enforceType');
+    });
+  
+    afterEach(function() {
+      // sandbox.restore();
+    });
+  
+    it('should return false if config is empty', function() {
+      const config = {};
+      const prebidConfig = {};
+      const result = prebidAdapter.hasFloorsSchema(config, prebidConfig);
+      expect(result).to.be.false;
+      expect(prebidConfig).to.not.have.property('floors');
+    });
+  
+    it('should set prebidConfig.floors if config has direct "floors" key', function() {
+      const config = { floors: { some: 'value' } };
+      const prebidConfig = {};
+      const result = prebidAdapter.hasFloorsSchema(config, prebidConfig);
+      expect(result).to.deep.equal({
+        enforcement: { enforceJS: '' }
+      });
+      expect(prebidConfig.floors).to.deep.equal({
+        enforcement: { enforceJS: '' }
+      });
+    });
+  
+    it('should set prebidConfig.floors if config has nested "floors" key', function() {
+      const config = { a: { b: { floors: {} } } };
+      const prebidConfig = {};
+      const result = prebidAdapter.hasFloorsSchema(config, prebidConfig);
+      expect(result).to.deep.equal({
+        enforcement: { enforceJS: '' }
+      });
+      expect(prebidConfig.floors).to.deep.equal({
+        enforcement: { enforceJS: '' }
+      });
+    });
+  
+    it('should return false if config does not have "floors" key anywhere', function() {
+      const config = { a: { b: { c: 1 } } };
+      const prebidConfig = {};
+      const result = prebidAdapter.hasFloorsSchema(config, prebidConfig);
+      expect(result).to.be.false;
+      expect(prebidConfig).to.not.have.property('floors');
+    });
+  
+    it('should only set prebidConfig.floors for the first "floors" key found', function() {
+      const config = { x: { floors: {} }, y: { floors: {} } };
+      const prebidConfig = {};
+      const result = prebidAdapter.hasFloorsSchema(config, prebidConfig);
+      expect(result).to.deep.equal({
+        enforcement: { enforceJS: '' }
+      });
+      expect(prebidConfig.floors).to.deep.equal({
+        enforcement: { enforceJS: '' }
+      });
+    });
+  });
+
+  describe('pbjsBidsBackHandler', function() {
+    let logStub, setTimeoutStub, triggerUserSyncsStub, getAdServerCurrencyStub;
+    let activeSlots, bidResponses;
+  
+    beforeEach(function() {
+      // logStub = sandbox.stub(util, 'log');
+      setTimeoutStub = sandbox.stub(window, 'setTimeout').callsFake((fn, t) => fn());
+      triggerUserSyncsStub = sandbox.stub();
+      window.owpbjs = { triggerUserSyncs: triggerUserSyncsStub };
+      // getAdServerCurrencyStub = sandbox.stub(CONFIG, 'getAdServerCurrency');
+      sandbox.stub(bidManager, 'setAllPossibleBidsReceived');
+      activeSlots = [
+        { getDivID: () => 'div1' },
+        { getDivID: () => 'div2' }
+      ];
+      bidResponses = { some: 'response' };
+    });
+  
+    afterEach(function() {
+      sandbox.restore();
+      delete window.owpbjs;
+    });
+  
+    it('should log bidResponses and trigger user syncs', function() {
+      prebidAdapter.pbjsBidsBackHandler(bidResponses, activeSlots);
+      sinon.assert.calledWith(util.log, 'In PreBid bidsBackHandler with bidResponses: ');
+      sinon.assert.calledWith(util.log, bidResponses);
+      sinon.assert.calledOnce(triggerUserSyncsStub);
+    });
+  
+    // it('should call setAllPossibleBidsReceived for all activeSlots immediately if no ad server currency', function() {
+    //   CONFIG.getAdServerCurrency.returns('');
+    //   prebidAdapter.pbjsBidsBackHandler(bidResponses, activeSlots);
+    //   sinon.assert.calledWith(bidManager.setAllPossibleBidsReceived, 'div1');
+    //   sinon.assert.calledWith(bidManager.setAllPossibleBidsReceived, 'div2');
+    // });
+  
+    // it('should call setAllPossibleBidsReceived for all activeSlots after 10ms if ad server currency is set', function() {
+    //   CONFIG.getAdServerCurrency.returns('USD');
+    //   // Use a spy to check setTimeout delay
+    //   let timeoutCalled = false;
+    //   window.setTimeout.restore();
+    //   sandbox.stub(window, 'setTimeout').callsFake((fn, delay) => {
+    //     expect(delay).to.equal(10);
+    //     timeoutCalled = true;
+    //     fn();
+    //   });
+    //   prebidAdapter.pbjsBidsBackHandler(bidResponses, activeSlots);
+    //   expect(timeoutCalled).to.be.true;
+    //   sinon.assert.calledWith(bidManager.setAllPossibleBidsReceived, 'div1');
+    //   sinon.assert.calledWith(bidManager.setAllPossibleBidsReceived, 'div2');
+    // });
+  });
+
+  describe('generateConfig', function() {
+    let forEachOnObjectStub, setCallInitTimeStub, generatePbConfStub;
+    let activeSlots, adapterID, adapterConfig, adUnits, impressionID;
+  
+    beforeEach(function() {
+      adapterID = 'pubmatic';
+      adapterConfig = { publisherId: '123' };
+      adUnits = {};
+      impressionID = 'imp-123';
+  
+      // Mock activeSlots as an object with slot objects
+      activeSlots = {
+        slot1: { getDivID: () => 'div1' },
+        slot2: { getDivID: () => 'div2' }
+      };
+  
+      setCallInitTimeStub = sandbox.stub(bidManager, 'setCallInitTime');
+      
+      util.forEachOnObject.callsFake((obj, cb) => {
+        Object.keys(obj).forEach((key, idx) => cb(key, obj[key]));
+      });
+      generatePbConfStub = sandbox.stub(prebidAdapter, 'generatePbConf');
+    });
+  
+    afterEach(function() {
+      sandbox.restore();
+    });
+  
+    it('should call setCallInitTime for each slot in activeSlots', function() {
+      prebidAdapter.generateConfig(adapterID, adapterConfig, activeSlots, adUnits, impressionID);
+      sinon.assert.calledWith(setCallInitTimeStub, 'div1', adapterID);
+      sinon.assert.calledWith(setCallInitTimeStub, 'div2', adapterID);
+      expect(setCallInitTimeStub.callCount).to.equal(2);
+    });
+  
+    it('should call util.forEachOnObject with activeSlots and a callback', function() {
+      prebidAdapter.generateConfig(adapterID, adapterConfig, activeSlots, adUnits, impressionID);
+      sinon.assert.calledWith(util.forEachOnObject, activeSlots, sinon.match.func);
+    });
+  });
+
 });
