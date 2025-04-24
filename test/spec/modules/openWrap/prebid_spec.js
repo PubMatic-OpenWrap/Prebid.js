@@ -1159,111 +1159,18 @@ describe('OpenWrap Module: prebid.js adapter', function() {
     
     it('should handle missing Prebid.js', function() {
       delete window.owpbjs;
-      
       prebidAdapter.fetchBids([], sandbox.stub());
-      
       expect(util.logError.calledWith('PreBid js is not loaded')).to.be.true;
     });
   });
   
   describe('fetchBids', function() {
-    // let sandbox, pbNameSpace = 'pbjs';
-  
-    // beforeEach(function() {
-    //   sandbox = sinon.createSandbox();
-    //   window[pbNameSpace] = {};
-    //   // sandbox.stub(util, 'generateUUID').returns('uuid');
-    //   // sandbox.stub(util, 'forEachOnArray').callsFake((arr, cb) => arr.forEach((slot, i) => cb(i, slot)));
-    //   // sandbox.stub(util, 'generateSlotNamesFromPattern').returns(['div1_300x250']);
-    //   // sandbox.stub(util, 'handleHook');
-    //   // sandbox.stub(util, 'isFunction').callsFake(fn => typeof fn === 'function');
-    //   // sandbox.stub(util, 'logError');
-    //   // sandbox.stub(util, 'log');
-    //   // sandbox.stub(CONFIG, 'getTimeout').returns(1000);
-    //   CONSTANTS.HOOKS = { PREBID_REQUEST_BIDS: 'PREBID_REQUEST_BIDS' };
-    //   CONSTANTS.CONFIG = { TIMEOUT_ADJUSTMENT: 100 };
-    // });
-  
-    // afterEach(function() {
-    //   sandbox.restore();
-    //   delete window[pbNameSpace];
-    // });
-  
     it('should return if adUnitsArray is empty', function() {
       window['pbjs'] = {};
       sandbox.stub(prebidAdapter, 'generateAdUnitsArray').returns([]);
       prebidAdapter.fetchBids([{getDivID: () => 'div1'}]);
       // No calls to requestBids, log, etc.
     });
-  
-    // it('should log if requestBids is not a function', function() {
-    //   window['pbjs'].requestBids = undefined;
-    //   sandbox.stub(prebidAdapter, 'generateAdUnitsArray').returns([{}]);
-    //   prebidAdapter.fetchBids([{getDivID: () => 'div1'}]);
-    //   sinon.assert.calledWith(util.log, 'PreBid js requestBids function is not available');
-    // });
-  
-    // it('should log error if requestBids throws', function() {
-    //   window['pbjs'].requestBids = () => { throw new Error('fail'); };
-    //   sandbox.stub(prebidAdapter, 'generateAdUnitsArray').returns([{}]);
-    //   prebidAdapter.fetchBids([{getDivID: () => 'div1'}]);
-    //   sinon.assert.calledWith(util.logError, 'Error occured in calling PreBid.');
-    // });
-  
-    // it('should call requestBids and handle callback and setPAAPIConfigForGPT', function(done) {
-    //   let bidsBackHandler;
-    //   window['pbjs'].removeAdUnit = sandbox.spy();
-    //   window['pbjs'].addAdUnits = sandbox.spy();
-    //   window['pbjs'].requestBids = function(obj) {
-    //     bidsBackHandler = obj.bidsBackHandler;
-    //     expect(obj.timeout).to.equal(900);
-    //   };
-    //   window['pbjs'].setPAAPIConfigForGPT = sandbox.spy();
-    //   sandbox.stub(prebidAdapter, 'generateAdUnitsArray').returns([{}]);
-    //   sandbox.stub(bidManager, 'resetBid');
-    //   sandbox.stub(bidManager, 'setSizes');
-    //   const callback = sandbox.spy();
-    //   prebidAdapter.fetchBids([{getDivID: () => 'div1'}], callback);
-    //   // Simulate bidsBackHandler
-    //   bidsBackHandler('bidResp');
-    //   sinon.assert.calledOnce(window['pbjs'].setPAAPIConfigForGPT);
-    //   sinon.assert.calledWith(callback, 'bidResp');
-    //   done();
-    // });
-  
-    // it('should handle bidsBackHandler when setPAAPIConfigForGPT is not present', function(done) {
-    //   let bidsBackHandler;
-    //   window['pbjs'].removeAdUnit = sandbox.spy();
-    //   window['pbjs'].addAdUnits = sandbox.spy();
-    //   window['pbjs'].requestBids = function(obj) {
-    //     bidsBackHandler = obj.bidsBackHandler;
-    //   };
-    //   sandbox.stub(prebidAdapter, 'generateAdUnitsArray').returns([{}]);
-    //   sandbox.stub(bidManager, 'resetBid');
-    //   sandbox.stub(bidManager, 'setSizes');
-    //   const callback = sandbox.spy();
-    //   prebidAdapter.fetchBids([{getDivID: () => 'div1'}], callback);
-    //   // Simulate bidsBackHandler
-    //   bidsBackHandler('bidResp');
-    //   sinon.assert.calledWith(callback, 'bidResp');
-    //   done();
-    // });
-  
-    // it('should not call callback if not a function', function(done) {
-    //   let bidsBackHandler;
-    //   window['pbjs'].removeAdUnit = sandbox.spy();
-    //   window['pbjs'].addAdUnits = sandbox.spy();
-    //   window['pbjs'].requestBids = function(obj) {
-    //     bidsBackHandler = obj.bidsBackHandler;
-    //   };
-    //   sandbox.stub(prebidAdapter, 'generateAdUnitsArray').returns([{}]);
-    //   sandbox.stub(bidManager, 'resetBid');
-    //   sandbox.stub(bidManager, 'setSizes');
-    //   prebidAdapter.fetchBids([{getDivID: () => 'div1'}]);
-    //   // Simulate bidsBackHandler
-    //   expect(() => bidsBackHandler('bidResp')).to.not.throw();
-    //   done();
-    // });
   });
 
   describe('gets2sConfig', function() {
@@ -1274,10 +1181,7 @@ describe('OpenWrap Module: prebid.js adapter', function() {
       // Stub all CONFIG and CONSTANTS methods used
       sandbox.stub(CONFIG, 'getServerEnabledAdaptars').returns(['pubmatic', 'ix']);
       sandbox.stub(CONFIG, 'getPubMaticAndAlias').returns(['pubmatic', 'pubmaticAlias']);
-      // sandbox.stub(CONFIG, 'getPublisherId').returns('123456');
       sandbox.stub(CONFIG, 'getTimeoutForPBSRequest').returns(700);
-      // sandbox.stub(CONFIG, 'getPriceGranularity').returns('medium');
-      // sandbox.stub(CONFIG, 'isPrebidPubMaticAnalyticsEnabled').returns(true);
       sandbox.stub(CONFIG, 'isUsePrebidKeysEnabled').returns(true);
       sandbox.stub(CONFIG, 'createMacros').returns({ MACRO: 'value' });
       sandbox.stub(CONFIG, 'getMarketplaceBidders').returns(null);
@@ -1322,10 +1226,6 @@ describe('OpenWrap Module: prebid.js adapter', function() {
       });
       expect(s2s.extPrebid.bidderparams).to.have.property('pubmatic');
       expect(s2s.extPrebid.bidderparams).to.have.property('pubmaticAlias');
-      // expect(s2s.extPrebid.targeting.pricegranularity).to.equal('medium');
-      // expect(s2s.extPrebid.isPrebidPubMaticAnalyticsEnabled).to.be.true;
-      // expect(s2s.extPrebid.isUsePrebidKeysEnabled).to.be.true;
-      // expect(s2s.extPrebid.macros).to.deep.equal({ MACRO: 'value' });
     });
   
     it('should add alternatebiddercodes if marketplace bidders are present', function() {
@@ -1664,14 +1564,6 @@ describe('OpenWrap Module: prebid.js adapter', function() {
   });
 
   describe('hasFloorsSchema', function() {
-    beforeEach(function() {
-      // sandbox.stub(CONFIG, 'getFloorType').returns('enforceType');
-    });
-  
-    afterEach(function() {
-      // sandbox.restore();
-    });
-  
     it('should return false if config is empty', function() {
       const config = {};
       const prebidConfig = {};
@@ -1726,15 +1618,13 @@ describe('OpenWrap Module: prebid.js adapter', function() {
   });
 
   describe('pbjsBidsBackHandler', function() {
-    let logStub, setTimeoutStub, triggerUserSyncsStub, getAdServerCurrencyStub;
+    let setTimeoutStub, triggerUserSyncsStub;
     let activeSlots, bidResponses;
   
     beforeEach(function() {
-      // logStub = sandbox.stub(util, 'log');
       setTimeoutStub = sandbox.stub(window, 'setTimeout').callsFake((fn, t) => fn());
       triggerUserSyncsStub = sandbox.stub();
       window.owpbjs = { triggerUserSyncs: triggerUserSyncsStub };
-      // getAdServerCurrencyStub = sandbox.stub(CONFIG, 'getAdServerCurrency');
       sandbox.stub(bidManager, 'setAllPossibleBidsReceived');
       activeSlots = [
         { getDivID: () => 'div1' },
@@ -1754,33 +1644,10 @@ describe('OpenWrap Module: prebid.js adapter', function() {
       sinon.assert.calledWith(util.log, bidResponses);
       sinon.assert.calledOnce(triggerUserSyncsStub);
     });
-  
-    // it('should call setAllPossibleBidsReceived for all activeSlots immediately if no ad server currency', function() {
-    //   CONFIG.getAdServerCurrency.returns('');
-    //   prebidAdapter.pbjsBidsBackHandler(bidResponses, activeSlots);
-    //   sinon.assert.calledWith(bidManager.setAllPossibleBidsReceived, 'div1');
-    //   sinon.assert.calledWith(bidManager.setAllPossibleBidsReceived, 'div2');
-    // });
-  
-    // it('should call setAllPossibleBidsReceived for all activeSlots after 10ms if ad server currency is set', function() {
-    //   CONFIG.getAdServerCurrency.returns('USD');
-    //   // Use a spy to check setTimeout delay
-    //   let timeoutCalled = false;
-    //   window.setTimeout.restore();
-    //   sandbox.stub(window, 'setTimeout').callsFake((fn, delay) => {
-    //     expect(delay).to.equal(10);
-    //     timeoutCalled = true;
-    //     fn();
-    //   });
-    //   prebidAdapter.pbjsBidsBackHandler(bidResponses, activeSlots);
-    //   expect(timeoutCalled).to.be.true;
-    //   sinon.assert.calledWith(bidManager.setAllPossibleBidsReceived, 'div1');
-    //   sinon.assert.calledWith(bidManager.setAllPossibleBidsReceived, 'div2');
-    // });
   });
 
   describe('generateConfig', function() {
-    let forEachOnObjectStub, setCallInitTimeStub, generatePbConfStub;
+    let setCallInitTimeStub, generatePbConfStub;
     let activeSlots, adapterID, adapterConfig, adUnits, impressionID;
   
     beforeEach(function() {
