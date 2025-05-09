@@ -1414,7 +1414,10 @@ export const spec = {
       method: 'POST',
       url: ENDPOINT + '?source=ow-client',
       data: JSON.stringify(payload),
-      bidderRequest: bidderRequest
+      bidderRequest: bidderRequest,
+      options: {
+        endpointCompression: true
+      }
     };
 
     // Allow translator request to execute it as GET Methoid if flag is set.

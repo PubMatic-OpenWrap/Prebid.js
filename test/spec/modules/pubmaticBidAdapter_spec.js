@@ -1074,6 +1074,14 @@ describe('PubMatic adapter', function () {
         expect(request.method).to.equal('POST');
       });
 
+      it('should set endpointCompression to true in request options', () => {
+        let request = spec.buildRequests(bidRequests, {
+          auctionId: 'new-auction-id'
+        });
+        expect(request).to.have.property('options');
+        expect(request.options).to.have.property('endpointCompression').to.equal(true);
+      });
+
       it('should return bidderRequest property', function() {
         let request = spec.buildRequests(bidRequests, validOutstreamBidRequest);
         expect(request.bidderRequest).to.equal(validOutstreamBidRequest);
