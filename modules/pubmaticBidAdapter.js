@@ -150,7 +150,7 @@ const converter = ortbConverter({
         ttl: DEFAULT_TTL,
         ad: '',
         creativeId: 0,
-        netRevenue: NET_REVENUE,
+        netRevenue: true,
         cpm: 0,
         currency: ortbResponse.cur || DEFAULT_CURRENCY,
         referrer: site?.ref || ''
