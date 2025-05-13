@@ -748,7 +748,10 @@ export const spec = {
       method: 'POST',
       url: ENDPOINT,
       data: data,
-      bidderRequest: bidderRequest
+      bidderRequest: bidderRequest,
+      options: {
+        endpointCompression: true
+      }
     };
     return data?.imp?.length ? serverRequest : null;
   },
