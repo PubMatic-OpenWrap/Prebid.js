@@ -99,8 +99,8 @@ export function ortbConverter({
     }
   );
 
-  function createLatencyMap(impressionID, id) {
-    impressionReqIdMap[id] = impressionID;
+  function createLatencyMap(impressionID) {
+    impressionReqIdMap[impressionID] = impressionID;
     window.pbsLatency[impressionID] = {
       'startTime': timestamp()
     };
@@ -157,18 +157,14 @@ export function ortbConverter({
       }
 
       firstBidRequest = ctx.req?.actualBidderRequests?.[0];
-      // check if isPrebidPubMaticAnalyticsEnabled in s2sConfig and if it is then get auctionId from adUnit
-      const s2sConfig = ctx.req?.s2sBidRequest?.s2sConfig;
-      let isAnalyticsEnabled = s2sConfig?.extPrebid?.isPrebidPubMaticAnalyticsEnabled;
       if (firstBidRequest) {
-        const iidValue = isAnalyticsEnabled ? firstBidRequest.auctionId : firstBidRequest?.bids[0]?.params?.wiid;
-        createLatencyMap(iidValue, firstBidRequest.auctionId);
+        createLatencyMap(firstBidRequest.auctionId);
       }
       return request;
     },
     fromORTB({request, response}) {
       // Get impressionID from impressionReqIdMap to check response belongs to same request
-      let impValue = impressionReqIdMap[response.id];
+      let impValue = impressionReqIdMap[firstBidRequest?.auctionId];
       if (impValue && window.pbsLatency[impValue]) {
         window.pbsLatency[impValue]['endTime'] = timestamp();
       }
