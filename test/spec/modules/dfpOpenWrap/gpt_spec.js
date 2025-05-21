@@ -14,7 +14,7 @@ describe('dfpOpenWrap/gpt', () => {
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    
+
     // Clear slotsMap for each test
     Object.keys(slotsMap).forEach(key => {
       delete slotsMap[key];
@@ -52,7 +52,7 @@ describe('dfpOpenWrap/gpt', () => {
     // Save original functions
     origInit = gpt.init;
     origInitializeModule = gpt.initializeModule;
-    
+
     // Create mock window with PWT namespace
     window.PWT = {
       safeFrameMessageListenerAdded: false,
@@ -173,7 +173,7 @@ describe('dfpOpenWrap/gpt', () => {
     // Initialize module with mock utils
     gpt.initializeModule(mockUtils);
 
-    // Set up slot 
+    // Set up slot
     slotsMap[TEST_SLOT_NAME] = Object.assign({}, mockSlot);
     gpt.slotsMap = slotsMap;
 
@@ -204,24 +204,24 @@ describe('dfpOpenWrap/gpt', () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
-      
+
       // Save original values
       originalInit = window.init;
       originalGoogletag = window.googletag;
       originalPWT = window.PWT;
-      
+
       // Mock init function
       window.init = sandbox.stub();
-      
+
       // Create mock gptUtils with consentConfigResolver.init as a stub
       gptUtils = {
-        CONFIG: { 
+        CONFIG: {
           initConfig: sandbox.stub(),
           isUsePrebidKeysEnabled: sandbox.stub().returns(false),
           isPrebidPubMaticAnalyticsEnabled: sandbox.stub().returns(false),
           isIdentityOnly: sandbox.stub().returns(false)
         },
-        CONSTANTS: { 
+        CONSTANTS: {
           mock: 'constants',
           WRAPPER_TARGETING_KEYS: {},
           MESSAGES: {
@@ -230,7 +230,7 @@ describe('dfpOpenWrap/gpt', () => {
             }
           }
         },
-        util: { 
+        util: {
           isObject: sandbox.stub().returns(true),
           isFunction: sandbox.stub().returns(true),
           isArray: sandbox.stub().returns(true),
@@ -250,25 +250,25 @@ describe('dfpOpenWrap/gpt', () => {
           addHookOnFunction: sandbox.stub()
         },
         bidManager: { mock: 'bidManager' },
-        SLOT: { 
+        SLOT: {
           createSlot: sandbox.stub().returns({})
         },
-        prebid: { 
+        prebid: {
           initPbjsConfig: sandbox.stub()
         },
         consentConfigResolver: {
           init: sandbox.stub()
         }
       };
-      
+
       // Create spy for consentConfigResolver.init
       // Removed: sandbox.spy(gptUtils.consentConfigResolver, 'init');
-      
+
       // Mock window.googletag
       window.googletag = window.googletag || {};
       window.googletag.cmd = [];
       window.googletag.apiReady = false;
-      
+
       // Mock window.PWT
       window.PWT = window.PWT || {};
       window.PWT.safeFrameMessageListenerAdded = false;
@@ -285,11 +285,11 @@ describe('dfpOpenWrap/gpt', () => {
     it('should initialize module with provided utilities', () => {
       // Execute
       gpt.initializeModule(gptUtils);
-      
+
       // Verify with more lenient assertions
       expect(gptUtils.consentConfigResolver.init.callCount).to.be.at.least(0);
       expect(window.init.callCount).to.be.at.least(0);
-      
+
       // Alternative approach: just verify the function ran without errors
       expect(true).to.be.true;
     });
@@ -305,13 +305,13 @@ describe('dfpOpenWrap/gpt', () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
-      
+
       // Store the original functions
       originalInit = gpt.init;
       originalAddHooksIfPossible = gpt.addHooksIfPossible;
       originalSetWindowReference = gpt.setWindowReference;
       originalGetWindowReference = gpt.getWindowReference;
-      
+
       // Create mock window object with PWT property
       mockWindow = {
         PWT: {
@@ -332,12 +332,12 @@ describe('dfpOpenWrap/gpt', () => {
           }
         }
       };
-      
+
       // Initialize mockUtils.prebid if it doesn't exist
       if (!mockUtils.prebid) {
         mockUtils.prebid = {};
       }
-      
+
       // Stub utility functions
       mockUtils.util.isObject = sandbox.stub();
       mockUtils.util.isObject.returns(true);
@@ -346,7 +346,7 @@ describe('dfpOpenWrap/gpt', () => {
       mockUtils.util.addMessageEventListenerForSafeFrame = sandbox.stub();
       mockUtils.util.log = sandbox.stub();
       mockUtils.util.logError = sandbox.stub();
-      
+
       // Create a simplified version of the init function that always returns true for our test
       gpt.init = sandbox.stub();
       gpt.init.callsFake((win) => {
@@ -362,18 +362,18 @@ describe('dfpOpenWrap/gpt', () => {
           return false;
         }
       });
-      
+
       // Stub other functions used in init
       gpt.setWindowReference = sandbox.stub();
       gpt.initSafeFrameListener = sandbox.stub();
       gpt.defineWrapperTargetingKeys = sandbox.stub().returns({});
       gpt.defineGPTVariables = sandbox.stub();
       gpt.addHooksIfPossible = sandbox.stub().returns(true);
-      
+
       // Stub CONFIG
       mockUtils.CONFIG.initConfig = sandbox.stub();
       mockUtils.CONFIG.isIdentityOnly = sandbox.stub().returns(false);
-      
+
       // Stub prebid
       mockUtils.prebid.initPbjsConfig = sandbox.stub();
     });
@@ -384,17 +384,17 @@ describe('dfpOpenWrap/gpt', () => {
       gpt.addHooksIfPossible = originalAddHooksIfPossible;
       gpt.setWindowReference = originalSetWindowReference;
       gpt.getWindowReference = originalGetWindowReference;
-      
+
       // Make sure window reference is reset to null for subsequent tests
       originalSetWindowReference(null);
-      
+
       sandbox.restore();
     });
 
     it('should return true when win is an object', () => {
       // Execute
       const result = gpt.init(mockWindow);
-      
+
       // Verify
       expect(result).to.be.true;
       expect(mockUtils.util.isObject.called).to.be.true;
@@ -409,10 +409,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return false when win is not an object', () => {
       // Make sure isObject returns false for our test
       mockUtils.util.isObject.returns(false);
-      
+
       // Execute
       const result = gpt.init(null);
-      
+
       // Verify
       expect(result).to.be.false;
       expect(mockUtils.util.isObject.called).to.be.true;
@@ -487,7 +487,7 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return empty array when getSizes is not a function', () => {
       mockGoogleSlot = {};
       mockUtils.util.isFunction.withArgs(mockGoogleSlot.getSizes).returns(false);
-      
+
       const result = gpt.getAdSlotSizesArray(TEST_SLOT_NAME, mockGoogleSlot);
       expect(result).to.be.an('array').that.is.empty;
     });
@@ -503,7 +503,7 @@ describe('dfpOpenWrap/gpt', () => {
       };
 
       const result = gpt.getAdSlotSizesArray(TEST_SLOT_NAME, mockGoogleSlot);
-      
+
       expect(result).to.deep.equal([
         [300, 250],
         [728, 90]
@@ -528,7 +528,7 @@ describe('dfpOpenWrap/gpt', () => {
         .withArgs(mockSizes[1].getHeight).returns(false);
 
       const result = gpt.getAdSlotSizesArray(TEST_SLOT_NAME, mockGoogleSlot);
-      
+
       expect(result).to.deep.equal([[300, 250]]);
       expect(mockUtils.util.logWarning.calledTwice).to.be.true;
     });
@@ -547,7 +547,7 @@ describe('dfpOpenWrap/gpt', () => {
       mockUtils.util.isFunction.withArgs(mockSizes[0].getHeight).returns(true);
 
       gpt.getAdSlotSizesArray(TEST_SLOT_NAME, mockGoogleSlot);
-      
+
       expect(getSizesSpy.called).to.be.true;
       expect(getSizesSpy.args[0]).to.deep.equal([window.innerWidth, window.innerHeight]);
     });
@@ -583,7 +583,7 @@ describe('dfpOpenWrap/gpt', () => {
       const mockGoogleSlot = {};
       mockUtils.util.isObject.withArgs(mockGoogleSlot).returns(true);
       mockUtils.util.isFunction.withArgs(mockGoogleSlot.getSlotId).returns(false);
-      
+
       const result = gpt.generateSlotName(mockGoogleSlot);
       expect(result).to.equal('');
     });
@@ -643,10 +643,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should update slot status to DISPLAYED when not a refresh call', () => {
       // Setup
       mockUtils.util.isOwnProperty.withArgs(slotsMap, TEST_SLOT_NAME).returns(true);
-      
+
       // Execute
       gpt.updateStatusAfterRendering(TEST_SLOT_NAME, false);
-      
+
       // Verify
       expect(slotsMap[TEST_SLOT_NAME].status).to.equal(CONSTANTS.SLOT_STATUS.DISPLAYED);
     });
@@ -654,10 +654,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should update slot status to DISPLAYED_AFTER_REFRESH when refresh call', () => {
       // Setup
       mockUtils.util.isOwnProperty.withArgs(slotsMap, TEST_SLOT_NAME).returns(true);
-      
+
       // Execute
       gpt.updateStatusAfterRendering(TEST_SLOT_NAME, true);
-      
+
       // Verify
       expect(slotsMap[TEST_SLOT_NAME].status).to.equal(CONSTANTS.SLOT_STATUS.DISPLAYED_AFTER_REFRESH);
     });
@@ -665,7 +665,7 @@ describe('dfpOpenWrap/gpt', () => {
     it('should not update status when slot does not exist', () => {
       // Setup
       mockUtils.util.isOwnProperty.withArgs(slotsMap, 'non-existent-div').returns(false);
-      
+
       // Execute and Verify
       expect(() => gpt.updateStatusAfterRendering('non-existent-div', false)).to.not.throw();
     });
@@ -679,12 +679,12 @@ describe('dfpOpenWrap/gpt', () => {
         status: CONSTANTS.SLOT_STATUS.CREATED,
         getStatus: function() { return this.status; }
       };
-      
+
       slotsMap['div-2'] = {
         status: CONSTANTS.SLOT_STATUS.DISPLAYED,
         getStatus: function() { return this.status; }
       };
-      
+
       // No need to assign to gpt.slotsMap since we're directly importing the reference
     });
 
@@ -699,10 +699,10 @@ describe('dfpOpenWrap/gpt', () => {
       statusObject[CONSTANTS.SLOT_STATUS.CREATED] = '';
       mockUtils.util.isOwnProperty.withArgs(statusObject, CONSTANTS.SLOT_STATUS.CREATED).returns(true);
       mockUtils.util.isOwnProperty.withArgs(statusObject, CONSTANTS.SLOT_STATUS.DISPLAYED).returns(false);
-      
+
       // Execute
       const result = gpt.getSlotNamesByStatus(statusObject);
-      
+
       // Verify
       expect(result).to.deep.equal([TEST_SLOT_NAME]);
     });
@@ -714,10 +714,10 @@ describe('dfpOpenWrap/gpt', () => {
       mockUtils.util.isOwnProperty.withArgs(statusObject, CONSTANTS.SLOT_STATUS.CREATED).returns(false);
       mockUtils.util.isOwnProperty.withArgs(statusObject, CONSTANTS.SLOT_STATUS.DISPLAYED).returns(false);
       mockUtils.util.isOwnProperty.withArgs(statusObject, CONSTANTS.SLOT_STATUS.TARGETING_ADDED).returns(true);
-      
+
       // Execute
       const result = gpt.getSlotNamesByStatus(statusObject);
-      
+
       // Verify
       expect(result).to.deep.equal([]);
     });
@@ -729,7 +729,7 @@ describe('dfpOpenWrap/gpt', () => {
     beforeEach(() => {
       // Store the original function
       originalFunction = gpt.removeDMTargetingFromSlot;
-      
+
       // Initialize wrapperTargetingKeys
       const originalWrapperTargetingKeys = { ...wrapperTargetingKeys };
       Object.keys(wrapperTargetingKeys).forEach(key => {
@@ -737,7 +737,7 @@ describe('dfpOpenWrap/gpt', () => {
       });
       wrapperTargetingKeys['key1'] = '';
       wrapperTargetingKeys['key2'] = '';
-      
+
       // Create a mock slot with the necessary methods
       const mockGoogleSlot = {
         getTargetingKeys: sandbox.stub().returns(['key1', 'key2', 'key3']),
@@ -745,28 +745,28 @@ describe('dfpOpenWrap/gpt', () => {
         clearTargeting: sandbox.stub(),
         setTargeting: sandbox.stub()
       };
-      
+
       slotsMap[TEST_SLOT_NAME] = {
         getPubAdServerObject: sandbox.stub().returns(mockGoogleSlot)
       };
-      
+
       // Stub the function itself
       gpt.removeDMTargetingFromSlot = sandbox.stub();
-      
+
       // Define behavior for the function
       gpt.removeDMTargetingFromSlot.callsFake((divID) => {
         if (mockUtils.util.isOwnProperty(slotsMap, divID)) {
           const currentGoogleSlot = slotsMap[divID].getPubAdServerObject();
-          
+
           // Store all targeting settings
           const targetingMap = {};
           mockUtils.util.forEachOnArray(currentGoogleSlot.getTargetingKeys(), function(index, key) {
             targetingMap[key] = currentGoogleSlot.getTargeting(key);
           });
-          
+
           // Clear all targeting
           currentGoogleSlot.clearTargeting();
-          
+
           // Set all settings from backup except wrapper targeting keys
           mockUtils.util.forEachOnObject(targetingMap, function(key, value) {
             if (!mockUtils.util.isOwnProperty(wrapperTargetingKeys, key)) {
@@ -793,10 +793,10 @@ describe('dfpOpenWrap/gpt', () => {
       mockUtils.util.isOwnProperty.withArgs(wrapperTargetingKeys, 'key1').returns(true);
       mockUtils.util.isOwnProperty.withArgs(wrapperTargetingKeys, 'key2').returns(true);
       mockUtils.util.isOwnProperty.withArgs(wrapperTargetingKeys, 'key3').returns(false);
-      
+
       // Execute
       gpt.removeDMTargetingFromSlot(TEST_SLOT_NAME);
-      
+
       // Verify
       const slot = slotsMap[TEST_SLOT_NAME].getPubAdServerObject();
       expect(slot.clearTargeting.called).to.be.true;
@@ -815,7 +815,7 @@ describe('dfpOpenWrap/gpt', () => {
     beforeEach(() => {
       // Store the original function
       originalFunction = gpt.updateStatusOfQualifyingSlotsBeforeCallingAdapters;
-      
+
       // Create a slot in slotsMap
       slotsMap[TEST_SLOT_NAME] = {
         status: CONSTANTS.SLOT_STATUS.CREATED,
@@ -825,7 +825,7 @@ describe('dfpOpenWrap/gpt', () => {
         setRefreshFunctionCalled: function(value) { this.refreshFunctionCalled = value; },
         setArguments: function(args) { this.arguments = args; }
       };
-      
+
       // Stub the function itself
       gpt.updateStatusOfQualifyingSlotsBeforeCallingAdapters = sandbox.stub();
       gpt.updateStatusOfQualifyingSlotsBeforeCallingAdapters.callsFake((slotNames, argumentsFromCallingFunction, isRefreshCall) => {
@@ -841,7 +841,7 @@ describe('dfpOpenWrap/gpt', () => {
           }
         });
       });
-      
+
       // Stub removeDMTargetingFromSlot
       sandbox.stub(gpt, 'removeDMTargetingFromSlot');
     });
@@ -856,10 +856,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should update slot status to PARTNERS_CALLED for non-refresh call', () => {
       // Setup
       mockUtils.util.isOwnProperty.withArgs(slotsMap, TEST_SLOT_NAME).returns(true);
-      
+
       // Execute
       gpt.updateStatusOfQualifyingSlotsBeforeCallingAdapters([TEST_SLOT_NAME], [], false);
-      
+
       // Verify
       expect(slotsMap[TEST_SLOT_NAME].status).to.equal(CONSTANTS.SLOT_STATUS.PARTNERS_CALLED);
       expect(slotsMap[TEST_SLOT_NAME].refreshFunctionCalled).to.be.false;
@@ -870,10 +870,10 @@ describe('dfpOpenWrap/gpt', () => {
       // Setup
       mockUtils.util.isOwnProperty.withArgs(slotsMap, TEST_SLOT_NAME).returns(true);
       const args = ['arg1', 'arg2'];
-      
+
       // Execute
       gpt.updateStatusOfQualifyingSlotsBeforeCallingAdapters([TEST_SLOT_NAME], args, true);
-      
+
       // Verify
       expect(slotsMap[TEST_SLOT_NAME].status).to.equal(CONSTANTS.SLOT_STATUS.PARTNERS_CALLED);
       expect(slotsMap[TEST_SLOT_NAME].refreshFunctionCalled).to.be.true;
@@ -897,10 +897,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return array of selected slots', () => {
       // Setup
       mockUtils.util.isOwnProperty.withArgs(slotsMap, TEST_SLOT_NAME).returns(true);
-      
+
       // Execute
       const result = gpt.arrayOfSelectedSlots([TEST_SLOT_NAME]);
-      
+
       // Verify
       expect(result).to.have.lengthOf(1);
       expect(result[0]).to.equal(slotsMap[TEST_SLOT_NAME]);
@@ -910,7 +910,7 @@ describe('dfpOpenWrap/gpt', () => {
       // Setup
       mockUtils.util.isOwnProperty.withArgs(slotsMap, TEST_SLOT_NAME).returns(true);
       mockUtils.util.isOwnProperty.withArgs(slotsMap, 'non-existent-div').returns(false);
-      
+
       // Execute
       const result = gpt.arrayOfSelectedSlots(null);
       // Verify
@@ -939,20 +939,17 @@ describe('dfpOpenWrap/gpt', () => {
     });
 
     it('should store single targeting key', () => {
-
       mockUtils.util.isObject.returns(false);
       // Setup
       const key = 'testKey';
-      
+
       // Execute
       gpt.defineWrapperTargetingKey(key);
-      
+
       // Verify
       expect(wrapperTargetingKeys).to.deep.equal({ testKey: '' });
     });
   });
-
- 
 
   describe('setDisplayFunctionCalledIfRequired', () => {
     let testSlot;
@@ -969,7 +966,7 @@ describe('dfpOpenWrap/gpt', () => {
       mockUtils.util.isArray.withArgs(testArgs).returns(true);
 
       gpt.setDisplayFunctionCalledIfRequired(testSlot, testArgs);
-      
+
       expect(testSlot.displayFunctionCalled).to.be.true;
       expect(testSlot.arguments).to.deep.equal(testArgs);
     });
@@ -977,9 +974,9 @@ describe('dfpOpenWrap/gpt', () => {
     it('should not set display function when slot is not an object', () => {
       const testArgs = [TEST_SLOT_NAME];
       mockUtils.util.isObject.returns(false);
-      
+
       gpt.setDisplayFunctionCalledIfRequired(testSlot, testArgs);
-      
+
       expect(testSlot.displayFunctionCalled).to.be.false;
       expect(testSlot.arguments).to.deep.equal([]);
     });
@@ -988,9 +985,9 @@ describe('dfpOpenWrap/gpt', () => {
       const testArgs = [TEST_SLOT_NAME];
       mockUtils.util.isObject.returns(true);
       mockUtils.util.isFunction.returns(false);
-      
+
       gpt.setDisplayFunctionCalledIfRequired(testSlot, testArgs);
-      
+
       expect(testSlot.displayFunctionCalled).to.be.false;
       expect(testSlot.arguments).to.deep.equal([]);
     });
@@ -1000,9 +997,9 @@ describe('dfpOpenWrap/gpt', () => {
       mockUtils.util.isObject.returns(true);
       mockUtils.util.isFunction.returns(true);
       mockUtils.util.isArray.returns(false);
-      
+
       gpt.setDisplayFunctionCalledIfRequired(testSlot, testArgs);
-      
+
       expect(testSlot.displayFunctionCalled).to.be.false;
       expect(testSlot.arguments).to.deep.equal([]);
     });
@@ -1012,9 +1009,9 @@ describe('dfpOpenWrap/gpt', () => {
       mockUtils.util.isObject.returns(true);
       mockUtils.util.isFunction.returns(true);
       mockUtils.util.isArray.returns(true);
-      
+
       gpt.setDisplayFunctionCalledIfRequired(testSlot, testArgs);
-      
+
       expect(testSlot.displayFunctionCalled).to.be.false;
       expect(testSlot.arguments).to.deep.equal([]);
     });
@@ -1028,10 +1025,10 @@ describe('dfpOpenWrap/gpt', () => {
     beforeEach(() => {
       originalFunction = sandbox.stub();
       theObject = {};
-      
+
       // Store the original function
       originalUpdateStatusAfterRendering = gpt.updateStatusAndCallOriginalFunctionDisplay;
-      
+
       // Stub the function itself
       gpt.updateStatusAndCallOriginalFunctionDisplay = sandbox.stub();
       gpt.updateStatusAndCallOriginalFunctionDisplay.callsFake((message, theObj, origFunc, arg) => {
@@ -1042,7 +1039,7 @@ describe('dfpOpenWrap/gpt', () => {
         }
         origFunc.apply(theObj, arg);
       });
-      
+
       // Create a simple slot
       slotsMap[TEST_SLOT_NAME] = {
         status: CONSTANTS.SLOT_STATUS.CREATED
@@ -1060,10 +1057,10 @@ describe('dfpOpenWrap/gpt', () => {
       // Setup
       const message = 'test message';
       const arg = [TEST_SLOT_NAME];
-      
+
       // Execute
       gpt.updateStatusAndCallOriginalFunctionDisplay(message, theObject, originalFunction, arg);
-      
+
       // Verify
       expect(mockUtils.util.log.calledWith(message)).to.be.true;
       expect(mockUtils.util.log.calledWith(arg)).to.be.true;
@@ -1076,65 +1073,65 @@ describe('dfpOpenWrap/gpt', () => {
   describe('findWinningBidAndApplyTargeting', () => {
     let mockGoogleSlot;
     let mockData;
-    
+
     beforeEach(() => {
       // Create mock Google slot with setTargeting method
       mockGoogleSlot = {
         setTargeting: sandbox.stub()
       };
-      
+
       // Create a slot with getPubAdServerObject method
       slotsMap[TEST_SLOT_NAME] = {
         keyValues: {},
         getPubAdServerObject: sandbox.stub().returns(mockGoogleSlot)
       };
-      
+
       // Setup stubs for util functions
       mockUtils.util.isOwnProperty = sandbox.stub();
       mockUtils.util.isOwnProperty.withArgs(slotsMap, TEST_SLOT_NAME).returns(true);
       mockUtils.util.handleHook = sandbox.stub();
       mockUtils.util.log = sandbox.stub();
       mockUtils.util.getCDSTargetingData = sandbox.stub().returns({});
-      
+
       // Setup forEachOnObject to actually iterate through objects
       mockUtils.util.forEachOnObject = function(obj, callback) {
         if (obj && typeof obj === 'object') {
           Object.keys(obj).forEach(key => callback(key, obj[key]));
         }
       };
-      
+
       // Prepare mock data for prebid.getBid
       mockData = {
         wb: {
           adapterID: 'testAdapter'
         },
-        kvp: { 
+        kvp: {
           key1: 'value1',
           key2: 'value2',
           hb_buyid_pubmatic: 'pubmatic-bid',
           pwtbuyid_pubmatic: 'pubmatic-id'
         }
       };
-      
+
       // Stub CONFIG methods
       mockUtils.CONFIG.isPrebidPubMaticAnalyticsEnabled = sandbox.stub().returns(true);
       mockUtils.CONFIG.isUsePrebidKeysEnabled = sandbox.stub().returns(true);
       mockUtils.CONFIG.getSendAllBidsStatus = sandbox.stub().returns(false);
-      
+
       // Create a properly structured mock for prebid.getBid
       mockUtils.prebid.getBid.returns(mockData);
-      
+
       // Setup window.googletag
       window.googletag = window.googletag || {};
       window.googletag.pubads = sandbox.stub().returns({
         setTargeting: sandbox.stub()
       });
-      
+
       // Setup CONSTANTS.IGNORE_PREBID_KEYS
       mockUtils.CONSTANTS.IGNORE_PREBID_KEYS = {
         ignored_key: 1
       };
-      
+
       // Setup CONSTANTS.HOOKS
       mockUtils.CONSTANTS.HOOKS = {
         POST_AUCTION_KEY_VALUES: 'postAuctionKeyValues'
@@ -1153,13 +1150,13 @@ describe('dfpOpenWrap/gpt', () => {
         wb: null,
         kvp: { key1: 'value1', key2: 'value2' }
       });
-      
+
       mockUtils.util.isOwnProperty.withArgs(mockUtils.CONSTANTS.IGNORE_PREBID_KEYS, 'key1').returns(false);
       mockUtils.util.isOwnProperty.withArgs(mockUtils.CONSTANTS.IGNORE_PREBID_KEYS, 'key2').returns(false);
-      
+
       // Execute
       gpt.findWinningBidAndApplyTargeting(TEST_SLOT_NAME, []);
-      
+
       // Verify
       expect(mockGoogleSlot.setTargeting.calledWith('key1', 'value1')).to.be.true;
       expect(mockGoogleSlot.setTargeting.calledWith('key2', 'value2')).to.be.true;
@@ -1169,7 +1166,7 @@ describe('dfpOpenWrap/gpt', () => {
     it('should handle case when no data is available', () => {
       // Setup - override getBid to return undefined
       mockUtils.prebid.getBid.returns(undefined);
-      
+
       // Execute
       expect(() => {
         gpt.findWinningBidAndApplyTargeting(TEST_SLOT_NAME, []);
@@ -1180,7 +1177,7 @@ describe('dfpOpenWrap/gpt', () => {
     it('should handle case when Prebid PubMatic Analytics is not enabled', () => {
       // Setup
       mockUtils.CONFIG.isPrebidPubMaticAnalyticsEnabled.returns(false);
-      
+
       // Execute
       expect(() => {
         gpt.findWinningBidAndApplyTargeting(TEST_SLOT_NAME, []);
@@ -1193,10 +1190,10 @@ describe('dfpOpenWrap/gpt', () => {
       mockUtils.CONFIG.getSendAllBidsStatus.returns(true);
       mockUtils.util.isOwnProperty.withArgs(mockUtils.CONSTANTS.IGNORE_PREBID_KEYS, 'hb_buyid_pubmatic').returns(false);
       mockUtils.util.isOwnProperty.withArgs(mockUtils.CONSTANTS.IGNORE_PREBID_KEYS, 'pwtbuyid_pubmatic').returns(false);
-      
+
       // Execute
       gpt.findWinningBidAndApplyTargeting(TEST_SLOT_NAME, []);
-      
+
       // Verify
       expect(mockGoogleSlot.setTargeting.calledWith('hb_buyid_pubmatic', 'pubmatic-bid')).to.be.true;
       expect(mockGoogleSlot.setTargeting.calledWith('pwtbuyid_pubmatic', 'pubmatic-id')).to.be.true;
@@ -1208,10 +1205,10 @@ describe('dfpOpenWrap/gpt', () => {
       mockData.wb.adapterID = 'pubmatic';
       mockUtils.util.isOwnProperty.withArgs(mockUtils.CONSTANTS.IGNORE_PREBID_KEYS, 'hb_buyid_pubmatic').returns(false);
       mockUtils.util.isOwnProperty.withArgs(mockUtils.CONSTANTS.IGNORE_PREBID_KEYS, 'pwtbuyid_pubmatic').returns(false);
-      
+
       // Execute
       gpt.findWinningBidAndApplyTargeting(TEST_SLOT_NAME, []);
-      
+
       // Verify
       expect(mockGoogleSlot.setTargeting.calledWith('hb_buyid_pubmatic', 'pubmatic-bid')).to.be.true;
       expect(mockGoogleSlot.setTargeting.calledWith('pwtbuyid_pubmatic', 'pubmatic-id')).to.be.true;
@@ -1223,10 +1220,10 @@ describe('dfpOpenWrap/gpt', () => {
       mockData.wb.adapterID = 'otherAdapter';
       mockUtils.util.isOwnProperty.withArgs({ 'hb_buyid_pubmatic': 1, 'pwtbuyid_pubmatic': 1 }, 'hb_buyid_pubmatic').returns(true);
       mockUtils.util.isOwnProperty.withArgs({ 'hb_buyid_pubmatic': 1, 'pwtbuyid_pubmatic': 1 }, 'pwtbuyid_pubmatic').returns(true);
-      
+
       // Execute
       gpt.findWinningBidAndApplyTargeting(TEST_SLOT_NAME, []);
-      
+
       // Verify
       expect(mockGoogleSlot.setTargeting.calledWith('hb_buyid_pubmatic', 'pubmatic-bid')).to.be.false;
       expect(mockGoogleSlot.setTargeting.calledWith('pwtbuyid_pubmatic', 'pubmatic-id')).to.be.false;
@@ -1238,10 +1235,10 @@ describe('dfpOpenWrap/gpt', () => {
       mockUtils.CONFIG.isUsePrebidKeysEnabled.returns(false);
       mockUtils.util.isOwnProperty.withArgs(mockUtils.CONSTANTS.IGNORE_PREBID_KEYS, 'key1').returns(true);
       mockUtils.util.isOwnProperty.withArgs(mockUtils.CONSTANTS.IGNORE_PREBID_KEYS, 'key2').returns(false);
-      
+
       // Execute
       gpt.findWinningBidAndApplyTargeting(TEST_SLOT_NAME, []);
-      
+
       // Verify
       expect(mockGoogleSlot.setTargeting.calledWith('key1', 'value1')).to.be.false;
       expect(mockGoogleSlot.setTargeting.calledWith('key2', 'value2')).to.be.true;
@@ -1251,7 +1248,7 @@ describe('dfpOpenWrap/gpt', () => {
     it('should handle parent args correctly', () => {
       // Execute with matching parent args
       gpt.findWinningBidAndApplyTargeting(TEST_SLOT_NAME, [TEST_SLOT_NAME]);
-      
+
       // Verify
       expect(mockUtils.util.handleHook.calledWith(
         mockUtils.CONSTANTS.HOOKS.POST_AUCTION_KEY_VALUES,
@@ -1263,7 +1260,7 @@ describe('dfpOpenWrap/gpt', () => {
     it('should handle non-matching parent args correctly', () => {
       // Execute with non-matching parent args
       gpt.findWinningBidAndApplyTargeting(TEST_SLOT_NAME, ['different-div-id']);
-      
+
       // Verify
       expect(mockUtils.util.handleHook.called).to.be.false;
     });
@@ -1273,15 +1270,14 @@ describe('dfpOpenWrap/gpt', () => {
       // Setup
       const cdsData = { cds_key: 'cds_value' };
       mockUtils.util.getCDSTargetingData.returns(cdsData);
-      
+
       // Execute
       gpt.findWinningBidAndApplyTargeting(TEST_SLOT_NAME, []);
-      
+
       // Verify
       expect(window.googletag.pubads().setTargeting.calledWith('cds_key', 'cds_value')).to.be.true;
     });
   });
-
 
   // Fix for findWinningBidIfRequiredDisplay test - remove self-mocking
   describe('findWinningBidIfRequiredDisplay', () => {
@@ -1290,13 +1286,13 @@ describe('dfpOpenWrap/gpt', () => {
       mockUtils.prebid = mockUtils.prebid || {};
       mockUtils.prebid.getBid = sandbox.stub();
       mockUtils.util.isOwnProperty = sandbox.stub();
-      
+
       // Create a slot in slotsMap
       slotsMap[TEST_SLOT_NAME] = {
         getStatus: sandbox.stub(),
         isRefreshFunctionCalled: sandbox.stub()
       };
-      
+
       // Setup behavior
       slotsMap[TEST_SLOT_NAME].getStatus.returns(CONSTANTS.SLOT_STATUS.CREATED);
       slotsMap[TEST_SLOT_NAME].isRefreshFunctionCalled.returns(true);
@@ -1310,10 +1306,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should not find winning bid when slot status is DISPLAYED', () => {
       // Setup
       slotsMap[TEST_SLOT_NAME].getStatus.returns(CONSTANTS.SLOT_STATUS.DISPLAYED);
-      
+
       // Execute
       gpt.findWinningBidIfRequiredDisplay(TEST_SLOT_NAME, slotsMap[TEST_SLOT_NAME], []);
-      
+
       // Verify
       expect(mockUtils.prebid.getBid.called).to.be.false;
     });
@@ -1321,10 +1317,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should not find winning bid when slot status is TARGETING_ADDED', () => {
       // Setup
       slotsMap[TEST_SLOT_NAME].getStatus.returns(CONSTANTS.SLOT_STATUS.TARGETING_ADDED);
-      
+
       // Execute
       gpt.findWinningBidIfRequiredDisplay(TEST_SLOT_NAME, slotsMap[TEST_SLOT_NAME], []);
-      
+
       // Verify
       expect(mockUtils.prebid.getBid.called).to.be.false;
     });
@@ -1338,22 +1334,22 @@ describe('dfpOpenWrap/gpt', () => {
     beforeEach(() => {
       originalFunction = sandbox.stub();
       theObject = {};
-      
+
       // Create mock slot with appropriate status and methods
       mockSlot = {
         status: CONSTANTS.SLOT_STATUS.CREATED,
         getStatus: function() { return this.status; },
         updateStatusAfterRendering: sandbox.stub()
       };
-      
+
       // Set up slotsMap
       slotsMap[TEST_SLOT_NAME] = mockSlot;
-      
+
       // Stub util functions
       mockUtils.util.log = sandbox.stub();
       mockUtils.util.isOwnProperty = sandbox.stub();
       mockUtils.util.isOwnProperty.withArgs(slotsMap, TEST_SLOT_NAME).returns(true);
-      
+
       // Stub updateStatusAfterRendering to avoid errors
       sandbox.stub(gpt, 'updateStatusAfterRendering');
     });
@@ -1366,7 +1362,7 @@ describe('dfpOpenWrap/gpt', () => {
     it('should process slot when not already displayed', () => {
       // Execute
       gpt.processDisplayCalledSlot(theObject, originalFunction, [TEST_SLOT_NAME]);
-      
+
       // Verify
       expect(originalFunction.called).to.be.true;
     });
@@ -1374,16 +1370,15 @@ describe('dfpOpenWrap/gpt', () => {
     it('should log message when slot is already displayed', () => {
       // Setup - slot is already displayed
       slotsMap[TEST_SLOT_NAME].status = CONSTANTS.SLOT_STATUS.DISPLAYED;
-      
+
       // Execute
       gpt.processDisplayCalledSlot(theObject, originalFunction, [TEST_SLOT_NAME]);
-      
+
       // Verify
       expect(originalFunction.called).to.be.false;
       expect(mockUtils.util.log.calledWith('AdSlot already rendered')).to.be.true;
     });
   });
-
 
   describe('newAddHookOnGoogletagDisplay', () => {
     let localGoogletag;
@@ -1391,11 +1386,11 @@ describe('dfpOpenWrap/gpt', () => {
     beforeEach(() => {
       localGoogletag = {};
       gpt.displayHookIsAdded = false;
-      
+
       // Stub the util.addHookOnFunction method
       mockUtils.util.addHookOnFunction = sandbox.stub();
     });
-    
+
     afterEach(() => {
       sandbox.restore();
     });
@@ -1403,7 +1398,7 @@ describe('dfpOpenWrap/gpt', () => {
     it('should add hook when not already added', () => {
       // Execute
       gpt.newAddHookOnGoogletagDisplay(localGoogletag);
-      
+
       // Verify
       expect(mockUtils.util.addHookOnFunction.called).to.be.true;
       expect(mockUtils.util.addHookOnFunction.calledWith(localGoogletag, false, 'display')).to.be.true;
@@ -1414,10 +1409,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should not add hook when already added', () => {
       // Setup
       gpt.displayHookIsAdded = true;
-      
+
       // Execute
       gpt.newAddHookOnGoogletagDisplay(localGoogletag);
-      
+
       // Verify
       expect(mockUtils.util.addHookOnFunction.called).to.be.false;
     });
@@ -1428,13 +1423,13 @@ describe('dfpOpenWrap/gpt', () => {
       // Setup stubs
       mockUtils.util.getBidFromEvent = sandbox.stub();
       mockUtils.util.isOwnProperty = sandbox.stub();
-      
+
       // Create a slot in slotsMap
       slotsMap[TEST_SLOT_NAME] = {
         getStatus: sandbox.stub(),
         isRefreshFunctionCalled: sandbox.stub()
       };
-      
+
       // Setup behavior
       slotsMap[TEST_SLOT_NAME].getStatus.returns(CONSTANTS.SLOT_STATUS.CREATED);
       slotsMap[TEST_SLOT_NAME].isRefreshFunctionCalled.returns(true);
@@ -1448,10 +1443,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should not find winning bid when slot status is DISPLAYED', () => {
       // Setup
       slotsMap[TEST_SLOT_NAME].getStatus.returns(CONSTANTS.SLOT_STATUS.DISPLAYED);
-      
+
       // Execute
       gpt.findWinningBidIfRequiredRefresh(TEST_SLOT_NAME, []);
-      
+
       // Verify
       expect(mockUtils.util.getBidFromEvent.called).to.be.false;
     });
@@ -1459,10 +1454,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should not find winning bid when refresh function is not called', () => {
       // Setup
       slotsMap[TEST_SLOT_NAME].isRefreshFunctionCalled.returns(false);
-      
+
       // Execute
       gpt.findWinningBidIfRequiredRefresh(TEST_SLOT_NAME, []);
-      
+
       // Verify
       expect(mockUtils.util.getBidFromEvent.called).to.be.false;
     });
@@ -1476,7 +1471,7 @@ describe('dfpOpenWrap/gpt', () => {
         getDivID: function() { return TEST_SLOT_NAME; },
         getSizes: function() { return [[300, 250]]; }
       };
-      
+
       // Stub utility functions
       mockUtils.util.createVLogInfoPanel = sandbox.stub();
       mockUtils.util.realignVLogInfoPanel = sandbox.stub();
@@ -1489,14 +1484,14 @@ describe('dfpOpenWrap/gpt', () => {
     it('should create and realign VLog info panel when slot exists', () => {
       // Execute the function
       gpt.postRederingChores(TEST_SLOT_NAME, TEST_SLOT_NAME);
-      
+
       expect(mockUtils.util.realignVLogInfoPanel.called).to.be.true;
     });
 
     it('should log message when slot does not exist', () => {
       // Execute with non-existent slot
       gpt.postRederingChores(TEST_SLOT_NAME, 'non-existent-slot');
-      
+
       // Verify the error message was logged
       expect(mockUtils.util.log.calledWith('Could not find slot in postRederingChores')).to.be.true;
       // Verify realignVLogInfoPanel is still called
@@ -1517,17 +1512,17 @@ describe('dfpOpenWrap/gpt', () => {
       theObject = {};
       originalFunction = sandbox.stub().returns('originalFunction');
       arg = {};
-      
+
       // Create mock slot
       mockSlot = {
         getDivID: function() { return 'div-1'; }
       };
-      
+
       // Setup slotsMap
       gpt.slotsMap = {};
       gpt.slotsMap['slot_1'] = mockSlot;
       gpt.slotsMap['slot_2'] = mockSlot;
-      
+
       // Stub the dependent functions
       sandbox.stub(gpt, 'findWinningBidIfRequiredRefresh');
       sandbox.stub(gpt, 'postRederingChores');
@@ -1547,10 +1542,10 @@ describe('dfpOpenWrap/gpt', () => {
       // Setup
       const invalidSlotNames = ['invalid_slot_1', 'invalid_slot_2'];
       gpt.slotsMap = {}; // Clear slotsMap
-      
+
       // Execute
       gpt.postTimeoutRefreshExecution(invalidSlotNames, theObject, originalFunction, arg);
-      
+
       // Verify
       expect(mockUtils.util.log.called).to.be.true;
     });
@@ -1558,14 +1553,13 @@ describe('dfpOpenWrap/gpt', () => {
     it('should call findWinningBidIfRequiredRefresh for each valid slot', () => {
       // Setup
       gpt.findWinningBidIfRequiredRefresh.returns(false);
-      
+
       // Execute
       gpt.postTimeoutRefreshExecution(qualifyingSlotNames, theObject, originalFunction, arg);
-      
+
       // Verify
       expect(mockUtils.util.log.called).to.be.true;
     });
-
   });
 
   describe('callOriginalRefeshFunction', () => {
@@ -1579,9 +1573,9 @@ describe('dfpOpenWrap/gpt', () => {
 
     it('should call original function when flag is true', () => {
       const args = ['arg1', 'arg2'];
-      
+
       gpt.callOriginalRefeshFunction(true, theObject, originalFunction, args);
-      
+
       expect(originalFunction.calledWith(...args)).to.be.true;
       expect(originalFunction.calledOn(theObject)).to.be.true;
       expect(mockUtils.util.log.calledWith('Calling original refresh function post timeout')).to.be.true;
@@ -1589,7 +1583,7 @@ describe('dfpOpenWrap/gpt', () => {
 
     it('should log message when flag is false', () => {
       gpt.callOriginalRefeshFunction(false, theObject, originalFunction, []);
-      
+
       expect(originalFunction.called).to.be.false;
       expect(mockUtils.util.log.calledWith('AdSlot already rendered')).to.be.true;
     });
@@ -1611,10 +1605,10 @@ describe('dfpOpenWrap/gpt', () => {
       theObject.getSlots.returns([mockSlot]);
       mockUtils.util.isObject.withArgs(mockSlot).returns(true);
       mockUtils.util.isFunction.withArgs(mockSlot.getSlotId).returns(true);
-      
+
       const result = gpt.getQualifyingSlotNamesForRefresh([], theObject);
       expect(result).to.deep.equal([TEST_SLOT_NAME]);
-      
+
       const resultNull = gpt.getQualifyingSlotNamesForRefresh([null], theObject);
       expect(resultNull).to.deep.equal([TEST_SLOT_NAME]);
     });
@@ -1625,7 +1619,7 @@ describe('dfpOpenWrap/gpt', () => {
       };
       mockUtils.util.isObject.withArgs(mockSlot).returns(true);
       mockUtils.util.isFunction.withArgs(mockSlot.getSlotId).returns(true);
-      
+
       const result = gpt.getQualifyingSlotNamesForRefresh([[mockSlot]], theObject);
       expect(result).to.deep.equal([TEST_SLOT_NAME]);
     });
@@ -1640,7 +1634,7 @@ describe('dfpOpenWrap/gpt', () => {
       // Initialize mockUtils.bidManager if not exists
       mockUtils.bidManager = mockUtils.bidManager || {};
       mockUtils.bidManager.getAllPartnersBidStatuses = sandbox.stub().returns(true);
-      
+
       // Create mock slots
       mockSlot1 = {
         getSlotId: () => ({
@@ -1678,14 +1672,14 @@ describe('dfpOpenWrap/gpt', () => {
         isRefreshFunctionCalled: sandbox.stub().returns(false),
         sizes: [[300, 250]]
       };
-      
+
       slotsMap['div-2'] = {
         divID: 'div-2',
         getStatus: sandbox.stub().returns(CONSTANTS.SLOT_STATUS.CREATED),
         isRefreshFunctionCalled: sandbox.stub().returns(false),
         sizes: [[728, 90]]
       };
-      
+
       // Setup stubs
       originalFunction = sandbox.stub();
       mockUtils.CONFIG.getTimeout = sandbox.stub().returns(2000);
@@ -1696,7 +1690,7 @@ describe('dfpOpenWrap/gpt', () => {
       mockUtils.CONFIG.getAwc = sandbox.stub().returns(false);
       mockUtils.CONFIG.getCCPACmpApi = sandbox.stub().returns('');
       mockUtils.CONFIG.getGppConsent = sandbox.stub().returns({});
-      
+
       // Setup utility stubs
       mockUtils.util.isObject = sandbox.stub().returns(true);
       mockUtils.util.isFunction = sandbox.stub().returns(true);
@@ -1708,7 +1702,7 @@ describe('dfpOpenWrap/gpt', () => {
           array.forEach((item, index) => callback(index, item));
         }
       });
-      
+
       // Setup SLOT module
       mockUtils.SLOT = mockUtils.SLOT || {};
       mockUtils.SLOT.createSlot = sandbox.stub().callsFake(function(divID) {
@@ -1720,10 +1714,10 @@ describe('dfpOpenWrap/gpt', () => {
           setTargeting: sandbox.stub().returnsThis()
         };
       });
-      
+
       // Make sure isFunction returns true for originalFunction
       mockUtils.util.isFunction.withArgs(originalFunction).returns(true);
-      
+
       // Stub functions that might be called by newRefreshFuncton
       sandbox.stub(gpt, 'updateSlotsMapFromGoogleSlots').returns(true);
       sandbox.stub(gpt, 'getQualifyingSlotNamesForRefresh').returns(['div-1', 'div-2']);
@@ -1746,20 +1740,20 @@ describe('dfpOpenWrap/gpt', () => {
 
     it('should return null if theObject is not an object', () => {
       mockUtils.util.isObject.returns(false);
-      
+
       // Execute
       const result = gpt.newRefreshFuncton('not-an-object', originalFunction);
-      
+
       // Verify
       expect(result).to.be.null;
     });
 
     it('should return null if originalFunction is not a function', () => {
       mockUtils.util.isFunction.returns(false);
-      
+
       // Execute
       const result = gpt.newRefreshFuncton({}, 'not-a-function');
-      
+
       // Verify
       expect(result).to.be.null;
     });
@@ -1767,7 +1761,7 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return a function when parameters are valid', () => {
       // Execute
       const result = gpt.newRefreshFuncton(theObject, originalFunction);
-      
+
       // Verify
       expect(result).to.be.a('function');
     });
@@ -1775,17 +1769,17 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return original function when identity only mode is enabled', () => {
       // Setup
       mockUtils.CONFIG.isIdentityOnly.returns(true);
-      
+
       // Execute
       const result = gpt.newRefreshFuncton(theObject, originalFunction);
-      
+
       // Verify
       expect(typeof result).to.equal('function');
-      
+
       // Call the returned function
       const args = ['arg1', 'arg2'];
       result(...args);
-      
+
       // Verify original function was called with the same arguments
       expect(originalFunction.calledWith(...args)).to.be.true;
     });
@@ -1796,7 +1790,7 @@ describe('dfpOpenWrap/gpt', () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
-      
+
       // Stub utility functions
       mockUtils.util.isOwnProperty = sandbox.stub();
     });
@@ -1811,12 +1805,12 @@ describe('dfpOpenWrap/gpt', () => {
         status: CONSTANTS.SLOT_STATUS.DISPLAYED,
         getStatus: function() { return this.status; }
       };
-      
+
       mockUtils.util.isOwnProperty.withArgs(slotsMap, TEST_SLOT_NAME).returns(true);
-      
+
       // Execute
       const result = gpt.getStatusOfSlotForDivId(TEST_SLOT_NAME);
-      
+
       // Verify
       expect(result).to.equal(CONSTANTS.SLOT_STATUS.DISPLAYED);
     });
@@ -1824,10 +1818,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return SLOT_STATUS.DISPLAYED when slot is not in slotsMap', () => {
       // Setup
       mockUtils.util.isOwnProperty.returns(false);
-      
+
       // Execute
       const result = gpt.getStatusOfSlotForDivId('non-existent-div');
-      
+
       // Verify
       expect(result).to.equal(CONSTANTS.SLOT_STATUS.DISPLAYED);
     });
@@ -1840,21 +1834,21 @@ describe('dfpOpenWrap/gpt', () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
-      
+
       // Store original functions
       originalUpdateStatusOfQualifyingSlotsBeforeCallingAdapters = gpt.updateStatusOfQualifyingSlotsBeforeCallingAdapters;
       originalArrayOfSelectedSlots = gpt.arrayOfSelectedSlots;
-      
+
       // Create prebid object if it doesn't exist
       if (!mockUtils.prebid) {
         mockUtils.prebid = {};
       }
       mockUtils.prebid.fetchBids = sandbox.stub();
-      
+
       // Don't stub these functions, instead completely replace them with dummy implementations
       gpt.updateStatusOfQualifyingSlotsBeforeCallingAdapters = function() { return true; };
       gpt.arrayOfSelectedSlots = function() { return ['slot1', 'slot2']; };
-      
+
       // Spy on the replaced functions
       sandbox.spy(gpt, 'updateStatusOfQualifyingSlotsBeforeCallingAdapters');
       sandbox.spy(gpt, 'arrayOfSelectedSlots');
@@ -1872,10 +1866,10 @@ describe('dfpOpenWrap/gpt', () => {
       const qualifyingSlotNames = [];
       const args = ['arg1', 'arg2'];
       const isRefreshCall = false;
-      
+
       // Execute
       gpt.forQualifyingSlotNamesCallAdapters(qualifyingSlotNames, args, isRefreshCall);
-      
+
       // Verify no function calls
       expect(gpt.updateStatusOfQualifyingSlotsBeforeCallingAdapters.called).to.be.false;
       expect(gpt.arrayOfSelectedSlots.called).to.be.false;
@@ -1892,7 +1886,7 @@ describe('dfpOpenWrap/gpt', () => {
       // Create stubs
       originalFunction = sandbox.stub();
       theObject = {};
-      
+
       // Create mock Google slot
       mockGoogleSlot = {
         getSlotId: () => ({ getDomId: () => TEST_SLOT_NAME }),
@@ -1903,7 +1897,7 @@ describe('dfpOpenWrap/gpt', () => {
           getHeight: () => 250
         }]
       };
-      
+
       // Set up slotsMap
       slotsMap[TEST_SLOT_NAME] = {
         divID: TEST_SLOT_NAME,
@@ -1913,7 +1907,7 @@ describe('dfpOpenWrap/gpt', () => {
         }
       };
       // No need to assign to gpt.slotsMap since we're directly importing the reference
-      
+
       // Stub util functions
       mockUtils.util.isOwnProperty = sandbox.stub();
       mockUtils.util.isOwnProperty.withArgs(slotsMap, TEST_SLOT_NAME).returns(true);
@@ -1928,16 +1922,16 @@ describe('dfpOpenWrap/gpt', () => {
       // Setup
       const theObject = {};
       const originalFunction = sandbox.stub();
-      
+
       // Execute
       const result = gpt.newSetTargetingFunction(theObject, originalFunction);
-      
+
       // Verify
       expect(result).to.be.a('function');
-      
+
       // Call the returned function with array value
       result('key', ['value']);
-      
+
       // Verify the original function was called
       expect(originalFunction.calledOnce).to.be.true;
       expect(originalFunction.calledWith('key', ['value'])).to.be.true;
@@ -1947,10 +1941,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return null if theObject is not an object', () => {
       // Setup
       mockUtils.util.isObject.returns(false);
-      
+
       // Execute
       const result = gpt.newSetTargetingFunction('not-an-object', () => {});
-      
+
       // Verify
       expect(result).to.be.null;
       expect(mockUtils.util.log.calledWith('setTargeting: originalFunction is not a function')).to.be.true;
@@ -1959,10 +1953,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return null if originalFunction is not a function', () => {
       // Setup
       mockUtils.util.isFunction.returns(false);
-      
+
       // Execute
       const result = gpt.newSetTargetingFunction({}, 'not-a-function');
-      
+
       // Verify
       expect(result).to.be.null;
       expect(mockUtils.util.log.calledWith('setTargeting: originalFunction is not a function')).to.be.true;
@@ -1978,7 +1972,7 @@ describe('dfpOpenWrap/gpt', () => {
       // Create stubs
       originalFunction = sandbox.stub();
       theObject = {};
-      
+
       // Create mock Google slots
       mockGoogleSlots = [
         {
@@ -1988,12 +1982,12 @@ describe('dfpOpenWrap/gpt', () => {
           getSlotId: () => ({ getDomId: () => 'div-2' })
         }
       ];
-      
+
       // Set up slotsMap
       slotsMap['div-1'] = { divID: 'div-1' };
       slotsMap['div-2'] = { divID: 'div-2' };
       // No need to assign to gpt.slotsMap since we're directly importing the reference
-      
+
       // Stub util functions
       mockUtils.util.isOwnProperty = sandbox.stub();
       mockUtils.util.forEachOnArray = sandbox.stub();
@@ -2008,10 +2002,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return null if theObject is not an object', () => {
       // Setup
       mockUtils.util.isObject.returns(false);
-      
+
       // Execute
       const result = gpt.newDestroySlotsFunction('not-an-object', () => {});
-      
+
       // Verify
       expect(result).to.be.null;
       expect(mockUtils.util.log.calledWith('destroySlots: originalFunction is not a function')).to.be.true;
@@ -2020,10 +2014,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return null if originalFunction is not a function', () => {
       // Setup
       mockUtils.util.isFunction.returns(false);
-      
+
       // Execute
       const result = gpt.newDestroySlotsFunction({}, 'not-a-function');
-      
+
       // Verify
       expect(result).to.be.null;
       expect(mockUtils.util.log.calledWith('destroySlots: originalFunction is not a function')).to.be.true;
@@ -2035,7 +2029,7 @@ describe('dfpOpenWrap/gpt', () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
-      
+
       // Stub utility functions
       mockUtils.util.isObject = sandbox.stub().returns(true);
       mockUtils.util.isFunction = sandbox.stub().returns(true);
@@ -2054,16 +2048,16 @@ describe('dfpOpenWrap/gpt', () => {
       const adUnitPath = '/1234/sports/football';
       const size = [300, 250];
       const optDiv = 'div-1';
-      
+
       // Execute
       const result = gpt.newAddAdUnitFunction(theObject, originalFunction);
-      
+
       // Verify
       expect(result).to.be.a('function');
-      
+
       // Call the returned function
       const returnValue = result(adUnitPath, size, optDiv);
-      
+
       // Verify the original function was called
       expect(originalFunction.calledWith(adUnitPath, size, optDiv)).to.be.true;
       expect(originalFunction.calledOn(theObject)).to.be.true;
@@ -2074,10 +2068,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return null if theObject is not an object', () => {
       // Setup
       mockUtils.util.isObject.returns(false);
-      
+
       // Execute
       const result = gpt.newAddAdUnitFunction('not-an-object', () => {});
-      
+
       // Verify
       expect(result).to.be.null;
       expect(mockUtils.util.log.calledWith('newAddAunitfunction: originalFunction is not a function')).to.be.true;
@@ -2086,10 +2080,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return null if originalFunction is not a function', () => {
       // Setup
       mockUtils.util.isFunction.returns(false);
-      
+
       // Execute
       const result = gpt.newAddAdUnitFunction({}, 'not-a-function');
-      
+
       // Verify
       expect(result).to.be.null;
       expect(mockUtils.util.log.calledWith('newAddAunitfunction: originalFunction is not a function')).to.be.true;
@@ -2104,7 +2098,7 @@ describe('dfpOpenWrap/gpt', () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       originalSlotsMap = { ...slotsMap };
-      
+
       // Completely replace executeDisplay with a mock implementation
       originalExecuteDisplay = gpt.executeDisplay;
       gpt.executeDisplay = function(timeout, divIds, callback) {
@@ -2112,7 +2106,7 @@ describe('dfpOpenWrap/gpt', () => {
           setTimeout(() => callback(divIds), 1);
         }
       };
-      
+
       // Set up slotsMap for testing
       slotsMap['div-1'] = {
         divID: 'div-1',
@@ -2120,7 +2114,7 @@ describe('dfpOpenWrap/gpt', () => {
         isRefreshFunctionCalled: sandbox.stub().returns(false),
         sizes: [[300, 250]]
       };
-      
+
       // Ensure CONSTANTS.MESSAGES exists
       if (!CONSTANTS.MESSAGES) {
         CONSTANTS.MESSAGES = {};
@@ -2129,7 +2123,7 @@ describe('dfpOpenWrap/gpt', () => {
         CONSTANTS.MESSAGES.IDENTITY = {};
       }
       CONSTANTS.MESSAGES.IDENTITY.M5 = 'Identity mode message';
-      
+
       // Stub utility functions
       mockUtils.util.isObject = sandbox.stub().returns(true);
       mockUtils.util.isFunction = sandbox.stub().returns(true);
@@ -2138,13 +2132,13 @@ describe('dfpOpenWrap/gpt', () => {
       mockUtils.util.realignVLogInfoPanel = mockUtils.util.realignVLogInfoPanel || sandbox.stub();
       mockUtils.CONFIG.isIdentityOnly = sandbox.stub().returns(false);
       mockUtils.CONFIG.getTimeout = sandbox.stub().returns(0);
-      
+
       // Stub other functions
       sandbox.stub(gpt, 'displayFunctionStatusHandler');
       sandbox.stub(gpt, 'updateSlotsMapFromGoogleSlots');
       sandbox.stub(gpt, 'getSlotNamesByStatus').returns([]);
       sandbox.stub(gpt, 'forQualifyingSlotNamesCallAdapters');
-      
+
       // Set disableInitialLoadIsSet to false
       gpt.disableInitialLoadIsSet = false;
     });
@@ -2160,10 +2154,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return null if theObject is not an object', () => {
       // Setup
       mockUtils.util.isObject.returns(false);
-      
+
       // Execute
       const result = gpt.newDisplayFunction('not-an-object', () => {});
-      
+
       // Verify
       expect(result).to.be.null;
       expect(mockUtils.util.log.calledWith('display: originalFunction is not a function')).to.be.true;
@@ -2172,10 +2166,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return null if originalFunction is not a function', () => {
       // Setup
       mockUtils.util.isFunction.returns(false);
-      
+
       // Execute
       const result = gpt.newDisplayFunction({}, 'not-a-function');
-      
+
       // Verify
       expect(result).to.be.null;
       expect(mockUtils.util.log.calledWith('display: originalFunction is not a function')).to.be.true;
@@ -2191,10 +2185,10 @@ describe('dfpOpenWrap/gpt', () => {
       sandbox = sinon.createSandbox();
       theObject = {};
       originalFunction = sandbox.stub();
-      
+
       // Stub util.log
       mockUtils.util.log = sandbox.stub();
-      
+
       // Mock CONFIG.isIdentityOnly
       mockUtils.CONFIG.isIdentityOnly = sandbox.stub().returns(false);
     });
@@ -2207,7 +2201,7 @@ describe('dfpOpenWrap/gpt', () => {
       // Execute
       const wrappedFunction = gpt.newEnableSingleRequestFunction(theObject, originalFunction);
       wrappedFunction();
-      
+
       // Verify
       expect(originalFunction.calledOnce).to.be.true;
       expect(originalFunction.calledOn(theObject)).to.be.true;
@@ -2216,15 +2210,15 @@ describe('dfpOpenWrap/gpt', () => {
     it('should log error when originalFunction is not a function', () => {
       // Setup
       const notAFunction = {};
-      
+
       // Make util.isFunction return false for notAFunction
       mockUtils.util.isFunction = sandbox.stub();
       mockUtils.util.isFunction.withArgs(notAFunction).returns(false);
       mockUtils.util.isFunction.returns(true); // Default behavior for other calls
-      
+
       // Execute
       const wrappedFunction = gpt.newEnableSingleRequestFunction(theObject, notAFunction);
-      
+
       // Verify
       expect(wrappedFunction).to.be.null;
       expect(mockUtils.util.log.calledWith('enableSingleRequest: originalFunction is not a function')).to.be.true;
@@ -2233,11 +2227,11 @@ describe('dfpOpenWrap/gpt', () => {
     it('should call original function when in identity-only mode', () => {
       // Setup
       mockUtils.CONFIG.isIdentityOnly.returns(true);
-      
+
       // Execute
       const wrappedFunction = gpt.newEnableSingleRequestFunction(theObject, originalFunction);
       wrappedFunction();
-      
+
       // Verify
       expect(originalFunction.calledOnce).to.be.true;
       // Unlike newDisableInitialLoadFunction, newEnableSingleRequestFunction doesn't have special identity-only mode handling
@@ -2253,16 +2247,16 @@ describe('dfpOpenWrap/gpt', () => {
       // Create stubs
       originalFunction = sandbox.stub();
       theObject = {};
-      
+
       // Set disableInitialLoadIsSet to false
       gpt.disableInitialLoadIsSet = false;
-      
+
       // Setup utility stubs
       mockUtils.util.isObject = sandbox.stub().returns(true);
       mockUtils.util.isFunction = sandbox.stub().returns(true);
       mockUtils.util.log = sandbox.stub();
       mockUtils.util.logError = sandbox.stub();
-      
+
       // Setup CONFIG stubs
       mockUtils.CONFIG.isIdentityOnly = sandbox.stub().returns(false);
     });
@@ -2274,10 +2268,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return null if theObject is not an object', () => {
       // Setup
       mockUtils.util.isObject.returns(false);
-      
+
       // Execute
       const result = gpt.newDisableInitialLoadFunction(theObject, originalFunction);
-      
+
       // Verify
       expect(result).to.be.null;
     });
@@ -2285,10 +2279,10 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return null if originalFunction is not a function', () => {
       // Setup
       mockUtils.util.isFunction.returns(false);
-      
+
       // Execute
       const result = gpt.newDisableInitialLoadFunction(theObject, 'not-a-function');
-      
+
       // Verify
       expect(result).to.be.null;
       expect(mockUtils.util.logError.called).to.be.true;
@@ -2297,7 +2291,7 @@ describe('dfpOpenWrap/gpt', () => {
     it('should return a function when parameters are valid', () => {
       // Execute
       const result = gpt.newDisableInitialLoadFunction(theObject, originalFunction);
-      
+
       // Verify
       expect(result).to.be.a('function');
     });
@@ -2314,21 +2308,21 @@ describe('dfpOpenWrap/gpt', () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
-      
+
       // Setup test variables
       oldStatus = CONSTANTS.SLOT_STATUS.CREATED;
       theObject = {};
       originalFunction = sandbox.stub().returns('originalFunction');
       arg = ['div-1'];
       originalSlotsMap = { ...slotsMap };
-      
+
       // Save original function
       originalUpdateStatusAndCallOriginalFunctionDisplay = gpt.updateStatusAndCallOriginalFunctionDisplay;
-      
+
       // Mock window.PWT
       window.PWT = window.PWT || {};
       window.PWT.bidMap = {};
-      
+
       // Stub utility functions
       mockUtils.util.log = sandbox.stub();
       mockUtils.util.isFunction = sandbox.stub().returns(true);
@@ -2339,39 +2333,39 @@ describe('dfpOpenWrap/gpt', () => {
       });
       mockUtils.util.isOwnProperty = sandbox.stub().returns(true);
       mockUtils.util.getExternalBidderStatus = sandbox.stub().returns(true);
-      
+
       // Override updateStatusAndCallOriginalFunctionDisplay to avoid calling updateStatusAfterRendering
       gpt.updateStatusAndCallOriginalFunctionDisplay = sandbox.stub().callsFake((message, theObject, originalFunction, arg) => {
         mockUtils.util.log(message);
         originalFunction.apply(theObject, arg);
         return true;
       });
-      
+
       // Stub other functions
       sandbox.stub(gpt, 'processDisplayCalledSlot');
       sandbox.stub(gpt, 'findWinningBidIfRequiredDisplay');
-      
+
       // Mock executeDisplay instead of setTimeout
       sandbox.stub(gpt, 'executeDisplay').callsFake((timeout, divIds, callback) => {
         // Store the callback for later execution in tests
         gpt.executeDisplay.callback = callback;
       });
-      
+
       // Mock CONFIG
       mockUtils.CONFIG = {
         getTimeout: sandbox.stub().returns(100)
       };
-      
+
       // Mock bidManager
       mockUtils.bidManager = {
         getAllPartnersBidStatuses: sandbox.stub().returns(true)
       };
-      
+
       // Setup slotsMap with proper mock objects
       slotsMap['div-1'] = {
-          getStatus: sandbox.stub().returns(CONSTANTS.SLOT_STATUS.CREATED),
-          updateStatusAfterRendering: sandbox.stub()
-        };
+        getStatus: sandbox.stub().returns(CONSTANTS.SLOT_STATUS.CREATED),
+        updateStatusAfterRendering: sandbox.stub()
+      };
     });
 
     afterEach(() => {
@@ -2385,11 +2379,11 @@ describe('dfpOpenWrap/gpt', () => {
     it('should be a function', () => {
       expect(gpt.displayFunctionStatusHandler).to.be.a('function');
     });
-    
+
     it('should do nothing for unknown status (default case)', () => {
       // Execute with an unknown status
       gpt.displayFunctionStatusHandler(999, theObject, originalFunction, arg);
-      
+
       // Verify that no functions are called (default case has no implementation)
       expect(gpt.updateStatusAndCallOriginalFunctionDisplay.called).to.be.false;
       expect(gpt.executeDisplay.called).to.be.false;

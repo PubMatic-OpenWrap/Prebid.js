@@ -103,9 +103,9 @@ describe('OpenWrap Module: bidManager.js', function () {
     it('should create new bid entry', function () {
       const divID = 'test_div';
       util.isOwnProperty.returns(false);
-      
+
       bidManager.createBidEntry(divID);
-      
+
       expect(bmEntry.createBMEntry.calledWith(divID)).to.be.true;
       expect(window.PWT.bidMap[divID]).to.equal(mockBMEntry);
     });
@@ -114,9 +114,9 @@ describe('OpenWrap Module: bidManager.js', function () {
       const divID = 'test_div';
       const sizes = [[300, 250]];
       util.isOwnProperty.returns(false);
-      
+
       bidManager.setSizes(divID, sizes);
-      
+
       expect(mockBMEntry.setSizes.calledWith(sizes)).to.be.true;
     });
 
@@ -124,9 +124,9 @@ describe('OpenWrap Module: bidManager.js', function () {
       const divID = 'test_div';
       const adapterID = 'test_adapter';
       util.isOwnProperty.returns(false);
-      
+
       bidManager.setCallInitTime(divID, adapterID);
-      
+
       expect(mockBMEntry.setAdapterEntry.calledWith(adapterID)).to.be.true;
     });
   });
@@ -176,9 +176,9 @@ describe('OpenWrap Module: bidManager.js', function () {
     it('should handle bid from bidder', function () {
       const divID = 'test_div';
       util.isOwnProperty.returns(true);
-      
+
       bidManager.setBidFromBidder(divID, mockBidDetails);
-      
+
       expect(util.log.called).to.be.true;
       expect(mockBMEntry.setNewBid.called).to.be.true;
       expect(mockBMEntry.adapters['test_adapter'].bids['test_bid_id']).to.equal(mockBidDetails);
@@ -188,9 +188,9 @@ describe('OpenWrap Module: bidManager.js', function () {
       const divID = 'test_div';
       util.isOwnProperty.returns(true);
       mockBidDetails.getReceivedTime.returns(3000);
-      
+
       bidManager.setBidFromBidder(divID, mockBidDetails);
-      
+
       expect(mockBidDetails.setPostTimeoutStatus.called).to.be.true;
       expect(mockBMEntry.setNewBid.called).to.be.true;
     });
@@ -204,9 +204,9 @@ describe('OpenWrap Module: bidManager.js', function () {
         getNetEcpm: sandbox.stub().returns(0.5),
         getPostTimeoutStatus: sandbox.stub().returns(false)
       });
-      
+
       bidManager.setBidFromBidder(divID, mockBidDetails);
-      
+
       expect(mockBMEntry.setNewBid.called).to.be.true;
       expect(mockBMEntry.adapters['test_adapter'].bids['test_bid_id']).to.equal(mockBidDetails);
     });
@@ -220,9 +220,9 @@ describe('OpenWrap Module: bidManager.js', function () {
         getNetEcpm: sandbox.stub().returns(0),
         getPostTimeoutStatus: sandbox.stub().returns(false)
       });
-      
+
       bidManager.setBidFromBidder(divID, mockBidDetails);
-      
+
       expect(mockBMEntry.setNewBid.called).to.be.true;
       expect(mockBMEntry.adapters['test_adapter'].bids['test_bid_id']).to.equal(mockBidDetails);
     });
@@ -236,9 +236,9 @@ describe('OpenWrap Module: bidManager.js', function () {
         getNetEcpm: sandbox.stub().returns(1.5),
         getPostTimeoutStatus: sandbox.stub().returns(false)
       });
-      
+
       bidManager.setBidFromBidder(divID, mockBidDetails);
-      
+
       expect(mockBMEntry.setNewBid.called).to.be.false;
       expect(util.log.calledWith(sinon.match(/Previous ecpm/))).to.be.true;
     });
@@ -253,9 +253,9 @@ describe('OpenWrap Module: bidManager.js', function () {
         getPostTimeoutStatus: sandbox.stub().returns(true)
       });
       mockBidDetails.getReceivedTime.returns(3000);
-      
+
       bidManager.setBidFromBidder(divID, mockBidDetails);
-      
+
       expect(mockBMEntry.setNewBid.called).to.be.false;
       expect(util.log.calledWith(CONSTANTS.MESSAGES.M17)).to.be.true;
     });
@@ -263,18 +263,18 @@ describe('OpenWrap Module: bidManager.js', function () {
     it('should handle non-existent bid entry', function () {
       const divID = 'test_div';
       util.isOwnProperty.returns(false);
-      
+
       bidManager.setBidFromBidder(divID, mockBidDetails);
-      
+
       expect(util.logWarning.called).to.be.true;
     });
   });
 
   describe('Slot Level Frequency', function () {
     it('should get slot level frequency depth', function () {
-      const mockFrequencyDepth = { 
+      const mockFrequencyDepth = {
         slotLevelFrquencyDepth: {
-          slot1: { prop1: 'value1' } 
+          slot1: { prop1: 'value1' }
         }
       };
       const result = bidManager.getSlotLevelFrequencyDepth(mockFrequencyDepth, 'prop1', 'slot1');
@@ -329,9 +329,9 @@ describe('OpenWrap Module: bidManager.js', function () {
           }
         }
       };
-      
+
       bidManager.fireTracker(bidDetails, 'click');
-      
+
       expect(window.setImageSrcToPixelURL.calledWith('click_url', false)).to.be.true;
     });
 
@@ -352,9 +352,9 @@ describe('OpenWrap Module: bidManager.js', function () {
           }
         }
       };
-      
+
       bidManager.fireTracker(bidDetails, 'imptrackers');
-      
+
       expect(util.insertHtmlIntoIframe.calledWith('<script>test</script>')).to.be.true;
     });
 
@@ -395,18 +395,18 @@ describe('OpenWrap Module: bidManager.js', function () {
     beforeEach(function () {
       window.parent.postMessage = sandbox.stub();
     });
-    
+
     afterEach(function () {
       delete window.parent.postMessage;
     });
-    
+
     it('should load trackers on click', function () {
       const event = { target: {} };
       const bidId = 'test_bid';
       util.getBidFromEvent.returns(bidId);
-      
+
       bidManager.loadTrackers(event);
-      
+
       expect(window.parent.postMessage.calledWith(
         sinon.match(JSON.stringify({
           pwt_type: '3',
@@ -420,9 +420,9 @@ describe('OpenWrap Module: bidManager.js', function () {
 
     it('should execute impression tracker', function () {
       const bidId = 'test_bid';
-      
+
       bidManager.executeTracker(bidId);
-      
+
       expect(window.parent.postMessage.calledWith(
         sinon.match(JSON.stringify({
           pwt_type: '3',
@@ -439,11 +439,11 @@ describe('OpenWrap Module: bidManager.js', function () {
     it('should handle missing bid maps', function () {
       const mockBidMaps = {};
       const divIds = ['div1'];
-      
+
       util.forEachOnArray.callsFake((arr, cb) => arr.forEach(cb));
-      
+
       const result = bidManager.getAllPartnersBidStatuses(mockBidMaps, divIds);
-      
+
       expect(result).to.be.true;
     });
   });

@@ -6,7 +6,7 @@ describe('OpenWrap Core Module: conf.js', function () {
   let sandbox;
 
   beforeEach(function () {
-    sandbox = sinon.createSandbox();    
+    sandbox = sinon.createSandbox();
     sinon.stub(utils, 'logError');
   });
 

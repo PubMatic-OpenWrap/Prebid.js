@@ -26,7 +26,7 @@ const typeFunction = 'Function';
 const typeNumber = 'Number';
 const toString = Object.prototype.toString;
 // const refThis = this;
-export function getPbNameSpace() { 
+export function getPbNameSpace() {
   return CONFIG.isIdentityOnly() ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
 }
 // const idsAppendedToAdUnits = false;
@@ -658,11 +658,11 @@ export function applyDataTypeChangesIfApplicable(params) {
             case 'customObject':
               if (paramValue) {
                 if (key === 'params.requestedAttributesOverrides') {
-									try {
-										params[key] = JSON.parse(paramValue);
-									} catch (e) {
-										logError("Error parsing requestedAttributesOverrides for partner ", partnerName);
-									}
+                  try {
+                    params[key] = JSON.parse(paramValue);
+                  } catch (e) {
+                    logError('Error parsing requestedAttributesOverrides for partner ', partnerName);
+                  }
                 }
               }
               break;

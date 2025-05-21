@@ -3,20 +3,20 @@
 var path = require('path');
 
 module.exports = {
-    output: {
-        filename: 'prebid.js'
-    },
-    devtool: false,
-    resolve: {
-				modules: [path.resolve('./node_modules'), path.resolve('./src')]
-    },
-    module: {
-      rules: [
-        {
-          test: /(\.js)$/,
-          loader: 'babel-loader',
-          exclude: /(node_modules)/
-        }
-		  ]
-    }
+  output: {
+    filename: 'prebid.js'
+  },
+  devtool: false,
+  resolve: {
+    modules: [path.resolve('./node_modules'), path.resolve('./src')]
+  },
+  module: {
+    rules: [
+      {
+        test: /(\.js)$/,
+        loader: 'babel-loader',
+        exclude: /(node_modules)/
+      }
+    ]
+  }
 };

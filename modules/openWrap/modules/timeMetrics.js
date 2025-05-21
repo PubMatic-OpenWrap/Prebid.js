@@ -1,3 +1,4 @@
+/* eslint-disable prebid/validate-imports */
 import * as commonUtil from '../common.util.js';
 
 let metrics = {};

@@ -37,7 +37,7 @@ describe('OpenWrap Module: timeMetrics.js', function () {
     it('should record entry time for a single key', function () {
       timeMetrics.recordEntryTime('test1');
       const metrics = timeMetrics.getMetricsObject();
-      
+
       expect(metrics.test1).to.deep.equal({
         st: 1000,
         et: null,
@@ -48,7 +48,7 @@ describe('OpenWrap Module: timeMetrics.js', function () {
     it('should record entry time for multiple keys', function () {
       timeMetrics.recordEntryTime(['test2', 'test3'], 100);
       const metrics = timeMetrics.getMetricsObject();
-      
+
       expect(metrics.test2).to.deep.equal({
         st: 1000,
         et: null,
@@ -65,7 +65,7 @@ describe('OpenWrap Module: timeMetrics.js', function () {
       timeMetrics.recordEntryTime('test4');
       clock.tick(1000);
       timeMetrics.recordEntryTime('test4');
-      
+
       const metrics = timeMetrics.getMetricsObject();
       expect(metrics.test1.st).to.equal(1000); // Should keep original start time
     });
@@ -81,7 +81,7 @@ describe('OpenWrap Module: timeMetrics.js', function () {
     it('should record exit time and calculate duration for a single key', function () {
       timeMetrics.recordExitTime('test1');
       const metrics = timeMetrics.getMetricsObject();
-      
+
       expect(metrics.test1).to.deep.equal({
         st: 1000,
         et: 2000,
@@ -92,7 +92,7 @@ describe('OpenWrap Module: timeMetrics.js', function () {
     it('should record exit time and calculate duration for multiple keys', function () {
       timeMetrics.recordExitTime(['test1', 'test2']);
       const metrics = timeMetrics.getMetricsObject();
-      
+
       expect(metrics.test1.tt).to.equal(1000);
       expect(metrics.test2.tt).to.equal(1000);
     });
@@ -100,17 +100,16 @@ describe('OpenWrap Module: timeMetrics.js', function () {
     it('should use default total time when provided', function () {
       timeMetrics.recordExitTime('test1', 5000);
       const metrics = timeMetrics.getMetricsObject();
-      
+
       expect(metrics.test1.tt).to.equal(5000);
     });
 
     it('should handle non-existent keys', function () {
       timeMetrics.recordExitTime('nonexistent');
       const metrics = timeMetrics.getMetricsObject();
-      
+
       expect(metrics.nonexistent).to.be.undefined;
     });
-
   });
 
   describe('getDurationOf', function () {
@@ -127,7 +126,6 @@ describe('OpenWrap Module: timeMetrics.js', function () {
     it('should return null for non-existent key', function () {
       expect(timeMetrics.getDurationOf('nonexistent')).to.be.null;
     });
-
   });
 
   describe('init', function () {
@@ -146,16 +144,15 @@ describe('OpenWrap Module: timeMetrics.js', function () {
       timeMetrics.recordEntryTime(undefined);
       timeMetrics.recordExitTime(null);
       timeMetrics.recordExitTime(undefined);
-      
+
       const metrics = timeMetrics.getMetricsObject();
-      console.log("Tes: ", JSON.stringify(metrics));
       expect(Object.keys(metrics).length).to.equal(0);
     });
 
     it('should handle empty array of key names', function () {
       timeMetrics.recordEntryTime([]);
       timeMetrics.recordExitTime([]);
-      
+
       const metrics = timeMetrics.getMetricsObject();
       expect(Object.keys(metrics).length).to.equal(0);
     });
@@ -163,7 +160,7 @@ describe('OpenWrap Module: timeMetrics.js', function () {
     it('should handle negative default total times', function () {
       timeMetrics.recordEntryTime('test5', -1000);
       const metrics = timeMetrics.getMetricsObject();
-      
+
       expect(metrics.test5.tt).to.equal(-1000);
     });
   });

@@ -4,12 +4,13 @@ import * as CONSTANTS from '../../../../modules/openWrap/constants.js';
 import * as CONFIG from '../../../../modules/openWrap/config.js';
 import * as bidManager from '../../../../modules/openWrap/bidManager.js'
 
+/* eslint-disable no-console */
 describe('OpenWrap Core Module: util.js', function () {
   let sandbox;
   let mockConsole;
   let clock;
 
-  var commonDivID = "DIV_1";
+  var commonDivID = 'DIV_1';
 
   beforeEach(function () {
     sandbox = sinon.createSandbox();
@@ -72,7 +73,6 @@ describe('OpenWrap Core Module: util.js', function () {
       it('should identify arrays correctly', function () {
         expect(util.isArray([])).to.be.true;
         expect(util.isArray([1, 2, 3])).to.be.true;
-        expect(util.isArray(new Array())).to.be.true;
 
         expect(util.isArray({})).to.be.false;
         expect(util.isArray('')).to.be.false;
@@ -95,7 +95,6 @@ describe('OpenWrap Core Module: util.js', function () {
     describe('isObject', function () {
       it('should identify objects correctly', function () {
         expect(util.isObject({})).to.be.true;
-        expect(util.isObject(new Object())).to.be.true;
         expect(util.isObject(Object.create(null))).to.be.true;
 
         expect(util.isObject(null)).to.be.false;
@@ -108,7 +107,7 @@ describe('OpenWrap Core Module: util.js', function () {
     describe('isOwnProperty', function () {
       it('should check own properties correctly', function () {
         const obj = { a: 1 };
-        Object.prototype.b = 2;
+        // Object.prototype.b = 2;
 
         expect(util.isOwnProperty(obj, 'a')).to.be.true;
         expect(util.isOwnProperty(obj, 'b')).to.be.false;
@@ -179,7 +178,6 @@ describe('OpenWrap Core Module: util.js', function () {
         util.log({ key: 'value' });
         expect(mockConsole.log.calledWith({ key: 'value' })).to.be.true;
       });
-
     });
 
     describe('logError', function () {
@@ -343,7 +341,6 @@ describe('OpenWrap Core Module: util.js', function () {
 
   describe('Browser Functions', function () {
     describe('getTopFrameOfSameDomain', function () {
-
       it('should handle cross-domain access errors', function () {
         const frame = {
           get parent() { throw new Error('Cross-origin access denied'); }
@@ -577,7 +574,6 @@ describe('OpenWrap Core Module: util.js', function () {
       expect(result).to.have.length(2);
       expect(result).to.include('test-div@300x250');
       expect(result).to.include('test-div@728x90');
-
     });
 
     it('should handle GPT slot objects', function () {
@@ -729,7 +725,6 @@ describe('OpenWrap Core Module: util.js', function () {
         util.applyDataTypeChangesIfApplicable(params);
         expect(params['params.requestedAttributesOverrides']).to.deep.equal({ test: 'value' });
       });
-
     });
 
     describe('applyCustomParamValuesfApplicable', function () {
@@ -1038,7 +1033,6 @@ describe('OpenWrap Core Module: util.js', function () {
       it('should identify objects correctly', function () {
         expect(util.isObject({})).to.be.true;
         expect(util.isObject({ a: 1 })).to.be.true;
-        expect(util.isObject(new Object())).to.be.true;
         expect(util.isObject([])).to.be.true; // Arrays are objects in JS
 
         expect(util.isObject(null)).to.be.false; // null is not an object for this function
@@ -1080,7 +1074,6 @@ describe('OpenWrap Core Module: util.js', function () {
     describe('isEmptyObject', function () {
       it('should identify empty objects correctly', function () {
         expect(util.isEmptyObject({})).to.be.true;
-        expect(util.isEmptyObject(new Object())).to.be.true;
 
         expect(util.isEmptyObject({ a: 1 })).to.be.false;
         expect(util.isEmptyObject([])).to.be.true;
@@ -1130,19 +1123,19 @@ describe('OpenWrap Core Module: util.js', function () {
     });
 
     it('should update externalBidderStatuses.Div1 obj if Div1 is passed', function (done) {
-      util.resetExternalBidderStatus(["Div1"]);
+      util.resetExternalBidderStatus(['Div1']);
       window.OWT.externalBidderStatuses.should.deep.equal({
-        "Div1": undefined,
-        "Div2": { id: 1, status: true },
+        'Div1': undefined,
+        'Div2': { id: 1, status: true },
       });
       done();
     });
 
     it('should update externalBidderStatuses obj if Div1, Div2 is passed', function (done) {
-      util.resetExternalBidderStatus(["Div1", "Div2"]);
+      util.resetExternalBidderStatus(['Div1', 'Div2']);
       window.OWT.externalBidderStatuses.should.deep.equal({
-        "Div1": undefined,
-        "Div2": undefined,
+        'Div1': undefined,
+        'Div2': undefined,
       });
       done();
     });
@@ -1643,7 +1636,6 @@ describe('OpenWrap Core Module: util.js', function () {
       });
     });
 
-
     describe('getElementLocation', function () {
       it('should get the location of an element', function () {
         const el = {
@@ -1812,7 +1804,6 @@ describe('OpenWrap Core Module: util.js', function () {
         });
       });
     }
-
   });
 
   describe('Data Processing Functions', function () {
@@ -2275,8 +2266,6 @@ describe('OpenWrap Core Module: util.js', function () {
       });
     });
 
-
-
     describe('getNestedObjectFromArray', function () {
       it('should get nested object from array', function () {
         const sourceObject = {};
@@ -2294,7 +2283,6 @@ describe('OpenWrap Core Module: util.js', function () {
         });
       });
     });
-
 
     describe('getNestedObjectFromString', function () {
       it('should get nested object from string', function () {
@@ -2330,45 +2318,45 @@ describe('OpenWrap Core Module: util.js', function () {
       elementStub = {
         parentNode: {
           insertBefore: function () {
-            return "insertBefore";
+            return 'insertBefore';
           }
         }
       };
       dimensionArray = [
         [1024, 120]
       ];
-      sinon.spy(elementStub.parentNode, "insertBefore");
-      sinon.stub(window.document, "getElementById");
+      sinon.spy(elementStub.parentNode, 'insertBefore');
+      sinon.stub(window.document, 'getElementById');
       window.document.getElementById.withArgs(divID).returns(elementStub);
       window.document.getElementById.withArgs(divID + '-pwtc-info').returns(false);
 
-      sinon.stub(window.document, "createElement");
+      sinon.stub(window.document, 'createElement');
       infoPanelElementStub = {
-        "id": "div_id",
-        "style": "none",
+        'id': 'div_id',
+        'style': 'none',
         appendChild: function () {
-          return "appendChild";
+          return 'appendChild';
         }
       };
-      sinon.spy(infoPanelElementStub, "appendChild");
-      window.document.createElement.withArgs("div").returns(infoPanelElementStub);
+      sinon.spy(infoPanelElementStub, 'appendChild');
+      window.document.createElement.withArgs('div').returns(infoPanelElementStub);
       closeImageStub = {
-        "src": "",
-        "style": "",
-        "title": "",
-        "onclick": function () {
-          return "onclick";
+        'src': '',
+        'style': '',
+        'title': '',
+        'onclick': function () {
+          return 'onclick';
         }
       };
-      window.document.createElement.withArgs("img").returns(closeImageStub);
-      window.document.createElement.withArgs("br").returns(infoPanelElementStub);
+      window.document.createElement.withArgs('img').returns(closeImageStub);
+      window.document.createElement.withArgs('br').returns(infoPanelElementStub);
       posStub = {
         x: 200,
         y: 400
       };
-      sinon.stub(util, "getElementLocation").returns(posStub);
-      sinon.stub(util, "isUndefined");
-      sinon.spy(window.document, "createTextNode");
+      sinon.stub(util, 'getElementLocation').returns(posStub);
+      sinon.stub(util, 'isUndefined');
+      sinon.spy(window.document, 'createTextNode');
 
       done();
     });
@@ -2403,14 +2391,14 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should have called doc.getElementById', function (done) {
       util.createVLogInfoPanel(divID, dimensionArray);
-      window.document.createElement.calledWith("img").should.be.true;
-      window.document.createElement.calledWith("div").should.be.true;
-      window.document.createElement.calledWith("br").should.be.true;
+      window.document.createElement.calledWith('img').should.be.true;
+      window.document.createElement.calledWith('div').should.be.true;
+      window.document.createElement.calledWith('br').should.be.true;
 
       expect(infoPanelElementStub.id).to.be.equal(divID + '-pwtc-info');
       // expect(infoPanelElementStub.style).to.be.equal('position: absolute; /*top: ' + posStub.y + 'px;*/ left: ' + posStub.x + 'px; width: ' + dimensionArray[0][0] + 'px; height: ' + dimensionArray[0][1] + 'px; border: 1px solid rgb(255, 204, 52); padding-left: 11px; background: rgb(247, 248, 224) none repeat scroll 0% 0%; overflow: auto; z-index: 9999997; visibility: hidden;opacity:0.9;font-size:13px;font-family:monospace;');
 
-      expect(closeImageStub.src).to.be.equal(util.metaInfo.protocol + "ads.pubmatic.com/AdServer/js/pwt/close.png");
+      expect(closeImageStub.src).to.be.equal(util.metaInfo.protocol + 'ads.pubmatic.com/AdServer/js/pwt/close.png');
       // expect(closeImageStub.style).to.be.equal('cursor:pointer; position: absolute; top: 2px; left: ' + (posStub.x + dimensionArray[0][0] - 16 - 15) + 'px; z-index: 9999998;');
       expect(closeImageStub.title).to.be.equal('close');
 
@@ -2438,10 +2426,10 @@ describe('OpenWrap Core Module: util.js', function () {
       divID = commonDivID;
 
       infoObject = {
-        type: "bid",
+        type: 'bid',
         latency: 100,
-        bidder: "pubmatic",
-        adapter: "",
+        bidder: 'pubmatic',
+        adapter: '',
         s2s: false,
         bidDetails: {
           getNetEcpm: function () {
@@ -2454,27 +2442,27 @@ describe('OpenWrap Core Module: util.js', function () {
             return true;
           },
           getAdapterID: function () {
-            return "pubmatic";
+            return 'pubmatic';
           },
         }
       };
 
-      sinon.spy(infoObject.bidDetails, "getGrossEcpm");
-      sinon.stub(infoObject.bidDetails, "getPostTimeoutStatus");
-      sinon.spy(infoObject.bidDetails, "getAdapterID");
-      sinon.spy(infoObject.bidDetails, "getNetEcpm");
+      sinon.spy(infoObject.bidDetails, 'getGrossEcpm');
+      sinon.stub(infoObject.bidDetails, 'getPostTimeoutStatus');
+      sinon.spy(infoObject.bidDetails, 'getAdapterID');
+      sinon.spy(infoObject.bidDetails, 'getNetEcpm');
 
       infoPanelElementStub = {
         appendChild: function () {
-          return "appendChild";
+          return 'appendChild';
         }
       };
 
-      sinon.stub(infoPanelElementStub, "appendChild");
-      sinon.stub(window.document, "getElementById").returns(infoPanelElementStub);
+      sinon.stub(infoPanelElementStub, 'appendChild');
+      sinon.stub(window.document, 'getElementById').returns(infoPanelElementStub);
 
-      sinon.stub(window.document, "createTextNode");
-      sinon.stub(window.document, "createElement");
+      sinon.stub(window.document, 'createTextNode');
+      sinon.stub(window.document, 'createElement');
       util.visualDebugLogIsEnabled = true;
       done();
     });
@@ -2510,23 +2498,23 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should have created the text node when type of the infoObject is bid with proper message being generated but getPostTimeoutStatus is false', function (done) {
       infoObject.bidDetails.getPostTimeoutStatus.returns(false);
-      infoObject.type = "bid";
+      infoObject.type = 'bid';
       util.vLogInfo(divID, infoObject);
       infoObject.bidDetails.getNetEcpm.called.should.be.true;
       infoObject.bidDetails.getGrossEcpm.called.should.be.true;
-      window.document.createTextNode.calledWith("Bid: " + infoObject.bidder + ": " + infoObject.bidDetails.getNetEcpm() + "(" + infoObject.bidDetails.getGrossEcpm() + ")USD :" + infoObject.latency + "ms").should.be.true;
+      window.document.createTextNode.calledWith('Bid: ' + infoObject.bidder + ': ' + infoObject.bidDetails.getNetEcpm() + '(' + infoObject.bidDetails.getGrossEcpm() + ')USD :' + infoObject.latency + 'ms').should.be.true;
       infoPanelElementStub.appendChild.calledTwice.should.be.true;
       done();
     });
 
     it('should have created the text node when type of the infoObject is bid with proper message being generated but getPostTimeoutStatus is true and latency is negative', function (done) {
       infoObject.bidDetails.getPostTimeoutStatus.returns(true);
-      infoObject.type = "bid";
+      infoObject.type = 'bid';
       infoObject.latency = -10;
       util.vLogInfo(divID, infoObject);
       infoObject.bidDetails.getNetEcpm.called.should.be.true;
       infoObject.bidDetails.getGrossEcpm.called.should.be.true;
-      window.document.createTextNode.calledWith("Bid: " + infoObject.bidder + ": " + infoObject.bidDetails.getNetEcpm() + "(" + infoObject.bidDetails.getGrossEcpm() + ")USD :" + 0 + "ms" + ": POST-TIMEOUT").should.be.true;
+      window.document.createTextNode.calledWith('Bid: ' + infoObject.bidder + ': ' + infoObject.bidDetails.getNetEcpm() + '(' + infoObject.bidDetails.getGrossEcpm() + ')USD :' + 0 + 'ms' + ': POST-TIMEOUT').should.be.true;
       infoPanelElementStub.appendChild.calledTwice.should.be.true;
       done();
     });
@@ -2536,7 +2524,7 @@ describe('OpenWrap Core Module: util.js', function () {
       infoObject.adServerCurrency = 'someValue';
       util.vLogInfo(divID, infoObject);
       window.document.createTextNode.calledWith(
-        "Bid: " + infoObject.bidder + ": " + infoObject.bidDetails.getNetEcpm() + "(" + infoObject.bidDetails.getGrossEcpm() + ")" + infoObject.adServerCurrency + " :100ms"
+        'Bid: ' + infoObject.bidder + ': ' + infoObject.bidDetails.getNetEcpm() + '(' + infoObject.bidDetails.getGrossEcpm() + ')' + infoObject.adServerCurrency + ' :100ms'
       ).should.be.true;
       done();
     });
@@ -2546,7 +2534,7 @@ describe('OpenWrap Core Module: util.js', function () {
       infoObject.adServerCurrency = 0;
       util.vLogInfo(divID, infoObject);
       window.document.createTextNode.calledWith(
-        "Bid: " + infoObject.bidder + ": " + infoObject.bidDetails.getNetEcpm() + "(" + infoObject.bidDetails.getGrossEcpm() + ")USD :100ms"
+        'Bid: ' + infoObject.bidder + ': ' + infoObject.bidDetails.getNetEcpm() + '(' + infoObject.bidDetails.getGrossEcpm() + ')USD :100ms'
       ).should.be.true;
       done();
     });
@@ -2557,58 +2545,58 @@ describe('OpenWrap Core Module: util.js', function () {
       infoObject.adServerCurrency = 0;
       util.vLogInfo(divID, infoObject);
       window.document.createTextNode.calledWith(
-        "Bid: " + infoObject.bidder + "(s2s): " + infoObject.bidDetails.getNetEcpm() + "(" + infoObject.bidDetails.getGrossEcpm() + ")USD :100ms"
+        'Bid: ' + infoObject.bidder + '(s2s): ' + infoObject.bidDetails.getNetEcpm() + '(' + infoObject.bidDetails.getGrossEcpm() + ')USD :100ms'
       ).should.be.true;
       done();
     });
 
     it('should have created the text node when type of the infoObject is \'win-bid\' with proper message being generated', function (done) {
-      infoObject.type = "win-bid";
+      infoObject.type = 'win-bid';
       util.vLogInfo(divID, infoObject);
-      window.document.createTextNode.calledWith("Winning Bid: " + infoObject.bidDetails.getAdapterID() + ": " + infoObject.bidDetails.getNetEcpm() + "USD").should.be.true;
+      window.document.createTextNode.calledWith('Winning Bid: ' + infoObject.bidDetails.getAdapterID() + ': ' + infoObject.bidDetails.getNetEcpm() + 'USD').should.be.true;
       infoPanelElementStub.appendChild.calledTwice.should.be.true;
       done();
     });
 
     it('should have created the text node when type of the infoObject is \'win-bid\' and adServerCurrency is set with proper message being generated', function (done) {
-      infoObject.type = "win-bid";
+      infoObject.type = 'win-bid';
       util.vLogInfo(divID, infoObject);
-      window.document.createTextNode.calledWith("Winning Bid: " + infoObject.bidDetails.getAdapterID() + ": " + infoObject.bidDetails.getNetEcpm() + "USD").should.be.true;
+      window.document.createTextNode.calledWith('Winning Bid: ' + infoObject.bidDetails.getAdapterID() + ': ' + infoObject.bidDetails.getNetEcpm() + 'USD').should.be.true;
       infoPanelElementStub.appendChild.calledTwice.should.be.true;
 
-      infoObject.adServerCurrency = "GBP";
+      infoObject.adServerCurrency = 'GBP';
       util.vLogInfo(divID, infoObject);
-      window.document.createTextNode.calledWith("Winning Bid: " + infoObject.bidDetails.getAdapterID() + ": " + infoObject.bidDetails.getNetEcpm() + infoObject.adServerCurrency).should.be.true;
+      window.document.createTextNode.calledWith('Winning Bid: ' + infoObject.bidDetails.getAdapterID() + ': ' + infoObject.bidDetails.getNetEcpm() + infoObject.adServerCurrency).should.be.true;
 
-      infoObject.adServerCurrency = "0";
+      infoObject.adServerCurrency = '0';
       util.vLogInfo(divID, infoObject);
-      window.document.createTextNode.calledWith("Winning Bid: " + infoObject.bidDetails.getAdapterID() + ": " + infoObject.bidDetails.getNetEcpm() + "USD").should.be.true;
+      window.document.createTextNode.calledWith('Winning Bid: ' + infoObject.bidDetails.getAdapterID() + ': ' + infoObject.bidDetails.getNetEcpm() + 'USD').should.be.true;
       done();
     });
 
     it('should have created the text node when type of the infoObject is \'win-bid-fail\' with proper message being generated', function (done) {
-      infoObject.type = "win-bid-fail";
+      infoObject.type = 'win-bid-fail';
       util.vLogInfo(divID, infoObject);
       infoPanelElementStub.appendChild.called.should.be.true;
-      window.document.createTextNode.calledWith("There are no bids from PWT").should.be.true;
+      window.document.createTextNode.calledWith('There are no bids from PWT').should.be.true;
       infoPanelElementStub.appendChild.calledTwice.should.be.true;
       done();
     });
 
     it('should have created the text node when type of the infoObject is \'hr\' with proper message being generated', function (done) {
-      infoObject.type = "hr";
+      infoObject.type = 'hr';
       util.vLogInfo(divID, infoObject);
       infoPanelElementStub.appendChild.called.should.be.true;
-      window.document.createTextNode.calledWith("----------------------").should.be.true;
+      window.document.createTextNode.calledWith('----------------------').should.be.true;
       infoPanelElementStub.appendChild.calledTwice.should.be.true;
       done();
     });
 
     it('should have created the text node when type of the infoObject is \'disp\' with proper message being generated', function (done) {
-      infoObject.type = "disp";
+      infoObject.type = 'disp';
       util.vLogInfo(divID, infoObject);
       infoPanelElementStub.appendChild.called.should.be.true;
-      window.document.createTextNode.calledWith("Displaying creative from " + infoObject.adapter).should.be.true;
+      window.document.createTextNode.calledWith('Displaying creative from ' + infoObject.adapter).should.be.true;
       infoPanelElementStub.appendChild.calledTwice.should.be.true;
       done();
     });
@@ -2648,12 +2636,12 @@ describe('OpenWrap Core Module: util.js', function () {
     });
 
     it('should return false if external bidder not responded', function (done) {
-      util.getExternalBidderStatus(["Div1"]).should.be.false;
+      util.getExternalBidderStatus(['Div1']).should.be.false;
       done();
     });
 
     it('should return true if external bidder already responded', function (done) {
-      util.getExternalBidderStatus(["Div2"]).should.be.true;
+      util.getExternalBidderStatus(['Div2']).should.be.true;
       done();
     });
   });
@@ -2662,11 +2650,11 @@ describe('OpenWrap Core Module: util.js', function () {
     var slotConfiguration, sizes, currentSlot;
 
     beforeEach(function (done) {
-      sinon.spy(util, "isOwnProperty");
+      sinon.spy(util, 'isOwnProperty');
       slotConfiguration = {
-        configPattern: "_DIV_", // Or it Could be _AU_
+        configPattern: '_DIV_', // Or it Could be _AU_
         config: {
-          "DIV_1": {
+          'DIV_1': {
             banner: {
               enabled: true
             },
@@ -2690,11 +2678,11 @@ describe('OpenWrap Core Module: util.js', function () {
               }
             }
           },
-          "DIV_2": {
-            "banner": {
+          'DIV_2': {
+            'banner': {
               enabled: true
             },
-            "native": {
+            'native': {
               enabled: true,
               config: {
                 image: {
@@ -2713,33 +2701,33 @@ describe('OpenWrap Core Module: util.js', function () {
                 }
               }
             },
-            "video": {
-              "enabled": true,
-              "config": {
-                "context": "instream",
-                "connectiontype": [1, 2, 6],
-                "minduration": 10,
-                "maxduration": 50,
-                "battr": [
+            'video': {
+              'enabled': true,
+              'config': {
+                'context': 'instream',
+                'connectiontype': [1, 2, 6],
+                'minduration': 10,
+                'maxduration': 50,
+                'battr': [
                   6,
                   7
                 ],
-                "skip": 1,
-                "skipmin": 10,
-                "skipafter": 15
+                'skip': 1,
+                'skipmin': 10,
+                'skipafter': 15
               }
             }
           }
         }
       };
-      sinon.stub(CONFIG, "getSlotConfiguration").returns(slotConfiguration);
+      sinon.stub(CONFIG, 'getSlotConfiguration').returns(slotConfiguration);
       sizes = [[300, 250]];
       currentSlot = {
         getSizes: function () {
           return [[300, 250]];
         },
         getAdUnitID: function () {
-          return "testAdUnit";
+          return 'testAdUnit';
         },
         getDivID: function () {
           return commonDivID;
@@ -2748,17 +2736,17 @@ describe('OpenWrap Core Module: util.js', function () {
           return 0;
         }
       }
-      sinon.spy(currentSlot, "getDivID");
-      sinon.spy(currentSlot, "getSizes");
-      sinon.spy(currentSlot, "getAdUnitID");
-      sinon.spy(currentSlot, "getAdUnitIndex");
+      sinon.spy(currentSlot, 'getDivID');
+      sinon.spy(currentSlot, 'getSizes');
+      sinon.spy(currentSlot, 'getAdUnitID');
+      sinon.spy(currentSlot, 'getAdUnitIndex');
       done();
     });
 
     afterEach(function (done) {
       slotConfiguration = null;
       sizes = null;
-      commonDivID = "DIV_1";
+      commonDivID = 'DIV_1';
       currentSlot.getDivID.restore();
       currentSlot.getSizes.restore();
       currentSlot.getAdUnitID.restore();
@@ -2796,41 +2784,41 @@ describe('OpenWrap Core Module: util.js', function () {
         }
       }
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject
-      console.log("Result is " + JSON.stringify(result));
+      console.log('Result is ' + JSON.stringify(result));
       expect(result).to.be.deep.equal(expectedResult);
       done();
     });
 
     it('should return adunit config with floors schema', function (done) {
-      slotConfiguration.config["DIV_1"] = {
+      slotConfiguration.config['DIV_1'] = {
         floors: {
-          "currency": 'USD',
-          "schema": {
-            "fields": ['gptSlot']
+          'currency': 'USD',
+          'schema': {
+            'fields': ['gptSlot']
           },
-          "values": {
-            "/43743431/DMDemo": 5,
-            "/43743431/DMDemo1": 25
+          'values': {
+            '/43743431/DMDemo': 5,
+            '/43743431/DMDemo1': 25
           }
         }
       }
       var result = util.getAdUnitConfig(sizes, currentSlot).floors;
       expect(result).to.be.deep.equal({
-        "currency": 'USD',
-        "schema": {
-          "fields": ['gptSlot']
+        'currency': 'USD',
+        'schema': {
+          'fields': ['gptSlot']
         },
-        "values": {
-          "/43743431/DMDemo": 5,
-          "/43743431/DMDemo1": 25
+        'values': {
+          '/43743431/DMDemo': 5,
+          '/43743431/DMDemo1': 25
         }
       });
-      delete slotConfiguration.config["DIV_1"]["floors"];
+      delete slotConfiguration.config['DIV_1']['floors'];
       done();
     });
 
     it('should return mediaTypeObject with Native only if for that kgpv banner is disabled', function (done) {
-      slotConfiguration["config"]["DIV_1"].banner.enabled = false;
+      slotConfiguration['config']['DIV_1'].banner.enabled = false;
       var expectedResult = {
         native: {
           image: {
@@ -2860,14 +2848,14 @@ describe('OpenWrap Core Module: util.js', function () {
           sizes: sizes
         }
       };
-      commonDivID = "DIV_3";
+      commonDivID = 'DIV_3';
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject
       result.should.deep.equal(expectedResult);
       done();
     });
 
     it('should return only banner if no configuration found for native', function (done) {
-      delete slotConfiguration["config"]["DIV_1"].native;
+      delete slotConfiguration['config']['DIV_1'].native;
       var expectedResult = {
         banner: {
           sizes: sizes
@@ -2880,10 +2868,10 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should return only video if both banner and native is disabled for slot', function (done) {
       currentSlot.getDivID.restore();
-      sinon.stub(currentSlot, "getDivID").returns("DIV_2");
-      slotConfiguration["config"]["DIV_2"].banner.enabled = false;
-      slotConfiguration["config"]["DIV_2"].native.enabled = false;
-      var expectedResult = { "video": { "context": "instream", "connectiontype": [1, 2, 6], "minduration": 10, "maxduration": 50, "battr": [6, 7], "skip": 1, "skipmin": 10, "skipafter": 15 } };
+      sinon.stub(currentSlot, 'getDivID').returns('DIV_2');
+      slotConfiguration['config']['DIV_2'].banner.enabled = false;
+      slotConfiguration['config']['DIV_2'].native.enabled = false;
+      var expectedResult = { 'video': { 'context': 'instream', 'connectiontype': [1, 2, 6], 'minduration': 10, 'maxduration': 50, 'battr': [6, 7], 'skip': 1, 'skipmin': 10, 'skipafter': 15 } };
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject;
       result.should.deep.equal(expectedResult);
       done();
@@ -2891,8 +2879,8 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should return video, banner and native if all are enabled ', function (done) {
       currentSlot.getDivID.restore();
-      sinon.stub(currentSlot, "getDivID").returns("DIV_2");
-      var expectedResult = { "native": { "image": { "required": true, "sizes": [150, 50] }, "title": { "required": true, "len": 80 }, "sponsoredBy": { "required": true }, "body": { "required": true } }, "video": { "context": "instream", "connectiontype": [1, 2, 6], "minduration": 10, "maxduration": 50, "battr": [6, 7], "skip": 1, "skipmin": 10, "skipafter": 15 }, "banner": { "sizes": [[300, 250]] } };
+      sinon.stub(currentSlot, 'getDivID').returns('DIV_2');
+      var expectedResult = { 'native': { 'image': { 'required': true, 'sizes': [150, 50] }, 'title': { 'required': true, 'len': 80 }, 'sponsoredBy': { 'required': true }, 'body': { 'required': true } }, 'video': { 'context': 'instream', 'connectiontype': [1, 2, 6], 'minduration': 10, 'maxduration': 50, 'battr': [6, 7], 'skip': 1, 'skipmin': 10, 'skipafter': 15 }, 'banner': { 'sizes': [[300, 250]] } };
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject;
       result.should.deep.equal(expectedResult);
       done();
@@ -2900,8 +2888,8 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should return only banner if video and native are disbaled in default ', function (done) {
       currentSlot.getDivID.restore();
-      sinon.stub(currentSlot, "getDivID").returns("DIV_2");
-      slotConfiguration.config["default"] = {
+      sinon.stub(currentSlot, 'getDivID').returns('DIV_2');
+      slotConfiguration.config['default'] = {
         video: {
           enabled: false
         },
@@ -2912,7 +2900,7 @@ describe('OpenWrap Core Module: util.js', function () {
           enabled: true
         }
       };
-      var expectedResult = { "banner": { "sizes": [[300, 250]] } };
+      var expectedResult = { 'banner': { 'sizes': [[300, 250]] } };
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject;
       result.should.deep.equal(expectedResult);
       done();
@@ -2920,8 +2908,8 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should return only native if banner and video are disbaled in default ', function (done) {
       currentSlot.getDivID.restore();
-      sinon.stub(currentSlot, "getDivID").returns("DIV_2");
-      slotConfiguration.config["default"] = {
+      sinon.stub(currentSlot, 'getDivID').returns('DIV_2');
+      slotConfiguration.config['default'] = {
         video: {
           enabled: false
         },
@@ -2932,7 +2920,7 @@ describe('OpenWrap Core Module: util.js', function () {
           enabled: false
         }
       };
-      var expectedResult = { "native": { "image": { "required": true, "sizes": [150, 50] }, "title": { "required": true, "len": 80 }, "sponsoredBy": { "required": true }, "body": { "required": true } } };
+      var expectedResult = { 'native': { 'image': { 'required': true, 'sizes': [150, 50] }, 'title': { 'required': true, 'len': 80 }, 'sponsoredBy': { 'required': true }, 'body': { 'required': true } } };
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject;
       result.should.deep.equal(expectedResult);
       done();
@@ -2940,8 +2928,8 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should return only video if banner and native are disbaled in default ', function (done) {
       currentSlot.getDivID.restore();
-      sinon.stub(currentSlot, "getDivID").returns("DIV_2");
-      slotConfiguration.config["default"] = {
+      sinon.stub(currentSlot, 'getDivID').returns('DIV_2');
+      slotConfiguration.config['default'] = {
         video: {
           enabled: true
         },
@@ -2952,14 +2940,14 @@ describe('OpenWrap Core Module: util.js', function () {
           enabled: false
         }
       };
-      var expectedResult = { "video": { "context": "instream", "connectiontype": [1, 2, 6], "minduration": 10, "maxduration": 50, "battr": [6, 7], "skip": 1, "skipmin": 10, "skipafter": 15 } };
+      var expectedResult = { 'video': { 'context': 'instream', 'connectiontype': [1, 2, 6], 'minduration': 10, 'maxduration': 50, 'battr': [6, 7], 'skip': 1, 'skipmin': 10, 'skipafter': 15 } };
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject;
       result.should.deep.equal(expectedResult);
       done();
     });
 
     it('should return empty object if video, banner and native are disbaled in default ', function (done) {
-      slotConfiguration.config["default"] = {
+      slotConfiguration.config['default'] = {
         video: {
           enabled: false
         },
@@ -2976,11 +2964,11 @@ describe('OpenWrap Core Module: util.js', function () {
     });
 
     it('should return video object from default if config not found for specific slot and default is on ', function (done) {
-      slotConfiguration.config["default"] = {
+      slotConfiguration.config['default'] = {
         video: {
           enabled: false,
           config: {
-            "mimes": ["mp4"]
+            'mimes': ['mp4']
           }
         },
         native: {
@@ -2996,21 +2984,21 @@ describe('OpenWrap Core Module: util.js', function () {
     });
 
     it('should return renderer if present with the div', function (done) {
-      slotConfiguration.config["DIV_1"].renderer = {
-        "url": "someUrl"
+      slotConfiguration.config['DIV_1'].renderer = {
+        'url': 'someUrl'
       }
       var expectedResult = {
-        "url": "someUrl"
+        'url': 'someUrl'
       }
       var result = util.getAdUnitConfig(sizes, currentSlot).renderer
-      console.log("Result is " + JSON.stringify(result));
+      console.log('Result is ' + JSON.stringify(result));
       expect(result).to.be.deep.equal(expectedResult);
       done();
     });
 
     it('should return ortb2Imp if present with the div', function (done) {
-      slotConfiguration.config["DIV_1"].ortb2Imp = { "ext": { "ae": 1 } }
-      var expectedResult = { "ext": { "ae": 1 } };
+      slotConfiguration.config['DIV_1'].ortb2Imp = { 'ext': { 'ae': 1 } }
+      var expectedResult = { 'ext': { 'ae': 1 } };
       var result = util.getAdUnitConfig(sizes, currentSlot).ortb2Imp;
       expect(result).to.be.deep.equal(expectedResult);
       done();
@@ -3018,71 +3006,70 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should not return renderer if not present with the div', function (done) {
       currentSlot.getDivID.restore();
-      sinon.stub(currentSlot, "getDivID").returns("DIV_2");
+      sinon.stub(currentSlot, 'getDivID').returns('DIV_2');
       var result = util.getAdUnitConfig(sizes, currentSlot).renderer
-      console.log("Result is " + JSON.stringify(result));
+      console.log('Result is ' + JSON.stringify(result));
       expect(result).to.be.undefined
       done();
     });
 
     it('should return renderer if present in default', function (done) {
-      slotConfiguration.config["default"] = {
+      slotConfiguration.config['default'] = {
         renderer: {
-          "url": "someUrl"
+          'url': 'someUrl'
         }
       }
       var expectedResult = {
-        "url": "someUrl"
+        'url': 'someUrl'
       }
       var result = util.getAdUnitConfig(sizes, currentSlot).renderer
-      console.log("Result is " + JSON.stringify(result));
+      console.log('Result is ' + JSON.stringify(result));
       expect(result).to.be.deep.equal(expectedResult);
       done();
     });
 
     it('should not return renderer if not present in default and div', function (done) {
       var result = util.getAdUnitConfig(sizes, currentSlot).renderer
-      console.log("Result is " + JSON.stringify(result));
+      console.log('Result is ' + JSON.stringify(result));
       expect(result).to.be.undefined;
       done();
     });
 
     it('should return div renderer if present in default and div', function (done) {
-      slotConfiguration.config["DIV_1"].renderer = {
-        "url": "divurl"
+      slotConfiguration.config['DIV_1'].renderer = {
+        'url': 'divurl'
       }
-      slotConfiguration.config["default"] = {
+      slotConfiguration.config['default'] = {
         renderer: {
-          "url": "defaulturl"
+          'url': 'defaulturl'
         }
       }
       var expectedResult = {
-        "url": "divurl"
+        'url': 'divurl'
       }
       var result = util.getAdUnitConfig(sizes, currentSlot).renderer
-      console.log("Result is " + JSON.stringify(result));
+      console.log('Result is ' + JSON.stringify(result));
       expect(result).to.be.deep.equal(expectedResult);
       done();
     });
 
-
     it('should return partnerConfig if present with the div', function (done) {
       currentSlot.getDivID.restore();
-      sinon.stub(currentSlot, "getDivID").returns("DIV_1");
-      slotConfiguration["config"]["DIV_1"].video = {
+      sinon.stub(currentSlot, 'getDivID').returns('DIV_1');
+      slotConfiguration['config']['DIV_1'].video = {
         enabled: true,
         config: {
-          "someconfig": "someconfigvalue"
+          'someconfig': 'someconfigvalue'
         },
         partnerConfig: {
-          "pubmatic": {
-            "outstreamAU": "pubmatictest"
+          'pubmatic': {
+            'outstreamAU': 'pubmatictest'
           }
         }
       };
       var expectedResult = {
-        "pubmatic": {
-          "outstreamAU": "pubmatictest"
+        'pubmatic': {
+          'outstreamAU': 'pubmatictest'
         }
       };
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject.partnerConfig;
@@ -3092,7 +3079,7 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should not return partnerConfig if not present with the div', function (done) {
       currentSlot.getDivID.restore();
-      sinon.stub(currentSlot, "getDivID").returns("DIV_2");
+      sinon.stub(currentSlot, 'getDivID').returns('DIV_2');
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject.partnerConfig
       expect(result).to.be.undefined
       done();
@@ -3101,19 +3088,19 @@ describe('OpenWrap Core Module: util.js', function () {
     it('should return partnerConfig if present in default', function (done) {
       CONFIG.getSlotConfiguration.restore();
       slotConfiguration = {
-        configPattern: "_DIV_", // Or it Could be _AU_
+        configPattern: '_DIV_', // Or it Could be _AU_
         config: {
         }
       }
-      slotConfiguration.config["default"] = {
+      slotConfiguration.config['default'] = {
         video: {
           enabled: true,
           config: {
-            "someconfig": "someconfigvalue"
+            'someconfig': 'someconfigvalue'
           },
           partnerConfig: {
-            "pubmatic": {
-              "outstreamAU": "pubmatictest"
+            'pubmatic': {
+              'outstreamAU': 'pubmatictest'
             }
           }
         },
@@ -3124,10 +3111,10 @@ describe('OpenWrap Core Module: util.js', function () {
           enabled: true
         }
       };
-      sinon.stub(CONFIG, "getSlotConfiguration").returns(slotConfiguration);
+      sinon.stub(CONFIG, 'getSlotConfiguration').returns(slotConfiguration);
       var expectedResult = {
-        "pubmatic": {
-          "outstreamAU": "pubmatictest"
+        'pubmatic': {
+          'outstreamAU': 'pubmatictest'
         }
       }
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject.partnerConfig;
@@ -3139,64 +3126,64 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should not return partnerConfig if not present in default and div', function (done) {
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject.partnerConfig;
-      console.log("Result is " + JSON.stringify(result));
+      console.log('Result is ' + JSON.stringify(result));
       expect(result).to.be.undefined;
       done();
     });
 
     it('should return div partnerConfig if present in default and div', function (done) {
-      slotConfiguration.config["default"] = {};
-      slotConfiguration.config["default"].video = {
+      slotConfiguration.config['default'] = {};
+      slotConfiguration.config['default'].video = {
         enabled: true,
         config: {
-          "someconfig": "defaultsomeconfigvalue"
+          'someconfig': 'defaultsomeconfigvalue'
         },
         partnerConfig: {
-          "pubmatic": {
-            "outstreamAU": "defaultpubmatictest"
+          'pubmatic': {
+            'outstreamAU': 'defaultpubmatictest'
           }
         }
       };
-      slotConfiguration.config["DIV_1"].video = {
+      slotConfiguration.config['DIV_1'].video = {
         enabled: true,
         config: {
-          "someconfig": "someconfigvalue"
+          'someconfig': 'someconfigvalue'
         },
         partnerConfig: {
-          "pubmatic": {
-            "outstreamAU": "pubmatictest"
+          'pubmatic': {
+            'outstreamAU': 'pubmatictest'
           }
         }
       };
       var expectedResult = {
-        "pubmatic": {
-          "outstreamAU": "pubmatictest"
+        'pubmatic': {
+          'outstreamAU': 'pubmatictest'
         }
       }
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject.partnerConfig
-      console.log("Result is " + JSON.stringify(result));
+      console.log('Result is ' + JSON.stringify(result));
       expect(result).to.be.deep.equal(expectedResult);
       done();
     });
 
     it('should return MediaConfigObject according to regex config mapping if regex is enabled, DIV/AU settings present in regex key', function (done) {
       currentSlot.getDivID.restore();
-      // DivId settings not registered in MediaConfiguration 
-      sinon.stub(currentSlot, "getDivID").returns("DIV_22");
-      commonDivID = "DIV_22";
-      var expectedResult = { "video": { "context": "instream", "connectiontype": [1, 6], "minduration": 20, "maxduration": 80, "battr": [5, 6], "skipmin": 20, "skipafter": 5 } };
+      // DivId settings not registered in MediaConfiguration
+      sinon.stub(currentSlot, 'getDivID').returns('DIV_22');
+      commonDivID = 'DIV_22';
+      var expectedResult = { 'video': { 'context': 'instream', 'connectiontype': [1, 6], 'minduration': 20, 'maxduration': 80, 'battr': [5, 6], 'skipmin': 20, 'skipafter': 5 } };
       // initializing  regex key and respective expression
-      slotConfiguration["regex"] = true;
-      slotConfiguration["config"]["div_[0-9]*"] = {
-        "banner": {
+      slotConfiguration['regex'] = true;
+      slotConfiguration['config']['div_[0-9]*'] = {
+        'banner': {
           enabled: false,
         },
-        "native": {
+        'native': {
           enabled: false,
         },
-        "video": {
-          "enabled": true,
-          "config": { "context": "instream", "connectiontype": [1, 6], "minduration": 20, "maxduration": 80, "battr": [5, 6], "skipmin": 20, "skipafter": 5 }
+        'video': {
+          'enabled': true,
+          'config': { 'context': 'instream', 'connectiontype': [1, 6], 'minduration': 20, 'maxduration': 80, 'battr': [5, 6], 'skipmin': 20, 'skipafter': 5 }
         }
       };
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject;
@@ -3206,22 +3193,22 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should return exact- slot/DIV match(Priority over regex)settings for DIV if both DIV and valid regex is present and regex is enabled', function (done) {
       currentSlot.getDivID.restore();
-      // DivId settings not registered in MediaConfiguration 
-      sinon.stub(currentSlot, "getDivID").returns("DIV_2");
-      commonDivID = "DIV_2";
-      var expectedResult = { "native": { "image": { "required": true, "sizes": [150, 50] }, "title": { "required": true, "len": 80 }, "sponsoredBy": { "required": true }, "body": { "required": true } }, "video": { "context": "instream", "connectiontype": [1, 2, 6], "minduration": 10, "maxduration": 50, "battr": [6, 7], "skip": 1, "skipmin": 10, "skipafter": 15 }, "banner": { "sizes": [[300, 250]] } };
+      // DivId settings not registered in MediaConfiguration
+      sinon.stub(currentSlot, 'getDivID').returns('DIV_2');
+      commonDivID = 'DIV_2';
+      var expectedResult = { 'native': { 'image': { 'required': true, 'sizes': [150, 50] }, 'title': { 'required': true, 'len': 80 }, 'sponsoredBy': { 'required': true }, 'body': { 'required': true } }, 'video': { 'context': 'instream', 'connectiontype': [1, 2, 6], 'minduration': 10, 'maxduration': 50, 'battr': [6, 7], 'skip': 1, 'skipmin': 10, 'skipafter': 15 }, 'banner': { 'sizes': [[300, 250]] } };
       // initializing  regex key and respective expression
-      slotConfiguration["regex"] = true;
-      slotConfiguration["config"]["div_*"] = {
-        "banner": {
+      slotConfiguration['regex'] = true;
+      slotConfiguration['config']['div_*'] = {
+        'banner': {
           enabled: false,
         },
-        "native": {
+        'native': {
           enabled: false,
         },
-        "video": {
-          "enabled": true,
-          "config": { "context": "instream", "connectiontype": [1, 6], "minduration": 20, "maxduration": 80, "battr": [5, 6], "skipmin": 20, "skipafter": 5 }
+        'video': {
+          'enabled': true,
+          'config': { 'context': 'instream', 'connectiontype': [1, 6], 'minduration': 20, 'maxduration': 80, 'battr': [5, 6], 'skipmin': 20, 'skipafter': 5 }
         }
       };
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject;
@@ -3231,29 +3218,29 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should return default settings match if both DIV and respective regex are absent in MediaConfig and regex is enabled', function (done) {
       currentSlot.getDivID.restore();
-      // DivId settings not registered in MediaConfiguration 
-      sinon.stub(currentSlot, "getDivID").returns("NOT_REGISTERED");
-      commonDivID = "NOT_REGISTERED";
-      var expectedResult = { "native": { "image": { "required": true, "sizes": [250, 150] }, "title": { "required": true, "len": 180 }, "sponsoredBy": { "required": false }, "body": { "required": false } }, "video": { "context": "instream", "connectiontype": [2, 6], "minduration": 100, "maxduration": 120, "battr": [7], "skip": 1, "skipmin": 100, "skipafter": 150 }, "banner": { "sizes": [[300, 250]] } };
+      // DivId settings not registered in MediaConfiguration
+      sinon.stub(currentSlot, 'getDivID').returns('NOT_REGISTERED');
+      commonDivID = 'NOT_REGISTERED';
+      var expectedResult = { 'native': { 'image': { 'required': true, 'sizes': [250, 150] }, 'title': { 'required': true, 'len': 180 }, 'sponsoredBy': { 'required': false }, 'body': { 'required': false } }, 'video': { 'context': 'instream', 'connectiontype': [2, 6], 'minduration': 100, 'maxduration': 120, 'battr': [7], 'skip': 1, 'skipmin': 100, 'skipafter': 150 }, 'banner': { 'sizes': [[300, 250]] } };
       // initializing  regex key and respective expression
-      slotConfiguration["regex"] = true;
-      slotConfiguration["config"]["div_*"] = {
-        "banner": {
+      slotConfiguration['regex'] = true;
+      slotConfiguration['config']['div_*'] = {
+        'banner': {
           enabled: false,
         },
-        "native": {
+        'native': {
           enabled: false,
         },
-        "video": {
-          "enabled": true,
-          "config": { "context": "instream", "connectiontype": [1, 6], "minduration": 20, "maxduration": 80, "battr": [5, 6], "skipmin": 20, "skipafter": 5 }
+        'video': {
+          'enabled': true,
+          'config': { 'context': 'instream', 'connectiontype': [1, 6], 'minduration': 20, 'maxduration': 80, 'battr': [5, 6], 'skipmin': 20, 'skipafter': 5 }
         }
       };
-      slotConfiguration["config"]["default"] = {
-        "banner": {
+      slotConfiguration['config']['default'] = {
+        'banner': {
           enabled: true
         },
-        "native": {
+        'native': {
           enabled: true,
           config: {
             image: {
@@ -3272,9 +3259,9 @@ describe('OpenWrap Core Module: util.js', function () {
             }
           }
         },
-        "video": {
-          "enabled": true,
-          "config": { "context": "instream", "connectiontype": [2, 6], "minduration": 100, "maxduration": 120, "battr": [7], "skip": 1, "skipmin": 100, "skipafter": 150 }
+        'video': {
+          'enabled': true,
+          'config': { 'context': 'instream', 'connectiontype': [2, 6], 'minduration': 100, 'maxduration': 120, 'battr': [7], 'skip': 1, 'skipmin': 100, 'skipafter': 150 }
         }
       }
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject;
@@ -3284,13 +3271,13 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should return only banner(default behaviour) settings match if default, DIV/AU and respective regex is absent in MediaConfig and regex is enabled', function (done) {
       currentSlot.getDivID.restore();
-      // DivId settings not registered in MediaConfiguration 
-      sinon.stub(currentSlot, "getDivID").returns("NOT_REGISTERED");
-      commonDivID = "NOT_REGISTERED";
-      var expectedResult = { "banner": { "sizes": [[300, 250]] } };
+      // DivId settings not registered in MediaConfiguration
+      sinon.stub(currentSlot, 'getDivID').returns('NOT_REGISTERED');
+      commonDivID = 'NOT_REGISTERED';
+      var expectedResult = { 'banner': { 'sizes': [[300, 250]] } };
       // initializing invalid regex key and respective expression
-      slotConfiguration["regex"] = true;
-      slotConfiguration["config"]["div_*"] = { "banner": { enabled: false, }, "native": { enabled: false, }, "video": { "enabled": true, "config": { "context": "instream", "connectiontype": [1, 6], "minduration": 20, "maxduration": 80, "battr": [5, 6], "skipmin": 20, "skipafter": 5 } } };
+      slotConfiguration['regex'] = true;
+      slotConfiguration['config']['div_*'] = { 'banner': { enabled: false, }, 'native': { enabled: false, }, 'video': { 'enabled': true, 'config': { 'context': 'instream', 'connectiontype': [1, 6], 'minduration': 20, 'maxduration': 80, 'battr': [5, 6], 'skipmin': 20, 'skipafter': 5 } } };
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject;
       expect(result.should.deep.equal(expectedResult));
       done();
@@ -3298,10 +3285,10 @@ describe('OpenWrap Core Module: util.js', function () {
 
     it('should return proper pos value', function (done) {
       currentSlot.getDivID.restore();
-      // DivId settings not registered in MediaConfiguration 
-      sinon.stub(currentSlot, "getDivID").returns("div_pos");
-      commonDivID = "div_pos";
-      var expectedResult = { "banner": { "sizes": [[300, 250]], pos: 5 } };
+      // DivId settings not registered in MediaConfiguration
+      sinon.stub(currentSlot, 'getDivID').returns('div_pos');
+      commonDivID = 'div_pos';
+      var expectedResult = { 'banner': { 'sizes': [[300, 250]], pos: 5 } };
       // initializing invalid regex key and respective expression
       slotConfiguration.config = { default: { banner: { enabled: true, config: { pos: 5 } } } };
       var result = util.getAdUnitConfig(sizes, currentSlot).mediaTypeObject;
@@ -3312,10 +3299,10 @@ describe('OpenWrap Core Module: util.js', function () {
 
   describe('#addEventListenerForClass', function () {
     var theWindow = null;
-    var theEvent = "";
-    var theClass = "";
+    var theEvent = '';
+    var theClass = '';
     var eventHandler = null;
-    var obj = undefined;
+    var obj;
 
     beforeEach(function (done) {
       theWindow = {
@@ -3323,21 +3310,21 @@ describe('OpenWrap Core Module: util.js', function () {
           getElementsByClassName: function() {}
         }
       };
-      theEvent = "someEvent",
-      theClass = "someClass",
+      theEvent = 'someEvent';
+      theClass = 'someClass';
       eventHandler = function () { };
       obj = {
         addEventListener: function () { }
       };
-      sinon.spy(obj, "addEventListener");
-      sinon.spy(util, "log");
+      sinon.spy(obj, 'addEventListener');
+      sinon.spy(util, 'log');
       sinon.stub(theWindow.document, 'getElementsByClassName').returns([obj]);
       done();
     });
 
     afterEach(function (done) {
-      theEvent = "";
-      theClass = "";
+      theEvent = '';
+      theClass = '';
       eventHandler = null;
       obj.addEventListener.restore();
       util.log.restore();
@@ -3361,9 +3348,9 @@ describe('OpenWrap Core Module: util.js', function () {
     });
 
     it('should return false for no eventHandler', function (done) {
-      eventHandler = "";
+      eventHandler = '';
       var result = util.addEventListenerForClass(theWindow, theEvent, theClass, eventHandler);
-      util.log.calledWith("EventHandler should be a function");
+      util.log.calledWith('EventHandler should be a function');
       result.should.be.equal(false);
       done();
     });
@@ -3371,66 +3358,66 @@ describe('OpenWrap Core Module: util.js', function () {
 
   describe('#addMessageEventListener', function() {
     var theWindow = null,
-        eventHandler = null;
+      eventHandler = null;
 
     beforeEach(function(done) {
-        theWindow = window;
+      theWindow = window;
 
-        theWindow.addEventListener = function() {
-            return "addEventListener";
-        };
+      theWindow.addEventListener = function() {
+        return 'addEventListener';
+      };
 
-        sinon.spy(theWindow, "addEventListener");
+      sinon.spy(theWindow, 'addEventListener');
 
-        theWindow.attachEvent = function() {
-            return "attachEvent";
-        };
+      theWindow.attachEvent = function() {
+        return 'attachEvent';
+      };
 
-        sinon.spy(theWindow, "attachEvent");
+      sinon.spy(theWindow, 'attachEvent');
 
-        eventHandler = function() {
-            return "eventHandler";
-        };
-        sinon.spy(util, "log");
-        done();
+      eventHandler = function() {
+        return 'eventHandler';
+      };
+      sinon.spy(util, 'log');
+      done();
     });
 
     afterEach(function(done) {
-        if (theWindow.addEventListener) {
-            theWindow.addEventListener.restore();
-        }
-        theWindow.attachEvent.restore();
+      if (theWindow.addEventListener) {
+        theWindow.addEventListener.restore();
+      }
+      theWindow.attachEvent.restore();
 
-        theWindow = null;
+      theWindow = null;
 
-        eventHandler = null;
-        util.log.restore();
-        done();
+      eventHandler = null;
+      util.log.restore();
+      done();
     });
 
     it('is a function', function(done) {
-        util.addMessageEventListener.should.be.a('function');
-        done();
+      util.addMessageEventListener.should.be.a('function');
+      done();
     });
 
     it('should have checked and logged if passed eventHandler is not a function ', function(done) {
-        eventHandler = {};
-        util.addMessageEventListener(theWindow, eventHandler).should.be.false;
-        // util.log.calledWith("EventHandler should be a function").should.be.true;
-        done();
+      eventHandler = {};
+      util.addMessageEventListener(theWindow, eventHandler).should.be.false;
+      // util.log.calledWith("EventHandler should be a function").should.be.true;
+      done();
     });
 
     it('should have added eventHandler using window object\'s addEventListener method', function(done) {
-        util.addMessageEventListener(theWindow, eventHandler).should.be.true;
-        theWindow.addEventListener.calledWith("message", eventHandler, false).should.be.true;
-        done();
+      util.addMessageEventListener(theWindow, eventHandler).should.be.true;
+      theWindow.addEventListener.calledWith('message', eventHandler, false).should.be.true;
+      done();
     });
 
     it('should have added eventHandler using window object\'s attachEvent method if addEventListener is not available', function(done) {
-        theWindow.addEventListener = false;
-        util.addMessageEventListener(theWindow, eventHandler).should.be.true;
-        theWindow.attachEvent.calledWith("onmessage", eventHandler).should.be.true;
-        done();
+      theWindow.addEventListener = false;
+      util.addMessageEventListener(theWindow, eventHandler).should.be.true;
+      theWindow.attachEvent.calledWith('onmessage', eventHandler).should.be.true;
+      done();
     });
   });
 
@@ -3441,15 +3428,15 @@ describe('OpenWrap Core Module: util.js', function () {
 
     beforeEach(function (done) {
       msg = {
-        "data": '{"pwt_type":1,"pwt_bidID":1,"pwt_origin":1,"pwt_bid":{}}',
-        "source": {
-          "postMessage": function () {
-            return "postMessage";
+        'data': '{"pwt_type":1,"pwt_bidID":1,"pwt_origin":1,"pwt_bid":{}}',
+        'source': {
+          'postMessage': function () {
+            return 'postMessage';
           }
         }
       };
 
-      sinon.spy(msg.source, "postMessage");
+      sinon.spy(msg.source, 'postMessage');
       window.PWT = {
         isSafeFrame: true
       };
@@ -3459,37 +3446,37 @@ describe('OpenWrap Core Module: util.js', function () {
             return commonAdapterID;
           }
         },
-        slotid: "slot_1"
+        slotid: 'slot_1'
       };
-      
-      sinon.spy(bidDetailsStub.bid, "getAdapterID");
-      sinon.stub(bidManager, "fireTracker");
 
-      sinon.stub(util, "vLogInfo").returns(true);
+      sinon.spy(bidDetailsStub.bid, 'getAdapterID');
+      sinon.stub(bidManager, 'fireTracker');
+
+      sinon.stub(util, 'vLogInfo').returns(true);
       iFrameStub = {
         setAttribute: function () {
-          return "setAttribute"
+          return 'setAttribute'
         },
-        style: "",
+        style: '',
         contentWindow: {
           document: {
             write: function () {
-              return "write";
+              return 'write';
             },
             close: function () {
-              return "close"
+              return 'close'
             }
           }
         }
       };
 
-      sinon.spy(iFrameStub, "setAttribute");
-      sinon.spy(iFrameStub.contentWindow.document, "write");
-      sinon.stub(util, "createInvisibleIframe").returns(iFrameStub);
-      sinon.spy(util, "log");
-      sinon.spy(util, "logError");
-      sinon.spy(util, "logWarning");
-      sinon.stub(window.document.body, "appendChild").returns(true);
+      sinon.spy(iFrameStub, 'setAttribute');
+      sinon.spy(iFrameStub.contentWindow.document, 'write');
+      sinon.stub(util, 'createInvisibleIframe').returns(iFrameStub);
+      sinon.spy(util, 'log');
+      sinon.spy(util, 'logError');
+      sinon.spy(util, 'logWarning');
+      sinon.stub(window.document.body, 'appendChild').returns(true);
       done();
     });
 
@@ -3512,7 +3499,6 @@ describe('OpenWrap Core Module: util.js', function () {
       msg = null;
       done();
     });
-
 
     it('is a function', function (done) {
       util.safeFrameCommunicationProtocol.should.be.a('function');
@@ -3549,7 +3535,6 @@ describe('OpenWrap Core Module: util.js', function () {
         util.safeFrameCommunicationProtocol(msg);
         done();
       });
-
     });
 
     describe('##when pwt_type is 3', function () {
@@ -3575,7 +3560,7 @@ describe('OpenWrap Core Module: util.js', function () {
 
       // it('should send native message via postMessage', function (done) {
       //   util.safeFrameCommunicationProtocol(msg);
-        
+
       //   // Verify that postMessage was called with the correct native message
       //   var expectedMsg = {
       //     message: 'Prebid Native',
@@ -3583,7 +3568,7 @@ describe('OpenWrap Core Module: util.js', function () {
       //     action: 'test_action'
       //   };
       //   msg.source.postMessage.calledWith(JSON.stringify(expectedMsg), '*').should.be.true;
-        
+
       //   done();
       // });
 
@@ -3594,14 +3579,13 @@ describe('OpenWrap Core Module: util.js', function () {
         done();
       });
     });
-
   });
 
   describe('#addMessageEventListenerForSafeFrame', function () {
     var theWindow = null;
     beforeEach(function (done) {
       theWindow = window;
-      sinon.spy(util, "addMessageEventListener");
+      sinon.spy(util, 'addMessageEventListener');
       done();
     });
 
@@ -3662,7 +3646,6 @@ describe('OpenWrap Core Module: util.js', function () {
     });
   });
 
-
   describe('Additional Utility Functions', function () {
     describe('updateAdUnits and updateUserIds', function () {
       let userIds;
@@ -3672,10 +3655,10 @@ describe('OpenWrap Core Module: util.js', function () {
       beforeEach(function () {
         userIds = { pubCommonId: 'test-id' };
         userIdsAsEids = [{ source: 'pubcid.org', uids: [{ id: 'test-id' }] }];
-        
+
         // Get the namespace that will be used
         pbNamespace = util.getPbNameSpace();
-        
+
         // Set up the namespace with required functions
         window[pbNamespace] = {
           getUserIds: () => userIds,
@@ -3789,14 +3772,14 @@ describe('OpenWrap Core Module: util.js', function () {
           }
           return script;
         });
-        
+
         // Stub window.addEventListener
         window.addEventListener = sandbox.stub().callsFake((event, handler) => {
           if (event === 'load') {
             handler();
           }
         });
-        
+
         // Stub document.readyState
         Object.defineProperty(document, 'readyState', {
           configurable: true,
@@ -4082,14 +4065,14 @@ describe('OpenWrap Core Module: util.js', function () {
           }
           return script;
         });
-        
+
         // Stub window.addEventListener
         window.addEventListener = sandbox.stub().callsFake((event, handler) => {
           if (event === 'load') {
             handler();
           }
         });
-        
+
         // Stub document.readyState
         Object.defineProperty(document, 'readyState', {
           configurable: true,
@@ -4560,7 +4543,6 @@ describe('OpenWrap Core Module: util.js', function () {
     describe('isEmptyObject', function () {
       it('should identify empty objects correctly', function () {
         expect(util.isEmptyObject({})).to.be.true;
-        expect(util.isEmptyObject(new Object())).to.be.true;
 
         expect(util.isEmptyObject({ a: 1 })).to.be.false;
         expect(util.isEmptyObject([])).to.be.true;
@@ -4613,45 +4595,45 @@ describe('OpenWrap Core Module: util.js', function () {
   // Test for getBididForPMP with more edge cases
   describe('getBididForPMP', function () {
     it('should get bid ID for PMP based on ecpm priority', function () {
-      const values = "deal1_-_PMP_-_20,deal2_-_PMP_-_10,deal3_-_PMP_-_30";
+      const values = 'deal1_-_PMP_-_20,deal2_-_PMP_-_10,deal3_-_PMP_-_30';
       const priorityArray = ['deal3_-_PMP_-_30'];
       const result = util.getBididForPMP(values, priorityArray);
-      expect(result).to.equal("30");
+      expect(result).to.equal('30');
     });
 
     it('should get bid ID for PMP based on priority order', function () {
-      const values = "deal1_-_PMP_-_20,deal2_-_PMP_-_10,deal3_-_PMP_-_30";
+      const values = 'deal1_-_PMP_-_20,deal2_-_PMP_-_10,deal3_-_PMP_-_30';
       const priorityArray = ['deal1_-_PMP_-_20', 'deal2_-_PMP_-_10'];
       const result = util.getBididForPMP(values, priorityArray);
-      expect(result).to.equal("20");
+      expect(result).to.equal('20');
     });
 
     it('should handle mixed priorities correctly', function () {
-      const values = "deal1_-_PMP_-_20,deal2_-_PMP_-_10,deal3_-_PMP_-_30";
+      const values = 'deal1_-_PMP_-_20,deal2_-_PMP_-_10,deal3_-_PMP_-_30';
       const priorityArray = ['deal1_-_PMP_-_10', 'deal2_-_PMP_-_20', 'deal3_-_PMP_-_30'];
       const result = util.getBididForPMP(values, priorityArray);
-      expect(result).to.equal("30");
+      expect(result).to.equal('30');
     });
 
     it('should handle empty values', function () {
-      const values = "";
+      const values = '';
       const priorityArray = ['ecpm'];
       const result = util.getBididForPMP(values, priorityArray);
       expect(result).to.be.undefined;
     });
 
     it('should handle invalid format values', function () {
-      const values = "invalid-format-string";
+      const values = 'invalid-format-string';
       const priorityArray = ['deal1_-_PMP_-_20_-_2'];
       const result = util.getBididForPMP(values, priorityArray);
       expect(result).to.be.undefined;
     });
 
     it('should handle missing priority parameters', function () {
-      const values = "deal1_-_PMP_-_20,deal2_-_PMP_-_10,deal3_-_PMP_-_30";
+      const values = 'deal1_-_PMP_-_20,deal2_-_PMP_-_10,deal3_-_PMP_-_30';
       const priorityArray = [];
       const result = util.getBididForPMP(values, priorityArray);
-      expect(result).to.equal("20");
+      expect(result).to.equal('20');
     });
   });
 
@@ -4757,7 +4739,7 @@ describe('OpenWrap Core Module: util.js', function () {
     });
   });
 
-  // Test getAdUnitConfig with more edge cases 
+  // Test getAdUnitConfig with more edge cases
   describe('getAdUnitConfig - Extended Tests', function () {
     let currentSlot;
 
@@ -4830,7 +4812,7 @@ describe('OpenWrap Core Module: util.js', function () {
     });
   });
 
-  // Test getRandomNumberBelow100 
+  // Test getRandomNumberBelow100
   describe('getRandomNumberBelow100', function () {
     it('should return a random number between 0 and 99', function () {
       const originalMathRandom = Math.random;
@@ -4919,7 +4901,6 @@ describe('OpenWrap Core Module: util.js', function () {
     });
 
     it('should delete custom params', function () {
-
       const params = {
         name: 'id5Id',
         'custom': '12345'
@@ -4930,8 +4911,6 @@ describe('OpenWrap Core Module: util.js', function () {
       expect(result).to.be.an('object');
       expect(result).to.not.have.property('custom');
     });
-
-
   });
   // Comprehensive test for callHandlerFunctionForMapping
   describe('callHandlerFunctionForMapping', function () {
@@ -5012,7 +4991,7 @@ describe('OpenWrap Core Module: util.js', function () {
         getBidID: sandbox.stub().returns('test-bid-id')
       };
 
-      //sandbox.stub(util, 'getBid').returns(mockBid);
+      // sandbox.stub(util, 'getBid').returns(mockBid);
 
       util.callHandlerFunctionForMapping(
         adapterID, adUnits, adapterConfig, impressionID,

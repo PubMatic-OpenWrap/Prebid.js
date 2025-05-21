@@ -1,4 +1,4 @@
-import { module } from "../../src/hook";
+import { module } from '../../src/hook.js';
 import * as CONSTANTS from './constants.js';
 import { isPlainObject, logError } from '../../src/utils.js';
 import * as consentConfigResolver from './modules/consentConfigResolver.js';
@@ -11,28 +11,27 @@ import * as SLOT from './slot.js';
 import * as prebid from './adapters/prebid.js';
 
 import * as CONFIG_IDHUB from './config.idhub.js';
-import * as util_idhub from './util.idhub.js';
+import * as utilIdhub from './util.idhub.js';
 import * as COMMON_CONFIG from './common.config.js';
 import * as idhubInit from './idhub.js';
 
-
-const sharedMethods  = {
-  "OW": {
-    "owtInit": owt.init,
-    "CONFIG": CONFIG,
-    "CONSTANTS": CONSTANTS,
-    "util": util,
-    "bidManager": bidManager,
-    "SLOT": SLOT,
-    "prebid": prebid,
-    "consentConfigResolver" : consentConfigResolver
+const sharedMethods = {
+  'OW': {
+    'owtInit': owt.init,
+    'CONFIG': CONFIG,
+    'CONSTANTS': CONSTANTS,
+    'util': util,
+    'bidManager': bidManager,
+    'SLOT': SLOT,
+    'prebid': prebid,
+    'consentConfigResolver': consentConfigResolver
   },
-  "IDHUB": {
-    "idhubInit": idhubInit.init,
-    "CONFIG": CONFIG_IDHUB,
-    "CONSTANTS": CONSTANTS,
-    "util": util_idhub,
-    "COMMON_CONFIG": COMMON_CONFIG
+  'IDHUB': {
+    'idhubInit': idhubInit.init,
+    'CONFIG': CONFIG_IDHUB,
+    'CONSTANTS': CONSTANTS,
+    'util': utilIdhub,
+    'COMMON_CONFIG': COMMON_CONFIG
   }
 };
 Object.freeze(sharedMethods);

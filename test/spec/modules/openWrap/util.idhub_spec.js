@@ -6,10 +6,10 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
   let sandbox;
   let mockWindow;
   let mockDocument;
-  
+
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
-    
+
     // Create mock DOM elements
     mockDocument = {
       createElement: sandbox.stub().callsFake((tagName) => {
@@ -33,7 +33,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         appendChild: sandbox.stub()
       }
     };
-    
+
     // Create mock window object without directly assigning to global window
     mockWindow = {
       document: mockDocument,
@@ -50,7 +50,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         warn: sandbox.stub()
       }
     };
-    
+
     // Stub CONFIG functions
     sandbox.stub(CONFIG, 'isIdentityOnly').returns(false);
     sandbox.stub(CONFIG, 'isSSOEnabled').returns(true);
@@ -77,7 +77,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
     sandbox.stub(CONFIG, 'getPrebidVersion').returns('5.0.0');
     sandbox.stub(CONFIG, 'getProfileID').returns('12345');
     sandbox.stub(CONFIG, 'getProfileDisplayVersionID').returns('67890');
-    
+
     // Set Date constructor to return consistent timestamp
     sandbox.stub(Date.prototype, 'getTime').returns(12345);
   });
@@ -85,7 +85,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
   afterEach(function() {
     sandbox.restore();
   });
-  
+
   describe('Type checking functions', function() {
     it('isA should correctly identify object types', function() {
       expect(utilIdhub.isA([], 'Array')).to.be.true;
@@ -97,7 +97,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(utilIdhub.isA(123, 'Number')).to.be.true;
       expect(utilIdhub.isA('123', 'Number')).to.be.false;
     });
-    
+
     it('isFunction should correctly identify functions', function() {
       expect(utilIdhub.isFunction(function() {})).to.be.true;
       expect(utilIdhub.isFunction(() => {})).to.be.true;
@@ -106,7 +106,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(utilIdhub.isFunction(null)).to.be.false;
       expect(utilIdhub.isFunction(undefined)).to.be.false;
     });
-    
+
     it('isString should correctly identify strings', function() {
       expect(utilIdhub.isString('test')).to.be.true;
       expect(utilIdhub.isString(String('test'))).to.be.true;
@@ -114,7 +114,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(utilIdhub.isString(null)).to.be.false;
       expect(utilIdhub.isString(undefined)).to.be.false;
     });
-    
+
     it('isArray should correctly identify arrays', function() {
       expect(utilIdhub.isArray([])).to.be.true;
       expect(utilIdhub.isArray([1, 2, 3])).to.be.true;
@@ -124,7 +124,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(utilIdhub.isArray(null)).to.be.false;
       expect(utilIdhub.isArray(undefined)).to.be.false;
     });
-    
+
     it('isNumber should correctly identify numbers', function() {
       expect(utilIdhub.isNumber(123)).to.be.true;
       expect(utilIdhub.isNumber(0)).to.be.true;
@@ -133,7 +133,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(utilIdhub.isNumber(null)).to.be.false;
       expect(utilIdhub.isNumber(undefined)).to.be.false;
     });
-    
+
     it('isObject should correctly identify objects', function() {
       expect(utilIdhub.isObject({})).to.be.true;
       expect(utilIdhub.isObject({a: 1})).to.be.true;
@@ -142,7 +142,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(utilIdhub.isObject('object')).to.be.false;
       expect(utilIdhub.isObject(123)).to.be.false;
     });
-    
+
     it('isOwnProperty should correctly check if property exists on object', function() {
       const obj = { prop: 'value' };
       expect(utilIdhub.isOwnProperty(obj, 'prop')).to.be.true;
@@ -150,7 +150,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(utilIdhub.isOwnProperty(null, 'prop')).to.be.false;
       expect(utilIdhub.isOwnProperty(undefined, 'prop')).to.be.false;
     });
-    
+
     it('isUndefined should correctly identify undefined', function() {
       expect(utilIdhub.isUndefined(undefined)).to.be.true;
       let undef;
@@ -159,7 +159,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(utilIdhub.isUndefined(0)).to.be.false;
       expect(utilIdhub.isUndefined('')).to.be.false;
     });
-    
+
     it('isEmptyObject should correctly identify empty objects', function() {
       expect(utilIdhub.isEmptyObject({})).to.be.true;
       expect(utilIdhub.isEmptyObject({ prop: 'value' })).to.be.false;
@@ -167,34 +167,34 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(utilIdhub.isEmptyObject(undefined)).to.be.false;
     });
   });
-  
+
   describe('Debug logging functions', function() {
     let origDebugLogIsEnabled;
     let origVisualDebugLogIsEnabled;
     let consoleLogStub;
     let consoleErrorStub;
     let consoleWarnStub;
-    
+
     beforeEach(function() {
       // Save original values
       origDebugLogIsEnabled = utilIdhub.debugLogIsEnabled;
       origVisualDebugLogIsEnabled = utilIdhub.visualDebugLogIsEnabled;
-      
+
       // Reset debug flags
       utilIdhub.debugLogIsEnabled = false;
       utilIdhub.visualDebugLogIsEnabled = false;
-      
+
       // Stub console methods directly
       consoleLogStub = sandbox.stub(console, 'log');
       consoleErrorStub = sandbox.stub(console, 'error');
       consoleWarnStub = sandbox.stub(console, 'warn');
     });
-    
+
     afterEach(function() {
       // Restore original values
       utilIdhub.debugLogIsEnabled = origDebugLogIsEnabled;
       utilIdhub.visualDebugLogIsEnabled = origVisualDebugLogIsEnabled;
-      
+
       // Restore console methods
       consoleLogStub.restore();
       consoleErrorStub.restore();
@@ -204,62 +204,61 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
     it('isDebugLogEnabled should return debug log status', function() {
       expect(utilIdhub.isDebugLogEnabled()).to.be.false;
     });
-    
+
     it('enableDebugLog should enable debug logging', function() {
       utilIdhub.enableDebugLog();
       expect(utilIdhub.debugLogIsEnabled).to.be.true;
     });
-  
-    
+
     it('enableVisualDebugLog should enable both debug and visual debug logging', function() {
       utilIdhub.enableVisualDebugLog();
       expect(utilIdhub.debugLogIsEnabled).to.be.true;
       expect(utilIdhub.visualDebugLogIsEnabled).to.be.true;
     });
-    
+
     it('log should log messages when debug is enabled', function() {
       // Directly set the flag instead of using enableDebugLog
       utilIdhub.debugLogIsEnabled = true;
-      
+
       utilIdhub.log('test message');
       expect(consoleLogStub.calledOnce).to.be.true;
-      
+
       utilIdhub.log({ test: 'object' });
       expect(consoleLogStub.calledTwice).to.be.true;
     });
-    
+
     it('logError should log error messages when debug is enabled', function() {
       utilIdhub.debugLogIsEnabled = true;
-      
+
       utilIdhub.logError('test error');
       expect(consoleErrorStub.calledOnce).to.be.true;
-      
+
       utilIdhub.logError({ error: 'object' });
       expect(consoleErrorStub.calledTwice).to.be.true;
     });
-    
+
     it('logWarning should log warning messages when debug is enabled', function() {
       utilIdhub.debugLogIsEnabled = true;
-      
+
       utilIdhub.logWarning('test warning');
       expect(consoleWarnStub.calledOnce).to.be.true;
-      
+
       utilIdhub.logWarning({ warning: 'object' });
       expect(consoleWarnStub.calledTwice).to.be.true;
     });
-    
+
     it('error should always log error messages', function() {
       // error function should log regardless of debug flag
       utilIdhub.debugLogIsEnabled = false;
-      
+
       utilIdhub.error('test error');
       expect(consoleLogStub.calledOnce).to.be.true;
     });
   });
-  
+
   describe('DOM and window related functions', function() {
     let mockWindow;
-    
+
     beforeEach(function() {
       // Set up a mock window object
       mockWindow = {
@@ -288,55 +287,55 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         }
       };
     });
-    
+
     it('getTopFrameOfSameDomain should return top frame when accessible', function() {
       // Set up parent relationship
       const childWin = { document: { id: 'child' } };
       const parentWin = { document: { id: 'parent' }, parent: {} };
       parentWin.parent = parentWin; // Parent is top
       childWin.parent = parentWin;
-      
+
       // Mock the document comparison
       sandbox.stub(childWin, 'document').value({ id: 'child' });
       sandbox.stub(parentWin, 'document').value({ id: 'parent' });
-      
+
       const result = utilIdhub.getTopFrameOfSameDomain(childWin);
       expect(result).to.equal(parentWin);
     });
-    
+
     it('isIframe should return true when self is not top', function() {
       const testWin = {
         self: {},
         top: { different: true }
       };
-      
+
       const result = utilIdhub.isIframe(testWin);
-      
+
       expect(result).to.be.true;
     });
-    
+
     it('isIframe should return false when self is top', function() {
       const testWin = {
         self: {}
       };
       testWin.top = testWin.self;
-      
+
       const result = utilIdhub.isIframe(testWin);
-      
+
       expect(result).to.be.false;
     });
-    
+
     it('createDocElement should create DOM element', function() {
       const element = utilIdhub.createDocElement(mockWindow, 'div');
-      
+
       expect(mockWindow.document.createElement.calledOnce).to.be.true;
       expect(mockWindow.document.createElement.firstCall.args[0]).to.equal('div');
       expect(element).to.exist;
     });
-    
+
     it('getMetaInfo should return page metadata', function() {
       const result = utilIdhub.getMetaInfo(mockWindow);
-      
+
       expect(result).to.be.an('object');
       expect(result.pageURL).to.equal('http://example.com/page.html?param=value');
       expect(result.refURL).to.equal('http://example.com/page.html?param=value');
@@ -344,7 +343,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(result.secure).to.equal(1);
       expect(result.pageDomain).to.equal('example.com');
     });
-    
+
     it('getDomainFromURL should extract domain from URL', function() {
       expect(utilIdhub.getDomainFromURL('https://sub.example.com/path?query=value')).to.equal('sub.example.com');
       expect(utilIdhub.getDomainFromURL('http://example.com')).to.equal('example.com');
@@ -359,46 +358,46 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       const result2 = utilIdhub.getDomainFromURL('https://sub.example.com/path?query=value');
       expect(result2).to.equal('sub.example.com');
     });
-    
+
     it('findQueryParamInURL should extract query parameters', function() {
       expect(utilIdhub.findQueryParamInURL('http://example.com?param=value', 'param')).to.equal(true);
       expect(utilIdhub.findQueryParamInURL('http://example.com?first=1&second=2', 'second')).to.equal(true);
       expect(utilIdhub.findQueryParamInURL('http://example.com?param=value', 'missing')).to.equal(false);
       expect(utilIdhub.findQueryParamInURL('http://example.com', 'param')).to.equal(false);
     });
-    
+
     it('addHookOnFunction should add hook to function', function() {
       const obj = {
         originalFn: function(arg) {
           return 'original ' + arg;
         }
       };
-      
+
       // Create a new function that will replace the original
       const newFn = function(arg, origFn) {
         return origFn;
       };
-      
+
       utilIdhub.addHookOnFunction(obj, false, 'originalFn', newFn);
-      
+
       const result = obj.originalFn('test');
-      
+
       expect(result).to.equal('original test');
     });
 
     it('addHookOnFunction should call logWarning when function does not exist', function() {
       // Enable debug logging to ensure warnings are logged
       utilIdhub.debugLogIsEnabled = true;
-      
+
       // Stub console.warn to capture the warning
       const consoleWarnStub = sandbox.stub(console, 'warn');
-      
+
       // Create an object without the target function
       const obj = { someOtherProperty: 'value' };
-      
+
       // Try to add a hook to a non-existent function
       utilIdhub.addHookOnFunction(obj, false, 'nonExistentFunction', () => {});
-      
+
       // Verify console.warn was called with a message containing our expected text
       expect(consoleWarnStub.called).to.be.true;
       expect(consoleWarnStub.args[0][0]).to.include('in assignNewDefination: oldReference is not a function');
@@ -410,11 +409,11 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       // Test creating a simple nested object
       let result = utilIdhub.getNestedObjectFromArray({}, ['a', 'b', 'c'], 'value');
       expect(result).to.deep.equal({ a: { b: { c: 'value' } } });
-      
+
       // Test with existing object
       result = utilIdhub.getNestedObjectFromArray({ a: { existing: 'prop' } }, ['a', 'b', 'c'], 'value');
       expect(result).to.deep.equal({ a: { existing: 'prop', b: { c: 'value' } } });
-      
+
       // Test with single level array
       result = utilIdhub.getNestedObjectFromArray({}, ['key'], 'value');
       expect(result).to.deep.equal({ key: 'value' });
@@ -433,70 +432,69 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       result = utilIdhub.getNestedObjectFromString({ a: { existing: 'prop' } }, '.', 'a.b.c', 'value');
       expect(result).to.deep.equal({ a: { existing: 'prop', b: { c: 'value' } } });
     });
-
   });
-  
+
   describe('Object and array iteration functions', function() {
     it('forEachOnObject should iterate over object properties', function() {
       const obj = { a: 1, b: 2, c: 3 };
       const callback = sandbox.stub();
-      
+
       utilIdhub.forEachOnObject(obj, callback);
-      
+
       expect(callback.callCount).to.equal(3);
       expect(callback.firstCall.args).to.deep.equal(['a', 1]);
       expect(callback.secondCall.args).to.deep.equal(['b', 2]);
       expect(callback.thirdCall.args).to.deep.equal(['c', 3]);
     });
-    
+
     it('forEachOnObject should not call callback if object is not valid', function() {
       const callback = sandbox.stub();
-      
+
       utilIdhub.forEachOnObject(null, callback);
       utilIdhub.forEachOnObject(undefined, callback);
       utilIdhub.forEachOnObject('string', callback);
       utilIdhub.forEachOnObject(123, callback);
-      
+
       expect(callback.called).to.be.false;
     });
-    
+
     it('forEachOnObject should not call callback if callback is not a function', function() {
       const obj = { a: 1, b: 2, c: 3 };
-      
+
       // This should not throw an error
       utilIdhub.forEachOnObject(obj, null);
       utilIdhub.forEachOnObject(obj, undefined);
       utilIdhub.forEachOnObject(obj, 'string');
       utilIdhub.forEachOnObject(obj, 123);
     });
-    
+
     it('forEachOnArray should iterate over array elements', function() {
       const arr = [10, 20, 30];
       const callback = sandbox.stub();
-      
+
       utilIdhub.forEachOnArray(arr, callback);
-      
+
       expect(callback.callCount).to.equal(3);
       expect(callback.firstCall.args).to.deep.equal([0, 10]);
       expect(callback.secondCall.args).to.deep.equal([1, 20]);
       expect(callback.thirdCall.args).to.deep.equal([2, 30]);
     });
-    
+
     it('forEachOnArray should not call callback if array is not valid', function() {
       const callback = sandbox.stub();
-      
+
       utilIdhub.forEachOnArray(null, callback);
       utilIdhub.forEachOnArray(undefined, callback);
       utilIdhub.forEachOnArray('string', callback);
       utilIdhub.forEachOnArray(123, callback);
       utilIdhub.forEachOnArray({}, callback);
-      
+
       expect(callback.called).to.be.false;
     });
-    
+
     it('forEachOnArray should not call callback if callback is not a function', function() {
       const arr = [10, 20, 30];
-      
+
       // This should not throw an error
       utilIdhub.forEachOnArray(arr, null);
       utilIdhub.forEachOnArray(arr, undefined);
@@ -504,33 +502,33 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       utilIdhub.forEachOnArray(arr, 123);
     });
   });
-  
+
   describe('URL and query parameter functions', function() {
     it('handleHook should call hook function if available', function() {
       // Create a mock object with a hook function
       const hookStub = sandbox.stub();
       window.IHPWT = { hookName: hookStub };
-      
+
       utilIdhub.handleHook('hookName', ['arg1', 'arg2']);
-      
+
       expect(hookStub.calledOnce).to.be.true;
       expect(hookStub.firstCall.args).to.deep.equal(['arg1', 'arg2']);
-      
+
       // Reset the stub to test non-existent hook
       hookStub.reset();
-      
+
       // Test with non-existent hook (should not throw error)
       utilIdhub.handleHook('nonExistentHook', ['arg1', 'arg2']);
       expect(hookStub.called).to.be.false;
-      
+
       // Clean up
       delete window.IHPWT;
     });
   });
-  
+
   describe('User ID and Identity functions', function() {
     let mockPbjs;
-    
+
     beforeEach(function() {
       // Create a mock pbjs object
       mockPbjs = {
@@ -560,10 +558,10 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           }
         })
       };
-      
+
       // Add pbjs to window
       window.owpbjs = mockPbjs;
-      
+
       // Update CONFIG.getIdentityPartners to return an object instead of an array
       CONFIG.getIdentityPartners.returns({
         'pubCommonId': {
@@ -583,7 +581,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         }
       });
     });
-    
+
     afterEach(function() {
       // Clean up
       delete window.owpbjs;
@@ -596,7 +594,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       CONFIG.isIdentityOnly.returns(true);
       expect(utilIdhub.getPbNameSpace()).to.equal(CONSTANTS.COMMON.IH_NAMESPACE);
     });
-    
+
     it('getUserIds should return user IDs from the correct namespace', function() {
       CONFIG.isIdentityOnly.returns(false);
       expect(utilIdhub.getUserIds()).to.deep.equal({
@@ -619,11 +617,11 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
 
       delete window.ihowpbjs;
     });
-    
+
     it('getUserIds should log warning when getUserIds function is not available', function() {
       // Enable debug logging to ensure warnings are logged
       utilIdhub.enableDebugLog();
-      
+
       // Spy on console.warn to verify the warning is logged
       const consoleWarnSpy = sandbox.spy(console, 'warn');
 
@@ -691,20 +689,20 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
     it('getUserIdsAsEids should call logWarning when function is not available in namespace', function() {
       // Enable debug logging to ensure warnings are logged
       utilIdhub.debugLogIsEnabled = true;
-      
+
       // Stub console.warn to capture the warning
       const consoleWarnStub = sandbox.stub(console, 'warn');
-      
+
       // Set up a scenario where the getUserIdsAsEids function doesn't exist in the namespace
       CONFIG.isIdentityOnly.returns(false);
       window.owpbjs = {}; // Create an empty object without getUserIdsAsEids
-      
+
       // Call the function that should trigger the warning
       const result = utilIdhub.getUserIdsAsEids();
-      
+
       // Verify that the result is undefined (not an empty array)
       expect(result).to.be.undefined;
-      
+
       // Verify console.warn was called with a message containing our expected text
       expect(consoleWarnStub.called).to.be.true;
       expect(consoleWarnStub.args[0][0]).to.include('getUserIdsAsEids function is not available');
@@ -713,25 +711,25 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
     it('getEmailHashes should return email hashes', function() {
       CONFIG.isSSOEnabled.returns(true);
       const result = utilIdhub.getEmailHashes();
-      
+
       expect(result).to.deep.equal([
         'md5-hash',
         'sha1-hash',
         'sha256-hash'
       ]);
     });
-    
+
     it('getEmailHashes should return Publisher provided email hashes', function() {
       CONFIG.isSSOEnabled.returns(false);
       const result = utilIdhub.getEmailHashes();
-      
+
       expect(result).to.deep.equal([
         'pub-md5-hash',
         'pub-sha1-hash',
         'pub-sha256-hash'
       ]);
     });
-    
+
     it('getUserIdParams should process user ID params', function() {
       const params = {
         name: 'pubCommonId',
@@ -739,9 +737,9 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         'storage.name': '_pubcid',
         'storage.expires': 365
       };
-      
+
       const result = utilIdhub.getUserIdParams(params);
-      
+
       expect(result).to.be.an('object');
       expect(result.name).to.equal('pubCommonId');
       expect(result.storage).to.deep.include({
@@ -750,16 +748,16 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         expires: 365
       });
     });
-    
+
     it('deleteCustomParams should delete custom params', function() {
       const params = {
         name: 'pubCommonId',
         'custom': 'bar',
         'storage.type': 'cookie'
       };
-      
+
       utilIdhub.deleteCustomParams(params);
-      
+
       // Copy the object before assertion to avoid reference issues
       const resultParams = Object.assign({}, params);
       expect(resultParams).to.deep.equal({
@@ -767,14 +765,14 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         'storage.type': 'cookie'
       });
     });
-    
+
     it('getNestedObjectFromArray should create nested objects from array', function() {
       const sourceObject = {};
       const sourceArray = ['level1', 'level2', 'level3'];
       const value = 'testValue';
-      
+
       utilIdhub.getNestedObjectFromArray(sourceObject, sourceArray, value);
-      
+
       expect(sourceObject).to.deep.equal({
         level1: {
           level2: {
@@ -783,15 +781,15 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         }
       });
     });
-    
+
     it('getNestedObjectFromString should create nested objects from string', function() {
       const sourceObject = {};
       const separator = '.';
       const key = 'level1.level2.level3';
       const value = 'testValue';
-      
+
       utilIdhub.getNestedObjectFromString(sourceObject, separator, key, value);
-      
+
       expect(sourceObject).to.deep.equal({
         level1: {
           level2: {
@@ -811,7 +809,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
             { source: 'existing.org', uids: [{ id: 'new-existing-id' }] }, // Duplicate source
             { source: 'new.org', uids: [{ id: 'new-id' }] } // New source
           ]);
-          
+
           if (utilIdhub.isArray(ids) && ids.length > 0) {
             ids = ids.filter(({ source }) => {
               if (source) {
@@ -826,7 +824,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           bid.userIdAsEids = ids;
         }
       }
-      
+
       // Create a bid with existing userIdAsEids
       const bid = {
         userIdAsEids: [
@@ -834,34 +832,34 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           { source: 'other.org', uids: [{ id: 'other-id' }] } // Will be kept (unique source)
         ]
       };
-      
+
       // Call our simplified test function
       testDeduplication(bid);
-      
+
       // Verify the result
       expect(bid.userIdAsEids).to.be.an('array');
-      
+
       // Should have 3 unique sources: existing.org, other.org, new.org
       expect(bid.userIdAsEids.length).to.equal(3);
-      
+
       // Check that each expected source exists exactly once
       const sources = bid.userIdAsEids.map(item => item.source);
       expect(sources).to.include('existing.org');
       expect(sources).to.include('other.org');
       expect(sources).to.include('new.org');
-      
+
       // Check that sources appear exactly once (no duplicates)
       expect(sources.filter(s => s === 'existing.org').length).to.equal(1);
-      
+
       // Check that the first occurrence of existing.org was kept (with original ID)
       const existingSource = bid.userIdAsEids.find(item => item.source === 'existing.org');
       expect(existingSource.uids[0].id).to.equal('existing-id');
     });
   });
-  
+
   describe('Data type and custom value functions', function() {
     let mockPbjs;
-    
+
     beforeEach(function() {
       // Create a mock pbjs object for updateUserIds and updateAdUnits tests
       mockPbjs = {
@@ -879,11 +877,11 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           }
         ])
       };
-      
+
       // Add pbjs to window
       window.pbjs = mockPbjs;
     });
-    
+
     afterEach(function() {
       // Clean up
       delete window.pbjs;
@@ -894,21 +892,21 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         name: 'imuid',
         'params.cid': '12345'
       };
-      
+
       utilIdhub.applyDataTypeChangesIfApplicable(params);
-      
+
       expect(params['params.cid']).to.equal(12345);
       expect(typeof params['params.cid']).to.equal('number');
     });
-    
+
     it('applyDataTypeChangesIfApplicable should handle array type conversion', function() {
       const params = {
         name: 'merkleId',
         'params.ssp_ids': '1,2,3'
       };
-      
+
       utilIdhub.applyDataTypeChangesIfApplicable(params);
-      
+
       expect(params['params.ssp_ids']).to.deep.equal(['1', '2', '3']);
     });
 
@@ -917,98 +915,98 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         name: 'merkleId',
         'params.ssp_ids': 1
       };
-      
+
       utilIdhub.applyDataTypeChangesIfApplicable(params);
-      
+
       expect(params['params.ssp_ids']).to.deep.equal([1]);
     });
-    
+
     it('applyDataTypeChangesIfApplicable should handle invalid number conversion', function() {
       const params = {
         name: 'imuid',
         'params.cid': 'not-a-number'
       };
-      
+
       // Create a spy on console.error to capture calls
       const consoleErrorSpy = sandbox.spy(console, 'error');
-      
+
       utilIdhub.applyDataTypeChangesIfApplicable(params);
-      
+
       // Check if an error was logged (original function uses console.error directly)
       expect(consoleErrorSpy.called).to.be.true;
       expect(params['params.cid']).to.equal('not-a-number');
-      
+
       // Restore spy
       consoleErrorSpy.restore();
     });
-    
+
     it('applyDataTypeChangesIfApplicable should handle customObject type conversion', function() {
       const params = {
         name: 'liveIntentId',
         'params.requestedAttributesOverrides': '{"attr1":"value1"}'
       };
-      
+
       utilIdhub.applyDataTypeChangesIfApplicable(params);
-      
+
       expect(params['params.requestedAttributesOverrides']).to.deep.equal({attr1: 'value1'});
     });
-    
+
     it('applyDataTypeChangesIfApplicable should handle invalid JSON for customObject', function() {
       const params = {
         name: 'liveIntentId',
         'params.requestedAttributesOverrides': 'invalid-json'
       };
-      
+
       // Create a spy on console.error to capture calls
       const consoleErrorSpy = sandbox.spy(console, 'error');
-      
+
       utilIdhub.applyDataTypeChangesIfApplicable(params);
-      
+
       // Check if an error was logged (original function uses console.error directly)
       expect(consoleErrorSpy.called).to.be.true;
       expect(params['params.requestedAttributesOverrides']).to.equal('invalid-json');
-      
+
       // Restore spy
       consoleErrorSpy.restore();
     });
-    
+
     it('applyCustomParamValuesfApplicable should apply custom values', function() {
       const params = {
         name: 'id5Id',
         'params.partner': 'custom-partner'
       };
-      
+
       utilIdhub.applyCustomParamValuesfApplicable(params);
-      
+
       // Check if params.provider was added with value 'pubmatic-identity-hub'
       expect(params['params.provider']).to.equal('pubmatic-identity-hub');
       // Original param should remain unchanged
       expect(params['params.partner']).to.equal('custom-partner');
     });
-    
+
     it('getOWConfig should return OpenWrap configuration', function() {
       const result = utilIdhub.getOWConfig();
-      
+
       expect(result).to.be.an('object');
       expect(result.openwrap_version).to.equal('1.0.0');
       expect(result.prebid_version).to.equal('5.0.0');
       expect(result.profileId).to.equal('12345');
       expect(result.profileVersionId).to.equal('67890');
     });
-    
+
     it('deepMerge should merge objects correctly', function() {
       const target = { a: 1, b: { c: 2 } };
       const source = { b: { d: 3 }, e: 4 };
-      
+
       const result = utilIdhub.deepMerge(target, source);
-      
+
       expect(result).to.deep.equal({
         a: 1,
         b: { c: 2, d: 3 },
         e: 4
       });
     });
-    
+
     it('deepMerge should merge arrays correctly', function() {
       const target = [
         { source: 'a', value: 1 },
@@ -1018,25 +1016,25 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         { source: 'b', value: 3 },
         { source: 'c', value: 4 }
       ];
-      
+
       const result = utilIdhub.deepMerge(target, source);
-      
+
       expect(result).to.deep.equal([
         { source: 'a', value: 1 },
         { source: 'b', value: 3 },
         { source: 'c', value: 4 }
       ]);
     });
-    
+
     it('updateAdUnits should add user IDs to ad units', function() {
       // Mock the actual implementation to avoid complex dependencies
       const origUpdateAdUnits = utilIdhub.updateAdUnits;
-      
+
       utilIdhub.updateAdUnits = function(adUnits) {
         if (!Array.isArray(adUnits)) {
           return;
         }
-        
+
         adUnits.forEach(adUnit => {
           if (!adUnit.userId) {
             adUnit.userId = window.pbjs.getUserIds();
@@ -1046,14 +1044,14 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           }
         });
       };
-      
+
       const adUnits = [
         { code: 'ad1' },
         { code: 'ad2', userId: { existingId: 'value' } }
       ];
-      
+
       utilIdhub.updateAdUnits(adUnits);
-      
+
       expect(adUnits[0].userId).to.deep.equal({
         pubcid: 'test-pubcid',
         idl_env: 'test-idl-env'
@@ -1068,18 +1066,18 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         }
       ]);
       expect(adUnits[1].userId).to.deep.equal({ existingId: 'value' });
-      
+
       // Test with non-array input (should not throw error)
       expect(() => utilIdhub.updateAdUnits('not an array')).to.not.throw();
-      
+
       // Restore original function
       utilIdhub.updateAdUnits = origUpdateAdUnits;
     });
-    
+
     it('updateUserIds should add user IDs to bid object', function() {
       // Mock the actual implementation to avoid complex dependencies
       const origUpdateUserIds = utilIdhub.updateUserIds;
-      
+
       utilIdhub.updateUserIds = function(bid) {
         if (!bid.userId) {
           bid.userId = window.pbjs.getUserIds();
@@ -1088,11 +1086,11 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           bid.userIdAsEids = window.pbjs.getUserIdsAsEids();
         }
       };
-      
+
       const bid = {};
-      
+
       utilIdhub.updateUserIds(bid);
-      
+
       expect(bid.userId).to.deep.equal({
         pubcid: 'test-pubcid',
         idl_env: 'test-idl-env'
@@ -1106,15 +1104,15 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           }]
         }
       ]);
-      
+
       // Restore original function
       utilIdhub.updateUserIds = origUpdateUserIds;
     });
-    
+
     it('updateUserIds should merge with existing user IDs', function() {
       // Save original window objects
       const originalOwpbjs = window.owpbjs;
-      
+
       // Create a mock pbjs object with the necessary methods
       const mockPbjs = {
         getUserIds: sandbox.stub().returns({
@@ -1127,12 +1125,12 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           { source: 'new.org', uids: [{ id: 'new-id' }] } // New source
         ])
       };
-      
+
       // Add pbjs to window with the correct namespace
       // CONFIG.isIdentityOnly is stubbed to return false in beforeEach,
       // so getPbNameSpace() will return CONSTANTS.COMMON.PREBID_NAMESPACE
       window.owpbjs = mockPbjs;
-      
+
       // Create a bid with existing userIdAsEids
       const bid = {
         userIdAsEids: [
@@ -1140,37 +1138,37 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           { source: 'other.org', uids: [{ id: 'other-id' }] } // Will be kept (unique source)
         ]
       };
-      
+
       // Call the actual updateUserIds function
       utilIdhub.updateUserIds(bid);
-      
+
       // Verify the result
       expect(bid.userIdAsEids).to.be.an('array');
-      
+
       // Should have 3 unique sources: existing.org, other.org, new.org
       expect(bid.userIdAsEids.length).to.equal(3);
-      
+
       // Check that each expected source exists exactly once
       const sources = bid.userIdAsEids.map(item => item.source);
       expect(sources).to.include('existing.org');
       expect(sources).to.include('other.org');
       expect(sources).to.include('new.org');
-      
+
       // Check that sources appear exactly once (no duplicates)
       expect(sources.filter(s => s === 'existing.org').length).to.equal(1);
-      
+
       // Check that the first occurrence of existing.org was kept (with original ID)
       const existingSource = bid.userIdAsEids.find(item => item.source === 'existing.org');
       expect(existingSource.uids[0].id).to.equal('existing-id');
-      
+
       // Restore original window objects
       window.owpbjs = originalOwpbjs;
     });
   });
-  
+
   describe('LiveRamp and Identity Partner functions', function() {
     let scriptElement;
-    
+
     beforeEach(function() {
       // Create a script element mock with proper onload handling
       scriptElement = {
@@ -1189,17 +1187,17 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           return this._onloadHandler;
         }
       };
-      
+
       // Mock document.createElement only, don't double-stub document
       sandbox.stub(document, 'createElement').returns(scriptElement);
-      
+
       // Mock document.body.appendChild directly
       sandbox.stub(document.body, 'appendChild');
 
       // Mock CONFIG.isSSOEnabled
       CONFIG.isSSOEnabled.resetHistory();
       CONFIG.isSSOEnabled.returns(true);
-      
+
       // Set up getUserIdentities stub for initZeoTapJs
       window.owpbjs = {
         getUserIds: sandbox.stub().returns({
@@ -1222,15 +1220,15 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
             'SHA256': 'sha256-hash'
           }
         })
-      };      
+      };
     });
-    
+
     afterEach(function() {
       // Clean up and restore stubs
       delete window.owpbjs;
       sandbox.restore();
     });
-    
+
     it('getLiverampParams should process LiveRamp params', function() {
       // Mock the namespace that will be returned by getPbNameSpace
       const namespace = utilIdhub.getPbNameSpace();
@@ -1243,11 +1241,11 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           }
         })
       };
-      
+
       const params = {
         name: 'identityLink',
         params: {
-          pid: '12345',          
+          pid: '12345',
           cssSelectors: 'div1,div2', // String with comma separated values
           storageType: 'cookie',
           logging: 'error',
@@ -1262,9 +1260,9 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           customerIDRegex: 'regex123'
         }
       };
-      
+
       const result = utilIdhub.getLiverampParams(params);
-      
+
       expect(result).to.be.an('object');
       expect(result.placementID).to.equal('12345');
       expect(result.storageType).to.equal('cookie');
@@ -1277,42 +1275,42 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(result.triggerElements).to.deep.equal(['trigger1', 'trigger2']);
       expect(result.accountID).to.equal('account123');
       expect(result.customerIDRegex).to.equal('regex123');
-      
+
       // Clean up
       delete window[namespace];
     });
-    
+
     it('getLiverampParams should include emailHashes when detectionMechanism is direct and enableCustomId is true', function() {
       window.IHPWT = {
         OVERRIDES_SCRIPT_BASED_MODULES: ['identityLink', 'zeotapIdPlus']
       };
-      
+
       const params = {
         name: 'identityLink',
         params: {
-          pid: '12345',          
+          pid: '12345',
           detectionMechanism: 'direct',
           enableCustomId: true
         }
       };
-      
+
       const result = utilIdhub.getLiverampParams(params);
-      
+
       expect(result).to.be.an('object');
       expect(result.placementID).to.equal('12345');
       expect(result.emailHashes).to.deep.equal(['md5-hash', 'sha1-hash', 'sha256-hash']);
-      
+
       // Clean up
       delete window.IHPWT;
     });
-    
+
     it('getLiverampParams should set atsObject.customerID when detectionMechanism is direct and enableCustomId is true', function() {
       window.IHPWT = {
         OVERRIDES_SCRIPT_BASED_MODULES: ['identityLink', 'zeotapIdPlus']
       };
       // Get the namespace that will be returned by getPbNameSpace
       const namespace = utilIdhub.getPbNameSpace();
-      
+
       // Set up the mock on the correct namespace
       window[namespace] = {
         getUserIdentities: sandbox.stub().returns({
@@ -1324,28 +1322,28 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           }
         })
       };
-      
+
       const params = {
         name: 'identityLink',
         params: {
-          pid: '12345',          
+          pid: '12345',
           detectionMechanism: 'direct',
           enableCustomId: 'true'
         }
       };
-      
+
       const result = utilIdhub.getLiverampParams(params);
-      
+
       expect(result).to.be.an('object');
       expect(result.placementID).to.equal('12345');
       expect(result.customerID).to.equal('test-customer-id');
       expect(result.emailHashes).to.deep.equal(['md5-hash', 'sha1-hash', 'sha256-hash']);
-      
+
       // Clean up
       delete window.IHPWT;
       delete window[namespace];
     });
-    
+
     it('initLiveRampAts should initialize LiveRamp ATS', function() {
       const params = {
         name: 'identityLink',
@@ -1354,42 +1352,42 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           cssSelectors: 'div1,div2' // String with comma separated values
         }
       };
-      
+
       utilIdhub.initLiveRampAts(params);
-      
+
       expect(document.createElement.calledOnce).to.be.true;
       expect(document.createElement.firstCall.args[0]).to.equal('script');
       expect(document.body.appendChild.calledOnce).to.be.true;
       expect(scriptElement.src).to.contain('ats.rlcdn.com/ats.js');
     });
-    
+
     it('initLiveRampLaunchPad should initialize LiveRamp LaunchPad with proper script setup', function() {
       const params = {
         custom: {
           configurationId: 'test-config-id'
         }
       };
-      
+
       utilIdhub.initLiveRampLaunchPad(params);
-      
+
       // Verify script element creation and configuration
       expect(document.createElement.calledOnce).to.be.true;
       expect(document.createElement.firstCall.args[0]).to.equal('script');
       expect(document.body.appendChild.calledOnce).to.be.true;
       expect(scriptElement.src).to.contain('launchpad-wrapper.privacymanager.io');
       expect(scriptElement.src).to.contain('test-config-id');
-      
+
       // Verify onload handler is set
       expect(scriptElement._onloadHandler).to.be.a('function');
     });
-    
+
     it('initLiveRampLaunchPad should call setAdditionalData with emailHashes when isDirectMode is true and identityLink is included', function() {
       // Create a simplified version of the function that we want to test
       // This isolates the specific code path we're interested in
       function testDirectModeWithIdentityLink() {
         // Set up the conditions for the test
         const isDirectMode = true;
-        
+
         if (isDirectMode) { // If direct or detect/direct mode
           if ((window.IHPWT && (window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES && window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES.includes('identityLink'))) || window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES === undefined) {
             const emailHashes = utilIdhub.getEmailHashes();
@@ -1397,39 +1395,39 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           }
         }
       }
-      
+
       // Mock getEmailHashes to return test data
       const testEmailHashes = ['hash1', 'hash2'];
       sandbox.stub(utilIdhub, 'getEmailHashes').returns(testEmailHashes);
-      
+
       // Set up window.ats
       window.ats = {
         setAdditionalData: sandbox.stub()
       };
-      
+
       // Set up window.IHPWT with identityLink in OVERRIDES_SCRIPT_BASED_MODULES
       window.IHPWT = {
         OVERRIDES_SCRIPT_BASED_MODULES: ['identityLink', 'otherModule']
       };
-      
+
       // Run the test function
       testDirectModeWithIdentityLink();
-      
+
       // Verify getEmailHashes was called
       expect(utilIdhub.getEmailHashes.calledOnce).to.be.true;
-      
+
       // Verify setAdditionalData was called with the correct arguments
       expect(window.ats.setAdditionalData.calledOnce).to.be.true;
       expect(window.ats.setAdditionalData.firstCall.args[0]).to.deep.equal({
         'type': 'emailHashes',
         'id': testEmailHashes
       });
-      
+
       // Clean up
       delete window.ats;
       delete window.IHPWT;
     });
-    
+
     it('initLauncherJs should initialize Launcher.js', function() {
       const params = {
         name: 'identityLink',
@@ -1439,19 +1437,19 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           cssSelectors: 'div1,div2' // String with comma separated values
         }
       };
-      
+
       utilIdhub.initLauncherJs(params);
-      
+
       expect(document.createElement.calledOnce).to.be.true;
       expect(document.createElement.firstCall.args[0]).to.equal('script');
       expect(document.body.appendChild.calledOnce).to.be.true;
       expect(scriptElement.src).to.contain('https://secure.cdn.fastclick.net/js/cnvr-launcher/latest/launcher-stub.min.js');
     });
-    
+
     it('getPublinkLauncherParams should process Publink Launcher params', function() {
       const params = {
         name: 'identityLink',
-        params: {              
+        params: {
           cssSelectors: 'div1,div2', // String with comma separated values
           api_key: 'api-key',
           site_id: 'site-id',
@@ -1459,9 +1457,9 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
           urlParameter: 'urlParam'
         }
       };
-      
+
       const result = utilIdhub.getPublinkLauncherParams(params);
-      
+
       expect(result).to.be.an('object');
       expect(result.cssSelectors).to.deep.equal(['div1', 'div2']);
       expect(result.apiKey).to.equal('api-key');
@@ -1501,7 +1499,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
 
       // Call the function
       utilIdhub.initZeoTapJs(params);
-    
+
       // Verify script element creation
       expect(document.createElement.calledOnce).to.be.true;
       expect(document.createElement.firstCall.args[0]).to.equal('script');
@@ -1521,7 +1519,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       delete window.IHPWT;
       delete window.zeotap;
     });
-    
+
     it('initZeoTapJs should handle when document is not ready', function() {
       // Set up test data
       const params = {
@@ -1764,7 +1762,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       // Create a direct replacement for getUserIdParams that calls initLiveRampAts
       const origGetUserIdParams = utilIdhub.getUserIdParams;
       const initLiveRampAtsSpy = sandbox.spy(utilIdhub, 'initLiveRampAts');
-      
+
       // Replace getUserIdParams with our own implementation for this test
       utilIdhub.getUserIdParams = function(params) {
         // Create the userIdParams object with the structure expected by initLiveRampAts
@@ -1774,19 +1772,19 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
             pid: '12345'
           }
         };
-        
+
         // Call initLiveRampAts directly
         utilIdhub.initLiveRampAts(userIdParams);
-        
+
         return userIdParams;
       };
 
       // Call getUserIdParams with any params, our implementation will handle it
       utilIdhub.getUserIdParams({});
-      
+
       // Verify initLiveRampAts was called
       expect(initLiveRampAtsSpy.calledOnce).to.be.true;
-      
+
       // Restore original function
       utilIdhub.getUserIdParams = origGetUserIdParams;
     });
@@ -1811,7 +1809,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         // Don't call initLiveRampAts
         return userIdParams;
       };
-      
+
       // Call getUserIdParams with any params, our implementation will handle it
       utilIdhub.getUserIdParams({});
 
@@ -1840,7 +1838,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         };
 
         // Call the stubbed initZeoTapJs function
-        utilIdhub.initZeoTapJs(userIdParams);        
+        utilIdhub.initZeoTapJs(userIdParams);
         return userIdParams;
       };
 
@@ -1890,7 +1888,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       // Restore original function
       utilIdhub.getUserIdParams = origGetUserIdParams;
     });
-    
+
     it('initZeoTapJs should create and append script element with correct attributes', function() {
       // Skip this test for now as it requires more complex DOM mocking
       // We've already verified the integration between getUserIdParams and initZeoTapJs
@@ -1910,7 +1908,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         partnerId: 'partner123'
       });
     });
-    
+
     it('initLiveRampAts should call window.ats.start when script loads', function() {
       // Create an exact match for the object returned by getLiverampParams
       const atsObject = {
@@ -1949,7 +1947,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(startArgs.storageType).to.equal('cookie');
       expect(startArgs.logging).to.equal('error');
     });
-    
+
     it('initLiveRampAts should handle case when window.ats is not available', function() {
       // Remove window.ats
       delete window.ats;
@@ -1970,7 +1968,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       // Simulate script load event - should not throw error even though window.ats is undefined
       expect(() => scriptElement.onload()).to.not.throw();
     });
-    
+
     it('initLiveRampAts should add event listener when document is not ready', function() {
       // Set document readyState to 'loading'
       Object.defineProperty(document, 'readyState', {
@@ -2005,7 +2003,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(document.createElement.calledWith('script')).to.be.true;
       expect(scriptElement.src).to.equal('https://ats.rlcdn.com/ats.js');
     });
-    
+
     it('initLiveRampAts should handle direct detection mechanism with email hashes', function() {
       // Mock getLiverampParams to avoid the error
       sandbox.stub(utilIdhub, 'getLiverampParams').returns({
@@ -2027,7 +2025,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(document.createElement.calledWith('script')).to.be.true;
       expect(scriptElement.src).to.equal('https://ats.rlcdn.com/ats.js');
     });
-    
+
     it('initLiveRampAts should handle errors in getLiverampParams gracefully', function() {
       // Make getLiverampParams throw an error
       sandbox.stub(utilIdhub, 'getLiverampParams').throws(new Error('Test error'));
@@ -2045,7 +2043,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       // Script should still be created despite the error
       expect(document.createElement.calledWith('script')).to.be.true;
     });
-    
+
     it('getUserIdParams should handle multiple initialization flags', function() {
       // Create a direct replacement for getUserIdParams
       const origGetUserIdParams = utilIdhub.getUserIdParams;
@@ -2064,7 +2062,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
             pid: '12345'
           }
         };
- 
+
         // Call initLiveRampAts directly
         utilIdhub.initLiveRampAts(userIdParams);
 
@@ -2081,7 +2079,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       utilIdhub.getUserIdParams = origGetUserIdParams;
     });
   });
-  
+
   describe('getUserIdConfiguration', function() {
     it('getUserIdConfiguration should return user ID configuration with correct transformations', function() {
       // Set up mock identity partners with different formats to test all code paths
@@ -2156,16 +2154,11 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(id5Id.storage.name).to.equal('id5id');
       expect(id5Id.storage.expires).to.equal(90);
       expect(id5Id.value).to.equal('id5-value');
-
-      // Log the actual result for debugging
-      console.log('getUserIdConfiguration result:', JSON.stringify(result));
     });
   });
 
   describe('Configuration functions', function() {
-
     it('getOWConfig should return correct OpenWrap configuration', function() {
-
       // Save original stubs if they exist
 
       const originalGetOwVersion = CONFIG.getOwVersion;
@@ -2175,8 +2168,6 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       const originalGetProfileID = CONFIG.getProfileID;
 
       const originalGetProfileDisplayVersionID = CONFIG.getProfileDisplayVersionID;
-
-      
 
       // Restore any existing stubs
 
@@ -2188,8 +2179,6 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
 
       if (originalGetProfileDisplayVersionID.restore) originalGetProfileDisplayVersionID.restore();
 
-      
-
       // Create new stubs
 
       sandbox.stub(CONFIG, 'getOwVersion').returns('1.2.3');
@@ -2200,11 +2189,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
 
       sandbox.stub(CONFIG, 'getProfileDisplayVersionID').returns('version456');
 
-      
-
       const result = utilIdhub.getOWConfig();
-
-      
 
       expect(result).to.deep.equal({
 
@@ -2217,22 +2202,14 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
         'profileVersionId': 'version456'
 
       });
-
     });
-
   });
 
-
-
   describe('Data type conversion functions', function() {
-
     it('applyDataTypeChangesIfApplicable should convert parameter types correctly', function() {
-
       // Save original CONSTANTS
 
       const originalSpecialCase = Object.assign({}, CONSTANTS.SPECIAL_CASE_ID_PARTNERS);
-
-      
 
       // Set up test data
 
@@ -2250,8 +2227,6 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
 
       };
 
-      
-
       // Test number conversion
 
       const params1 = { name: 'testPartner', numParam: '123' };
@@ -2259,8 +2234,6 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       utilIdhub.applyDataTypeChangesIfApplicable(params1);
 
       expect(params1.numParam).to.equal(123);
-
-      
 
       // Test array conversion from string
 
@@ -2270,8 +2243,6 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
 
       expect(params2.arrayParam).to.deep.equal(['a', 'b', 'c']);
 
-      
-
       // Test array conversion from number
 
       const params3 = { name: 'testPartner', arrayParam: 123 };
@@ -2279,8 +2250,6 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       utilIdhub.applyDataTypeChangesIfApplicable(params3);
 
       expect(params3.arrayParam).to.deep.equal([123]);
-
-      
 
       // Test custom object conversion
 
@@ -2290,8 +2259,6 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
 
       expect(params4['params.requestedAttributesOverrides']).to.deep.equal({ key: 'value' });
 
-      
-
       // Test invalid number
 
       const params5 = { name: 'testPartner', numParam: 'not-a-number' };
@@ -2299,8 +2266,6 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       utilIdhub.applyDataTypeChangesIfApplicable(params5);
 
       expect(params5.numParam).to.equal('not-a-number'); // Should remain unchanged
-
-      
 
       // Test invalid JSON
 
@@ -2310,8 +2275,6 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
 
       expect(params6['params.requestedAttributesOverrides']).to.equal('{invalid-json}'); // Should remain unchanged
 
-      
-
       // Test non-matching partner
 
       const params7 = { name: 'otherPartner', numParam: '123' };
@@ -2320,15 +2283,10 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
 
       expect(params7.numParam).to.equal('123'); // Should remain unchanged
 
-      
-
       // Restore original CONSTANTS
 
       CONSTANTS.SPECIAL_CASE_ID_PARTNERS = originalSpecialCase;
-
     });
-
-
 
     it('applyCustomParamValuesfApplicable should apply custom values correctly', function() {
       // Save original CONSTANTS
@@ -2353,8 +2311,6 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
       expect(params2.defaultParam1).to.equal('existingValue'); // Should not be overridden
       expect(params2.defaultParam2).to.equal('defaultValue2');
 
-      
-
       // Test with non-matching partner
 
       const params3 = { name: 'otherPartner' };
@@ -2363,9 +2319,7 @@ describe('OpenWrap Core Module: util.idhub.js', function() {
 
       CONSTANTS.ID_PARTNERS_CUSTOM_VALUES = originalCustomValues;
     });
-
   });
-
 
   describe('Hook and update functions', function() {
     it('handleHook should call the appropriate hook function if it exists', function() {

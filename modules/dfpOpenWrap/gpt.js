@@ -5,10 +5,10 @@ let bidManager = {};
 let SLOT = {};
 let prebid = {};
 // let IdHub = {};
-//var usePrebidKeys = {};
-//var isPrebidPubMaticAnalyticsEnabled = {};
+// var usePrebidKeys = {};
+// var isPrebidPubMaticAnalyticsEnabled = {};
 
-export function initializeModule(gptUtils){
+export function initializeModule(gptUtils) {
   CONFIG = gptUtils.CONFIG;
   CONSTANTS = gptUtils.CONSTANTS;
   util = gptUtils.util;
@@ -17,13 +17,11 @@ export function initializeModule(gptUtils){
   prebid = gptUtils.prebid;
   // IdHub = idhubUtils.IdHub;
 
-  //usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
-  //isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
+  // usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
+  // isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
   gptUtils.consentConfigResolver.init();
   init(window);
 }
-
-
 
 var displayHookIsAdded = false;
 
@@ -337,7 +335,7 @@ function findWinningBidAndApplyTargeting(divID, parentArgs) { // TDD, i/o : done
 
   // Hook to modify key-value-pairs generated, google-slot object is passed so that consumer can get details about the AdSlot
   // this hook is not needed in custom controller
-  if(!parentArgs || (parentArgs && parentArgs[0] == divID)) {
+  if (!parentArgs || (parentArgs && parentArgs[0] == divID)) {
     util.handleHook(CONSTANTS.HOOKS.POST_AUCTION_KEY_VALUES, [keyValuePairs, googleDefinedSlot]);
   }
   // attaching keyValuePairs from adapters
@@ -354,7 +352,7 @@ function findWinningBidAndApplyTargeting(divID, parentArgs) { // TDD, i/o : done
     }
   });
   util.forEachOnObject(util.getCDSTargetingData(), function(key, value) {
-      window.googletag &&
+    window.googletag &&
       window.googletag.pubads().setTargeting(key, value);
   });
 }
@@ -667,7 +665,7 @@ function newDisplayFunction(theObject, originalFunction) { // TDD, i/o : done
         const divID = args[0];
         /* istanbul ignore next */
         setTimeout(() => {
-          util.realignVLogInfoPanel(divID);          
+          util.realignVLogInfoPanel(divID);
         }, 2000 + CONFIG.getTimeout());
 
         // return originalFunction.apply(theObject, arguments);
@@ -730,10 +728,10 @@ export { findWinningBidIfRequiredRefresh };
 
 function postRederingChores(divID, dmSlot) {
   // googleSlot.getSizes() returns applicable sizes as per sizemapping if we pass current available view-port width and height
-  if(slotsMap[dmSlot]) {
+  if (slotsMap[dmSlot]) {
     util.createVLogInfoPanel(divID, slotsMap[dmSlot].getSizes(window.innerWidth, window.innerHeight));
   } else {
-      util.log("Could not find slot in postRederingChores");
+    util.log('Could not find slot in postRederingChores');
   }
   util.realignVLogInfoPanel(divID);
 }
@@ -749,13 +747,13 @@ function postTimeoutRefreshExecution(qualifyingSlotNames, theObject, originalFun
   let yesCallRefreshFunction = false;
   util.forEachOnArray(qualifyingSlotNames, (index, dmSlot) => {
     const divID = slotsMap[dmSlot] && slotsMap[dmSlot].getDivID();
-    if(divID) {
+    if (divID) {
       yesCallRefreshFunction = findWinningBidIfRequiredRefresh(dmSlot, divID, yesCallRefreshFunction);
       window.setTimeout(() => {
         postRederingChores(divID, dmSlot);
       }, 2000);
     } else {
-        util.log("Could not find divID");
+      util.log('Could not find divID');
     }
   });
   callOriginalRefeshFunction(yesCallRefreshFunction, theObject, originalFunction, arg);

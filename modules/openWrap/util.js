@@ -33,7 +33,7 @@ const mediaTypeConfigPerSlot = {};
 var mediaTypeConfig = mediaTypeConfigPerSlot;
 export { mediaTypeConfig };
 
-export function getPbNameSpace() { 
+export function getPbNameSpace() {
   return parseInt(conf[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.IDENTITY_ONLY] || CONSTANTS.CONFIG.DEFAULT_IDENTITY_ONLY) ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
 }
 
@@ -286,21 +286,21 @@ export function generateSlotNamesFromPattern(activeSlot, pattern, shouldCheckMap
  */
 
 /**
-  *  Algo for Regex and Normal Flow
-  * 1. Check for kgp key
-  *   a). If KGP is present for partner then proceed with old flow and no change in that
-  *   b). If KGP is not present and kgp_rx is present it is regex flow and proceed with regex flow as below
-  * 2. Regex Flow
-  *   a. Generate KGPV's with kgp as _AU_@_DIV_@_W_x_H_
-  *   b. Regex Match each KGPV with KLM_rx
-  *   c. Get config for the partner
-  *     d. Send the config to prebid and log the same kgpv in logger
-  *
-  * Special Case for Pubmatic
-  *  1. In case of regex flow we will have hashed keys which will be sent to translator for matching
-  *  2. These hashed keys could be same for multiple slot on the page and hence need to check how to send it to prebid for
-  *     identification in prebid resposne.
-  */
+ *  Algo for Regex and Normal Flow
+ * 1. Check for kgp key
+ *   a). If KGP is present for partner then proceed with old flow and no change in that
+ *   b). If KGP is not present and kgp_rx is present it is regex flow and proceed with regex flow as below
+ * 2. Regex Flow
+ *   a. Generate KGPV's with kgp as _AU_@_DIV_@_W_x_H_
+ *   b. Regex Match each KGPV with KLM_rx
+ *   c. Get config for the partner
+ *     d. Send the config to prebid and log the same kgpv in logger
+ *
+ * Special Case for Pubmatic
+ *  1. In case of regex flow we will have hashed keys which will be sent to translator for matching
+ *  2. These hashed keys could be same for multiple slot on the page and hence need to check how to send it to prebid for
+ *     identification in prebid resposne.
+ */
 
 export function forEachGeneratedKey(
   adapterID,
@@ -847,9 +847,9 @@ export function resetExternalBidderStatus(divIds) {
 }
 
 export function addFloorConfigIfPresent(config, adUnitConfig, defaultFloor) {
-	if(config.floors || defaultFloor){
-		adUnitConfig["floors"] = config.floors || defaultFloor;
-	}	
+  if (config.floors || defaultFloor) {
+    adUnitConfig['floors'] = config.floors || defaultFloor;
+  }
 }
 
 // Returns mediaTypes for adUnits which are sent to prebid
@@ -903,8 +903,8 @@ export function getAdUnitConfig(sizes, currentSlot) {
       const kgp = slotConfig.configPattern;
       let isVideo = true;
       let isNative = true;
-      let isBanner = true;      
-			var defaultFloor = undefined;
+      let isBanner = true;
+      var defaultFloor;
       var divId = isFunction(currentSlot.getDivID) ? currentSlot.getDivID() : currentSlot.getSlotId().getDomId();
 
       // TODO: Have to write logic if required in near future to support multiple kgpvs, right now
@@ -924,7 +924,7 @@ export function getAdUnitConfig(sizes, currentSlot) {
           isVideo = false;
         }
         config = slotConfig['config'][CONSTANTS.COMMON.DEFAULT];
-				defaultFloor = config && config["floors"];
+        defaultFloor = config && config['floors'];
         if (config.renderer && !isEmptyObject(config.renderer)) {
           adUnitConfig['renderer'] = config.renderer;
         }
@@ -969,16 +969,16 @@ export function getAdUnitConfig(sizes, currentSlot) {
         if (config.renderer && !isEmptyObject(config.renderer)) {
           adUnitConfig['renderer'] = config.renderer;
         }
-				if(config.ortb2Imp && !isEmptyObject(config.ortb2Imp)){
-					adUnitConfig['ortb2Imp'] = config.ortb2Imp;
-				}
+        if (config.ortb2Imp && !isEmptyObject(config.ortb2Imp)) {
+          adUnitConfig['ortb2Imp'] = config.ortb2Imp;
+        }
         if (!isBanner || (config.banner && (isOwnProperty(config.banner, 'enabled') && !config.banner.enabled))) {
           mediaTypeConfig[divId] = mediaTypeObject;
           adUnitConfig['mediaTypeObject'] = mediaTypeObject
-					addFloorConfigIfPresent(config, adUnitConfig, defaultFloor);
+          addFloorConfigIfPresent(config, adUnitConfig, defaultFloor);
           return adUnitConfig;
         }
-				addFloorConfigIfPresent(config, adUnitConfig, defaultFloor);
+        addFloorConfigIfPresent(config, adUnitConfig, defaultFloor);
       } else {
         log(`Config not found for adSlot: ${JSON.stringify(currentSlot)}`);
       }
@@ -991,7 +991,7 @@ export function getAdUnitConfig(sizes, currentSlot) {
   };
   let bannerConfig = (config && config.banner && config.banner.config) || {};
   Object.keys(bannerConfig).map(function (configKey) {
-    mediaTypeObject["banner"][configKey] = bannerConfig[configKey];
+    mediaTypeObject['banner'][configKey] = bannerConfig[configKey];
   });
   mediaTypeConfig[divId] = mediaTypeObject;
   adUnitConfig['mediaTypeObject'] = mediaTypeObject
@@ -1039,7 +1039,6 @@ export function addMessageEventListener(theWindow, eventHandler) {
   return true;
 }
 // endRemoveIf(removeNativeRelatedCode)
-
 
 // removeIf(removeNativeRelatedCode)
 export function safeFrameCommunicationProtocol(msg) {
@@ -1599,11 +1598,11 @@ export function applyDataTypeChangesIfApplicable(params) {
             case 'customObject':
               if (paramValue) {
                 if (key === 'params.requestedAttributesOverrides') {
-									try {
-										params[key] = JSON.parse(paramValue);
-									} catch (e) {
-										logError("Error parsing requestedAttributesOverrides for partner ", partnerName);
-									}
+                  try {
+                    params[key] = JSON.parse(paramValue);
+                  } catch (e) {
+                    logError('Error parsing requestedAttributesOverrides for partner ', partnerName);
+                  }
                 }
               }
               break;
@@ -1637,35 +1636,36 @@ export function getPltForFloor() {
 }
 
 export function getGeoInfo() {
-	let PREFIX = 'UINFO';
-	let LOCATION_INFO_VALIDITY =  172800000; // 2 * 24 * 60 * 60 * 1000 - 2 days
-	let geoDetectionURL = 'https://ut.pubmatic.com/geo?pubid=' +
-		conf[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.PUBLISHER_ID];
+  let PREFIX = 'UINFO';
+  let LOCATION_INFO_VALIDITY = 172800000; // 2 * 24 * 60 * 60 * 1000 - 2 days
+  let geoDetectionURL = 'https://ut.pubmatic.com/geo?pubid=' +
+    conf[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.PUBLISHER_ID];
 
-	let info = window[getPbNameSpace()].getDataFromLocalStorage(PREFIX, LOCATION_INFO_VALIDITY);
-	if(info && JSON.parse(info).cc) {	// Got valid data
-		window.PWT.CC = JSON.parse(info);
-	} else {
-		window[getPbNameSpace()].detectLocation(geoDetectionURL,
-		function(loc) {
-			window[getPbNameSpace()].setAndStringifyToLocalStorage(PREFIX, loc);
-			window.PWT.CC = loc;
-		});
-	}
+  let info = window[getPbNameSpace()].getDataFromLocalStorage(PREFIX, LOCATION_INFO_VALIDITY);
+  if (info && JSON.parse(info).cc) { // Got valid data
+    window.PWT.CC = JSON.parse(info);
+  } else {
+    window[getPbNameSpace()].detectLocation(geoDetectionURL,
+      function (loc) {
+        window[getPbNameSpace()].setAndStringifyToLocalStorage(PREFIX, loc);
+        window.PWT.CC = loc;
+      }
+    );
+  }
 }
 
 export function getCDSTargetingData(obj) {
-	obj = obj || {};
-	let cdsData = window[CONSTANTS.COMMON.PREBID_NAMESPACE].getConfig('cds');
-    cdsData && Object.keys(cdsData).map(function(key) {
-      if((cdsData[key].sendtoGAM !== false)) {
-        let val = cdsData[key].value;
-        val = (!Array.isArray(val) && typeof val !== 'object' &&
-            typeof val !== 'function' && typeof val !== 'undefined') ? val : '';
-        obj[key] = val;
-      }
-    });
-	return obj;
+  obj = obj || {};
+  let cdsData = window[CONSTANTS.COMMON.PREBID_NAMESPACE].getConfig('cds');
+  cdsData && Object.keys(cdsData).map(function (key) {
+    if ((cdsData[key].sendtoGAM !== false)) {
+      let val = cdsData[key].value;
+      val = (!Array.isArray(val) && typeof val !== 'object' &&
+        typeof val !== 'function' && typeof val !== 'undefined') ? val : '';
+      obj[key] = val;
+    }
+  });
+  return obj;
 }
 
 export function getDevicePlatform() {

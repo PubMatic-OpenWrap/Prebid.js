@@ -1,5 +1,5 @@
 import * as CONFIG from './config.js';
-import * as CONSTANTS from './constants.js';
+// import * as CONSTANTS from './constants.js';
 import * as UTIL from './util.js';
 
 class Bid {
@@ -94,7 +94,7 @@ class Bid {
     }
     return this.grossEcpm;
   }
-  
+
   getNetEcpm(forAnalytics) {
     if (CONFIG.getAdServerCurrency() && this.analyticsNetCpm && forAnalytics) {
       return this.analyticsNetCpm;
@@ -103,7 +103,7 @@ class Bid {
   }
 }
 
-  /* start-test-block */
+/* start-test-block */
 export {Bid};
 
 /* end-test-block */
@@ -111,7 +111,6 @@ export {Bid};
 export function createBid(adapterID, kgpv) {
   return new Bid(adapterID, kgpv);
 }
-
 
 // todo:
 // add validations

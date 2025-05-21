@@ -24,7 +24,7 @@ describe('OpenWrap Core Module: bmEntry.js', function () {
   describe('Constructor', function () {
     it('should initialize BMEntry with correct default values', function () {
       const bmEntry = new BMEntry(TEST_NAME);
-      
+
       expect(bmEntry.name).to.equal(TEST_NAME);
       expect(bmEntry.sizes).to.deep.equal([]);
       expect(bmEntry.adapters).to.deep.equal({});
@@ -96,10 +96,10 @@ describe('OpenWrap Core Module: bmEntry.js', function () {
     it('setAdapterEntry should not create duplicate adapter entry', function () {
       bmEntry.setAdapterEntry(TEST_ADAPTER_ID);
       const firstAdapter = bmEntry.adapters[TEST_ADAPTER_ID];
-      
+
       util.isOwnProperty.returns(true);
       bmEntry.setAdapterEntry(TEST_ADAPTER_ID);
-      
+
       expect(bmEntry.adapters[TEST_ADAPTER_ID]).to.equal(firstAdapter);
     });
 
@@ -112,7 +112,7 @@ describe('OpenWrap Core Module: bmEntry.js', function () {
       bmEntry.adapters[TEST_ADAPTER_ID] = {
         getLastBidID: sandbox.stub().returns(TEST_BID_ID)
       };
-      
+
       expect(bmEntry.getLastBidIDForAdapter(TEST_ADAPTER_ID)).to.equal(TEST_BID_ID);
     });
   });
@@ -130,7 +130,7 @@ describe('OpenWrap Core Module: bmEntry.js', function () {
     it('setNewBid should create adapter entry if it does not exist', function () {
       util.isOwnProperty.returns(false);
       bmEntry.setNewBid(TEST_ADAPTER_ID, mockBid);
-      
+
       expect(bmEntry.adapters[TEST_ADAPTER_ID]).to.be.instanceof(AdapterEntry);
     });
 
@@ -140,7 +140,7 @@ describe('OpenWrap Core Module: bmEntry.js', function () {
         setNewBid: sandbox.stub()
       };
       bmEntry.adapters[TEST_ADAPTER_ID] = mockAdapter;
-      
+
       bmEntry.setNewBid(TEST_ADAPTER_ID, mockBid);
       expect(mockAdapter.setNewBid.calledWith(mockBid)).to.be.true;
     });
@@ -156,7 +156,7 @@ describe('OpenWrap Core Module: bmEntry.js', function () {
         getBid: sandbox.stub().returns(mockBid)
       };
       bmEntry.adapters[TEST_ADAPTER_ID] = mockAdapter;
-      
+
       expect(bmEntry.getBid(TEST_ADAPTER_ID, TEST_BID_ID)).to.equal(mockBid);
       expect(mockAdapter.getBid.calledWith(TEST_BID_ID)).to.be.true;
     });

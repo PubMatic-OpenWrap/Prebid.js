@@ -1,6 +1,7 @@
 import { config } from '../../src/config.js';
 import { logError } from '../../src/utils.js';
 
+/* eslint-disable camelcase */
 export let pwt = {};
 export let testConfigDetails = {};
 export let test_pwt = {};

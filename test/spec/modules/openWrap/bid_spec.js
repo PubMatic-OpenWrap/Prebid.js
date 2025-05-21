@@ -26,7 +26,7 @@ describe('OpenWrap Core Module: bid.js', function () {
   describe('Constructor', function () {
     it('should initialize bid with correct default values', function () {
       const bid = new Bid(TEST_ADAPTER_ID, TEST_KGPV);
-      
+
       expect(bid.adapterID).to.equal(TEST_ADAPTER_ID);
       expect(bid.kgpv).to.equal(TEST_KGPV);
       expect(bid.bidID).to.equal('test_bid_id');

@@ -46,8 +46,8 @@ export const COMMON = {
   'TEST_GROUP_DETAILS': 'testConfigDetails',
   'TEST_PWT': 'test_pwt',
   'PRICE_GRANULARITY': 'priceGranularity',
-  "PRICE_GRANULARITY_CUSTOM" : "custom",
-	"PRICE_GRANULARITY_BUCKETS" : "customPriceGranularityConfig",
+  'PRICE_GRANULARITY_CUSTOM': 'custom',
+  'PRICE_GRANULARITY_BUCKETS': 'customPriceGranularityConfig',
   'GRANULARITY_MULTIPLIER': 'granularityMultiplier',
   'TEST_PARTNER': 'test_adapters',
   'REDUCE_CODE_SIZE': 'reduceCodeSize',
@@ -55,11 +55,11 @@ export const COMMON = {
   'IH_ANALYTICS_ADAPTER_EXPIRY': 'ihAnalyticsAdapterExpiry',
   'IH_ANALYTICS_ADAPTER_DEFAULT_EXPIRY': 7,
   'EXTERNAL_FLOOR_WO_CONFIG': 'External Floor w/o Config',
-	"HARD_FLOOR": "hard",
-	"BID_POOLING": "Bid Pooling",
-	"USE_BID_CACHE": "useBidCache",
-	"BID_POOLING_ENABLED": "bidPoolingEnabled",
-  "ENABLED_BID_POOLING": "1"
+  'HARD_FLOOR': 'hard',
+  'BID_POOLING': 'Bid Pooling',
+  'USE_BID_CACHE': 'useBidCache',
+  'BID_POOLING_ENABLED': 'bidPoolingEnabled',
+  'ENABLED_BID_POOLING': '1'
 };
 
 export const CONFIG = {
@@ -118,12 +118,12 @@ export const CONFIG = {
   'TIMEOUT_ADJUSTMENT': 50,
   'SSO_ENABLED': 'ssoEnabled',
   'FLOOR_SOURCE': 'floorSource',
-  "GPP_CONSENT": "gpp",
-	"GPP_CMPAPI": "gppCmpApi",
-	"GPP_TIMEOUT": "gppTimeout",
-	"DEFAULT_GPP_CONSENT": "0",
-	"DEFAULT_GPP_CMPAPI": "iab",
-	"DEFAULT_GPP_TIMEOUT": 10000,
+  'GPP_CONSENT': 'gpp',
+  'GPP_CMPAPI': 'gppCmpApi',
+  'GPP_TIMEOUT': 'gppTimeout',
+  'DEFAULT_GPP_CONSENT': '0',
+  'DEFAULT_GPP_CMPAPI': 'iab',
+  'DEFAULT_GPP_TIMEOUT': 10000,
   'GDPR_ACTION_TIMEOUT': 'gdprActionTimeout',
   'PB_GLOBAL_VAR_NAMESPACE': 'pbGlobalVarNamespace',
   'OW_GLOBAL_VAR_NAMESPACE': 'owGlobalVarNamespace'
@@ -171,10 +171,10 @@ export const WRAPPER_TARGETING_KEYS = {
   'CACHE_ID': 'pwtcid',
   'CACHE_URL': 'pwtcurl',
   'CACHE_PATH': 'pwtcpath',
-	"ACAT": "pwtacat",
-	"CRID": "pwtcrid",
-	"DSP": "pwtdsp",
-  "PRICE_BUCKET": "pwtpb"
+  'ACAT': 'pwtacat',
+  'CRID': 'pwtcrid',
+  'DSP': 'pwtdsp',
+  'PRICE_BUCKET': 'pwtpb'
 };
 
 export const IGNORE_PREBID_KEYS = {
@@ -230,10 +230,10 @@ export const MESSAGES = {
   'M30': 'AB Test Enabled With Config',
   'M31': 'AB Test Enabled With Partner Config',
   'M32': 'Invalid MediaConfig regex pattern : ',
-  "M33": "AdUnitsArray response should be an array.",
-	"M34": "Invalid HTML Element selected for ad rendering.",
-	"M35": "Winning bid not found for Div Id :",
-  "M36": "Price Buckets should be set for custom price granularity",
+  'M33': 'AdUnitsArray response should be an array.',
+  'M34': 'Invalid HTML Element selected for ad rendering.',
+  'M35': 'Winning bid not found for Div Id :',
+  'M36': 'Price Buckets should be set for custom price granularity',
   IDENTITY: {
     M1: 'Unable to get User Id from OpenIdentity',
     M2: 'Setting UserIds to EB ',
@@ -287,8 +287,8 @@ export const SPECIAL_CASE_ID_PARTNERS = {
   },
   'id5Id': {
     'params.partner': 'number',
-		"storage.refreshInSeconds": "number",
-		"storage.expires": "number"
+    'storage.refreshInSeconds': 'number',
+    'storage.expires': 'number'
   },
   'parrableId': {
     'params.timezoneFilter.allowedZones': 'array'
@@ -313,32 +313,32 @@ export const ID_PARTNERS_CUSTOM_VALUES = {
     'value': 'pubmatic-identity-hub'
   },
   {
-		"key": "params.externalModuleUrl",
-		"value": "https://cdn.id5-sync.com/api/1.0/id5PrebidModule.js"
-		}
+    'key': 'params.externalModuleUrl',
+    'value': 'https://cdn.id5-sync.com/api/1.0/id5PrebidModule.js'
+  }
   ],
   'identityLink': [{
     'key': 'storage.refreshInSeconds',
     'value': '1800'
   }],
-  "pubmaticId": [
-		{
-			"key": "storage.name",
-			"value": "pubmaticId"
-		},
-		{
-			"key": "storage.type",
-			"value": "cookie&html5"
-		},
-		{
-			"key": "storage.expires",
-			"value": 30
-		},
-		{
-			"key": "storage.refreshInSeconds",
-			"value": 86400
-		}
-	]
+  'pubmaticId': [
+    {
+      'key': 'storage.name',
+      'value': 'pubmaticId'
+    },
+    {
+      'key': 'storage.type',
+      'value': 'cookie&html5'
+    },
+    {
+      'key': 'storage.expires',
+      'value': 30
+    },
+    {
+      'key': 'storage.refreshInSeconds',
+      'value': 86400
+    }
+  ]
 };
 
 export const EXCLUDE_PARTNER_LIST = ['pubProvidedId'];
@@ -393,10 +393,10 @@ export const BROWSER_MAPPING = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1
   65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90];
 
 export const PRICE_GRANULARITY_KEYS = {
-    auto: "pbAg",
-    dense: "pbDg",
-    low: "pbLg",
-    medium: "pbMg",
-    high:"pbHg",
-    custom: "pbCg"
-  };
+  auto: 'pbAg',
+  dense: 'pbDg',
+  low: 'pbLg',
+  medium: 'pbMg',
+  high: 'pbHg',
+  custom: 'pbCg'
+};

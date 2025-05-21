@@ -5,23 +5,23 @@ import * as util from './util.js';
 import * as bmEntry from './bmEntry.js';
 
 // const refThis = this;
-let storedObject;
-let frequencyDepth;
-const PREFIX = 'PROFILE_AUCTION_INFO_';
+// let storedObject;
+// let frequencyDepth;
+// const PREFIX = 'PROFILE_AUCTION_INFO_';
 
-const TRACKER_METHODS = {
-  img: 1,
-  js: 2,
-  1: 'img',
-  2: 'js'
-}
+// const TRACKER_METHODS = {
+//   img: 1,
+//   js: 2,
+//   1: 'img',
+//   2: 'js'
+// }
 
-const TRACKER_EVENTS = {
-  impression: 1,
-  'viewable-mrc50': 2,
-  'viewable-mrc100': 3,
-  'viewable-video50': 4,
-}
+// const TRACKER_EVENTS = {
+//   impression: 1,
+//   'viewable-mrc50': 2,
+//   'viewable-mrc100': 3,
+//   'viewable-video50': 4,
+// }
 
 function createBidEntry(divID) { // TDD, i/o : done
   /* istanbul ignore else */
@@ -144,8 +144,6 @@ export { resetBid };
 
 /* end-test-block */
 
-
-
 // Returns property from localstorages slotlevel object
 export function getSlotLevelFrequencyDepth(frequencyDepth, prop, adUnit) {
   let freqencyValue;
@@ -199,54 +197,6 @@ export function getAllPartnersBidStatuses(bidMaps, divIds) {
   return status;
 }
 
-
-// removeIf(removeNativeRelatedCode)
-/**
- * based on action it executes either the clickTrackers or
- * impressionTrackers and javascriptTrackers.
- * Javascript trackers is a valid html, urls already wrapped in script tagsand its guidelines can be found at
- * iab spec document.
- * @param {*} bidDetails
- * @param {*} action
- */
-export function fireTracker(bidDetails, action) {
-  let trackers;
-
-  if (action === 'click') {
-    trackers = bidDetails['native'] && bidDetails['native'].ortb &&
-      bidDetails['native'].ortb.link && bidDetails['native'].ortb.link.clickTrackers;
-  } else if (action === 'imptrackers') {
-    const nativeResponse = bidDetails.native.ortb || bidDetails.native;
-
-    const impTrackers = (nativeResponse.eventtrackers || [])
-      .filter(({ event }) => event === TRACKER_EVENTS.impression);
-
-    const tally = { img: [], js: [] };
-    impTrackers.forEach(({ method, url }) => {
-      if (TRACKER_METHODS.hasOwnProperty(method)) {
-        tally[TRACKER_METHODS[method]].push(url);
-      }
-    });
-
-    if (tally.img.length == 0 && nativeResponse.imptrackers) {
-      tally.img = tally.img.concat(nativeResponse.imptrackers);
-    }
-    trackers = tally.img;
-
-    if (tally.js.length == 0 && nativeResponse.jstracker) {
-      // jstracker is already HTML markup
-      tally.js = tally.js.concat([nativeResponse.jstracker]);
-    }
-    if (tally.js.length) {
-      util.insertHtmlIntoIframe(tally.js.join('\n'));
-    }
-  }
-
-  (trackers || []).forEach(url => { setImageSrcToPixelURL(url, false); });
-}
-
-// endRemoveIf(removeNativeRelatedCode)
-
 // removeIf(removeNativeRelatedCode)
 function updateNativeTargtingKeys(keyValuePairs) {
   for (const key in keyValuePairs) {
@@ -279,7 +229,6 @@ export function getBrowser() {
   }
   return browserName;
 }
-
 
 // removeIf(removeNativeRelatedCode)
 // this function generates all satndard key-value pairs for a given bid and setup, set these key-value pairs in an object

@@ -260,26 +260,24 @@ export function getPriceGranularity() {
       util.logWarning(CONSTANTS.MESSAGES.M36);
       return null;
     }
-  }
-  else {
+  } else {
     return priceGranularity;
   }
 }
 
 export function getPriceGranularityBuckets() {
   let pgBuckets = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PRICE_GRANULARITY_BUCKETS] || null;
-  if (pgBuckets === null)
-    return null;
+  if (pgBuckets === null) { return null; }
 
   // API would be providing us with ranges as keyword, we need to raplace it by buckets before processing
   let transformedBuckets = {};
-  delete Object.assign(transformedBuckets, pgBuckets, { ['buckets']: pgBuckets['ranges'] })['ranges'];
+  delete Object.assign(transformedBuckets, pgBuckets, { 'buckets': pgBuckets['ranges'] })['ranges'];
 
   return transformedBuckets;
 }
 
 export function isBidPoolingEnabled() {
-	return parseInt(config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.BID_POOLING_ENABLED]) === 1;
+  return parseInt(config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.BID_POOLING_ENABLED]) === 1;
 };
 
 export function getGranularityMultiplier() {
@@ -421,10 +419,10 @@ export function getTimeoutForPBSRequest() {
 }
 
 export function getPubMaticAndAlias(s2sBidders) {
-  const pubMaticaliases = s2sBidders.filter(adapter => {		
-    if(config.alias && config.alias[adapter] && ( config.alias[adapter].name ? config.alias[adapter].name.includes("pubmatic") : config.alias[adapter].includes("pubmatic") )|| adapter.includes("pubmatic")) {
-			return adapter;
-		}
+  const pubMaticaliases = s2sBidders.filter(adapter => {
+    if ((config.alias && config.alias[adapter] && (config.alias[adapter].name ? config.alias[adapter].name.includes('pubmatic') : config.alias[adapter].includes('pubmatic'))) || adapter.includes('pubmatic')) {
+      return adapter;
+    }
   });
   return pubMaticaliases;
 }
@@ -457,19 +455,19 @@ export function getPrebidVersion() {
 }
 
 export function getGppConsent() {
-	const gpp = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CONSENT] || CONSTANTS.CONFIG.DEFAULT_GPP_CONSENT;
-	return gpp === "1";
+  const gpp = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CONSENT] || CONSTANTS.CONFIG.DEFAULT_GPP_CONSENT;
+  return gpp === '1';
 }
 
 export function getGppCmpApi() {
-	return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CMPAPI] || CONSTANTS.CONFIG.DEFAULT_GPP_CMPAPI;
+  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CMPAPI] || CONSTANTS.CONFIG.DEFAULT_GPP_CMPAPI;
 }
 
 export function getGppTimeout() {
-	const gppTimeout = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_TIMEOUT];
-	return gppTimeout ? window.parseInt(gppTimeout) : CONSTANTS.CONFIG.DEFAULT_GPP_TIMEOUT;
+  const gppTimeout = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_TIMEOUT];
+  return gppTimeout ? window.parseInt(gppTimeout) : CONSTANTS.CONFIG.DEFAULT_GPP_TIMEOUT;
 }
 
 export function shouldClearTargeting() {
-	return window.PWT.shouldClearTargeting !== undefined ? Boolean(window.PWT.shouldClearTargeting) : true;
+  return window.PWT.shouldClearTargeting !== undefined ? Boolean(window.PWT.shouldClearTargeting) : true;
 };

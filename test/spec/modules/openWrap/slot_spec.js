@@ -122,7 +122,7 @@ describe('OpenWrap Core Module: slot.js', function () {
 
     it('should update status correctly after display', function () {
       slot.updateStatusAfterRendering(false);
-      
+
       expect(slot.getStatus()).to.equal(CONSTANTS.SLOT_STATUS.DISPLAYED);
       expect(slot.getArguments()).to.deep.equal([]);
       expect(slot.isDisplayFunctionCalled()).to.be.false;
@@ -131,7 +131,7 @@ describe('OpenWrap Core Module: slot.js', function () {
 
     it('should update status correctly after refresh', function () {
       slot.updateStatusAfterRendering(true);
-      
+
       expect(slot.getStatus()).to.equal(CONSTANTS.SLOT_STATUS.DISPLAYED);
       expect(slot.getArguments()).to.deep.equal([]);
       expect(slot.isDisplayFunctionCalled()).to.be.true;
