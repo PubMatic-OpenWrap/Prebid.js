@@ -2390,4 +2390,232 @@ describe('dfpOpenWrap/gpt', () => {
       expect(gpt.processDisplayCalledSlot.called).to.be.false;
     });
   });
+
+  describe('addHooks', () => {
+    let mockWindow;
+    let mockGoogletag;
+    let mockPubAdsObj;
+
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      
+      // Create mock pubads object with methods to hook
+      mockPubAdsObj = {
+        disableInitialLoad: function() {},
+        enableSingleRequest: function() {},
+        refresh: function() {},
+        setTargeting: function() {}
+      };
+      
+      // Create mock googletag object
+      mockGoogletag = {
+        pubads: sandbox.stub().returns(mockPubAdsObj),
+        destroySlots: function() {},
+        display: function() {}
+      };
+      
+      // Create mock window with googletag
+      mockWindow = {
+        googletag: mockGoogletag
+      };
+      
+      // Stub utility functions
+      mockUtils.util.addHookOnFunction = sandbox.stub().returns(true);
+      mockUtils.util.isObject = sandbox.stub().returns(true);
+      mockUtils.util.isFunction = sandbox.stub().returns(true);
+      
+      // Stub hook creation functions
+      sandbox.stub(gpt, 'newDisableInitialLoadFunction').returns(function() {});
+      sandbox.stub(gpt, 'newEnableSingleRequestFunction').returns(function() {});
+      sandbox.stub(gpt, 'newRefreshFuncton').returns(function() {});
+      sandbox.stub(gpt, 'newSetTargetingFunction').returns(function() {});
+      sandbox.stub(gpt, 'newDestroySlotsFunction').returns(function() {});
+      sandbox.stub(gpt, 'newAddHookOnGoogletagDisplay').returns(true);
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it('should add hooks to all GPT functions when googletag is available', () => {
+      // Execute
+      const result = gpt.addHooks(mockWindow);
+      
+      // Verify
+     
+      expect(result).to.be.true;
+      expect(mockUtils.util.addHookOnFunction.callCount).to.equal(5);
+      expect(mockUtils.util.addHookOnFunction.calledWith(mockPubAdsObj, false, 'disableInitialLoad')).to.be.true;
+      expect(mockUtils.util.addHookOnFunction.calledWith(mockPubAdsObj, false, 'enableSingleRequest')).to.be.true;
+      expect(mockUtils.util.addHookOnFunction.calledWith(mockPubAdsObj, false, 'refresh')).to.be.true;
+      expect(mockUtils.util.addHookOnFunction.calledWith(mockPubAdsObj, false, 'setTargeting')).to.be.true;      
+      expect(mockUtils.util.addHookOnFunction.calledWith(mockGoogletag, false, 'destroySlots')).to.be.true;      
+    });
+
+    it('should return false when window is not an object', () => {
+      // Setup
+      mockUtils.util.isObject.returns(false);
+      
+      // Execute
+      const result = gpt.addHooks(null);
+      
+      // Verify
+      expect(result).to.be.false;
+      expect(mockUtils.util.addHookOnFunction.called).to.be.false;
+    });
+
+    it('should return false when googletag is not an object', () => {
+      // Setup
+      mockUtils.util.isObject.withArgs(mockWindow).returns(true);
+      mockUtils.util.isObject.withArgs(mockWindow.googletag).returns(false);
+      
+      // Execute
+      const result = gpt.addHooks(mockWindow);
+      
+      // Verify
+      expect(result).to.be.false;
+      expect(mockUtils.util.addHookOnFunction.called).to.be.false;
+    });
+
+    it('should return false when pubads is not a function', () => {
+      // Setup
+      mockUtils.util.isFunction.withArgs(mockWindow.googletag.pubads).returns(false);
+      
+      // Execute
+      const result = gpt.addHooks(mockWindow);
+      
+      // Verify
+      expect(result).to.be.false;
+      expect(mockUtils.util.addHookOnFunction.called).to.be.false;
+    });    
+  });
+
+  describe('addHooksIfPossible', () => {
+    let mockWindow;
+    
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      
+      // Create mock window with googletag
+      mockWindow = {
+        googletag: {
+          cmd: [],
+          apiReady: false,
+          pubads: sandbox.stub().returns({
+            setTargeting: sandbox.stub()
+          })
+        }
+      };
+      
+      // Stub utility functions
+      mockUtils.util.isObject = sandbox.stub().returns(true);
+      mockUtils.util.isArray = sandbox.stub().returns(true);
+      mockUtils.util.isFunction = sandbox.stub().returns(true);
+      mockUtils.util.log = sandbox.stub();
+      mockUtils.util.logError = sandbox.stub();
+      
+      // Stub CONFIG.isIdentityOnly
+      mockUtils.CONFIG.isIdentityOnly = sandbox.stub().returns(false);
+      
+      // Stub addHooks function
+      sandbox.stub(gpt, 'addHooks').returns(true);
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it('should add hook to googletag.cmd when GPT is not ready', () => {
+      // Setup
+      mockWindow.googletag.cmd.unshift = sandbox.stub();
+      
+      // Execute
+      const result = gpt.addHooksIfPossible(mockWindow);
+      
+      // Verify
+      expect(result).to.be.true;
+      expect(mockWindow.googletag.cmd.unshift.calledOnce).to.be.true;
+      expect(mockUtils.util.log.calledWith('Succeeded to load before GPT')).to.be.true;
+    });
+
+    it('should return false when GPT is already ready', () => {
+      // Setup
+      mockWindow.googletag.apiReady = true;
+      
+      // Execute
+      const result = gpt.addHooksIfPossible(mockWindow);
+      
+      // Verify
+      expect(result).to.be.false;
+      expect(mockUtils.util.logError.calledWith('Failed to load before GPT')).to.be.true;
+    });
+
+    it('should return false when cmd is not an array', () => {
+      // Setup
+      mockUtils.util.isArray.returns(false);
+      
+      // Execute
+      const result = gpt.addHooksIfPossible(mockWindow);
+      
+      // Verify
+      expect(result).to.be.false;
+      expect(mockUtils.util.logError.calledWith('Failed to load before GPT')).to.be.true;
+    });
+
+    it('should return false when unshift is not a function', () => {
+      // Setup
+      mockUtils.util.isFunction.returns(false);
+      
+      // Execute
+      const result = gpt.addHooksIfPossible(mockWindow);
+      
+      // Verify
+      expect(result).to.be.false;
+      expect(mockUtils.util.logError.calledWith('Failed to load before GPT')).to.be.true;
+    });
+
+    it('should return false when in identity-only mode', () => {
+      // Setup
+      mockUtils.CONFIG.isIdentityOnly.returns(true);
+      
+      // Execute
+      const result = gpt.addHooksIfPossible(mockWindow);
+      
+      // Verify
+      expect(result).to.be.false;
+      expect(mockUtils.util.log.called).to.be.false;
+      expect(mockUtils.util.logError.called).to.be.false;
+    });
+  });
+
+  describe('initSafeFrameListener', () => {
+    let mockWindow;
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      
+      // Create mock window with PWT object
+      mockWindow = {
+        PWT: {}
+      };
+      
+      // Stub utility functions
+      mockUtils.util.addMessageEventListenerForSafeFrame = sandbox.stub();
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it('should not add message event listener when already added', () => {
+      // Setup
+      mockWindow.PWT.safeFrameMessageListenerAdded = true;
+      
+      // Execute
+      gpt.initSafeFrameListener(mockWindow);
+      
+      // Verify
+      expect(mockUtils.util.addMessageEventListenerForSafeFrame.called).to.be.false;
+      expect(mockWindow.PWT.safeFrameMessageListenerAdded).to.be.true;
+    });
+  });
 });
