@@ -2618,4 +2618,199 @@ describe('dfpOpenWrap/gpt', () => {
       expect(mockWindow.PWT.safeFrameMessageListenerAdded).to.be.true;
     });
   });
+
+  describe('storeInSlotsMap', () => {
+    let mockGoogleSlot;
+    let dmSlotName;
+    let mockSlot;
+    let originalSendTargetingInfoIsSet;
+    
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      
+      // Save original value
+      originalSendTargetingInfoIsSet = gpt.sendTargetingInfoIsSet;
+      
+      // Clear slotsMap for each test
+      Object.keys(slotsMap).forEach(key => {
+        delete slotsMap[key];
+      });
+      
+      // Set up test variables
+      dmSlotName = 'test-div-id';
+      
+      // Create mock Google slot with required methods
+      mockGoogleSlot = {
+        getAdUnitPath: sandbox.stub().returns('/test/ad/unit/path'),
+        getTargetingKeys: sandbox.stub().returns(['key1', 'key2']),
+        getTargeting: sandbox.stub(),
+        getSizes: sandbox.stub().returns([
+          { getWidth: () => 300, getHeight: () => 250 },
+          { getWidth: () => 728, getHeight: () => 90 }
+        ]),
+        getSlotId: sandbox.stub().returns({
+          getId: sandbox.stub().returns('test_slot_123')
+        })
+      };
+      
+      // Set up targeting values
+      mockGoogleSlot.getTargeting.withArgs('key1').returns('value1');
+      mockGoogleSlot.getTargeting.withArgs('key2').returns('value2');
+      
+      // Create mock slot
+      mockSlot = {
+        setDivID: sandbox.stub().returnsThis(),
+        setPubAdServerObject: sandbox.stub().returnsThis(),
+        setAdUnitID: sandbox.stub().returnsThis(),
+        setAdUnitIndex: sandbox.stub().returnsThis(),
+        setSizes: sandbox.stub().returnsThis(),
+        setStatus: sandbox.stub().returnsThis(),
+        setKeyValue: sandbox.stub().returnsThis(),
+        getSizes: sandbox.stub().returns([[300, 250], [728, 90]])
+      };
+      
+      // Mock utility functions
+      mockUtils.util.isOwnProperty = sandbox.stub();
+      mockUtils.util.isObject = sandbox.stub().returns(true);
+      mockUtils.util.isFunction = sandbox.stub().returns(true);
+      mockUtils.util.forEachOnArray = sandbox.stub().callsFake((array, callback) => {
+        if (array && array.length) {
+          for (let i = 0; i < array.length; i++) {
+            callback(i, array[i]);
+          }
+        }
+      });
+      mockUtils.util.createVLogInfoPanel = sandbox.stub();
+      mockUtils.util.logWarning = sandbox.stub();
+      
+      // Mock SLOT module
+      mockUtils.SLOT.createSlot = sandbox.stub().returns(mockSlot);
+      
+      // Mock getAdUnitIndex and getAdSlotSizesArray
+      sandbox.stub(gpt, 'getAdUnitIndex').returns(123);
+      sandbox.stub(gpt, 'getAdSlotSizesArray').returns([[300, 250], [728, 90]]);
+    });
+    
+    afterEach(() => {
+      // Restore original value
+      gpt.sendTargetingInfoIsSet = originalSendTargetingInfoIsSet;
+      
+      sandbox.restore();
+    });
+    
+    it('should create a new slot when the slot does not exist in slotsMap', () => {
+      // Setup
+      mockUtils.util.isOwnProperty.returns(false);
+      
+      // Execute
+      gpt.storeInSlotsMap(dmSlotName, mockGoogleSlot, false);
+      
+      // Verify
+      expect(mockUtils.util.isOwnProperty.called).to.be.true;
+      expect(mockUtils.SLOT.createSlot.called).to.be.true;
+      expect(mockSlot.setDivID.called).to.be.true;
+      expect(mockSlot.setPubAdServerObject.called).to.be.true;
+      expect(mockSlot.setAdUnitID.called).to.be.true;
+      expect(mockSlot.setAdUnitIndex.called).to.be.true;
+      expect(mockSlot.setSizes.called).to.be.true;
+      expect(mockSlot.setStatus.called).to.be.true;
+      
+      // Verify createVLogInfoPanel was called
+      expect(mockUtils.util.createVLogInfoPanel.calledWith(dmSlotName, [[300, 250], [728, 90]])).to.be.true;
+    });
+    
+    it('should set targeting key-value pairs when sendTargetingInfoIsSet is true', () => {
+      // Setup
+      mockUtils.util.isOwnProperty.returns(false);
+      
+      // Execute
+      gpt.storeInSlotsMap(dmSlotName, mockGoogleSlot, false);
+      
+      // Verify
+      expect(mockSlot.setKeyValue.calledWith('key1', 'value1')).to.be.true;
+      expect(mockSlot.setKeyValue.calledWith('key2', 'value2')).to.be.true;
+    });
+    
+    it('should update sizes for an existing slot when not in display flow', () => { 
+      // Setup
+      mockUtils.util.isOwnProperty.returns(true);
+      
+      // Create a mock existing slot
+      slotsMap[dmSlotName] = {
+        setSizes: sandbox.stub()
+      };
+      
+      // Execute
+      gpt.storeInSlotsMap(dmSlotName, mockGoogleSlot, false);
+      
+      // Verify
+      expect(mockUtils.SLOT.createSlot.called).to.be.false;
+    });
+    
+    it('should not update sizes for an existing slot when in display flow', () => {
+      // Setup
+      mockUtils.util.isOwnProperty.returns(true);
+      
+      // Create a mock existing slot
+      slotsMap[dmSlotName] = {
+        setSizes: sandbox.stub()
+      };
+      
+      // Execute
+      gpt.storeInSlotsMap(dmSlotName, mockGoogleSlot, true);
+      
+      // Verify
+      expect(slotsMap[dmSlotName].setSizes.called).to.be.false;
+      expect(mockUtils.SLOT.createSlot.called).to.be.false;
+    });
+    
+    it('should handle empty targeting keys array', () => {
+      // Setup
+      mockUtils.util.isOwnProperty.returns(false);
+      mockGoogleSlot.getTargetingKeys.returns([]);
+      
+      // Execute
+      gpt.storeInSlotsMap(dmSlotName, mockGoogleSlot, false);
+      
+      // Verify
+      expect(mockSlot.setKeyValue.called).to.be.false;
+    });
+    
+    
+    it('should not set targeting when JSON is not an object', () => {
+      // Setup
+      mockUtils.util.isOwnProperty.returns(false);
+      mockUtils.util.isObject.withArgs(JSON).returns(false);
+      
+      // Execute
+      gpt.storeInSlotsMap(dmSlotName, mockGoogleSlot, false);
+      
+      // Verify
+      expect(mockSlot.setKeyValue.called).to.be.false;
+    });
+    
+    it('should not set targeting when JSON.stringify is not a function', () => {
+      // Setup
+      mockUtils.util.isOwnProperty.returns(false);
+      mockUtils.util.isFunction.withArgs(JSON.stringify).returns(false);
+      
+      // Execute
+      gpt.storeInSlotsMap(dmSlotName, mockGoogleSlot, false);
+      
+      // Verify
+      expect(mockSlot.setKeyValue.called).to.be.false;
+    });
+    
+    it('should handle null or undefined dmSlotName', () => {
+      // Execute - should not throw
+      expect(() => {
+        gpt.storeInSlotsMap(null, mockGoogleSlot, false);
+      }).to.not.throw();
+      
+      expect(() => {
+        gpt.storeInSlotsMap(undefined, mockGoogleSlot, false);
+      }).to.not.throw();
+    });
+  });
+
 });
