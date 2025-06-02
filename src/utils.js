@@ -104,7 +104,9 @@ export const internal = {
   parseQS,
   formatQS,
   deepEqual,
-  resetWinDimensions
+  resetWinDimensions,
+  isEmpty,
+  skipUndefinedValues
 };
 
 let prebidInternal = {};
@@ -1191,6 +1193,17 @@ export function cyrb53Hash(str, seed = 0) {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString();
 }
 
+export function skipUndefinedValues (obj) {
+  var newObj = {};
+  var prop;
+  for (prop in obj) {
+    if (obj[prop]) {
+      newObj[prop] = obj[prop];
+    }
+  }
+  return newObj;
+}
+
 /**
  * returns the result of `JSON.parse(data)`, or undefined if that throws an error.
  * @param data
@@ -1377,4 +1390,46 @@ export function triggerNurlWithCpm(bid, cpm) {
     );
     triggerPixel(bid.nurl);
   }
+}
+
+// To ensure that isGzipCompressionSupported() doesn’t become an overhead, we have used memoization to cache the result after the first execution.
+// This way, even if the function is called multiple times, it will only perform the actual check once and return the cached result in subsequent calls.
+export const isGzipCompressionSupported = (function () {
+  let cachedResult; // Store the result
+
+  return function () {
+    if (cachedResult !== undefined) {
+      return cachedResult; // Return cached result if already computed
+    }
+
+    try {
+      if (typeof window.CompressionStream === 'undefined') {
+        cachedResult = false;
+      } else {
+        // eslint-disable-next-line no-unused-vars
+        let newCompressionStream = new window.CompressionStream('gzip'); // Will throw an error if unsupported
+        cachedResult = true;
+      }
+    } catch (error) {
+      cachedResult = false;
+    }
+
+    return cachedResult;
+  };
+})();
+
+// Make sure to use isGzipCompressionSupported before calling this function
+export async function compressDataWithGZip(data) {
+  const encoder = new TextEncoder();
+  const encodedData = encoder.encode(data); // Convert to Uint8Array
+  // eslint-disable-next-line no-unused-vars
+  const originalSize = encodedData.length; // Get original data size in bytes
+
+  const compressedStream = new Blob([encodedData])
+    .stream()
+    .pipeThrough(new window.CompressionStream('gzip'));
+
+  const compressedBlob = await new Response(compressedStream).blob();
+  const compressedArrayBuffer = await compressedBlob.arrayBuffer();
+  return new Uint8Array(compressedArrayBuffer);
 }
