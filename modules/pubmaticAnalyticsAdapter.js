@@ -19,7 +19,7 @@ const FLOOR_VALUES = {
   TIMEOUT: 'timeout'
 };
 
-/// /////////// CONSTANTS //////////////
+/// /////////// CONSTANTS ///////////////
 const ADAPTER_CODE = 'pubmatic';
 const VENDOR_OPENWRAP = 'openwrap';
 const DISPLAY_MANAGER = 'Prebid.js';
@@ -52,6 +52,22 @@ const MEDIATYPE = {
   VIDEO: 1,
   NATIVE: 2
 }
+
+// TODO : Remove - Once BM calculation moves to Server Side
+const BROWSER_MAP = [
+  { value: /(firefox)\/([\w\.]+)/i, key: 12 }, // Firefox
+  { value: /\b(?:crios)\/([\w\.]+)/i, key: 1 }, // Chrome for iOS
+  { value: /edg(?:e|ios|a)?\/([\w\.]+)/i, key: 2 }, // Edge
+  { value: /(opera|opr)(?:.+version\/|[\/ ]+)([\w\.]+)/i, key: 3 }, // Opera
+  { value: /(?:ms|\()(ie) ([\w\.]+)|(?:trident\/[\w\.]+)/i, key: 4 }, // Internet Explorer
+  { value: /fxios\/([-\w\.]+)/i, key: 5 }, // Firefox for iOS
+  { value: /((?:fban\/fbios|fb_iab\/fb4a)(?!.+fbav)|;fbav\/([\w\.]+);)/i, key: 6 }, // Facebook In-App Browser
+  { value: / wv\).+(chrome)\/([\w\.]+)/i, key: 7 }, // Chrome WebView
+  { value: /droid.+ version\/([\w\.]+)\b.+(?:mobile safari|safari)/i, key: 8 }, // Android Browser
+  { value: /(chrome|chromium|crios)\/v?([\w\.]+)/i, key: 9 }, // Chrome
+  { value: /version\/([\w\.\,]+) .*mobile\/\w+ (safari)/i, key: 10 }, // Safari Mobile
+  { value: /version\/([\w(\.|\,)]+) .*(mobile ?safari|safari)/i, key: 11 }, // Safari
+];
 const PREFIX = 'PROFILE_AUCTION_INFO_'
 
 /// /////////// VARIABLES //////////////
@@ -214,6 +230,17 @@ function getDevicePlatform() {
     }
   } catch (ex) {}
   return deviceType;
+}
+
+// TODO : Remove - Once BM calculation moves to Server Side
+function getBrowserType() {
+  const userAgent = navigator?.userAgent;
+  let browserIndex = userAgent == null ? -1 : 0;
+
+  if (userAgent) {
+    browserIndex = BROWSER_MAP.find(({ value }) => value.test(userAgent))?.key || 0;
+  }
+  return browserIndex;
 }
 
 function getValueForKgpv(bid, adUnitId) {
@@ -450,7 +477,7 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid, e) {
         'ocpm': bid.bidResponse ? (bid.bidResponse.originalCpm || 0) : 0,
         'ocry': bid.bidResponse ? (bid.bidResponse.originalCurrency || CURRENCY_USD) : CURRENCY_USD,
         'frv': bid.bidResponse ? bid.bidResponse.floorData?.floorRuleValue : undefined,
-        'fv': bid.bidResponse ? bid.bidResponse?.floorData?.floorValue : undefined,
+        'fv': bid.bidResponse ? bid.bidResponse.floorData?.floorValue : undefined,
         'md': bid.bidResponse ? getMetadata(bid.bidResponse.meta) : undefined,
         'pb': pg || undefined
       });
@@ -589,17 +616,17 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   let auctionId = e.auctionId;
   let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId]?.referer || '';
   let auctionCache = cache.auctions[auctionId];
-  let floorFetchStatus = getFloorFetchStatus(auctionCache?.floorData);
   let wiid = auctionCache?.wiid || auctionId;
   let floorData = auctionCache?.floorData;
+  let floorFetchStatus = getFloorFetchStatus(floorData);
   let outputObj = { s: [] };
   let pixelURL = END_POINT_BID_LOGGER;
 
-  if (!auctionCache) {
-    return;
-  }
+  const country = e.bidderRequests?.length > 0
+    ? e.bidderRequests.find(bidder => bidder?.bidderCode === ADAPTER_CODE)?.ortb2?.user?.ext?.ctr || ''
+    : '';
 
-  if (auctionCache.sent) {
+  if (!auctionCache || auctionCache.sent) {
     return;
   }
 
@@ -614,7 +641,6 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['pdvid'] = '' + profileVersionId;
   outputObj['psl'] = getPSL(auctionId);
   outputObj['dvc'] = {'plt': getDevicePlatform()};
-  outputObj['bm'] = window.PWT && window.PWT.browserMapping;
   outputObj['ih'] = identityOnly;
   outputObj['it'] = getIntegrationType()
   outputObj['tpv'] = frequencyDepth?.pageView;
@@ -625,6 +651,8 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['tgid'] = getTgId();
   outputObj['dm'] = DISPLAY_MANAGER;
   outputObj['dmv'] = '$prebid.version$' || '-1';
+  outputObj['bm'] = getBrowserType();
+  outputObj['ctr'] = country ? country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '';
 
   if (floorData) {
     const floorRootValues = getFloorsCommonField(floorData?.floorRequestData);
@@ -644,7 +672,6 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     }
   }
 
-  window.PWT?.CC?.cc && (outputObj.ctr = window.PWT.CC.cc);
   outputObj.s = Object.keys(auctionCache.adUnitCodes).reduce(function(slotsArray, adUnitId) {
     let adUnit = auctionCache.adUnitCodes[adUnitId];
     let origAdUnit = getAdUnit(auctionCache.origAdUnits, adUnitId) || {};
@@ -691,8 +718,8 @@ function executeBidsLoggerCall(e, highestCpmBids) {
 }
 
 function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
-  const winningBidId = cache.auctions[auctionId].adUnitCodes[adUnitId].bidWon;
-  const winningBids = cache.auctions[auctionId].adUnitCodes[adUnitId].bids[winningBidId];
+  const winningBidId = cache.auctions[auctionId]?.adUnitCodes[adUnitId]?.bidWon;
+  const winningBids = cache.auctions[auctionId]?.adUnitCodes[adUnitId]?.bids[winningBidId];
   if (!winningBids) {
     logWarn(LOG_PRE_FIX + 'Could not find winningBids for : ', auctionId);
     return;
@@ -700,19 +727,19 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
 
   let winningBid = winningBids[0];
   if (winningBids.length > 1) {
-    winningBid = winningBids.filter(bid => bid.adId === cache.auctions[auctionId].adUnitCodes[adUnitId].bidWonAdId)[0];
+    winningBid = winningBids.filter(bid => bid.adId === cache.auctions[auctionId]?.adUnitCodes[adUnitId]?.bidWonAdId)[0];
   }
   const adapterName = getAdapterNameForAlias(winningBid.adapterCode || winningBid.bidder);
   const generatedBidId = winningBid.bidResponse && winningBid.bidResponse.prebidBidId;
   if (isOWPubmaticBid(adapterName) && isS2SBidder(winningBid.bidder)) {
     return;
   }
-  let origAdUnit = getAdUnit(cache.auctions[auctionId].origAdUnits, adUnitId) || {};
+  let origAdUnit = getAdUnit(cache.auctions[auctionId]?.origAdUnits, adUnitId) || {};
   let owAdUnitId = origAdUnit.owAdUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId;
   let auctionCache = cache.auctions[auctionId];
-  let floorData = auctionCache.floorData;
+  let floorData = auctionCache?.floorData;
   let wiid = cache.auctions[auctionId]?.wiid || auctionId;
-  let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId].referer || '';
+  let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId]?.referer || '';
   let adv = winningBid.bidResponse ? getAdDomain(winningBid.bidResponse) || undefined : undefined;
   let floorFetchStatus = getFloorFetchStatus(floorData);
   let fskp = floorData && floorFetchStatus ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined;
@@ -720,7 +747,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   let pixelURL = END_POINT_WIN_BID_LOGGER;
 
   pixelURL += 'pubid=' + publisherId;
-  pixelURL += '&purl=' + enc(referrer);
+  pixelURL += '&purl=' + enc(config.getConfig('pageUrl') || cache.auctions[auctionId]?.referer || '');
   pixelURL += '&tst=' + Math.round((new window.Date()).getTime() / 1000);
   pixelURL += '&iid=' + enc(wiid);
   pixelURL += '&bidid=' + (generatedBidId ? enc(generatedBidId) : enc(winningBidId));
@@ -730,8 +757,8 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   pixelURL += '&au=' + enc(owAdUnitId);
   pixelURL += '&pn=' + enc(adapterName);
   pixelURL += '&bc=' + enc(winningBid.bidderCode || winningBid.bidder);
-  pixelURL += '&en=' + enc(winningBid.bidResponse.bidPriceUSD);
-  pixelURL += '&eg=' + enc(winningBid.bidResponse.bidGrossCpmUSD);
+  pixelURL += '&en=' + enc(winningBid.bidResponse?.bidPriceUSD);
+  pixelURL += '&eg=' + enc(winningBid.bidResponse?.bidGrossCpmUSD);
   pixelURL += '&kgpv=' + enc(getValueForKgpv(winningBid, adUnitId));
   pixelURL += '&rf=' + enc(origAdUnit?.pubmaticAutoRefresh?.isRefreshed ? 1 : 0);
   pixelURL += '&origbidid=' + enc(winningBid?.bidResponse?.partnerImpId || winningBidId);
@@ -755,7 +782,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   if (floorData) {
     const floorRootValues = getFloorsCommonField(floorData.floorRequestData);
     if (floorRootValues) {
-      const { ffs, fsrc, fp, mv } = floorRootValues;
+      const { ffs, fsrc, fp, mv } = floorRootValues || {};
       const params = { ffs, fsrc, fp, fmv: mv };
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined) {
