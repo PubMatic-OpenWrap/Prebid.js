@@ -72,12 +72,12 @@ function wrapURI(uri, impTrackerURLs) {
  * @param {Object} [options.index=auctionManager.index] - Index object, defaulting to `auctionManager.index`.
  * @return {Object|null} - The payload to be sent to the prebid-server endpoints, or null if the bid can't be converted cleanly.
  */
-function toStorageRequest(bid, {index = auctionManager.index} = {}) {
+async function  toStorageRequest(bid, {index = auctionManager.index} = {}) {
   let vastValue = bid.vastXml ? bid.vastXml : wrapURI(bid.vastUrl, bid.vastImpUrl);
   const auction = index.getAuction(bid);
   /* istanbul ignore next */
   if (window && window.ima) {
-    vastValue = getGlobal().injectTrackerForIMA(bid, vastValue);
+    vastValue = await getGlobal().injectTrackerForIMA(bid, vastValue);
   }
   const ttlWithBuffer = Number(bid.ttl) + ttlBufferInSeconds;
   let payload = {
@@ -152,9 +152,9 @@ function shimStorageCallback(done) {
  * @param {videoCacheStoreCallback} [done] An optional callback which should be executed after
  * the data has been stored in the cache.
  */
-export function store(bids, done, getAjax = ajaxBuilder) {
+export async function store(bids, done, getAjax = ajaxBuilder) {
   const requestData = {
-    puts: bids.map(toStorageRequest)
+    puts: await Promise.all(bids.map(toStorageRequest))
   };
   const ajax = getAjax(config.getConfig('cache.timeout'));
   ajax(config.getConfig('cache.url'), shimStorageCallback(done), JSON.stringify(requestData), {
