@@ -473,6 +473,11 @@
             "name": "brandmetricsRtdProvider",
             "path": "/modules/brandmetricsRtdProvider.js",
             "module": "brandmetricsRtdProvider"
+        },
+        {
+            "name": "pubmaticRtdProvider",
+            "path": "/modules/pubmaticRtdProvider.js",
+            "module": "pubmaticRtdProvider"
         }
     ],
     "Analytics Module": [
