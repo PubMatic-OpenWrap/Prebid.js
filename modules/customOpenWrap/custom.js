@@ -1,27 +1,26 @@
 let CONFIG = {};
 let CONSTANTS = {};
 let util = {};
-let bidManager = {};
+// let bidManager = {};
 let SLOT = {};
 let prebid = {};
 
-//var usePrebidKeys = {};
-//var isPrebidPubMaticAnalyticsEnabled = {};
+// var usePrebidKeys = {};
+// var isPrebidPubMaticAnalyticsEnabled = {};
 
-export function initializeModule(customUtils){
+export function initializeModule(customUtils) {
   CONFIG = customUtils.CONFIG;
   CONSTANTS = customUtils.CONSTANTS;
   util = customUtils.util;
-  bidManager = customUtils.bidManager;
+  // bidManager = customUtils.bidManager;
   SLOT = customUtils.SLOT;
   prebid = customUtils.prebid;
 
-  //usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
+  // usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
   // isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
   customUtils.consentConfigResolver.init();
   init(window);
 }
-
 
 // ToDo: add a functionality / API to remove extra added wrpper keys
 var wrapperTargetingKeys = {}; // key is div id
@@ -102,23 +101,6 @@ function defineWrapperTargetingKeys(object) {
 export { defineWrapperTargetingKeys };
 
 /* end-test-block */
-
-// removeIf(removeLegacyAnalyticsRelatedCode)
-function initSafeFrameListener(theWindow) {
-  if (!theWindow.PWT.safeFrameMessageListenerAdded) {
-    util.addMessageEventListenerForSafeFrame(theWindow);
-    theWindow.PWT.safeFrameMessageListenerAdded = true;
-  }
-}
-
-// endRemoveIf(removeLegacyAnalyticsRelatedCode)
-
-// removeIf(removeLegacyAnalyticsRelatedCode)
-/* start-test-block */
-export { initSafeFrameListener };
-
-/* end-test-block */
-// endRemoveIf(removeLegacyAnalyticsRelatedCode)
 
 function validateAdUnitObject(anAdUnitObject) {
   if (!util.isObject(anAdUnitObject)) {
@@ -203,27 +185,16 @@ function findWinningBidAndGenerateTargeting(divId) {
   if (CONFIG.isPrebidPubMaticAnalyticsEnabled() === true) {
     data = prebid.getBid(divId);
     // todo: we might need to change some proprty names in wb (from PBJS)
-  } else {
-    // removeIf(removeLegacyAnalyticsRelatedCode)
-    data = bidManager.getBid(divId);
-    // endRemoveIf(removeLegacyAnalyticsRelatedCode)
   }
   const winningBid = data.wb || null;
   const keyValuePairs = data.kvp || null;
   const ignoreTheseKeys = !CONFIG.isUsePrebidKeysEnabled() ? CONSTANTS.IGNORE_PREBID_KEYS : {};
 
-  // removeIf(removeLegacyAnalyticsRelatedCode)
-  /* istanbul ignore else */
-  if (CONFIG.isPrebidPubMaticAnalyticsEnabled() === false && winningBid && winningBid.getNetEcpm() > 0) {
-    bidManager.setStandardKeys(winningBid, keyValuePairs);
-  }
-  // endRemoveIf(removeLegacyAnalyticsRelatedCode)
-
   // attaching keyValuePairs from adapters
   util.forEachOnObject(keyValuePairs, key => {
     // if winning bid is not pubmatic then remove buyId targeting key. Ref : UOE-5277
     /* istanbul ignore else */
-    if (util.isOwnProperty(ignoreTheseKeys, key) || (winningBid && winningBid.adapterID !== "pubmatic" && util.isOwnProperty({"hb_buyid_pubmatic":1,"pwtbuyid_pubmatic":1}, key))) {
+    if (util.isOwnProperty(ignoreTheseKeys, key) || (winningBid && winningBid.adapterID !== 'pubmatic' && util.isOwnProperty({ 'hb_buyid_pubmatic': 1, 'pwtbuyid_pubmatic': 1 }, key))) {
       delete keyValuePairs[key];
     } else {
       defineWrapperTargetingKey(key);
@@ -297,26 +268,26 @@ function origCustomServerExposedAPI(arrayOfAdUnits, callbackFunction) {
   }
 
   // new approach without adapter-managers
-  prebid.fetchBids(qualifyingSlots, function(){
-		let winningBids = {}; // object:: { code : response bid or just key value pairs }
-		// we should loop on qualifyingSlotDivIds to avoid confusion if two parallel calls are fired to our PWT.requestBids 
-		util.forEachOnArray(qualifyingSlotDivIds, function(index, divId) {
-			var code = mapOfDivToCode[divId];				
-			winningBids[code] = findWinningBidAndGenerateTargeting(divId);
-			// we need to delay the realignment as we need to do it post creative rendering :)
-			// delaying by 1000ms as creative rendering may tke time
-			setTimeout(util.realignVLogInfoPanel, 1000, divId);
-		});
+  prebid.fetchBids(qualifyingSlots, function () {
+    let winningBids = {}; // object:: { code : response bid or just key value pairs }
+    // we should loop on qualifyingSlotDivIds to avoid confusion if two parallel calls are fired to our PWT.requestBids
+    util.forEachOnArray(qualifyingSlotDivIds, function (index, divId) {
+      var code = mapOfDivToCode[divId];
+      winningBids[code] = findWinningBidAndGenerateTargeting(divId);
+      // we need to delay the realignment as we need to do it post creative rendering :)
+      // delaying by 1000ms as creative rendering may tke time
+      setTimeout(util.realignVLogInfoPanel, 1000, divId);
+    });
 
-      // for each adUnit in arrayOfAdUnits find the winningBids, we need to return this updated arrayOfAdUnits
-		util.forEachOnArray(arrayOfAdUnits, function(index, anAdUnitObject) {
-			if (winningBids.hasOwnProperty(anAdUnitObject.code)) {
-				anAdUnitObject.bidData = winningBids[anAdUnitObject.code];
-			}
-		});
+    // for each adUnit in arrayOfAdUnits find the winningBids, we need to return this updated arrayOfAdUnits
+    util.forEachOnArray(arrayOfAdUnits, function (index, anAdUnitObject) {
+      if (winningBids.hasOwnProperty(anAdUnitObject.code)) {
+        anAdUnitObject.bidData = winningBids[anAdUnitObject.code];
+      }
+    });
 
     callbackFunction(arrayOfAdUnits);
-	});
+  });
 }
 
 /* start-test-block */
@@ -359,67 +330,64 @@ export { customServerExposedAPI };
 
 /* end-test-block */
 
-function displayAllCreativesWithoutAdServer(adUnitsArray){
-	if(util.isArray(adUnitsArray)){
-		util.forEachOnArray(adUnitsArray,function(index,au){
-			displayCreativeWithoutAdServer(au);
-		});
-	}
-	else{
-		util.logWarning(CONSTANTS.MESSAGES.M33 + " " + adUnitsArray);
-	}
+function displayAllCreativesWithoutAdServer(adUnitsArray) {
+  if (util.isArray(adUnitsArray)) {
+    util.forEachOnArray(adUnitsArray, function (index, au) {
+      displayCreativeWithoutAdServer(au);
+    });
+  } else {
+    util.logWarning(CONSTANTS.MESSAGES.M33 + ' ' + adUnitsArray);
+  }
 }
 
 /* start-test-block */
 export { displayAllCreativesWithoutAdServer };
 /* end-test-block */
 
-function displayCreativeWithoutAdServer(adUnit){
-	var adDiv = document.getElementById(adUnit.divId);
-	if(adDiv){
-		if(adUnit.bidData.kvp.pwtsid){
-			var oldIframe = document.getElementById("prebid_ads_iframe_" + adUnit.divId);
-			if(oldIframe){
-				oldIframe.remove();
-			}
-			var iframe = document.createElement("iframe");
-			iframe.scrolling = "no";
-			iframe.frameBorder = "0";
-			iframe.marginHeight = "0";
-			iframe.marginHeight = "0";
-			iframe.name = "prebid_ads_iframe_" + adUnit.divId;
-			iframe.id = "prebid_ads_iframe_" + adUnit.divId;
-			iframe.title = "3rd party ad content";
-			iframe.sandbox.add(
-				"allow-forms",
-				"allow-popups",
-				"allow-popups-to-escape-sandbox",
-				"allow-same-origin",
-				"allow-scripts",
-				"allow-top-navigation-by-user-activation"
-			);
-			iframe.setAttribute("aria-label", "Advertisment");
-			iframe.style.setProperty("border", "0");
-			iframe.style.setProperty("margin", "0");
-			iframe.style.setProperty("overflow", "hidden");
-			adDiv.appendChild(iframe);
-			if(iframe.contentWindow && iframe.contentWindow.document){
-				var iframeDoc = iframe.contentWindow.document;
-				owpbjs.renderAd(iframeDoc,adUnit.bidData.kvp.pwtsid);
+function displayCreativeWithoutAdServer(adUnit) {
+  var adDiv = document.getElementById(adUnit.divId);
+  if (adDiv) {
+    if (adUnit.bidData.kvp.pwtsid) {
+      var oldIframe = document.getElementById('prebid_ads_iframe_' + adUnit.divId);
+      if (oldIframe) {
+        oldIframe.remove();
+      }
+      var iframe = document.createElement('iframe');
+      iframe.scrolling = 'no';
+      iframe.frameBorder = '0';
+      iframe.marginHeight = '0';
+      iframe.marginHeight = '0';
+      iframe.name = 'prebid_ads_iframe_' + adUnit.divId;
+      iframe.id = 'prebid_ads_iframe_' + adUnit.divId;
+      iframe.title = '3rd party ad content';
+      iframe.sandbox.add(
+        'allow-forms',
+        'allow-popups',
+        'allow-popups-to-escape-sandbox',
+        'allow-same-origin',
+        'allow-scripts',
+        'allow-top-navigation-by-user-activation'
+      );
+      iframe.setAttribute('aria-label', 'Advertisment');
+      iframe.style.setProperty('border', '0');
+      iframe.style.setProperty('margin', '0');
+      iframe.style.setProperty('overflow', 'hidden');
+      adDiv.appendChild(iframe);
+      if (iframe.contentWindow && iframe.contentWindow.document) {
+        var iframeDoc = iframe.contentWindow.document;
+        window.owpbjs.renderAd(iframeDoc, adUnit.bidData.kvp.pwtsid);
 
-				var normalizeCss = "/*! normalize.css v8.0.1 | MIT License | github.com/necolas/normalize.css */button,hr,input{overflow:visible}progress,sub,sup{vertical-align:baseline}[type=checkbox],[type=radio],legend{box-sizing:border-box;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0}details,main{display:block}h1{font-size:2em;margin:.67em 0}hr{box-sizing:content-box;height:0}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}a{background-color:transparent}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:bolder}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}img{border-style:none}button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;line-height:1.15;margin:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]::-moz-focus-inner,[type=reset]::-moz-focus-inner,[type=submit]::-moz-focus-inner,button::-moz-focus-inner{border-style:none;padding:0}[type=button]:-moz-focusring,[type=reset]:-moz-focusring,[type=submit]:-moz-focusring,button:-moz-focusring{outline:ButtonText dotted 1px}fieldset{padding:.35em .75em .625em}legend{color:inherit;display:table;max-width:100%;white-space:normal}textarea{overflow:auto}[type=number]::-webkit-inner-spin-button,[type=number]::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}[type=search]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}[hidden],template{display:none}";
-				var iframeStyle = iframeDoc.createElement("style");
-				iframeStyle.appendChild(iframeDoc.createTextNode(normalizeCss));
-				iframeDoc.head.appendChild(iframeStyle);
-			}
-		}
-		else{
-			util.logError(CONSTANTS.MESSAGES.M35 + " " + adUnit.divId);
-		}
-	}
-	else{
-		util.logWarning(CONSTANTS.MESSAGES.M34 + " " + adDiv);
-	}
+        var normalizeCss = '/*! normalize.css v8.0.1 | MIT License | github.com/necolas/normalize.css */button,hr,input{overflow:visible}progress,sub,sup{vertical-align:baseline}[type=checkbox],[type=radio],legend{box-sizing:border-box;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0}details,main{display:block}h1{font-size:2em;margin:.67em 0}hr{box-sizing:content-box;height:0}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}a{background-color:transparent}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:bolder}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}img{border-style:none}button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;line-height:1.15;margin:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]::-moz-focus-inner,[type=reset]::-moz-focus-inner,[type=submit]::-moz-focus-inner,button::-moz-focus-inner{border-style:none;padding:0}[type=button]:-moz-focusring,[type=reset]:-moz-focusring,[type=submit]:-moz-focusring,button:-moz-focusring{outline:ButtonText dotted 1px}fieldset{padding:.35em .75em .625em}legend{color:inherit;display:table;max-width:100%;white-space:normal}textarea{overflow:auto}[type=number]::-webkit-inner-spin-button,[type=number]::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}[type=search]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}[hidden],template{display:none}';
+        var iframeStyle = iframeDoc.createElement('style');
+        iframeStyle.appendChild(iframeDoc.createTextNode(normalizeCss));
+        iframeDoc.head.appendChild(iframeStyle);
+      }
+    } else {
+      util.logError(CONSTANTS.MESSAGES.M35 + ' ' + adUnit.divId);
+    }
+  } else {
+    util.logWarning(CONSTANTS.MESSAGES.M34 + ' ' + adDiv);
+  }
 }
 
 /* start-test-block */
@@ -489,10 +457,10 @@ function generateConfForGPT(arrayOfGPTSlots) {
       mediaTypes: util.getAdUnitConfig(sizes, googleSlot).mediaTypeObject,
       sizes
     });
-		let floorConfig = util.getAdUnitConfig(sizes, googleSlot).floors;
-		if(floorConfig) {
-			gptConfArray[gptConfArray.length - 1]["floors"] = floorConfig;
-		}
+    let floorConfig = util.getAdUnitConfig(sizes, googleSlot).floors;
+    if (floorConfig) {
+      gptConfArray[gptConfArray.length - 1]['floors'] = floorConfig;
+    }
   });
 
   return gptConfArray;
@@ -534,10 +502,10 @@ function addKeyValuePairsToGPTSlots(arrayOfAdUnits) {
         util.forEachOnObject(adUnit.bidData.kvp, (key, value) => {
           googleSlot.setTargeting(key, [value]);
         });
-				util.forEachOnObject(util.getCDSTargetingData(), (key, value) => {
-					window.googletag &&
-					window.googletag.pubads().setTargeting(key, value);
-				});
+        util.forEachOnObject(util.getCDSTargetingData(), (key, value) => {
+          window.googletag &&
+            window.googletag.pubads().setTargeting(key, value);
+        });
       }
     } else {
       util.error(`GPT-Slot not found for divId: ${adUnit.divId}`);
@@ -561,7 +529,7 @@ function removeKeyValuePairsFromGPTSlots(arrayOfGPTSlots) {
       });
     }
     // now clear all targetings
-		if(util.isFunction(currentGoogleSlot.clearTargeting) && CONFIG.shouldClearTargeting()){
+    if (util.isFunction(currentGoogleSlot.clearTargeting) && CONFIG.shouldClearTargeting()) {
       currentGoogleSlot.clearTargeting();
     }
     // now set all settings from backup
@@ -580,21 +548,31 @@ export { removeKeyValuePairsFromGPTSlots };
 
 /* end-test-block */
 
+function initSafeFrameListener(theWindow) {
+  if (!theWindow.PWT.safeFrameMessageListenerAdded) {
+    util.addMessageEventListenerForSafeFrame(theWindow);
+    theWindow.PWT.safeFrameMessageListenerAdded = true;
+  }
+}
+
+// removeIf(removeLegacyAnalyticsRelatedCode)
+/* start-test-block */
+export { initSafeFrameListener };
+
+/* end-test-block */
+
 export function init(win) {
   CONFIG.initConfig();
   if (util.isObject(win)) {
     setWindowReference(win);
-
-    // removeIf(removeLegacyAnalyticsRelatedCode)
     initSafeFrameListener(win);
-    // endRemoveIf(removeLegacyAnalyticsRelatedCode)
     prebid.initPbjsConfig();
     win.PWT.requestBids = customServerExposedAPI;
     win.PWT.generateConfForGPT = generateConfForGPT;
     win.PWT.addKeyValuePairsToGPTSlots = addKeyValuePairsToGPTSlots;
     win.PWT.removeKeyValuePairsFromGPTSlots = removeKeyValuePairsFromGPTSlots;
     win.PWT.displayAllCreativesWithoutAdServer = displayAllCreativesWithoutAdServer;
-		win.PWT.displayCreativeWithoutAdServer = displayCreativeWithoutAdServer;
+    win.PWT.displayCreativeWithoutAdServer = displayCreativeWithoutAdServer;
     wrapperTargetingKeys = defineWrapperTargetingKeys(CONSTANTS.WRAPPER_TARGETING_KEYS);
     return true;
   } else {

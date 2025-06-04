@@ -4,10 +4,8 @@ import { config } from '../../src/config.js';
 
 export const customUtils = {};
 
-submodule('openWrap', customUtils, "OW");
-ready.then(function(){
+submodule('openWrap', customUtils, 'OW');
+ready.then(function() {
   customUtils.owtInit();
-  config.getConfig("openWrap", () => initializeModule(customUtils));
+  config.getConfig('openWrap', () => initializeModule(customUtils));
 });
-
-

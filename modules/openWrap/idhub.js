@@ -29,6 +29,6 @@ window.IHPWT.deepMerge = (target, source, key) => {
 window.IHPWT.versionDetails = util.getOWConfig;
 
 // controller.init(window);
-export function init(){
+export function init() {
 
 }

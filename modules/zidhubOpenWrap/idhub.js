@@ -5,7 +5,7 @@ let COMMON_CONFIG = {};
 let pbNameSpace = {}
 let isPubmaticIHAnalyticsEnabled = {}
 
-export function initializeModule(idhubUtils){
+export function initializeModule(idhubUtils) {
   CONFIG = idhubUtils.CONFIG;
   CONSTANTS = idhubUtils.CONSTANTS;
   util = idhubUtils.util;
@@ -71,10 +71,10 @@ let setConfig = () => {
       }
 
       // Set Gpp consent config
-			if (CONFIG.getGppConsent()) {
-				prebidConfig = COMMON_CONFIG.setConsentConfig(prebidConfig, "gpp", CONFIG.getGppCmpApi(), CONFIG.getGppTimeout());
-			}
-      
+      if (CONFIG.getGppConsent()) {
+        prebidConfig = COMMON_CONFIG.setConsentConfig(prebidConfig, 'gpp', CONFIG.getGppCmpApi(), CONFIG.getGppTimeout());
+      }
+
       window.IHPWT.ssoEnabled = CONFIG.isSSOEnabled() || false;
       if (CONFIG.isUserIdModuleEnabled()) {
         prebidConfig['userSync']['userIds'] = util.getUserIdConfiguration();
@@ -113,6 +113,7 @@ export function initIdHub(win) {
             util.log(`Adding Hook on${win[CONFIG.getPBJSNamespace()]}.addAddUnits()`);
             const theObject = win[CONFIG.getPBJSNamespace()];
             const functionName = 'addAdUnits';
+            /* eslint-disable no-undef */
             util.addHookOnFunction(theObject, false, functionName, newAddAdUnitFunction);
           }
         });

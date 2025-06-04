@@ -4,12 +4,8 @@ import { config } from '../../src/config.js';
 
 export const gptUtils = {};
 
-submodule('openWrap', gptUtils, "OW");
-ready.then(function(){
+submodule('openWrap', gptUtils, 'OW');
+ready.then(function() {
   gptUtils.owtInit();
-  config.getConfig("openWrap", () => initializeModule(gptUtils));
+  config.getConfig('openWrap', () => initializeModule(gptUtils));
 });
-
-
-
-

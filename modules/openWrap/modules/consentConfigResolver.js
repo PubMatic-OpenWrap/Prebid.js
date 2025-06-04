@@ -1,27 +1,23 @@
-import * as commonUtil from "../common.util.js";
-import * as util from "../util.js";
-import * as timeMetrics from "./timeMetrics.js";
+/* eslint-disable prebid/validate-imports */
+import * as commonUtil from '../common.util.js';
+import * as util from '../util.js';
+import * as timeMetrics from './timeMetrics.js';
 
 const CMP_CHECK_TIMEOUT = 1500;
-const CONSENT_MANAGEMENT_SOURCE = {
-  CMP: "CMP",
-  GEO: "GEO",
-  NONE: "NONE"
-};
 const COMPLIANCE_MAP = {
   GDPR: 1,
   USP: 2,
   GPP: 3
 };
 const READ_GEO_DATA_FROM = {
-  LOCALSTORAGE: "LS",
-  GEO_SERVICE: "GS",
-  NONE: "NONE"
+  LOCALSTORAGE: 'LS',
+  GEO_SERVICE: 'GS',
+  NONE: 'NONE'
 };
-const CMP_APIs = {
-  GDPR: { apiName: "__tcfapi", complianceName: "gdpr", cmpCommandListner: gdprHandler },
-  USP: { apiName: "__uspapi", complianceName: "usp" },
-  GPP: { apiName: "__gpp", complianceName: "gpp", cmpCommandListner: gppHandler }
+const CMP_API = {
+  GDPR: { apiName: '__tcfapi', complianceName: 'gdpr', cmpCommandListner: gdprHandler },
+  USP: { apiName: '__uspapi', complianceName: 'usp' },
+  GPP: { apiName: '__gpp', complianceName: 'gpp', cmpCommandListner: gppHandler }
 };
 /**
  * Get the consent management configuration object
@@ -35,7 +31,7 @@ export function getCMConfigObject() {
 /**
  * Initializes the consent management configuration object.
  */
-function initializeCMConfig(allStatsAvailable, cmpPresent = 0, complianceSupport = [], cmpId = 0) {
+export function initializeCMConfig(allStatsAvailable, cmpPresent = 0, complianceSupport = [], cmpId = 0) {
   const cmConf = {
     allStatsAvailable,
     cmpPresent,
@@ -52,36 +48,46 @@ function initializeCMConfig(allStatsAvailable, cmpPresent = 0, complianceSupport
  * Set the time taken by CMP to load
  * @param {*} timeExceeded : If time exceeded then set the default timeout value
  */
-function setCMPTime(timeExceeded) {
+export function setCMPTime(timeExceeded) {
   const globalObj = commonUtil.getGlobalOwObject();
-  if (!globalObj.getDurationOf("CMP_CALLING_TIME")) {
+  if (!globalObj.getDurationOf('CMP_CALLING_TIME')) {
     timeExceeded
-      ? timeMetrics.recordExitTime("CMP_CALLING_TIME", CMP_CHECK_TIMEOUT)
-      : timeMetrics.recordExitTime("CMP_CALLING_TIME");
+      ? timeMetrics.recordExitTime('CMP_CALLING_TIME', CMP_CHECK_TIMEOUT)
+      : timeMetrics.recordExitTime('CMP_CALLING_TIME');
   }
 }
-function gdprHandler(pingReturnData) {
+
+/**
+ * Handler for GDPR CMP
+ * @param {Object} pingReturnData
+ */
+export function gdprHandler(pingReturnData) {
   if (pingReturnData && pingReturnData.cmpId) {
     getCMConfigObject().cmpId = pingReturnData.cmpId;
   }
 }
-function gppHandler(pingReturnData) {
+
+/**
+ * Handler for GPP CMP
+ * @param {Object} pingReturnData
+ */
+export function gppHandler(pingReturnData) {
   if (pingReturnData?.pingData?.cmpId) {
     getCMConfigObject().cmpId = pingReturnData.pingData.cmpId;
   }
 }
 /**
  * Get the CMPs present on the page
- * 
+ *
  * @returns Object : CMPs present on the page
  */
-function getCMPsPresentOnPage() {
+export function getCMPsPresentOnPage() {
   const cmps = {};
   let currentWindow = window;
   const cmConfig = getCMConfigObject();
   const checkAndExecuteCMP = (name, frame) => {
-    const cmpApi = CMP_APIs[name];
-    const apiExists = typeof frame[cmpApi.apiName] === 'function' || frame.frames[cmpApi.apiName + "Locator"];
+    const cmpApi = CMP_API[name];
+    const apiExists = typeof frame[cmpApi.apiName] === 'function' || frame.frames[cmpApi.apiName + 'Locator'];
     if (apiExists) {
       cmConfig.cmpPresent = 1;
       setCMPTime(false);
@@ -95,7 +101,7 @@ function getCMPsPresentOnPage() {
   };
   while (currentWindow) {
     try {
-      for (const name in CMP_APIs) {
+      for (const name in CMP_API) {
         checkAndExecuteCMP(name, currentWindow);
       }
     } catch (e) {}
@@ -108,9 +114,9 @@ function getCMPsPresentOnPage() {
  * Get the geo information from the service
  */
 export function getGeoInfoWrapper() {
-  timeMetrics.recordEntryTime("GEO_CALLING_TIME", 1500);
+  timeMetrics.recordEntryTime('GEO_CALLING_TIME', 1500);
   commonUtil.getGeoInfo(READ_GEO_DATA_FROM, (readFrom, uInfo) => {
-    timeMetrics.recordExitTime("GEO_CALLING_TIME");
+    timeMetrics.recordExitTime('GEO_CALLING_TIME');
     const cmConfig = getCMConfigObject();
     cmConfig.geoInfo.cc = uInfo.cc;
     cmConfig.geoInfo.sc = uInfo.sc;

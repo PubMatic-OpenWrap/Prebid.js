@@ -4,8 +4,8 @@ import { config } from '../../src/config.js';
 
 export const idhubUtils = {};
 
-submodule('openWrap', idhubUtils, "IDHUB");
-ready.then(function(){
+submodule('openWrap', idhubUtils, 'IDHUB');
+ready.then(function() {
   idhubUtils.idhubInit();
-  config.getConfig("openWrap", () => initializeModule(idhubUtils));
+  config.getConfig('openWrap', () => initializeModule(idhubUtils));
 });

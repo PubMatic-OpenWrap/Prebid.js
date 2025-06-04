@@ -1,16 +1,19 @@
+/* eslint-disable prebid/validate-imports */
 import * as util from './util.js';
 import * as bidManager from './bidManager.js';
 import * as CONSTANTS from './constants.js';
 import * as CONFIG from './config.js';
 import * as conf from './conf.js';
-import * as ucTag from "prebid-universal-creative";  // Do Not Remove, it required in case of SafeFrame rendering
+/* eslint-disable no-unused-vars */
+import * as ucTag from 'prebid-universal-creative'; // Do Not Remove, it required in case of SafeFrame rendering
 import * as timeMetrics from './modules/timeMetrics.js';
+/* eslint-enable no-unused-vars */
 const metaInfo = util.getMetaInfo(window);
 
 window.PWT = window.PWT || {};
 
 timeMetrics.init();
-timeMetrics.recordEntryTime(["CMP_CALLING_TIME", "TRANSLATOR_CALLING_TIME", "LOGGER_CALLING_TIME", "TRACKER_CALLING_TIME"]);
+timeMetrics.recordEntryTime(['CMP_CALLING_TIME', 'TRANSLATOR_CALLING_TIME', 'LOGGER_CALLING_TIME', 'TRACKER_CALLING_TIME']);
 
 window.PWT.bidMap = window.PWT.bidMap || {};
 window.PWT.bidIdMap = window.PWT.bidIdMap || {};
@@ -31,16 +34,12 @@ window.PWT.udpv = window.PWT.udpv || util.findQueryParamInURL(metaInfo.isIframe 
 util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtc') && util.enableDebugLog();
 util.findQueryParamInURL(metaInfo.isIframe ? metaInfo.refURL : metaInfo.pageURL, 'pwtvc') && util.enableVisualDebugLog();
 
-//var isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
+// var isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
 
 window.PWT.displayCreative = function(theDocument, bidID) {
   util.log('In displayCreative for: ' + bidID);
   if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
     window[CONSTANTS.COMMON.PREBID_NAMESPACE].renderAd(theDocument, bidID);
-  } else {
-    // removeIf(removeLegacyAnalyticsRelatedCode)
-    bidManager.displayCreative(theDocument, bidID);
-    // endRemoveIf(removeLegacyAnalyticsRelatedCode)
   }
 };
 
@@ -50,10 +49,6 @@ window.PWT.displayPMPCreative = function(theDocument, values, priorityArray) {
   if (bidID) {
     if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
       window[CONSTANTS.COMMON.PREBID_NAMESPACE].renderAd(theDocument, bidID);
-    } else {
-      // removeIf(removeLegacyAnalyticsRelatedCode)
-      bidManager.displayCreative(theDocument, bidID);
-      // endRemoveIf(removeLegacyAnalyticsRelatedCode)
     }
   }
 };
@@ -65,15 +60,6 @@ window.PWT.sfDisplayCreative = function(theDocument, bidID) {
   ucTag = window.ucTag || {};
   if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
     ucTag.renderAd(theDocument, {adId: bidID, pubUrl: document.referrer});
-  } else {
-    window.parent.postMessage(
-      JSON.stringify({
-        pwt_type: '1',
-        pwt_bidID: bidID,
-        pwt_origin: CONSTANTS.COMMON.PROTOCOL + window.location.hostname
-      }),
-      '*'
-    );
   }
 };
 
@@ -85,26 +71,15 @@ window.PWT.sfDisplayPMPCreative = function(theDocument, values, priorityArray) {
   if (bidID) {
     if (CONFIG.isPrebidPubMaticAnalyticsEnabled()) {
       ucTag.renderAd(theDocument, {adId: bidID, pubUrl: document.referrer});
-    } else {
-      window.parent.postMessage(
-        JSON.stringify({
-          pwt_type: '1',
-          pwt_bidID: bidID,
-          pwt_origin: CONSTANTS.COMMON.PROTOCOL + window.location.hostname
-        }),
-        '*'
-      );
     }
   }
 };
 
-// removeIf(removeNativeRelatedCode)
 window.PWT.initNativeTrackers = function(theDocument, bidID) {
   util.log('In startTrackers for: ' + bidID);
   util.addEventListenerForClass(window, 'click', CONSTANTS.COMMON.OW_CLICK_NATIVE, bidManager.loadTrackers);
   bidManager.executeTracker(bidID);
 };
-// endRemoveIf(removeNativeRelatedCode)
 
 window.PWT.getUserIds = function() {
   return util.getUserIds();
@@ -141,14 +116,8 @@ window.OWT.notifyExternalBiddingComplete = function(notifyId) {
   });
 };
 
-// removeIf(removeLegacyAnalyticsRelatedCode)
-window.PWT.UpdateVastWithTracker = function(bid, vast) {
-  return util.UpdateVastWithTracker(bid, vast);
-};
-// endRemoveIf(removeLegacyAnalyticsRelatedCode)
-
 // removeIf(removeInStreamRelatedCode)
-window.PWT.generateDFPURL = function(adUnit, cust_params) {
+window.PWT.generateDFPURL = function(adUnit, custParams) {
   var dfpurl = '';
   if (!adUnit || !util.isObject(adUnit)) {
     util.logError('An AdUnit should be an Object', adUnit);
@@ -159,12 +128,12 @@ window.PWT.generateDFPURL = function(adUnit, cust_params) {
   } else {
     util.logWarning('No bid found for given adUnit');
   }
-	util.getCDSTargetingData(cust_params);
+  util.getCDSTargetingData(custParams);
   var params = {
     adUnit: adUnit,
     params: {
       iu: adUnit.adUnitId,
-			cust_params: cust_params,
+      cust_params: custParams,
       output: 'vast'
     }
   };

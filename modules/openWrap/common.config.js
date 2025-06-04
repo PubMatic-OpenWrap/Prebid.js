@@ -10,10 +10,10 @@ export function getGdprActionTimeout() {
 
 export function setConsentConfig(prebidConfig, key, cmpApi, timeout) {
   prebidConfig = prebidConfig || {};
-  if (!prebidConfig["consentManagement"]) {
-    prebidConfig["consentManagement"] = {};
+  if (!prebidConfig['consentManagement']) {
+    prebidConfig['consentManagement'] = {};
   }
-  prebidConfig["consentManagement"][key] = {
+  prebidConfig['consentManagement'][key] = {
     cmpApi: cmpApi,
     timeout: timeout
   };

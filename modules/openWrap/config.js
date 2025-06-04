@@ -11,16 +11,6 @@ export function getPublisherId() {
   return util.trim(config.pwt.pubid) || '0';
 }
 
-// removeIf(removeLegacyAnalyticsRelatedCode)
-export function getMataDataPattern() {
-  if (util.isString(config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.META_DATA_PATTERN])) {
-    return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.META_DATA_PATTERN];
-  }
-  return null;
-}
-
-// endRemoveIf(removeLegacyAnalyticsRelatedCode)
-
 export function getSendAllBidsStatus() {
   return window.parseInt(config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.SEND_ALL_BIDS]) || 0;
 }
@@ -62,25 +52,6 @@ export function isServerSideAdapter(adapterID) {
   return false;
 }
 
-// removeIf(removeLegacyAnalyticsRelatedCode)
-export function getAdapterMaskBidsStatus(adapterID) {
-  const adapterConfig = config.adapters;
-  const tempSettings = {
-    'audienceNetwork': 1
-  };
-
-  if (util.isOwnProperty(tempSettings, adapterID)) {
-    return tempSettings[adapterID];
-  }
-
-  if (util.isOwnProperty(adapterConfig[adapterID], CONSTANTS.CONFIG.MASK_BIDS)) {
-    return window.parseInt(adapterConfig[adapterID][CONSTANTS.CONFIG.MASK_BIDS]) || 0;
-  }
-  return 0;
-}
-
-// endRemoveIf(removeLegacyAnalyticsRelatedCode)
-
 // TODO: do we need this feature?
 export function getBidPassThroughStatus(adapterID) {
   const adapterConfig = config.adapters;
@@ -97,20 +68,6 @@ export function getProfileID() {
 export function getProfileDisplayVersionID() {
   return util.trim(config.pwt[CONSTANTS.CONFIG.PROFILE_VERSION_ID]) || '0';
 }
-
-// removeIf(removeLegacyAnalyticsRelatedCode)
-export function getAnalyticsPixelURL() {
-  return config.pwt[CONSTANTS.CONFIG.LOGGER_URL] || false;
-}
-
-// endRemoveIf(removeLegacyAnalyticsRelatedCode)
-
-// removeIf(removeLegacyAnalyticsRelatedCode)
-export function getMonetizationPixelURL() {
-  return config.pwt[CONSTANTS.CONFIG.TRACKER_URL] || false;
-}
-
-// endRemoveIf(removeLegacyAnalyticsRelatedCode)
 
 export function forEachAdapter(callback) {
   util.forEachOnObject(config.adapters, callback);
@@ -292,13 +249,6 @@ export function getPBJSNamespace() {
   return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PBJS_NAMESPACE] || 'pbjs';
 }
 
-// removeIf(removeAlways)
-export function isReduceCodeSizeFeatureEnabled() {
-  // note: not using window.parseInt as this function is also used in build.sh that runs in NodeJS environment
-  return parseInt(config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.REDUCE_CODE_SIZE]) === 1;
-}
-
-// endRemoveIf(removeAlways)
 export function getPriceGranularity() {
   const priceGranularity = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PRICE_GRANULARITY] || null;
 
@@ -310,26 +260,24 @@ export function getPriceGranularity() {
       util.logWarning(CONSTANTS.MESSAGES.M36);
       return null;
     }
-  }
-  else {
+  } else {
     return priceGranularity;
   }
 }
 
 export function getPriceGranularityBuckets() {
   let pgBuckets = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.PRICE_GRANULARITY_BUCKETS] || null;
-  if (pgBuckets === null)
-    return null;
+  if (pgBuckets === null) { return null; }
 
   // API would be providing us with ranges as keyword, we need to raplace it by buckets before processing
   let transformedBuckets = {};
-  delete Object.assign(transformedBuckets, pgBuckets, { ['buckets']: pgBuckets['ranges'] })['ranges'];
+  delete Object.assign(transformedBuckets, pgBuckets, { 'buckets': pgBuckets['ranges'] })['ranges'];
 
   return transformedBuckets;
 }
 
 export function isBidPoolingEnabled() {
-	return parseInt(config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.BID_POOLING_ENABLED]) === 1;
+  return parseInt(config[CONSTANTS.CONFIG.COMMON][CONSTANTS.COMMON.BID_POOLING_ENABLED]) === 1;
 };
 
 export function getGranularityMultiplier() {
@@ -471,10 +419,10 @@ export function getTimeoutForPBSRequest() {
 }
 
 export function getPubMaticAndAlias(s2sBidders) {
-  const pubMaticaliases = s2sBidders.filter(adapter => {		
-    if(config.alias && config.alias[adapter] && ( config.alias[adapter].name ? config.alias[adapter].name.includes("pubmatic") : config.alias[adapter].includes("pubmatic") )|| adapter.includes("pubmatic")) {
-			return adapter;
-		}
+  const pubMaticaliases = s2sBidders.filter(adapter => {
+    if ((config.alias && config.alias[adapter] && (config.alias[adapter].name ? config.alias[adapter].name.includes('pubmatic') : config.alias[adapter].includes('pubmatic'))) || adapter.includes('pubmatic')) {
+      return adapter;
+    }
   });
   return pubMaticaliases;
 }
@@ -507,19 +455,19 @@ export function getPrebidVersion() {
 }
 
 export function getGppConsent() {
-	const gpp = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CONSENT] || CONSTANTS.CONFIG.DEFAULT_GPP_CONSENT;
-	return gpp === "1";
+  const gpp = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CONSENT] || CONSTANTS.CONFIG.DEFAULT_GPP_CONSENT;
+  return gpp === '1';
 }
 
 export function getGppCmpApi() {
-	return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CMPAPI] || CONSTANTS.CONFIG.DEFAULT_GPP_CMPAPI;
+  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_CMPAPI] || CONSTANTS.CONFIG.DEFAULT_GPP_CMPAPI;
 }
 
 export function getGppTimeout() {
-	const gppTimeout = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_TIMEOUT];
-	return gppTimeout ? window.parseInt(gppTimeout) : CONSTANTS.CONFIG.DEFAULT_GPP_TIMEOUT;
+  const gppTimeout = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GPP_TIMEOUT];
+  return gppTimeout ? window.parseInt(gppTimeout) : CONSTANTS.CONFIG.DEFAULT_GPP_TIMEOUT;
 }
 
 export function shouldClearTargeting() {
-	return window.PWT.shouldClearTargeting !== undefined ? Boolean(window.PWT.shouldClearTargeting) : true;
+  return window.PWT.shouldClearTargeting !== undefined ? Boolean(window.PWT.shouldClearTargeting) : true;
 };

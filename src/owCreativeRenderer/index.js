@@ -1,14 +1,15 @@
-import("prebid-universal-creative");
+/* eslint-disable prebid/validate-imports */
+import 'prebid-universal-creative';
 
 window.PWT = window.PWT || {};
 window.ucTag = window.ucTag || {};
 
-const typeString = "String";
+const typeString = 'String';
 
 export const isString = (object) => toString.call(object) === `[object ${typeString}]`;
 
 // Desc: Uses prebid js render ad function to call cache and render ad based on the params from response.
-// Param Definition 
+// Param Definition
 export const renderCreative = (theDocument, params) => {
   if (params && params.cacheURL && params.uuid) {
     try {
@@ -16,7 +17,7 @@ export const renderCreative = (theDocument, params) => {
         cacheHost: params.cacheURL,
         cachePath: params.cachePath,
         uuid: params.uuid,
-        mediaType: "banner",
+        mediaType: 'banner',
         size: params.size
       });
     } catch (e) {
@@ -28,22 +29,22 @@ export const renderCreative = (theDocument, params) => {
 
 export const removeProtocolFromUrl = (url) => {
   if (isString(url)) {
-    let outputUrl = url || "";
+    let outputUrl = url || '';
     if (url && url.length > 0) {
-      outputUrl = url.replace(/^https{0,1}:\/\//i, "");
+      outputUrl = url.replace(/^https{0,1}:\/\//i, '');
     }
     return outputUrl;
   }
-  return "";
+  return '';
 };
 
 /// Change name to general render function : renderOWCreative
 window.PWT.renderOWCreative = (theDocument, targetingKeys) => {
   if (targetingKeys) {
-    let cacheid = targetingKeys.pwtcid || "";
-    let cacheURL = targetingKeys.pwtcurl || "";
-    let cachePath = targetingKeys.pwtcpath || "/cache";
-    let size = targetingKeys.pwtsz || ""; // Assigning it empty string as per code review
+    let cacheid = targetingKeys.pwtcid || '';
+    let cacheURL = targetingKeys.pwtcurl || '';
+    let cachePath = targetingKeys.pwtcpath || '/cache';
+    let size = targetingKeys.pwtsz || ''; // Assigning it empty string as per code review
     /* istanbul ignore else */
     if (cacheURL.length > 0 && cacheid.length > 0) {
       cacheURL = removeProtocolFromUrl(cacheURL); // removes protocol from url if present and returns host only
