@@ -1,5 +1,4 @@
-
-import pubmaticAnalyticsAdapter, { getMetadata, getConsentInfo, getConsentInfoStr } from 'modules/pubmaticAnalyticsAdapter.js';
+import pubmaticAnalyticsAdapter, { getMetadata, getConsentInfo, getConsentInfoStr, setConsentFieldsLoggedBy, getConsentFieldsLoggedBy } from 'modules/pubmaticAnalyticsAdapter.js';
 import adapterManager from 'src/adapterManager.js';
 import { EVENTS, REJECTION_REASON } from 'src/constants.js';
 import {config} from 'src/config.js';
@@ -2109,102 +2108,6 @@ describe('pubmatic analytics adapter', function () {
     });
   });
 
-  // test/spec/getConsentInfo_spec.js
-  describe('getConsentInfo', function () {
-    let sandbox;
-
-    beforeEach(function () {
-      sandbox = sinon.createSandbox();
-      window.PWT = {};
-    });
-
-    afterEach(function () {
-      sandbox.restore();
-      delete window.PWT;
-    });
-
-    it('should return an empty object if cmConfig is not an object', function () {
-      window.PWT.cmConfig = null;
-      expect(getConsentInfo(false)).to.deep.equal({});
-
-      window.PWT.cmConfig = undefined;
-      expect(getConsentInfo(false)).to.deep.equal({});
-    });
-
-    it('should return metrics if getDurationOf is a function and allStatsAvailable is false', function () {
-      const fakeGetDurationOf = sandbox.stub().callsFake((metric) => {
-        const metrics = {
-          'TRANSLATOR_CALLING_TIME': 100,
-          'LOGGER_CALLING_TIME': 200,
-          'TRACKER_CALLING_TIME': 300
-        };
-        return metrics[metric];
-      });
-
-      window.PWT.getDurationOf = fakeGetDurationOf;
-      window.PWT.cmConfig = { allStatsAvailable: false };
-
-      const expectedMetrics = {
-        trnslt: 100,
-        lrt: 200,
-        trt: 300
-      };
-
-      expect(getConsentInfo(false)).to.deep.equal(expectedMetrics);
-    });
-
-    it('should return cmConfig properties and metrics when allStatsAvailable is true', function () {
-      const fakeGetDurationOf = sandbox.stub().callsFake((metric) => {
-        const metrics = {
-          'TRANSLATOR_CALLING_TIME': 100,
-          'LOGGER_CALLING_TIME': 200,
-          'TRACKER_CALLING_TIME': 300,
-          'GEO_CALLING_TIME': 400,
-          'CMP_CALLING_TIME': 500
-        };
-        return metrics[metric];
-      });
-
-      window.PWT.getDurationOf = fakeGetDurationOf;
-      window.PWT.cmConfig = {
-        allStatsAvailable: true,
-        cmpPresent: 1,
-        complianceSupport: [1, 2],
-        cmpId: 31,
-        geoInfo: { sc: 'US' }
-      };
-
-      const expectedInfo = {
-        ccmp: 1,
-        ccmps: [1, 2],
-        ccmpid: 31,
-        cgst: 400,
-        ccmpt: 500,
-        csc: 'US',
-        trnslt: 100,
-        lrt: 200,
-        trt: 300
-      };
-
-      expect(getConsentInfo(false)).to.deep.equal(expectedInfo);
-    });
-
-    it('should return metrics with null values if getDurationOf is not a function', function () {
-      window.PWT.getDurationOf = null;
-      window.PWT.cmConfig = { allStatsAvailable: true };
-
-      const expectedInfo = {
-        ccmp: undefined,
-        ccmps: undefined,
-        ccmpid: undefined,
-        cgst: null,
-        ccmpt: null,
-        csc: undefined
-      };
-
-      expect(getConsentInfo(false)).to.deep.equal(expectedInfo);
-    });
-  });
 
   describe('custom dimensions', function() {
     beforeEach(function () {
@@ -2287,6 +2190,252 @@ describe('pubmatic analytics adapter', function () {
       let trackerData = {};
       requests[0].url.split('?')[1].split('&').map(e => e.split('=')).forEach(e => trackerData[e[0]] = e[1]);
       expect(trackerData.cds).to.equal(encodedDataStr);
+    });
+  });
+
+  describe('Standardized Consent Management', function() {
+    const mockAuctionId = 'mock-auction-id-123';
+
+    beforeEach(function() {
+      window.PWT = {};
+      //consentFieldsLoggedBy.reset();
+      getConsentFieldsLoggedBy().reset();
+    });
+
+    afterEach(function() {
+      delete window.PWT;
+    });
+
+    describe('setConsentFieldsLoggedBy', () => {
+      const auctionId = 'test-auction-1';
+
+      it('should initialize empty loggedBy object', () => {
+        const logger = setConsentFieldsLoggedBy();
+        expect(logger.getLoggedBy()).to.deep.equal({});
+      });
+
+      it('should initialize auction data correctly', () => {
+        const logger = setConsentFieldsLoggedBy();
+        logger.initialize(auctionId);
+
+        const expected = {
+          [auctionId]: {
+            tracker: false,
+            logger: false
+          }
+        };
+        expect(logger.getLoggedBy()).to.deep.equal(expected);
+      });
+
+      it('should not reinitialize if already initialized', () => {
+        const logger = setConsentFieldsLoggedBy();
+        logger.initialize(auctionId);
+        logger.setLoggedBy(auctionId, 'tracker');
+
+        // Try to initialize again
+        logger.initialize(auctionId);
+
+        const expected = {
+          [auctionId]: {
+            tracker: true,
+            logger: false
+          }
+        };
+
+        expect(logger.getLoggedBy()).to.deep.equal(expected);
+      });
+
+      it('should set logged by correctly', () => {
+        const logger = setConsentFieldsLoggedBy();
+        logger.initialize(auctionId);
+        logger.setLoggedBy(auctionId, 'tracker');
+
+        const expected = {
+          [auctionId]: {
+            tracker: true,
+            logger: false
+          }
+        };
+        expect(logger.getLoggedBy()).to.deep.equal(expected);
+      });
+
+      it('should not set logged by if auction not initialized', () => {
+        const logger = setConsentFieldsLoggedBy();
+        logger.setLoggedBy('non-existent', 'tracker');
+        expect(logger.getLoggedBy()).to.deep.equal({});
+      });
+
+      it('should reset correctly', () => {
+        const logger = setConsentFieldsLoggedBy();
+        logger.initialize(auctionId);
+        logger.setLoggedBy(auctionId, 'tracker');
+        logger.reset();
+        expect(logger.getLoggedBy()).to.deep.equal({});
+      });
+    });
+
+    describe('getConsentInfo', () => {
+      const auctionId = 'test-auction-1';      
+
+      beforeEach(() => {
+        window.PWT = {
+            getConsentResolverConfig: sandbox.stub(),
+            getDurationOf: sandbox.stub()
+        };             
+
+        // Initialize consent fields
+        getConsentFieldsLoggedBy().initialize(auctionId);
+      });
+
+      afterEach(() => {
+        // Restore original window
+        window.PWT = {};
+      });
+
+      it('should return empty object if no config available', () => {
+        window.PWT.getConsentResolverConfig.returns(null);
+        expect(getConsentInfo(auctionId, 'tracker')).to.deep.equal({});
+      });
+
+      it('should return base object if ccme is false', () => {
+        const mockConfig = {
+          cecbo: 'test-cecbo',
+          ccmps: 'test-ccmps',
+          ccme: false
+        };
+        window.PWT.getConsentResolverConfig.returns(mockConfig);
+
+        const expected = {
+          cecbo: 'test-cecbo',
+          ccmps: 'test-ccmps'
+        };
+        expect(getConsentInfo(auctionId, 'tracker')).to.deep.equal(expected);
+      });
+
+      it('should return full object for tracker with dimensions', () => {
+        const mockConfig = {
+          cecbo: 'test-cecbo',
+          ccmps: 'test-ccmps',
+          ccme: true,
+          ccmp: 'test-ccmp',
+          ccmpid: 'test-ccmpid',
+          csc: 'test-csc',
+          crgdf: 'test-crgdf',
+          cgm: 'test-cgm'
+        };
+        window.PWT.getConsentResolverConfig.returns(mockConfig);
+
+        const result = getConsentInfo(auctionId, 'tracker');
+        expect(result).to.deep.equal(mockConfig);
+      });
+
+      it('should include metrics for logger when getDurationOf is available', () => {
+        const mockConfig = {
+          cecbo: 'test-cecbo',
+          ccmps: 'test-ccmps',
+          ccme: true,
+          ccmp: 'test-ccmp',
+          ccmpid: 'test-ccmpid',
+          csc: 'test-csc',
+          crgdf: 'test-crgdf',
+          cgm: 'test-cgm'
+        };
+
+        window.PWT.getConsentResolverConfig.returns(mockConfig);
+        window.PWT.getDurationOf.withArgs('TRANSLATOR_CALLING_TIME').returns(100);
+        window.PWT.getDurationOf.withArgs('LOGGER_CALLING_TIME').returns(200);
+        window.PWT.getDurationOf.withArgs('TRACKER_CALLING_TIME').returns(300);
+        window.PWT.getDurationOf.withArgs('CONSENT_CONFIG_RESOLVER_TIME').returns(400);
+        window.PWT.getDurationOf.withArgs('GEO_CALLING_TIME').returns(500);
+        window.PWT.getDurationOf.withArgs('CMP_CALLING_TIME').returns(600);
+
+        const expected = {
+          ...mockConfig,
+          trnslt: 100,
+          lrt: 200,
+          trt: 300,
+          ccmt: 400,
+          cgst: 500,
+          ccmpt: 600
+        };
+
+        const result = getConsentInfo(auctionId, 'logger');
+        expect(result).to.deep.equal(expected);
+      });
+
+      it('should not log same consent info twice for same auction and logging type', () => {
+        const mockConfig = {
+          cecbo: 'test-cecbo',
+          ccmps: 'test-ccmps',
+          ccme: true
+        };
+        window.PWT.getConsentResolverConfig.returns(mockConfig);
+
+        // First call
+        getConsentInfo(auctionId, 'tracker');
+        // Second call should return base object only
+        const result = getConsentInfo(auctionId, 'tracker');
+
+        expect(result).to.deep.equal({
+          cecbo: 'test-cecbo',
+          ccmps: 'test-ccmps'
+        });
+      });
+    });
+
+    describe('getConsentInfoStr', function() {
+      beforeEach(function() {
+        getConsentFieldsLoggedBy().initialize(mockAuctionId);
+      });
+
+      it('should return empty string when no consent info', function() {
+        window.PWT.getConsentResolverConfig = () => null;
+        const result = getConsentInfoStr(mockAuctionId);
+        expect(result).to.equal('');
+      });
+
+      it('should return properly encoded query string with consent info', function() {
+        window.PWT.getConsentResolverConfig = () => ({
+          cecbo: 'test value',
+          ccmps: 'test&value',
+          ccme: 'test=value',
+          ccmp: 'test?value'
+        });
+
+        const result = getConsentInfoStr(mockAuctionId);
+        expect(result).to.include('&cecbo=' + encodeURIComponent('test value'));
+        expect(result).to.include('&ccmps=' + encodeURIComponent('test&value'));
+        expect(result).to.include('&ccme=' + encodeURIComponent('test=value'));
+        expect(result).to.include('&ccmp=' + encodeURIComponent('test?value'));
+      });
+
+      it('should handle null/undefined values in consent info', function() {
+        window.PWT.getConsentResolverConfig = () => ({
+          cecbo: null,
+          ccmps: undefined,
+          ccme: 'test-value'
+        });
+
+        const result = getConsentInfoStr(mockAuctionId);
+        expect(result).to.include('&cecbo=');
+        expect(result).to.include('&ccmps=');
+        expect(result).to.include('&ccme=' + encodeURIComponent('test-value'));
+      });
+
+      it('should handle special characters in consent values', function() {
+        window.PWT.getConsentResolverConfig = () => ({
+          cecbo: 'test+value',
+          ccmps: 'test/value',
+          ccme: 'test#value',
+          ccmp: 'test%value'
+        });
+
+        const result = getConsentInfoStr(mockAuctionId);
+        expect(result).to.include('&cecbo=' + encodeURIComponent('test+value'));
+        expect(result).to.include('&ccmps=' + encodeURIComponent('test/value'));
+        expect(result).to.include('&ccme=' + encodeURIComponent('test#value'));
+        expect(result).to.include('&ccmp=' + encodeURIComponent('test%value'));
+      });
     });
   });
 });
