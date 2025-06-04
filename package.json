@@ -119,6 +119,7 @@
     "opn": "^5.4.0",
     "querystring": "^0.2.1",
     "resolve-from": "^5.0.0",
+    "shelljs": "^0.7.7",
     "sinon": "^4.5.0",
     "through2": "^4.0.2",
     "url": "^0.11.0",
@@ -148,7 +149,8 @@
     "fun-hooks": "^0.9.9",
     "gulp-wrap": "^0.15.0",
     "klona": "^2.0.6",
-    "live-connect-js": "^7.1.0"
+    "live-connect-js": "^7.1.0",
+    "prebid-universal-creative": "1.13.0"
   },
   "optionalDependencies": {
     "fsevents": "^2.3.2"

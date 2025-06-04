@@ -120,6 +120,15 @@
     "paapi": [
       "paapiForGpt",
       "topLevelPaapi"
+    ],
+    "openWrap": [
+      "dfpOpenWrap",
+      "customOpenWrap",
+      "zidhubOpenWrap"
+    ],
+    "zidhubOpenWrap": [
+      "dfpOpenWrap",
+      "customOpenWrap"
     ]
   }
 }

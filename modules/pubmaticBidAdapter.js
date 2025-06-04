@@ -746,6 +746,7 @@ export const spec = {
       if (acat) {
         allowedIabCategories = allowedIabCategories.concat(acat);
       }
+
     })
     const data = converter.toORTB({ validBidRequests, bidderRequest });
 
