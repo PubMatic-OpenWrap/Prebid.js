@@ -1244,40 +1244,33 @@ describe('Utils', function () {
   });
 
   describe('isGzipCompressionSupported', () => {
-    let originalIsGzipCompressionSupported;
+    let sandbox;
 
     beforeEach(() => {
-      // Store original function reference
-      originalIsGzipCompressionSupported = utils.isGzipCompressionSupported;
-
-      // Reset cachedResult manually
-      utils.isGzipCompressionSupported = (function () {
-        let cachedResult; // Reset cached value
-
+      sandbox = sinon.createSandbox();
+      sandbox.stub(utils, 'isGzipCompressionSupported').callsFake((() => {
+        let cachedResult;
         return function () {
           if (cachedResult !== undefined) {
             return cachedResult;
           }
-
           try {
             if (typeof window.CompressionStream === 'undefined') {
               cachedResult = false;
             } else {
-              let newCompressionStream = new window.CompressionStream('gzip'); // Will throw an error if unsupported
+              let newCompressionStream = new window.CompressionStream('gzip');
               cachedResult = true;
             }
           } catch (error) {
             cachedResult = false;
           }
-
           return cachedResult;
         };
-      })();
+      })());
     });
 
     afterEach(() => {
-      // Restore original function after each test
-      utils.isGzipCompressionSupported = originalIsGzipCompressionSupported;
+      sandbox.restore();
     });
 
     it('should return true if CompressionStream is available', () => {
@@ -1330,8 +1323,17 @@ describe('Utils', function () {
     });
 
     it('should compress data correctly when CompressionStream is available', async () => {
-      const data = 'Test data';
+      const data = JSON.stringify({ test: 'data' });
       const compressedData = await utils.compressDataWithGZip(data);
+
+      expect(compressedData).to.be.instanceOf(Uint8Array);
+      expect(compressedData.length).to.be.greaterThan(0);
+      expect(compressedData).to.deep.equal(new Uint8Array([1, 2, 3, 4]));
+    });
+
+    it('should handle non-string input by stringifying it', async () => {
+      const nonStringData = { test: 'data' };
+      const compressedData = await utils.compressDataWithGZip(nonStringData);
 
       expect(compressedData).to.be.instanceOf(Uint8Array);
       expect(compressedData.length).to.be.greaterThan(0);
