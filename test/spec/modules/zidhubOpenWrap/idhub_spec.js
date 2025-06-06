@@ -81,7 +81,8 @@ describe('ZidHub OpenWrap Module: idhub.js', function() {
         isUndefined: sandbox.stub().returns(false),
         isObject: sandbox.stub().returns(true),
         updateAdUnits: sandbox.stub(),
-        addHookOnFunction: sandbox.stub()
+        addHookOnFunction: sandbox.stub(),
+        isEmptyObject: sandbox.stub().returns(false)
       },
       COMMON_CONFIG: {
         getGdprActionTimeout: sandbox.stub().returns(2000),
@@ -94,6 +95,18 @@ describe('ZidHub OpenWrap Module: idhub.js', function() {
             timeout: timeout
           };
           return config;
+        }),
+        getConsentManagementEnabled: sandbox.stub().returns(true)
+      },
+      consentConfigResolver: {
+        getConsentManagementConfig: sandbox.stub().callsFake(function(callback) {
+          // Immediately execute the callback with a mock config
+          callback({
+            gdpr: {
+              cmpApi: 'iab',
+              timeout: 1000
+            }
+          });
         })
       }
     };

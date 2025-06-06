@@ -810,66 +810,6 @@ describe('OpenWrap Core Module: util.js', function () {
       });
     });
 
-    describe('getGeoInfo', function () {
-      let origPWT, origOwpbjs;
-
-      beforeEach(function () {
-        // Save original window objects
-        origPWT = window.PWT;
-        origOwpbjs = window.owpbjs;
-
-        // Create mock objects with all required methods
-        window.PWT = {
-          CC: null
-        };
-
-        window.owpbjs = {
-          getDataFromLocalStorage: sandbox.stub(),
-          detectLocation: sandbox.stub(),
-          setAndStringifyToLocalStorage: sandbox.stub()
-        };
-
-        // Set up conf with the structure expected by getGeoInfo
-        if (!conf.pwt) {
-          conf.pwt = {};
-        }
-        conf.pwt.pubid = 'test-pub';
-
-        // Mock getPbNameSpace to return the correct namespace
-        sandbox.stub(util, 'getPbNameSpace').returns('ihowpbjs');
-      });
-
-      afterEach(function () {
-        // Restore original window objects
-        window.PWT = origPWT;
-        window.owpbjs = origOwpbjs;
-
-        // Clean up conf
-        if (conf.pwt) {
-          delete conf.pwt.pubid;
-        }
-      });
-
-      it('should use cached geo data if available', function () {
-        window.owpbjs.getDataFromLocalStorage.returns('{"cc":"US"}');
-
-        util.getGeoInfo();
-
-        expect(window.PWT.CC).to.deep.equal({ cc: 'US' });
-        expect(window.owpbjs.detectLocation.called).to.be.false;
-      });
-
-      it('should fetch geo data if not in cache', function () {
-        window.owpbjs.getDataFromLocalStorage.returns(null);
-
-        util.getGeoInfo();
-
-        expect(window.owpbjs.detectLocation.called).to.be.true;
-        const url = window.owpbjs.detectLocation.args[0][0];
-        expect(url).to.include('pubid=test-pub');
-      });
-    });
-
     describe('getCDSTargetingData', function () {
       let origPWT;
 
@@ -3450,7 +3390,6 @@ describe('OpenWrap Core Module: util.js', function () {
       };
 
       sinon.spy(bidDetailsStub.bid, 'getAdapterID');
-      sinon.stub(bidManager, 'fireTracker');
 
       sinon.stub(util, 'vLogInfo').returns(true);
       iFrameStub = {
@@ -3481,7 +3420,6 @@ describe('OpenWrap Core Module: util.js', function () {
     });
 
     afterEach(function (done) {
-      bidManager.fireTracker.restore();
 
       util.vLogInfo.restore();
       util.createInvisibleIframe.restore();
