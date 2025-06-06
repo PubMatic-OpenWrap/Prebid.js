@@ -292,7 +292,7 @@ export function getCMPLookUpTimeout() {
  * Get the consent management configuration
  */
 export function getConsentManagementConfig(callbackToSetConfig) {
-  const isCallbackExecuted = false;
+  let isCallbackExecuted = false;
   let timeoutId;
 
   function executeCallback(enforcedConsentBasisOn) {

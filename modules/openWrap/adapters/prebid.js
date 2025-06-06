@@ -968,7 +968,7 @@ export function fetchBids(activeSlots, callback) {
 				if (util.isFunction(window[pbNameSpace].setPAAPIConfigForGPT) && typeof window[pbNameSpace].setPAAPIConfigForGPT == "function") {
 					window[pbNameSpace].setPAAPIConfigForGPT();
 				};
-				refThis.pbjsBidsBackHandler(bidResponses, activeSlots);
+				pbjsBidsBackHandler(bidResponses, activeSlots);
 				if (util.isFunction(callback)) {
 					callback(bidResponses);
 				}

@@ -18,7 +18,6 @@ export function initializeModule(customUtils) {
 
   // usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
   // isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
-  customUtils.consentConfigResolver.init();
   init(window);
 }
 
@@ -299,7 +298,7 @@ function origCustomServerExposedAPI(arrayOfAdUnits, callbackFunction) {
     prebid.fetchBids(slots, function () {
       const winningBids = {};
       // we should loop on qualifyingSlotDivIds to avoid confusion if two parallel calls are fired to our PWT.requestBids 
-      util.forEachOnArray(slotDivIds, divId => {
+      util.forEachOnArray(slotDivIds, (index,divId) => {
         const code = mapOfDivToCode[divId];
         winningBids[code] = findWinningBidAndGenerateTargeting(divId);
         // we need to delay the realignment as we need to do it post creative rendering :)
@@ -308,7 +307,7 @@ function origCustomServerExposedAPI(arrayOfAdUnits, callbackFunction) {
       });
 
       // for each adUnit in arrayOfAdUnits find the winningBids, we need to return this updated arrayOfAdUnits
-      util.forEachOnArray(newArrayOfAdUnits, adUnit => {
+      util.forEachOnArray(newArrayOfAdUnits, (index,adUnit) => {
         if (winningBids.hasOwnProperty(adUnit.code)) {
           adUnit.bidData = winningBids[adUnit.code];
         }
