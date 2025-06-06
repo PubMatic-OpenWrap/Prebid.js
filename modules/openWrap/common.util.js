@@ -1,6 +1,28 @@
 import * as CONSTANTS from './constants.js';
 import * as conf from './conf.js';
 
+const toString = Object.prototype.toString;
+
+export function isA(object, testForType) {
+	return toString.call(object) === `[object ${testForType}]`;
+}
+
+export function isFunction(object) {
+	return isA(object, "Function");
+}
+
+export function isNumber(object) {
+	return isA(object, 'Number');
+}
+
+export function isObject(object) {
+  return typeof object === 'object' && object !== null;
+}
+
+export function isEmptyObject(object) {
+  return isObject(object) && Object.keys(object).length === 0;
+}
+
 /**
  * Retrieves the global Prebid object, creating it if it doesn't exist. Example: owpbjs
  *
@@ -66,7 +88,7 @@ export function getGeoInfo(readFrom, callback) {
     // Set the global object with the country code from local storage
     getGlobalOwObject().CC = JSON.parse(info);
     // If a callback is provided, execute it with the source being local storage
-    if (callback) callback(readFrom.LOCALSTORAGE);
+    if (callback) callback(readFrom.LOCALSTORAGE, getGlobalOwObject().CC);
   } else {
     // If no valid data is found, use the geo-detection service to get the location
     getGlobalPbObject().detectLocation(geoDetectionURL, function (loc, success) {
@@ -83,4 +105,21 @@ export function getGeoInfo(readFrom, callback) {
       }
     });
   }
+}
+
+/**
+ * Get a key value from an object based on the value.
+ * @param {*} obj 
+ * @param {*} value 
+ * @returns key name or else null
+ */
+export function getKeyByValue(obj, value) {
+	for (const key in obj) {
+		if (obj.hasOwnProperty(key)) {
+			if (obj[key] === value) {
+				return key;
+			}
+		}
+	}
+	return null; // Return null if value not found
 }

@@ -11,6 +11,8 @@ import * as CONSTANTS from '../constants.js';
 import * as util from '../util.js';
 import * as bidManager from '../bidManager.js';
 import * as CONF from '../conf.js';
+import * as consentConfigResolver from '../modules/consentConfigResolver.js';
+import * as commonUtil from '../common.util.js';
 import * as COMMON_CONFIG from '../common.config.js';
 
 const parentAdapterID = CONSTANTS.COMMON.PARENT_ADAPTER_PREBID;
@@ -379,47 +381,47 @@ function assignUserSyncConfig(prebidConfig) {
 
 export { assignUserSyncConfig };
 
-function assignGdprConfigIfRequired(prebidConfig) {
-  if (CONFIG.getGdpr()) {
-    if (!prebidConfig['consentManagement']) {
-      prebidConfig['consentManagement'] = {};
-    }
-    prebidConfig['consentManagement']['gdpr'] = {
-      cmpApi: CONFIG.getCmpApi(),
-      timeout: CONFIG.getGdprTimeout(),
-      allowAuctionWithoutConsent: CONFIG.getAwc(), // Auction without consent
-      defaultGdprScope: true
-    };
-    const gdprActionTimeout = COMMON_CONFIG.getGdprActionTimeout();
-    if (gdprActionTimeout) {
-      util.log(`GDPR IS ENABLED, TIMEOUT: ${prebidConfig['consentManagement']['gdpr']['timeout']}, ACTION TIMEOUT: ${gdprActionTimeout}`);
-      prebidConfig['consentManagement']['gdpr']['actionTimeout'] = gdprActionTimeout;
-    }
-  }
-}
+// function assignGdprConfigIfRequired(prebidConfig) {
+//   if (CONFIG.getGdpr()) {
+//     if (!prebidConfig['consentManagement']) {
+//       prebidConfig['consentManagement'] = {};
+//     }
+//     prebidConfig['consentManagement']['gdpr'] = {
+//       cmpApi: CONFIG.getCmpApi(),
+//       timeout: CONFIG.getGdprTimeout(),
+//       allowAuctionWithoutConsent: CONFIG.getAwc(), // Auction without consent
+//       defaultGdprScope: true
+//     };
+//     const gdprActionTimeout = COMMON_CONFIG.getGdprActionTimeout();
+//     if (gdprActionTimeout) {
+//       util.log(`GDPR IS ENABLED, TIMEOUT: ${prebidConfig['consentManagement']['gdpr']['timeout']}, ACTION TIMEOUT: ${gdprActionTimeout}`);
+//       prebidConfig['consentManagement']['gdpr']['actionTimeout'] = gdprActionTimeout;
+//     }
+//   }
+// }
 
-export { assignGdprConfigIfRequired };
+// export { assignGdprConfigIfRequired };
 
-function assignCcpaConfigIfRequired(prebidConfig) {
-  if (CONFIG.getCCPA()) {
-    if (!prebidConfig['consentManagement']) {
-      prebidConfig['consentManagement'] = {};
-    }
-    prebidConfig['consentManagement']['usp'] = {
-      cmpApi: CONFIG.getCCPACmpApi(),
-      timeout: CONFIG.getCCPATimeout(),
-    };
-  }
-}
+// function assignCcpaConfigIfRequired(prebidConfig) {
+//   if (CONFIG.getCCPA()) {
+//     if (!prebidConfig['consentManagement']) {
+//       prebidConfig['consentManagement'] = {};
+//     }
+//     prebidConfig['consentManagement']['usp'] = {
+//       cmpApi: CONFIG.getCCPACmpApi(),
+//       timeout: CONFIG.getCCPATimeout(),
+//     };
+//   }
+// }
 
-export { assignCcpaConfigIfRequired };
+// export { assignCcpaConfigIfRequired };
 
-function assignGppConfigIfRequired(prebidConfig) {
-  if (CONFIG.getGppConsent()) {
-    prebidConfig = COMMON_CONFIG.setConsentConfig(prebidConfig, 'gpp', CONFIG.getGppCmpApi(), CONFIG.getGppTimeout());
-  }
-}
-export { assignGppConfigIfRequired };
+// function assignGppConfigIfRequired(prebidConfig) {
+//   if (CONFIG.getGppConsent()) {
+//     prebidConfig = COMMON_CONFIG.setConsentConfig(prebidConfig, 'gpp', CONFIG.getGppCmpApi(), CONFIG.getGppTimeout());
+//   }
+// }
+// export { assignGppConfigIfRequired };
 
 function assignCurrencyConfigIfRequired(prebidConfig) {
   if (CONFIG.getAdServerCurrency()) {
@@ -539,6 +541,7 @@ function setPrebidConfig() {
       bidderSequence: CONF.pwt.bidderOrderingEnabled === '1' ? 'fixed' : 'random',
       disableAjaxTimeout: CONFIG.getDisableAjaxTimeout(),
       enableSendAllBids: CONFIG.getSendAllBidsStatus(),
+      enableTIDs: !!CONFIG.getTransactionIdStatus(),
       targetingControls: {
         alwaysIncludeDeals: true
       },
@@ -566,10 +569,10 @@ function setPrebidConfig() {
 
     getFloorsConfiguration(prebidConfig)
     checkConfigLevelFloor(prebidConfig);
-    assignUserSyncConfig(prebidConfig);
-    assignGdprConfigIfRequired(prebidConfig);
-    assignCcpaConfigIfRequired(prebidConfig);
-    assignGppConfigIfRequired(prebidConfig);
+    // assignUserSyncConfig(prebidConfig);
+    // assignGdprConfigIfRequired(prebidConfig);
+    // assignCcpaConfigIfRequired(prebidConfig);
+    // assignGppConfigIfRequired(prebidConfig);
     assignCurrencyConfigIfRequired(prebidConfig);
     assignSchainConfigIfRequired(prebidConfig);
     assignSingleRequestConfigForBidders(prebidConfig);
@@ -586,6 +589,20 @@ function setPrebidConfig() {
     // do not set any config below this line as we are executing the hook above
 
     window[pbNameSpace].setConfig(prebidConfig);
+
+    
+		consentConfigResolver.getConsentManagementConfig(function (cmConfig) {			
+			var postConsentPrebidConfig = {};
+			assignUserSyncConfig(postConsentPrebidConfig);
+
+      const cmEnabled = COMMON_CONFIG.consentManagentEnabled();			
+      const message =  cmEnabled ? "setting" : "not setting";
+			util.log("ConsentManagement: " + cmEnabled + ", " + message + " the consentManagement config: " + JSON.stringify(cmConfig));
+			if(cmConfig && !util.isEmptyObject(cmConfig)) {
+				postConsentPrebidConfig.consentManagement = cmConfig;
+			}
+      window[pbNameSpace].setConfig(postConsentPrebidConfig);
+		});
   } else {
     util.logWarning('PreBidJS setConfig method is not available');
   }
@@ -682,7 +699,10 @@ function getFloorsConfiguration(prebidConfig) {
       },
       additionalSchemaFields: {
         browser: util.getBrowserDetails,
-        platform_id: util.getPltForFloor
+        platform_id : util.getPltForFloor,
+        country: function() {
+          return (window.PWT && window.PWT.CC && window.PWT.CC.cc) || '';
+        }
       }
     }
   }
@@ -923,39 +943,62 @@ function initPbjsConfig() {
     return;
   }
   window[pbNameSpace].logging = util.isDebugLogEnabled();
+  setPbjsBidderSettingsIfRequired();
   setPrebidConfig();
   configureBidderAliasesIfAvailable();
   enablePrebidPubMaticAnalyticIfRequired();
-  setPbjsBidderSettingsIfRequired();
-  // util.getGeoInfo();
+  
+  // IF consent Management is enabled then do not fetch the geo info from here consentMangement.js module will do the same.
+	if(!COMMON_CONFIG.consentManagentEnabled()){
+		commonUtil.getGeoInfo();
+	}
 }
 export { initPbjsConfig };
 
-function fetchBids(activeSlots, callback) {
-  const impressionID = util.generateUUID();
-  // todo:
-  //  Accept a call back function, pass it from controllers only if pbjs-analytics is enabled
-  //  if possible try to use the callback for all cases
-  //  TRY not make many changes in GPT controller
+export function fetchBids(activeSlots, callback) {
 
-  /* istanbul ignore else */
+  function requestBidsPostConsentProcess() {
+		// Halt execution till we found if consentManagement Config is set or not, once this flag found we will proceed with below execution
+		if(!COMMON_CONFIG.consentManagentEnabled()){
+			executeRequestBids();
+			return;
+		}
+		consentConfigResolver.getConsentResolverConfigInstance().getProcessCompleted(executeRequestBids);	
+	}
+
+  function executeRequestBids() {
+		window[pbNameSpace].removeAdUnit();
+		window[pbNameSpace].addAdUnits(adUnitsArray);
+		window[pbNameSpace].requestBids({
+			bidsBackHandler: function (bidResponses) {
+				if (util.isFunction(window[pbNameSpace].setPAAPIConfigForGPT) && typeof window[pbNameSpace].setPAAPIConfigForGPT == "function") {
+					window[pbNameSpace].setPAAPIConfigForGPT();
+				};
+				refThis.pbjsBidsBackHandler(bidResponses, activeSlots);
+				if (util.isFunction(callback)) {
+					callback(bidResponses);
+				}
+			},
+			timeout: CONFIG.getTimeout() - CONSTANTS.CONFIG.TIMEOUT_ADJUSTMENT
+		});
+	}
+
+  const impressionID = util.generateUUID();
+  
   if (!window[pbNameSpace]) { // todo: move this code owt.js
     util.logError('PreBid js is not loaded');
     return;
   }
 
-  // calling some bid-manager functions to reset, and set new sizes
-  // todo: can be moved to a function
   util.forEachOnArray(activeSlots, (key, slot) => {
     const divID = slot.getDivID();
     bidManager.resetBid(divID, impressionID);
-    bidManager.setSizes(divID, util.generateSlotNamesFromPattern(slot, '_W_x_H_'));
+    bidManager.setSizes(divID, util.generateSlotNamesFromPattern(slot, "_W_x_H_"));
   });
 
-  // todo: this is the function that basically puts bidder params in all adUnits, expose it separately
+  // todo: this is the function that basically puts bidder params in all adUnits, expose it separatelyMore actions
   const adUnitsArray = generateAdUnitsArray(activeSlots, impressionID);
 
-  /* istanbul ignore else */
   if (adUnitsArray.length > 0 && window[pbNameSpace]) {
     try {
       /* With prebid 2.0.0 it has started using FunHooks library which provides
@@ -969,21 +1012,7 @@ function fetchBids(activeSlots, callback) {
       if (util.isFunction(window[pbNameSpace].requestBids) || typeof window[pbNameSpace].requestBids == 'function') {
         // Adding a hook for publishers to modify the adUnits we are passing to Prebid
         util.handleHook(CONSTANTS.HOOKS.PREBID_REQUEST_BIDS, [adUnitsArray]);
-
-        window[pbNameSpace].removeAdUnit();
-        window[pbNameSpace].addAdUnits(adUnitsArray);
-        window[pbNameSpace].requestBids({
-          bidsBackHandler(bidResponses) {
-            if (util.isFunction(window[pbNameSpace].setPAAPIConfigForGPT) && typeof window[pbNameSpace].setPAAPIConfigForGPT == 'function') {
-              window[pbNameSpace].setPAAPIConfigForGPT();
-            };
-            pbjsBidsBackHandler(bidResponses, activeSlots);
-            if (util.isFunction(callback)) {
-              callback(bidResponses);
-            }
-          },
-          timeout: CONFIG.getTimeout() - CONSTANTS.CONFIG.TIMEOUT_ADJUSTMENT
-        });
+        requestBidsPostConsentProcess();
       } else {
         util.log('PreBid js requestBids function is not available');
         return;
@@ -995,10 +1024,6 @@ function fetchBids(activeSlots, callback) {
   }
 }
 
-/* start-test-block */
-export { fetchBids };
-
-/* end-test-block */
 
 // returns the highest bid and its key value pairs
 function getBid(divID) {

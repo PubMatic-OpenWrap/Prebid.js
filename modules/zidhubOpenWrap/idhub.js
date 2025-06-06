@@ -2,14 +2,16 @@ let CONFIG = {};
 let CONSTANTS = {};
 let util = {};
 let COMMON_CONFIG = {};
-let pbNameSpace = {}
-let isPubmaticIHAnalyticsEnabled = {}
+let pbNameSpace = {};
+let isPubmaticIHAnalyticsEnabled = {};
+let consentConfigResolver = {};
 
 export function initializeModule(idhubUtils) {
   CONFIG = idhubUtils.CONFIG;
   CONSTANTS = idhubUtils.CONSTANTS;
   util = idhubUtils.util;
   COMMON_CONFIG = idhubUtils.COMMON_CONFIG;
+  consentConfigResolver = idhubUtils.consentConfigResolver;
 
   pbNameSpace = CONFIG.isIdentityOnly() ? CONSTANTS.COMMON.IH_NAMESPACE : CONSTANTS.COMMON.PREBID_NAMESPACE;
   isPubmaticIHAnalyticsEnabled = CONFIG.isPubMaticIHAnalyticsEnabled();
@@ -43,45 +45,22 @@ let setConfig = () => {
         }
       };
 
-      if (CONFIG.getGdpr()) {
-        if (!prebidConfig['consentManagement']) {
-          prebidConfig['consentManagement'] = {};
-        }
-        prebidConfig['consentManagement']['gdpr'] = {
-          cmpApi: CONFIG.getCmpApi(),
-          timeout: CONFIG.getGdprTimeout(),
-          allowAuctionWithoutConsent: CONFIG.getAwc(),
-          defaultGdprScope: true
-        };
-        const gdprActionTimeout = COMMON_CONFIG.getGdprActionTimeout();
-        if (gdprActionTimeout) {
-          util.log(`GDPR IS ENABLED, TIMEOUT: ${prebidConfig['consentManagement']['gdpr']['timeout']}, ACTION TIMEOUT: ${gdprActionTimeout}`);
-          prebidConfig['consentManagement']['gdpr']['actionTimeout'] = gdprActionTimeout;
-        }
-      }
-
-      if (CONFIG.getCCPA()) {
-        if (!prebidConfig['consentManagement']) {
-          prebidConfig['consentManagement'] = {};
-        }
-        prebidConfig['consentManagement']['usp'] = {
-          cmpApi: CONFIG.getCCPACmpApi(),
-          timeout: CONFIG.getCCPATimeout(),
-        };
-      }
-
-      // Set Gpp consent config
-      if (CONFIG.getGppConsent()) {
-        prebidConfig = COMMON_CONFIG.setConsentConfig(prebidConfig, 'gpp', CONFIG.getGppCmpApi(), CONFIG.getGppTimeout());
-      }
-
       window.IHPWT.ssoEnabled = CONFIG.isSSOEnabled() || false;
       if (CONFIG.isUserIdModuleEnabled()) {
         prebidConfig['userSync']['userIds'] = util.getUserIdConfiguration();
       }
       // Adding a hook for publishers to modify the Prebid Config we have generated
       util.handleHook(CONSTANTS.HOOKS.PREBID_SET_CONFIG, [ prebidConfig ]);
-      window[pbNameSpace].setConfig(prebidConfig);
+
+      consentConfigResolver.getConsentManagementConfig(function (cmConfig) {
+        const cmEnabled = COMMON_CONFIG.consentManagentEnabled();
+        const message =  cmEnabled ? "setting" : "not setting";
+        util.log("ConsentManagement: " + cmEnabled + ", " + message + " the consentManagement config: " + JSON.stringify(cmConfig));
+        if(cmConfig && !util.isEmptyObject(cmConfig)) {
+          prebidConfig.consentManagement = cmConfig;
+        }
+        window[pbNameSpace].setConfig(prebidConfig);
+      });
     }
     if (CONFIG.isUserIdModuleEnabled() && CONFIG.isIdentityOnly()) {
       enablePubMaticIdentityAnalyticsIfRequired();

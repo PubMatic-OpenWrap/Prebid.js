@@ -5,6 +5,7 @@ let bidManager = {};
 let SLOT = {};
 let prebid = {};
 // let IdHub = {};
+let consentConfigResolver = {};
 // var usePrebidKeys = {};
 // var isPrebidPubMaticAnalyticsEnabled = {};
 
@@ -19,7 +20,7 @@ export function initializeModule(gptUtils) {
 
   // usePrebidKeys = CONFIG.isUsePrebidKeysEnabled();
   // isPrebidPubMaticAnalyticsEnabled = CONFIG.isPrebidPubMaticAnalyticsEnabled();
-  gptUtils.consentConfigResolver.init();
+  consentConfigResolver = gptUtils.consentConfigResolver;
   init(window);
 }
 
@@ -552,16 +553,19 @@ export { processDisplayCalledSlot };
 /* end-test-block */
 
 function executeDisplay(timeout, divIds, callback) {
-  let timeoutTicker = 0; // here we will calculate time elapsed
-  const timeoutIncrementer = 10; // in ms
-  const intervalId = window.setInterval(() => {
-    if ((util.getExternalBidderStatus(divIds) && bidManager.getAllPartnersBidStatuses(window.PWT.bidMap, divIds)) || timeoutTicker >= timeout) {
-      window.clearInterval(intervalId);
-      util.resetExternalBidderStatus(divIds); // Quick fix to reset flag so that the notification flow happens only once per page load
-      callback();
-    }
-    timeoutTicker += timeoutIncrementer;
-  }, timeoutIncrementer);
+  function executeDisplayPostConsentProcess() {
+    let timeoutTicker = 0; // here we will calculate time elapsed
+    const timeoutIncrementer = 10; // in ms
+    const intervalId = window.setInterval(() => {
+      if ((util.getExternalBidderStatus(divIds) && bidManager.getAllPartnersBidStatuses(window.PWT.bidMap, divIds)) || timeoutTicker >= timeout) {
+        window.clearInterval(intervalId);
+        util.resetExternalBidderStatus(divIds); // Quick fix to reset flag so that the notification flow happens only once per page load
+        callback();
+      }
+      timeoutTicker += timeoutIncrementer;
+    }, timeoutIncrementer);
+  }
+  consentConfigResolver.getConsentResolverConfigInstance().getProcessCompleted(executeDisplayPostConsentProcess);
 }
 
 /* start-test-block */

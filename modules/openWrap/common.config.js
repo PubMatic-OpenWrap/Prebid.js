@@ -3,19 +3,15 @@
 import * as config from './conf.js';
 import * as CONSTANTS from './constants.js';
 
-export function getGdprActionTimeout() {
-  const gdprActionTimeout = config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.GDPR_ACTION_TIMEOUT];
-  return gdprActionTimeout ? window.parseInt(gdprActionTimeout) : 0;
+export function consentManagentEnabled() {
+  return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.CONSENT_MANAGEMENT_ENABLED] === "1";
 }
 
-export function setConsentConfig(prebidConfig, key, cmpApi, timeout) {
-  prebidConfig = prebidConfig || {};
-  if (!prebidConfig['consentManagement']) {
-    prebidConfig['consentManagement'] = {};
-  }
-  prebidConfig['consentManagement'][key] = {
-    cmpApi: cmpApi,
-    timeout: timeout
-  };
-  return prebidConfig;
+export function getCmpApi(cmpApi) {
+  return config[CONSTANTS.CONFIG.COMMON][cmpApi] || "iab";
+}
+
+export function getTimeout(timeoutField, defaultTimeout) {
+  const timeout = config[CONSTANTS.CONFIG.COMMON][timeoutField];
+  return timeout ? window.parseInt(timeout) : defaultTimeout;
 }

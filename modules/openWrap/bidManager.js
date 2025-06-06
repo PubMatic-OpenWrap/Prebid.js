@@ -213,22 +213,35 @@ function updateNativeTargtingKeys(keyValuePairs) {
 export { updateNativeTargtingKeys };
 // endRemoveIf(removeNativeRelatedCode)
 
-export function getBrowser() {
+export const getBrowser = function() {
   const regExBrowsers = CONSTANTS.REGEX_BROWSERS;
-  const browserMapping = CONSTANTS.BROWSER_MAPPING;
-
-  const userAgent = navigator.userAgent;
-  let browserName = userAgent == null ? -1 : 0;
-  if (userAgent) {
-    for (let i = 0; i < regExBrowsers.length; i++) {
-      if (userAgent.match(regExBrowsers[i])) {
-        browserName = browserMapping[i];
-        break;
+  function matchBrowserPatterns(str) {
+		if (!str) {
+			return 0;
+		}
+		for (let i = 0; i < regExBrowsers.length; i++) {
+			if (regExBrowsers[i].regex.test(str)) {
+				return regExBrowsers[i].id;
       }
     }
+    return 0;
   }
-  return browserName;
-}
+  return function getBrowser() {
+		const nav = (typeof window !== 'undefined' && window.navigator) || {};
+		const brands = nav.userAgentData && nav.userAgentData.brands;
+		
+		if (brands && brands.length) {
+			const brandString = brands.reduce((a, b) => {
+				return a + (b.brand || '').toLowerCase() + ' ';
+			}, '').trim();
+			const result = matchBrowserPatterns(brandString);
+			if (result) return result;
+		}
+
+		const result = matchBrowserPatterns(nav.userAgent);
+		return result;
+	};
+}();
 
 // removeIf(removeNativeRelatedCode)
 // this function generates all satndard key-value pairs for a given bid and setup, set these key-value pairs in an object

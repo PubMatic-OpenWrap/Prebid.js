@@ -7,6 +7,7 @@ import * as conf from './conf.js';
 /* eslint-disable no-unused-vars */
 import * as ucTag from 'prebid-universal-creative'; // Do Not Remove, it required in case of SafeFrame rendering
 import * as timeMetrics from './modules/timeMetrics.js';
+import * as consentConfigResolver from './modules/consentConfigResolver.js';
 /* eslint-enable no-unused-vars */
 const metaInfo = util.getMetaInfo(window);
 
@@ -165,3 +166,13 @@ window.PWT.getAdapterNameForAlias = CONFIG.getAdapterNameForAlias;
 window.PWT.browserMapping = bidManager.getBrowser();
 
 export function init() {}
+
+if (CONFIG.isGamLazyLoadingEnabled()) {
+  googletag.cmd.push(function () {
+    googletag.pubads().enableLazyLoad({
+      fetchMarginPercent: CONFIG.getFetchMarginPercentage(),
+      renderMarginPercent: CONFIG.getRenderMarginPercentage(),
+      mobileScaling: CONFIG.getMobileScalingForLazyLoading()
+    });
+  });
+}

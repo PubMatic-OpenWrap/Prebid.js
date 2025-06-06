@@ -31,7 +31,8 @@ const sharedMethods = {
     'CONFIG': CONFIG_IDHUB,
     'CONSTANTS': CONSTANTS,
     'util': utilIdhub,
-    'COMMON_CONFIG': COMMON_CONFIG
+    'COMMON_CONFIG': COMMON_CONFIG,
+    'consentConfigResolver': consentConfigResolver
   }
 };
 Object.freeze(sharedMethods);

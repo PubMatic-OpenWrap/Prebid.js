@@ -15,6 +15,10 @@ export function getSendAllBidsStatus() {
   return window.parseInt(config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.SEND_ALL_BIDS]) || 0;
 }
 
+export function getTransactionIdStatus() {
+  return window.parseInt(config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.TRANSACTION_ID]) || 0;
+}
+
 export function getTimeout() {
   return window.parseInt(config.pwt.t) || 1000;
 }
@@ -470,4 +474,49 @@ export function getGppTimeout() {
 
 export function shouldClearTargeting() {
   return window.PWT.shouldClearTargeting !== undefined ? Boolean(window.PWT.shouldClearTargeting) : true;
+};
+
+// Utility function to retrieve configuration valuesMore actions
+export function getConfigValue(property, defaultValue, parseAsInteger) {
+  parseAsInteger = (typeof parseAsInteger === 'undefined') ? true : parseAsInteger; // Default to true if not supplied
+  const configValue = config[CONSTANTS.CONFIG.COMMON] && config[CONSTANTS.CONFIG.COMMON][property];
+  
+  if (configValue !== undefined) {
+      return parseAsInteger ? parseInt(configValue, 10) : parseFloat(configValue);
+  }
+
+  const pwtValue = PWT && PWT.LazyLoading && PWT.LazyLoading[property];
+  if (pwtValue !== undefined) {
+      return parseAsInteger ? parseInt(pwtValue, 10) : parseFloat(pwtValue);
+  }
+
+  return parseAsInteger ? parseInt(defaultValue, 10) : parseFloat(defaultValue);
+}
+
+export function isAuctionLazyLoadingEnabled() {
+  return getConfigValue(CONSTANTS.CONFIG.AUCTION_LAZY_LOADING_ENABLED, CONSTANTS.COMMON.DEFAULT_AUCTION_LAZY_LOADING_ENABLED) === 1;
+};
+
+export function getAuctionMarginPercentage() {
+	return getConfigValue(CONSTANTS.CONFIG.AUCTION_MARGIN_PERCENTAGE, CONSTANTS.COMMON.DEFAULT_AUCTION_MARGIN_PERCENTAGE);
+};
+
+export function isGamLazyLoadingEnabled() {
+  return getConfigValue(CONSTANTS.CONFIG.GAM_LAZY_LOADING_ENABLED, CONSTANTS.COMMON.DEFAULT_GAM_LAZY_LOADING_ENABLED) === 1;
+};
+
+export function getFetchMarginPercentage() {
+	return getConfigValue(CONSTANTS.CONFIG.FETCH_MARGIN_PERCENTAGE, CONSTANTS.COMMON.DEFAULT_FETCH_MARGIN_PERCENTAGE);
+};
+
+export function getRenderMarginPercentage() {
+	return getConfigValue(CONSTANTS.CONFIG.RENDER_MARGIN_PERCENTAGE, CONSTANTS.COMMON.DEFAULT_RENDER_MARGIN_PERCENTAGE);
+};
+
+export function getMobileScalingForLazyLoading() {
+	return getConfigValue(CONSTANTS.CONFIG.MOBILE_SCALING_FOR_LAZY_LOADING, CONSTANTS.COMMON.DEFAULT_MOBILE_SCALING_FOR_LAZY_LOADING, false);
+};
+
+export function isSRAEnabled() {
+  return window.googletag && window.googletag.pubads && window.googletag.pubads().isSRA() || false;
 };
