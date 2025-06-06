@@ -569,7 +569,7 @@ function setPrebidConfig() {
 
     getFloorsConfiguration(prebidConfig)
     checkConfigLevelFloor(prebidConfig);
-    // assignUserSyncConfig(prebidConfig);
+    assignUserSyncConfig(prebidConfig);
     // assignGdprConfigIfRequired(prebidConfig);
     // assignCcpaConfigIfRequired(prebidConfig);
     // assignGppConfigIfRequired(prebidConfig);
@@ -588,20 +588,14 @@ function setPrebidConfig() {
     // todo: stop supporting this hook let pubs use pbjs.requestBids hook
     // do not set any config below this line as we are executing the hook above
 
-    window[pbNameSpace].setConfig(prebidConfig);
-
-    
 		consentConfigResolver.getConsentManagementConfig(function (cmConfig) {			
-			var postConsentPrebidConfig = {};
-			assignUserSyncConfig(postConsentPrebidConfig);
-
       const cmEnabled = COMMON_CONFIG.consentManagentEnabled();			
       const message =  cmEnabled ? "setting" : "not setting";
 			util.log("ConsentManagement: " + cmEnabled + ", " + message + " the consentManagement config: " + JSON.stringify(cmConfig));
 			if(cmConfig && !util.isEmptyObject(cmConfig)) {
-				postConsentPrebidConfig.consentManagement = cmConfig;
+				prebidConfig.consentManagement = cmConfig;
 			}
-      window[pbNameSpace].setConfig(postConsentPrebidConfig);
+      window[pbNameSpace].setConfig(prebidConfig);
 		});
   } else {
     util.logWarning('PreBidJS setConfig method is not available');
