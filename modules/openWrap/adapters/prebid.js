@@ -589,7 +589,7 @@ function setPrebidConfig() {
     // do not set any config below this line as we are executing the hook above
 
 		consentConfigResolver.getConsentManagementConfig(function (cmConfig) {			
-      const cmEnabled = COMMON_CONFIG.consentManagentEnabled();			
+      const cmEnabled = COMMON_CONFIG.getConsentManagementEnabled();			
       const message =  cmEnabled ? "setting" : "not setting";
 			util.log("ConsentManagement: " + cmEnabled + ", " + message + " the consentManagement config: " + JSON.stringify(cmConfig));
 			if(cmConfig && !util.isEmptyObject(cmConfig)) {
@@ -943,7 +943,7 @@ function initPbjsConfig() {
   enablePrebidPubMaticAnalyticIfRequired();
   
   // IF consent Management is enabled then do not fetch the geo info from here consentMangement.js module will do the same.
-	if(!COMMON_CONFIG.consentManagentEnabled()){
+	if(!COMMON_CONFIG.getConsentManagementEnabled()){
 		commonUtil.getGeoInfo();
 	}
 }
@@ -953,7 +953,7 @@ export function fetchBids(activeSlots, callback) {
 
   function requestBidsPostConsentProcess() {
 		// Halt execution till we found if consentManagement Config is set or not, once this flag found we will proceed with below execution
-		if(!COMMON_CONFIG.consentManagentEnabled()){
+		if(!COMMON_CONFIG.getConsentManagementEnabled()){
 			executeRequestBids();
 			return;
 		}

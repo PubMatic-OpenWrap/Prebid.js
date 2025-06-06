@@ -3,7 +3,7 @@
 import * as config from './conf.js';
 import * as CONSTANTS from './constants.js';
 
-export function consentManagentEnabled() {
+export function getConsentManagementEnabled() {
   return config[CONSTANTS.CONFIG.COMMON][CONSTANTS.CONFIG.CONSENT_MANAGEMENT_ENABLED] === "1";
 }
 

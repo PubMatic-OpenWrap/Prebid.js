@@ -53,7 +53,7 @@ let setConfig = () => {
       util.handleHook(CONSTANTS.HOOKS.PREBID_SET_CONFIG, [ prebidConfig ]);
 
       consentConfigResolver.getConsentManagementConfig(function (cmConfig) {
-        const cmEnabled = COMMON_CONFIG.consentManagentEnabled();
+        const cmEnabled = COMMON_CONFIG.getConsentManagementEnabled();
         const message =  cmEnabled ? "setting" : "not setting";
         util.log("ConsentManagement: " + cmEnabled + ", " + message + " the consentManagement config: " + JSON.stringify(cmConfig));
         if(cmConfig && !util.isEmptyObject(cmConfig)) {

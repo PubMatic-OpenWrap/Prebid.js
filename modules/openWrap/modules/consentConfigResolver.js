@@ -349,7 +349,7 @@ export function getConsentManagementConfig(callbackToSetConfig) {
   // console.log("Resolver: Initializing configuration");
   timeMetrics.recordEntryTime("CONSENT_CONFIG_RESOLVER_TIME");
 
-  if (!COMMON_CONFIG.consentManagentEnabled()) {
+  if (!COMMON_CONFIG.getConsentManagementEnabled()) {
     executeCallback(CONSENT_CONSTANTS.CONSENT_MANAGEMENT_SOURCE.NONE);
     return;
   }
