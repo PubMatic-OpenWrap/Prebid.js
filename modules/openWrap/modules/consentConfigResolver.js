@@ -5,7 +5,7 @@ import * as CONSTANTS from '../constants.js';
 import * as COMMON_CONFIG from '../common.config.js';
 
 // Constants for consent management
-const CONSENT_CONSTANTS = {
+export const CONSENT_CONSTANTS = {
   DEFAULT_CMP_LOOK_UP_TIMEOUT: 1000,
   CONSENT_MANAGEMENT_SOURCE: {    // 1 -> CMP, 2 -> GEO, 0 -> NONE
     CMP: 1, 
@@ -25,7 +25,7 @@ const CONSENT_CONSTANTS = {
 }
 
 // CMP APIs configuration
-const CMP_APIs = {
+export const CMP_APIs = {
   GDPR: { apiName: "__tcfapi", complianceName: "gdpr", prepareConfig: configureGDPR, cmpCommandListner: handleGDPR },
   USP: { apiName: "__uspapi", complianceName: "usp", prepareConfig: configureUSP },
   GPP: { apiName: "__gpp", complianceName: "gpp", prepareConfig: configureGPP, cmpCommandListner: handleGPP }
@@ -230,7 +230,7 @@ export function configureGPP() {
  * @returns Object : CMPs present on the page
  */
 export function checkCMPsPresentOnPage() {
-  const currentWindow = window;
+  let currentWindow = window;
 
   // Get the CMPs present on the page
   function checkCMPInWindow(frame) {
