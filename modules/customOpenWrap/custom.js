@@ -236,9 +236,10 @@ function origCustomServerExposedAPI(arrayOfAdUnits, callbackFunction) {
     return;
   }
 
-  const qualifyingSlots = [];
+  let qualifyingSlots = [];
   const mapOfDivToCode = {};
   const qualifyingSlotDivIds = [];
+  let throttledScrollHandler;
   util.forEachOnArray(arrayOfAdUnits, (index, anAdUnitObject) => {
     if (validateAdUnitObject(anAdUnitObject)) { // returns true for valid adUnit
       const dmSlotName = anAdUnitObject.code;
@@ -281,7 +282,7 @@ function origCustomServerExposedAPI(arrayOfAdUnits, callbackFunction) {
 
   // Initial check in case some elements are already in view
   if (!CONFIG.isSRAEnabled() && CONFIG.isAuctionLazyLoadingEnabled()) {
-    const throttledScrollHandler = util.throttle(checkAndExecute, 300);
+    throttledScrollHandler = util.throttle(checkAndExecute, 300);
     if (qualifyingSlots.length > 0) {
       window.addEventListener("scroll", throttledScrollHandler);
     }
