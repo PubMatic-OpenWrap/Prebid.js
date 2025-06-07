@@ -4990,4 +4990,138 @@ describe('OpenWrap Core Module: util.js', function () {
       expect(handlerFunction.called).to.be.true;
     });
   });
+
+  describe('isTabletDeviceForLazyLoading', function () {
+    let sandbox;
+    
+    beforeEach(function () {
+      sandbox = sinon.createSandbox();
+    });
+
+    afterEach(function () {
+      sandbox.restore();
+    });
+
+    it('should detect iPad as tablet using userAgent string', function () {
+      sandbox.stub(navigator, 'userAgent').value('Mozilla/5.0 (iPad; CPU OS 14_0 like Mac OS X) AppleWebKit/605.1.15');
+      sandbox.stub(navigator, 'userAgentData').value(undefined);
+      expect(util.isTabletDeviceForLazyLoading()).to.be.true;
+    });
+
+    it('should detect Android tablet using userAgent string', function () {
+      sandbox.stub(navigator, 'userAgent').value('Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko)');
+      sandbox.stub(navigator, 'userAgentData').value(undefined);
+      expect(util.isTabletDeviceForLazyLoading()).to.be.true;
+    });
+
+    it('should detect Amazon Silk tablet using userAgent string', function () {
+      sandbox.stub(navigator, 'userAgent').value('Mozilla/5.0 (Linux; Android 9) Silk/92.2.3');
+      sandbox.stub(navigator, 'userAgentData').value(undefined);
+      expect(util.isTabletDeviceForLazyLoading()).to.be.true;
+    });
+
+    it('should not detect mobile phone as tablet using userAgent string', function () {
+      sandbox.stub(navigator, 'userAgent').value('Mozilla/5.0 (iPhone; CPU iPhone OS 14_0) Mobile Safari/604.1');
+      sandbox.stub(navigator, 'userAgentData').value(undefined);
+      expect(util.isTabletDeviceForLazyLoading()).to.be.false;
+    });
+
+    it('should not detect desktop as tablet using userAgent string', function () {
+      sandbox.stub(navigator, 'userAgent').value('Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/94.0.4606.71');
+      sandbox.stub(navigator, 'userAgentData').value(undefined);
+      expect(util.isTabletDeviceForLazyLoading()).to.be.false;
+    });
+
+    it('should detect Android tablet with Mobile keyword missing', function () {
+      sandbox.stub(navigator, 'userAgent').value('Mozilla/5.0 (Linux; Android 10) Chrome/94.0.4606.71');
+      sandbox.stub(navigator, 'userAgentData').value(undefined);
+      expect(util.isTabletDeviceForLazyLoading()).to.be.true;
+    });
+
+    it('should not detect Android mobile with Mobile keyword present', function () {
+      sandbox.stub(navigator, 'userAgent').value('Mozilla/5.0 (Linux; Android 10; Mobile) Chrome/94.0.4606.71');
+      sandbox.stub(navigator, 'userAgentData').value(undefined);
+      expect(util.isTabletDeviceForLazyLoading()).to.be.false;
+    });
+
+    it('should handle empty userAgent string', function () {
+      sandbox.stub(navigator, 'userAgent').value('');
+      sandbox.stub(navigator, 'userAgentData').value(undefined);
+      expect(util.isTabletDeviceForLazyLoading()).to.be.false;
+    });
+
+    it('should not detect tablet using userAgentData when mobile is true', function () {
+      const userAgentData = {
+        mobile: true,
+        brands: [
+          { brand: 'Chromium', version: '94' },
+          { brand: 'Android', version: '10' }
+        ]
+      };
+      sandbox.stub(navigator, 'userAgentData').value(userAgentData);
+      expect(util.isTabletDeviceForLazyLoading()).to.be.false;
+    });
+
+    it('should not detect tablet using userAgentData when not mobile and no tablet brands', function () {
+      const userAgentData = {
+        mobile: false,
+        brands: [
+          { brand: 'Chromium', version: '94' },
+          { brand: 'Windows', version: '10' }
+        ]
+      };
+      sandbox.stub(navigator, 'userAgentData').value(userAgentData);
+      expect(util.isTabletDeviceForLazyLoading()).to.be.false;
+    });
+
+    it('should handle empty brands array in userAgentData', function () {
+      const userAgentData = {
+        mobile: false,
+        brands: []
+      };
+      sandbox.stub(navigator, 'userAgentData').value(userAgentData);
+      expect(util.isTabletDeviceForLazyLoading()).to.be.false;
+    });
+
+    it('should fallback to userAgent when userAgentData.brands is empty', function () {
+      const userAgentData = {
+        mobile: false,
+        brands: []
+      };
+      sandbox.stub(navigator, 'userAgentData').value(userAgentData);
+      sandbox.stub(navigator, 'userAgent').value('Mozilla/5.0 (iPad; CPU OS 14_0)');
+      expect(util.isTabletDeviceForLazyLoading()).to.be.true;
+    });
+  });
+
+  describe('isMobileDeviceForLazyLoading', function () {
+    it('should detect mobile device using userAgentData when mobile is true', function () {
+      const userAgentData = {
+        mobile: true
+      };
+      sandbox.stub(navigator, 'userAgentData').value(userAgentData);
+      expect(util.isMobileDeviceForLazyLoading()).to.be.true;
+    });
+
+    it('should detect mobile device using userAgentData when mobile is false', function () {
+      const userAgentData = {
+        mobile: false
+      };
+      sandbox.stub(navigator, 'userAgentData').value(userAgentData);
+      expect(util.isMobileDeviceForLazyLoading()).to.be.false;
+    });
+
+    it('should detect mobile device using userAgent string', function () {
+      sandbox.stub(navigator, 'userAgent').value('Mozilla/5.0 (iPhone; CPU iPhone OS 14_0) Mobile Safari/604.1');
+      sandbox.stub(navigator, 'userAgentData').value(undefined);
+      expect(util.isMobileDeviceForLazyLoading()).to.be.true;
+    });
+
+    it('should not detect mobile device using userAgent string', function () {
+      sandbox.stub(navigator, 'userAgent').value('Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/94.0.4606.71');
+      sandbox.stub(navigator, 'userAgentData').value(undefined);
+      expect(util.isMobileDeviceForLazyLoading()).to.be.false;
+    });
+  });
+
 });

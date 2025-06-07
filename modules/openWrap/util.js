@@ -1695,7 +1695,7 @@ export function throttle(func, limit) {
   };
 }
 
-function isMobileDeviceForLazyLoading() {
+export function isMobileDeviceForLazyLoading() {
   // Get the user agent string
   const userAgent = navigator.userAgent || '';
   
@@ -1718,7 +1718,7 @@ function isMobileDeviceForLazyLoading() {
    * Detects if the current device is a tablet
    * @returns {boolean} true if the device is a tablet, false otherwise
    */
-function isTabletDeviceForLazyLoading() {
+export function isTabletDeviceForLazyLoading() {
   // Get the user agent string
   const userAgent = navigator.userAgent || '';
 
