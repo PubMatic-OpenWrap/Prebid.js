@@ -62,13 +62,13 @@ describe('OpenWrap Core Module: conf.js', function () {
 
       expect(conf.pwt).to.deep.equal(partialConfig.pwt);
       expect(conf.adapters).to.deep.equal(partialConfig.adapters);
-      expect(conf.testConfigDetails).to.deep.equal({});
-      expect(conf.test_pwt).to.deep.equal({});
-      expect(conf.identityPartners).to.deep.equal({});
-      expect(conf.slotConfig).to.deep.equal({});
-      expect(conf.alias).to.deep.equal({});
-      expect(conf.test_adapters).to.deep.equal({});
-      expect(conf.test_identityPartners).to.deep.equal({});
+      expect(conf.testConfigDetails).to.deep.equal(undefined);
+      expect(conf.test_pwt).to.deep.equal(undefined);
+      expect(conf.identityPartners).to.deep.equal(undefined);
+      expect(conf.slotConfig).to.deep.equal(undefined);
+      expect(conf.alias).to.deep.equal(undefined);
+      expect(conf.test_adapters).to.deep.equal(undefined);
+      expect(conf.test_identityPartners).to.deep.equal(undefined);
     });
   });
 
