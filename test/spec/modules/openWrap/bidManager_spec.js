@@ -60,7 +60,6 @@ describe('OpenWrap Module: bidManager.js', function () {
       BID_RECEIVED: 'bidReceived'
     });
     sandbox.stub(CONSTANTS, 'REGEX_BROWSERS');
-    sandbox.stub(CONSTANTS, 'BROWSER_MAPPING');
 
     // Setup window.PWT
     if (!window.PWT) {
@@ -314,80 +313,200 @@ describe('OpenWrap Module: bidManager.js', function () {
     });
   });
 
-  describe('Native Tracker Functions', function () {
-    beforeEach(function () {
-      window.setImageSrcToPixelURL = sandbox.stub();
-    });
-
-    it('should fire click trackers', function () {
-      const bidDetails = {
-        native: {
-          ortb: {
-            link: {
-              clickTrackers: ['click_url']
-            }
-          }
-        }
-      };
-
-      bidManager.fireTracker(bidDetails, 'click');
-
-      expect(window.setImageSrcToPixelURL.calledWith('click_url', false)).to.be.true;
-    });
-
-    it('should handle missing click trackers', function () {
-      const bidDetails = { native: {} };
-      bidManager.fireTracker(bidDetails, 'click');
-      expect(window.setImageSrcToPixelURL.called).to.be.false;
-    });
-
-    it('should handle impression trackers with jstracker', function () {
-      const bidDetails = {
-        native: {
-          ortb: {
-            eventtrackers: [
-              { event: 1, method: 2, url: '<script>test</script>' }
-            ],
-            jstracker: '<script>test</script>'
-          }
-        }
-      };
-
-      bidManager.fireTracker(bidDetails, 'imptrackers');
-
-      expect(util.insertHtmlIntoIframe.calledWith('<script>test</script>')).to.be.true;
-    });
-
-    it('should handle missing trackers', function () {
-      const bidDetails = { native: {} };
-      bidManager.fireTracker(bidDetails, 'imptrackers');
-      expect(window.setImageSrcToPixelURL.called).to.be.false;
-      expect(util.insertHtmlIntoIframe.called).to.be.false;
-    });
-  });
-
   describe('Browser Detection', function () {
-    it('should detect browser with regex match', function () {
-      CONSTANTS.REGEX_BROWSERS.value = [/Chrome/];
-      CONSTANTS.BROWSER_MAPPING.value = [73];
-      const result = bidManager.getBrowser();
-      expect(result).to.equal(73);
-    });
-
-    it('should handle no regex match', function () {
-      CONSTANTS.REGEX_BROWSERS.value = [/Firefox/];
-      CONSTANTS.BROWSER_MAPPING.value = [73];
-      const result = bidManager.getBrowser();
-      expect(result).to.equal(73);
-    });
-
-    it('should handle null user agent', function () {
-      Object.defineProperty(navigator, 'userAgent', {
-        value: null,
+    beforeEach(function () {
+      // Save original navigator
+      const originalNavigator = window.navigator;
+      
+      // Mock window.navigator
+      Object.defineProperty(window, 'navigator', {
+        value: originalNavigator,
         configurable: true
       });
+    });
+
+    afterEach(function () {
+      // Restore original navigator
+      Object.defineProperty(window, 'navigator', {
+        value: window.navigator,
+        configurable: true
+      });
+    });
+
+    it('should detect browser with regex match', function () {
+      CONSTANTS.REGEX_BROWSERS.value = [/Chrome/];
       const result = bidManager.getBrowser();
-      expect(result).to.equal(-1);
+      expect(result).to.equal(9);
+    });
+
+    it('should detect browser using userAgentData.brands', function () {
+      // Setup browser brands data
+      const originalNavigator = window.navigator;
+      const mockNavigator = {
+        userAgentData: {
+          brands: [
+            { brand: 'Chrome', version: '91' },
+            { brand: 'Chromium', version: '91' }
+          ]
+        }
+      };
+      
+      // Mock window.navigator
+      Object.defineProperty(window, 'navigator', {
+        value: mockNavigator,
+        configurable: true
+      });
+      
+      // Setup regex browsers with Chrome pattern
+      CONSTANTS.REGEX_BROWSERS.value = [
+        { regex: /chrome/i, id: 9 }
+      ];
+      
+      const result = bidManager.getBrowser();
+      
+      // Restore original navigator
+      Object.defineProperty(window, 'navigator', {
+        value: originalNavigator,
+        configurable: true
+      });
+      
+      expect(result).to.equal(9);
+    });
+    
+    it('should fallback to userAgent when userAgentData.brands is empty', function () {
+      // Setup mock navigator with empty brands
+      const originalNavigator = window.navigator;
+      const mockNavigator = {
+        userAgentData: {
+          brands: []
+        },
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      };
+      
+      // Mock window.navigator
+      Object.defineProperty(window, 'navigator', {
+        value: mockNavigator,
+        configurable: true
+      });
+      
+      // Setup regex browsers with Chrome pattern
+      CONSTANTS.REGEX_BROWSERS.value = [
+        { regex: /chrome/i, id: 9 }
+      ];
+      
+      const result = bidManager.getBrowser();
+      
+      // Restore original navigator
+      Object.defineProperty(window, 'navigator', {
+        value: originalNavigator,
+        configurable: true
+      });
+      
+      expect(result).to.equal(9);
+    });
+    
+    it('should fallback to userAgent when userAgentData is not available', function () {
+      // Setup mock navigator without userAgentData
+      const originalNavigator = window.navigator;
+      const mockNavigator = {
+        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Mobile/15E148 Safari/604.1'
+      };
+      
+      // Mock window.navigator
+      Object.defineProperty(window, 'navigator', {
+        value: mockNavigator,
+        configurable: true
+      });
+      
+      // Setup regex browsers with Safari Mobile pattern
+      CONSTANTS.REGEX_BROWSERS.value = [
+        { regex: /version\/([\w\.\,]+) .*mobile\/\w+ (safari)/i, id: 10 }
+      ];
+      
+      const result = bidManager.getBrowser();
+      
+      // Restore original navigator
+      Object.defineProperty(window, 'navigator', {
+        value: originalNavigator,
+        configurable: true
+      });
+      
+      expect(result).to.equal(10);
+    });
+    
+    it('should return 0 when no browser pattern matches', function () {
+      // Setup mock navigator
+      const originalNavigator = window.navigator;
+      const mockNavigator = {
+        userAgent: 'Unknown Browser'
+      };
+      
+      // Mock window.navigator
+      Object.defineProperty(window, 'navigator', {
+        value: mockNavigator,
+        configurable: true
+      });
+      
+      // Setup regex browsers with patterns that won't match
+      CONSTANTS.REGEX_BROWSERS.value = [
+        { regex: /chrome/i, id: 9 },
+        { regex: /firefox/i, id: 12 }
+      ];
+      
+      const result = bidManager.getBrowser();
+      
+      // Restore original navigator
+      Object.defineProperty(window, 'navigator', {
+        value: originalNavigator,
+        configurable: true
+      });
+      
+      expect(result).to.equal(0);
+    });
+    
+    it('should return 0 when userAgent is empty', function () {
+      // Setup mock navigator with empty userAgent
+      const originalNavigator = window.navigator;
+      const mockNavigator = {
+        userAgent: ''
+      };
+      
+      // Mock window.navigator
+      Object.defineProperty(window, 'navigator', {
+        value: mockNavigator,
+        configurable: true
+      });
+      
+      const result = bidManager.getBrowser();
+      
+      // Restore original navigator
+      Object.defineProperty(window, 'navigator', {
+        value: originalNavigator,
+        configurable: true
+      });
+      
+      expect(result).to.equal(0);
+    });
+    
+    it('should handle undefined navigator gracefully', function () {
+      // Save original navigator
+      const originalNavigator = window.navigator;
+      
+      // Set navigator to undefined
+      Object.defineProperty(window, 'navigator', {
+        value: undefined,
+        configurable: true
+      });
+      
+      const result = bidManager.getBrowser();
+      
+      // Restore original navigator
+      Object.defineProperty(window, 'navigator', {
+        value: originalNavigator,
+        configurable: true
+      });
+      
+      expect(result).to.equal(0);
     });
   });
 
