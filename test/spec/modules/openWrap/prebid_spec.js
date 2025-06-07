@@ -5,6 +5,7 @@ import * as util from '../../../../modules/openWrap/util.js';
 import * as bidManager from '../../../../modules/openWrap/bidManager.js';
 import * as CONF from '../../../../modules/openWrap/conf.js';
 import * as COMMON_CONFIG from '../../../../modules/openWrap/common.config.js';
+import * as consentConfigResolver from '../../../../modules/openWrap/modules/consentConfigResolver.js';
 
 describe('OpenWrap Module: prebid.js adapter', function() {
   let sandbox;
@@ -63,9 +64,6 @@ describe('OpenWrap Module: prebid.js adapter', function() {
     sandbox.stub(CONFIG, 'getFloorType').returns('');
     sandbox.stub(util, 'getBrowserDetails').returns({});
     sandbox.stub(util, 'getPltForFloor').returns('');
-
-    // Setup stubs for COMMON_CONFIG
-    sandbox.stub(COMMON_CONFIG, 'getGdprActionTimeout').returns(1000);
 
     // Setup stubs for bidManager
     sandbox.stub(bidManager, 'resetBid');
@@ -757,100 +755,6 @@ describe('OpenWrap Module: prebid.js adapter', function() {
     });
   });
 
-  describe('assignGdprConfigIfRequired', function() {
-    beforeEach(function() {
-      // Create specific stubs for GDPR-related functions
-      CONFIG.getCmpApi = sandbox.stub().returns('iab');
-      CONFIG.getGdprTimeout = sandbox.stub().returns(1000);
-      CONFIG.getAwc = sandbox.stub().returns(true);
-    });
-
-    it('should assign GDPR config when available', function() {
-      const prebidConfig = {
-        consentManagement: {}
-      };
-      CONFIG.getGdpr.returns({
-        cmpApi: 'iab',
-        timeout: 1000,
-        allowAuctionWithoutConsent: true
-      });
-
-      prebidAdapter.assignGdprConfigIfRequired(prebidConfig);
-
-      expect(prebidConfig.consentManagement).to.have.property('gdpr');
-      expect(prebidConfig.consentManagement.gdpr).to.have.property('cmpApi', 'iab');
-      expect(prebidConfig.consentManagement.gdpr).to.have.property('timeout', 1000);
-      expect(prebidConfig.consentManagement.gdpr).to.have.property('allowAuctionWithoutConsent', true);
-    });
-
-    it('should not assign GDPR config when not available', function() {
-      const prebidConfig = {
-        consentManagement: {}
-      };
-      CONFIG.getGdpr.returns(false);
-
-      prebidAdapter.assignGdprConfigIfRequired(prebidConfig);
-
-      expect(prebidConfig.consentManagement).to.not.have.property('gdpr');
-    });
-  });
-
-  describe('assignCcpaConfigIfRequired', function() {
-    beforeEach(function() {
-      // Create specific stubs for CCPA-related functions
-      CONFIG.getCCPACmpApi = sandbox.stub().returns('iab');
-      CONFIG.getCCPATimeout = sandbox.stub().returns(1000);
-    });
-
-    it('should assign CCPA config when available', function() {
-      const prebidConfig = {
-        consentManagement: {}
-      };
-      CONFIG.getCCPA.returns({
-        cmpApi: 'iab',
-        timeout: 1000
-      });
-
-      prebidAdapter.assignCcpaConfigIfRequired(prebidConfig);
-
-      expect(prebidConfig.consentManagement).to.have.property('usp');
-      expect(prebidConfig.consentManagement.usp).to.have.property('cmpApi', 'iab');
-      expect(prebidConfig.consentManagement.usp).to.have.property('timeout', 1000);
-    });
-
-    it('should not assign CCPA config when not available', function() {
-      const prebidConfig = {
-        consentManagement: {}
-      };
-      CONFIG.getCCPA.returns(false);
-
-      prebidAdapter.assignCcpaConfigIfRequired(prebidConfig);
-
-      expect(prebidConfig.consentManagement).to.not.have.property('usp');
-    });
-  });
-
-  describe('assignGppConfigIfRequired', function() {
-    beforeEach(function() {
-      // Create specific stubs for GPP-related functions
-      CONFIG.getGppConsent = sandbox.stub().returns(true);
-      CONFIG.getGppCmpApi = sandbox.stub().returns('iab');
-      CONFIG.getGppTimeout = sandbox.stub().returns(1000);
-    });
-
-    it('should assign GPP config when available', function() {
-      const prebidConfig = {
-        consentManagement: {}
-      };
-
-      prebidAdapter.assignGppConfigIfRequired(prebidConfig);
-
-      expect(prebidConfig.consentManagement).to.have.property('gpp');
-      expect(prebidConfig.consentManagement.gpp).to.have.property('cmpApi');
-      expect(prebidConfig.consentManagement.gpp).to.have.property('timeout');
-    });
-  });
-
   describe('assignCurrencyConfigIfRequired', function() {
     beforeEach(function() {
       // Create specific stubs for currency-related functions
@@ -1021,12 +925,15 @@ describe('OpenWrap Module: prebid.js adapter', function() {
   });
 
   describe('setPrebidConfig', function() {
+    let consentConfigResolverStub;
+    
     beforeEach(function() {
       // Setup stubs for required CONFIG functions
       sandbox.stub(util, 'isDebugLogEnabled').returns(true);
       sandbox.stub(CONFIG, 'getDisableAjaxTimeout').returns(false);
       sandbox.stub(CONFIG, 'getSendAllBidsStatus').returns(true);
       sandbox.stub(CONFIG, 'isBidPoolingEnabled').returns(false);
+      sandbox.stub(CONFIG, 'getTransactionIdStatus').returns(1);
 
       // Create a new stub for isFloorPriceModuleEnabled
       CONFIG.isFloorPriceModuleEnabled = sandbox.stub().returns(false);
@@ -1058,21 +965,17 @@ describe('OpenWrap Module: prebid.js adapter', function() {
       // Reset the setConfig call count
       mockPbjs.setConfig.resetHistory();
 
-      // Make sure isFunction returns true for setConfig and getCustomDimensionsDataFromPublisher
-      util.isFunction.callsFake((fn) => {
-        if (fn === window.getCustomDimensionsDataFromPublisher) {
-          return true;
-        }
-        return true; // Default to true for all functions
+      // Mock the consentConfigResolver
+      consentConfigResolverStub = sandbox.stub(consentConfigResolver, 'getConsentManagementConfig');
+      consentConfigResolverStub.callsFake(function(callback) {
+        callback({});
       });
+
+      // Mock COMMON_CONFIG
+      sandbox.stub(COMMON_CONFIG, 'getConsentManagementEnabled').returns(false);
     });
 
     afterEach(function() {
-      // Restore any stubs created in the tests
-      if (prebidAdapter.getFloorsConfiguration.restore) {
-        prebidAdapter.getFloorsConfiguration.restore();
-      }
-
       // Clean up window.getCustomDimensionsDataFromPublisher
       delete window.getCustomDimensionsDataFromPublisher;
     });
@@ -1084,8 +987,17 @@ describe('OpenWrap Module: prebid.js adapter', function() {
       expect(mockPbjs.setConfig.calledOnce).to.be.true;
     });
 
+    it('should set bidderSequence to fixed when bidderOrderingEnabled is 1', function() {
+      CONF.pwt.bidderOrderingEnabled = '1';
+
+      prebidAdapter.setPrebidConfig();
+
+      // Get the config object passed to setConfig
+      const config = mockPbjs.setConfig.args[0][0];
+      expect(config).to.have.property('bidderSequence', 'fixed');
+    });
+
     it('should set bidderSequence to random when bidderOrderingEnabled is not 1', function() {
-      // Change bidderOrderingEnabled to '0'
       CONF.pwt.bidderOrderingEnabled = '0';
 
       prebidAdapter.setPrebidConfig();
@@ -1151,6 +1063,65 @@ describe('OpenWrap Module: prebid.js adapter', function() {
       // Get the config object passed to setConfig
       const config = mockPbjs.setConfig.args[0][0];
       expect(config).to.not.have.property('cds');
+    });
+
+    it('should set enableTIDs when getTransactionIdStatus returns truthy value', function() {
+      CONFIG.getTransactionIdStatus.returns(1);
+      
+      prebidAdapter.setPrebidConfig();
+      
+      const config = mockPbjs.setConfig.args[0][0];
+      expect(config).to.have.property('enableTIDs', true);
+    });
+
+    it('should set enableTIDs to false when getTransactionIdStatus returns falsy value', function() {
+      CONFIG.getTransactionIdStatus.returns(0);
+      
+      prebidAdapter.setPrebidConfig();
+      
+      const config = mockPbjs.setConfig.args[0][0];
+      expect(config).to.have.property('enableTIDs', false);
+    });
+
+    it('should set consentManagement config when provided by resolver', function() {
+      // Set up consent management to be enabled
+      COMMON_CONFIG.getConsentManagementEnabled.returns(true);
+      
+      // Mock the consent management config
+      consentConfigResolverStub.callsFake(function(callback) {
+        callback({ gdpr: { cmpApi: 'iab', timeout: 1000 } });
+      });
+      
+      prebidAdapter.setPrebidConfig();
+      
+      const config = mockPbjs.setConfig.args[0][0];
+      expect(config).to.have.property('consentManagement');
+      expect(config.consentManagement).to.have.property('gdpr');
+      expect(config.consentManagement.gdpr).to.have.property('cmpApi', 'iab');
+    });
+
+    it('should not set consentManagement config when empty object returned', function() {
+      // Set up consent management to be enabled
+      COMMON_CONFIG.getConsentManagementEnabled.returns(true);
+      
+      // Mock the consent management config to return empty object
+      consentConfigResolverStub.callsFake(function(callback) {
+        callback({});
+      });
+      
+      prebidAdapter.setPrebidConfig();
+      
+      const config = mockPbjs.setConfig.args[0][0];
+      expect(config).to.not.have.property('consentManagement');
+    });
+
+    it('should set cache configuration correctly', function() {
+      prebidAdapter.setPrebidConfig();
+      
+      const config = mockPbjs.setConfig.args[0][0];
+      expect(config).to.have.property('cache');
+      expect(config.cache).to.have.property('url', 'https://cache.example.com/cache');
+      expect(config.cache).to.have.property('ignoreBidderCacheKey', true);
     });
   });
 
