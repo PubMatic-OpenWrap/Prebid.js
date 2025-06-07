@@ -1294,4 +1294,249 @@ describe('OpenWrap Core Module: config.js', function () {
       expect(conf.adapters.testAdapter.klm.slot2.param2).to.equal('value2');
     });
   });
+
+  describe('Miscellaneous Configuration', function () {
+    it('getDisableAjaxTimeout should return true by default', function () {
+      expect(configModule.getDisableAjaxTimeout()).to.be.true;
+    });
+
+    it('getDisableAjaxTimeout should return configured value', function () {
+      conf.setOWConfig({
+        pwt: { disableAjaxTimeout: false }
+      });
+      expect(configModule.getDisableAjaxTimeout()).to.be.false;
+    });
+
+    it('getSendAllBidsStatus should return 0 by default', function () {
+      expect(configModule.getSendAllBidsStatus()).to.equal(0);
+    });
+
+    it('getSendAllBidsStatus should return configured value', function () {
+      conf.setOWConfig({
+        pwt: { sendAllBids: '1' }
+      });
+      expect(configModule.getSendAllBidsStatus()).to.equal(1);
+    });
+
+    it('getTransactionIdStatus should return 0 by default', function () {
+      expect(configModule.getTransactionIdStatus()).to.equal(0);
+    });
+
+    it('getTransactionIdStatus should return configured value', function () {
+      conf.setOWConfig({
+        pwt: { transactionId: '1' }
+      });
+      expect(configModule.getTransactionIdStatus()).to.equal(1);
+    });
+
+    it('getNativeConfiguration should return undefined when not configured', function () {
+      expect(configModule.getNativeConfiguration()).to.be.undefined;
+    });
+
+
+
+    it('getAdServerCurrency should return configured value', function () {
+      conf.setOWConfig({
+        pwt: { adServerCurrency: 'EUR' }
+      });
+      expect(configModule.getAdServerCurrency()).to.equal('EUR');
+    });
+
+
+    it('getIdentityPartners should return empty object when not configured', function () {
+      expect(configModule.getIdentityPartners()).to.deep.equal({});
+    });
+
+    it('getIdentityPartners should return configured value', function () {
+      const identityPartners = { partner1: { enabled: true } };
+      conf.setOWConfig({
+        identityPartners
+      });
+      expect(configModule.getIdentityPartners()).to.deep.equal(identityPartners);
+    });
+
+
+    it('getSlotConfiguration should return empty object when not configured', function () {
+      expect(configModule.getSlotConfiguration()).to.deep.equal({});
+    });
+
+    it('getSlotConfiguration should return configured value', function () {
+      const slotConfig = { slot1: { sizes: [[300, 250]] } };
+      conf.setOWConfig({
+        slotConfig
+      });
+      expect(configModule.getSlotConfiguration()).to.deep.equal(slotConfig);
+    });
+
+    it('getAdServer should return undefined when not configured', function () {
+      expect(configModule.getAdServer()).to.be.undefined;
+    });
+
+  });
+
+  describe('getConfigValue utility function', function () {
+    beforeEach(function () {
+      window.PWT = window.PWT || {};
+      window.PWT.LazyLoading = {};
+    });
+
+    afterEach(function () {
+      delete window.PWT.LazyLoading;
+    });
+
+    it('should retrieve value from config when available', function () {
+      conf.pwt = { testProperty: '123' };
+      expect(configModule.getConfigValue('testProperty', '456')).to.equal(123);
+    });
+
+    it('should retrieve value from PWT.LazyLoading when config not available', function () {
+      window.PWT.LazyLoading.testProperty = '789';
+      expect(configModule.getConfigValue('testProperty', '456')).to.equal(789);
+    });
+
+    it('should return default value when neither config nor PWT.LazyLoading has the property', function () {
+      expect(configModule.getConfigValue('nonExistentProperty', '456')).to.equal(456);
+    });
+
+    it('should parse as float when parseAsInteger is false', function () {
+      conf.pwt = { testProperty: '123.45' };
+      expect(configModule.getConfigValue('testProperty', '456', false)).to.equal(123.45);
+    });
+  });
+
+  describe('Lazy Loading Configuration', function () {
+    beforeEach(function () {
+
+      window.PWT = window.PWT || {};
+      window.PWT.LazyLoading = {};
+      
+
+      sandbox.stub(CONSTANTS, 'CONFIG').value({
+        AUCTION_LAZY_LOADING_ENABLED: 'auctionLazyLoadingEnabled',
+        AUCTION_MARGIN_PERCENTAGE: 'auctionMarginPercentage',
+        GAM_LAZY_LOADING_ENABLED: 'gamLazyLoadingEnabled',
+        FETCH_MARGIN_PERCENTAGE: 'fetchMarginPercentage',
+        RENDER_MARGIN_PERCENTAGE: 'renderMarginPercentage',
+        MOBILE_SCALING_FOR_LAZY_LOADING: 'mobileScalingForLazyLoading'
+      });
+      
+      sandbox.stub(CONSTANTS, 'COMMON').value({
+        DEFAULT_AUCTION_LAZY_LOADING_ENABLED: '0',
+        DEFAULT_AUCTION_MARGIN_PERCENTAGE: '400',
+        DEFAULT_GAM_LAZY_LOADING_ENABLED: '0',
+        DEFAULT_FETCH_MARGIN_PERCENTAGE: '300',
+        DEFAULT_RENDER_MARGIN_PERCENTAGE: '200',
+        DEFAULT_MOBILE_SCALING_FOR_LAZY_LOADING: '2.0'
+      });
+    });
+
+    afterEach(function () {
+      delete window.PWT.LazyLoading;
+    });
+
+    it('isAuctionLazyLoadingEnabled should return correct value when configured', function () {
+      conf.pwt = { auctionLazyLoadingEnabled: '1' };
+      expect(configModule.isAuctionLazyLoadingEnabled()).to.equal(false);
+    });
+
+    it('isAuctionLazyLoadingEnabled should return default value when not configured', function () {
+      expect(configModule.isAuctionLazyLoadingEnabled()).to.equal(false);
+    });
+
+    it('getAuctionMarginPercentage should return correct value when configured', function () {
+      window.PWT.LazyLoading = { auctionMarginPercentage: '500' };
+      expect(configModule.getAuctionMarginPercentage()).to.equal(500);
+    });
+
+    it('getAuctionMarginPercentage should return default value when not configured', function () {
+      expect(configModule.getAuctionMarginPercentage()).to.equal(400);
+    });
+
+    it('isGamLazyLoadingEnabled should return correct value when configured', function () {
+      window.PWT.LazyLoading = { gamLazyLoadingEnabled: '1' };
+      expect(configModule.isGamLazyLoadingEnabled()).to.equal(true);
+    });
+
+    it('isGamLazyLoadingEnabled should return default value when not configured', function () {
+      expect(configModule.isGamLazyLoadingEnabled()).to.equal(false);
+    });
+
+    it('getFetchMarginPercentage should return correct value when configured', function () {
+      window.PWT.LazyLoading = { fetchMarginPercentage: '350' };
+      expect(configModule.getFetchMarginPercentage()).to.equal(350);
+    });
+
+    it('getFetchMarginPercentage should return default value when not configured', function () {
+      expect(configModule.getFetchMarginPercentage()).to.equal(300);
+    });
+
+    it('getRenderMarginPercentage should return correct value when configured', function () {
+      window.PWT.LazyLoading = { renderMarginPercentage: '250' };
+      expect(configModule.getRenderMarginPercentage()).to.equal(250);
+    });
+
+    it('getRenderMarginPercentage should return default value when not configured', function () {
+      expect(configModule.getRenderMarginPercentage()).to.equal(200);
+    });
+
+    it('getMobileScalingForLazyLoading should return correct value when configured', function () {
+      window.PWT.LazyLoading = { mobileScalingForLazyLoading: '3.0' };
+      expect(configModule.getMobileScalingForLazyLoading()).to.equal(3.0);
+    });
+
+    it('getMobileScalingForLazyLoading should return default value when not configured', function () {
+      expect(configModule.getMobileScalingForLazyLoading()).to.equal(2.0);
+    });
+  });
+
+  describe('isSRAEnabled function', function () {
+    let originalGoogletag;
+
+    beforeEach(function () {
+      originalGoogletag = window.googletag;
+      window.googletag = {
+        pubads: sinon.stub().returns({
+          isSRA: sinon.stub()
+        })
+      };
+    });
+
+    afterEach(function () {
+      window.googletag = originalGoogletag;
+    });
+
+    it('should return false when googletag is not available', function () {
+      window.googletag = undefined;
+      expect(configModule.isSRAEnabled()).to.be.false;
+    });
+
+    it('should return false when pubads is not available', function () {
+      window.googletag.pubads = undefined;
+      expect(configModule.isSRAEnabled()).to.be.false;
+    });
+
+    it('should return false when SRA is disabled', function () {
+      window.googletag.pubads().isSRA.returns(false);
+      expect(configModule.isSRAEnabled()).to.be.false;
+    });
+
+    it('should return true when SRA is enabled', function () {
+      window.googletag.pubads().isSRA.returns(true);
+      expect(configModule.isSRAEnabled()).to.be.true;
+    });
+  });
+
+  describe('usePBSAdapter function', function () {
+    it('should return false by default', function () {
+      expect(configModule.usePBSAdapter()).to.be.false;
+    });
+
+    it('should return true when configured as 1', function () {
+      conf.setOWConfig({
+        pwt: { usePBSAdapter: '1' }
+      });
+      expect(configModule.usePBSAdapter()).to.be.true;
+    });
+  });
+
 });

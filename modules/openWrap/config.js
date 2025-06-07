@@ -485,7 +485,7 @@ export function getConfigValue(property, defaultValue, parseAsInteger) {
       return parseAsInteger ? parseInt(configValue, 10) : parseFloat(configValue);
   }
 
-  const pwtValue = PWT && PWT.LazyLoading && PWT.LazyLoading[property];
+  const pwtValue = window.PWT && window.PWT.LazyLoading && window.PWT.LazyLoading[property];
   if (pwtValue !== undefined) {
       return parseAsInteger ? parseInt(pwtValue, 10) : parseFloat(pwtValue);
   }
