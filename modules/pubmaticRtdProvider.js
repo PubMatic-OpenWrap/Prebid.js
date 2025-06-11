@@ -31,7 +31,7 @@ const CONSTANTS = Object.freeze({
     NIGHT: 'night',
   },
   ENDPOINTS: {
-    BASEURL: 'http://localhost:8080',
+    BASEURL: 'https://ads.pubmatic.com/AdServer/js/pwt',
     FLOORS: 'floors.json',
     CONFIGS: 'config.json'
   }
