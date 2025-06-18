@@ -23,7 +23,7 @@ function generateQueryStringParams(config) {
   const gdprConsent = gdprDataHandler.getConsentData();
 
   const params = {
-    publisherId: config.params.publisherId,
+    publisherId: Number(config.params.publisherId),
     gdpr: (gdprConsent && gdprConsent?.gdprApplies) ? 1 : 0,
     gdpr_consent: gdprConsent && gdprConsent?.consentString ? encodeURIComponent(gdprConsent.consentString) : '',
     src: 'pbjs_uid',
@@ -95,8 +95,12 @@ function hasRequiredConfig(config) {
     return false;
   }
 
-  if (!isNumber(config.params.publisherId)) {
-    logError(LOG_PREFIX + 'config.params.publisherId (int) should be provided.');
+  // convert publisherId to number
+  if (config.params.publisherId) {
+    config.params.publisherId = Number(config.params.publisherId);
+  }
+  if (!config.params.publisherId) {
+    logError(LOG_PREFIX + 'config.params.publisherId (Number) should be provided.');
     return false;
   }
 
