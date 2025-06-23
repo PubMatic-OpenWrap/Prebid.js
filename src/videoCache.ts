@@ -118,11 +118,11 @@ declare module './config' {
  * @return {Object|null} - The payload to be sent to the prebid-server endpoints, or null if the bid can't be converted cleanly.
  */
 function toStorageRequest(bid, {index = auctionManager.index} = {}) {
-const vastValue = getVastXml(bid);
+let vastValue = getVastXml(bid);
   const auction = index.getAuction(bid);
   /* istanbul ignore next */
-  if (window && window.ima) {
-    vastValue = getGlobal().injectTrackerForIMA(bid, vastValue);
+  if (window && (window as any).ima) {
+    vastValue = (getGlobal() as any).injectTrackerForIMA(bid, vastValue);
   }
   const ttlWithBuffer = Number(bid.ttl) + ttlBufferInSeconds;
   let payload: any = {

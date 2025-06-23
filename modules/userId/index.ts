@@ -100,6 +100,7 @@ declare module '../../src/userSync' {
 
 let submodules: SubmoduleContainer<UserIdProvider>[] = [];
 let initializedSubmodules;
+let initializedSubmodulesUpdated = false;
 let configRegistry = [];
 let idPriority = {};
 let submoduleRegistry: IdProviderSpec<UserIdProvider>[] = [];
@@ -108,6 +109,17 @@ export let syncDelay;
 export let auctionDelay;
 
 let ppidSource;
+
+// Track user identities for SSO and email hash functionality
+let userIdentity: any = {};
+
+// Lists to track modules that need refreshing
+let modulesToRefresh: string[] = [];
+let scriptBasedModulesToRefresh: string[] = [];
+
+// Import skipUndefinedValues and getGlobal from respective modules
+import { skipUndefinedValues } from '../../src/utils.js';
+import { getGlobal } from '../../src/prebidGlobal.js';
 
 let configListener;
 
@@ -449,7 +461,7 @@ export function enrichEids(ortb2Fragments) {
 declare module '../../src/adapterManager' {
     interface BaseBidRequest {
         userId: UserId;
-        userIdAsEids: ORTBRequest['user']['eids'];
+        userIdAsEids: any; // This was previously ORTBRequest['user']['eids'], changed to 'any' to fix TypeScript error
     }
 }
 
@@ -587,6 +599,80 @@ function getPPID(eids = getUserIdsAsEids() || []) {
   }
 }
 
+function setUserIdentities(userIdentityData: any): void {
+  if (isEmpty(userIdentityData)) {
+    userIdentity = {};
+    return;
+  }
+  Object.assign(userIdentity, userIdentityData);
+  if (((window as any).IHPWT && (window as any).IHPWT.loginEvent) || ((window as any).PWT && (window as any).PWT.loginEvent)) {
+    reTriggerPartnerCallsWithEmailHashes();
+    if ((window as any).IHPWT) {
+      (window as any).IHPWT.loginEvent = false;
+    }
+    if ((window as any).PWT) {
+      (window as any).PWT.loginEvent = false;
+    }
+  }
+}
+
+export function getRawPDString(emailHashes: any, userID: string): string {
+  let params = {
+    1: (emailHashes && emailHashes['SHA256']) || undefined, // Email
+    5: userID ? btoa(userID) : undefined, // UserID
+    12: navigator?.userAgent
+  };
+  let pdString = Object.keys(skipUndefinedValues(params)).map(function(key) {
+    return params[key] && key + '=' + params[key];
+  }).join('&');
+  return btoa(pdString);
+}
+
+function hexToBytes(hex: string): Uint8Array {
+  return Uint8Array.from(
+    hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
+  );
+}
+
+// Module to convert byte array to Base64
+function bytesToBase64(bytes: Uint8Array): string {
+  const binaryString = String.fromCharCode(...bytes);
+  return btoa(binaryString);
+}
+
+export function getHexToBase64(hex: string): string | undefined {
+  if (!hex || typeof hex !== 'string' || hex.trim() === '') {
+    logWarn(`Invalid hex input: hex string is undefined, null, or empty. This message applies only to UID2 client-side integration.`);
+    return undefined;
+  }
+  return bytesToBase64(hexToBytes(hex)); // Convert byte array to Base64
+}
+
+export function updateModuleParams(moduleToUpdate: any): void {
+  let params = MODULE_PARAM_TO_UPDATE_FOR_SSO[moduleToUpdate.name];
+  if (!params) return;
+
+  let userIdentity = getUserIdentities() || {};
+  let enableSSO = ((window as any).IHPWT && (window as any).IHPWT.ssoEnabled) || ((window as any).PWT && (window as any).PWT.ssoEnabled) || false;
+  let emailHashes = enableSSO && userIdentity.emailHash ? userIdentity.emailHash : userIdentity.pubProvidedEmailHash ? userIdentity.pubProvidedEmailHash : undefined;
+  
+  params.forEach(function(param: any) {
+    switch (moduleToUpdate.name) {
+      case 'id5Id':
+        moduleToUpdate.params[param.key] = getRawPDString(emailHashes, userIdentity.userID);
+        break;
+      case 'uid2':
+        moduleToUpdate.params[param.key] = emailHashes && emailHashes[param.hashType]
+          ? emailHashes[param.hashType]
+          : getHexToBase64(emailHashes?.SHA256);
+        break;
+      default:
+        moduleToUpdate.params[param.key] = emailHashes ? emailHashes[param.hashType] : undefined;
+        break;
+    }
+  });
+}
+
 /**
  * Hook is executed before adapters, but after consentManagement. Consent data is requied because
  * this module requires GDPR consent with Purpose #1 to save data locally.
@@ -645,7 +731,7 @@ function getUserIds() {
  * This function will be exposed in global-name-space so that userIds stored by Prebid UserId module can be used by external codes as well.
  * Simple use case will be passing these UserIds to A9 wrapper solution
  */
-function getUserIdsAsEids(): ORTBRequest['user']['eids'] {
+function getUserIdsAsEids(): any {
   return getEids(initializedSubmodules.combined)
 }
 
@@ -688,7 +774,7 @@ function encryptSignals(signals, version = 1) {
   let encryptedSig = '';
   switch (version) {
     case 1: // Base64 Encryption
-      encryptedSig = typeof signals === 'object' ? window.btoa(JSON.stringify(signals)) : window.btoa(signals); // Test encryption. To be replaced with better algo
+      encryptedSig = typeof signals === 'object' ? (window as any).btoa(JSON.stringify(signals)) : (window as any).btoa(signals); // Test encryption. To be replaced with better algo
       break;
     default:
       break;
@@ -703,14 +789,14 @@ function registerSignalSources() {
   if (!isGptPubadsDefined()) {
     return;
   }
-  window.googletag.secureSignalProviders = window.googletag.secureSignalProviders || [];
+  (window as any).googletag.secureSignalProviders = (window as any).googletag.secureSignalProviders || [];
   const encryptedSignalSources = config.getConfig('userSync.encryptedSignalSources');
   if (encryptedSignalSources) {
     const registerDelay = encryptedSignalSources.registerDelay || 0;
     setTimeout(() => {
       encryptedSignalSources['sources'] && encryptedSignalSources['sources'].forEach(({ source, encrypt, customFunc }) => {
         source.forEach((src) => {
-          window.googletag.secureSignalProviders.push({
+          (window as any).googletag.secureSignalProviders.push({
             id: src,
             collectorFunction: () => getEncryptedEidsForSource(src, encrypt, customFunc)
           });
@@ -751,7 +837,10 @@ function retryOnCancel(initParams?) {
  */
 function refreshUserIds({submoduleNames}: {
     submoduleNames?: string[]
-} = {}, callback?: () => void): Promise<Partial<UserId>> {
+} = {}, callback?: () => void, moduleUpdated?: boolean): Promise<Partial<UserId>> {
+  if (moduleUpdated !== undefined) {
+    initializedSubmodulesUpdated = moduleUpdated;
+  }
   return retryOnCancel({refresh: true, submoduleNames})
     .then((userIds) => {
       if (callback && isFn(callback)) {
@@ -776,82 +865,18 @@ function getUserIdsAsync(): Promise<Partial<UserId>> {
   return retryOnCancel();
 }
 
-function setUserIdentities(userIdentityData) {
-  if (isEmpty(userIdentityData)) {
-    userIdentity = {};
-    return;
-  }
-  Object.assign(userIdentity, userIdentityData);
-  if ((window.IHPWT && window.IHPWT.loginEvent) || (window.PWT && window.PWT.loginEvent)) {
-    reTriggerPartnerCallsWithEmailHashes();
-    if (window.IHPWT) {
-      window.IHPWT.loginEvent = false;
-    }
-    if (window.PWT) {
-      window.PWT.loginEvent = false;
-    }
-  }
-};
+// Function moved to setUserIdentities at line 602
+// The duplicate is removed to fix TypeScript errors;
 
-export function getRawPDString(emailHashes, userID) {
-  let params = {
-    1: (emailHashes && emailHashes['SHA256']) || undefined, // Email
-    5: userID ? btoa(userID) : undefined, // UserID
-    12: navigator?.userAgent
-  };
-  let pdString = Object.keys(skipUndefinedValues(params)).map(function(key) {
-    return params[key] && key + '=' + params[key]
-  }).join('&');
-  return btoa(pdString);
-};
-
-function hexToBytes(hex) {
-  return Uint8Array.from(
-    hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
-  );
-}
-
-// Module to convert byte array to Base64
-function bytesToBase64(bytes) {
-  const binaryString = String.fromCharCode(...bytes);
-  return btoa(binaryString);
-}
-
-export function getHexToBase64(hex) {
-  if (!hex || typeof hex !== 'string' || hex.trim() === '') {
-    logWarn(`Invalid hex input: hex string is undefined, null, or empty. This message applies only to UID2 client-side integration.`);
-    return undefined;
-  }
-  return bytesToBase64(hexToBytes(hex)); // Convert byte array to Base64
-}
-
-export function updateModuleParams(moduleToUpdate) {
-  let params = MODULE_PARAM_TO_UPDATE_FOR_SSO[moduleToUpdate.name];
-  if (!params) return;
-
-  let userIdentity = getUserIdentities() || {};
-  let enableSSO = (window.IHPWT && window.IHPWT.ssoEnabled) || (window.PWT && window.PWT.ssoEnabled) || false;
-  let emailHashes = enableSSO && userIdentity.emailHash ? userIdentity.emailHash : userIdentity.pubProvidedEmailHash ? userIdentity.pubProvidedEmailHash : undefined;
-  params.forEach(function(param) {
-    switch (moduleToUpdate.name) {
-      case 'id5Id':
-        moduleToUpdate.params[param.key] = getRawPDString(emailHashes, userIdentity.userID);
-        break;
-      case 'uid2':
-        moduleToUpdate.params[param.key] = emailHashes && emailHashes[param.hashType]
-          ? emailHashes[param.hashType]
-          : getHexToBase64(emailHashes?.SHA256);
-        break;
-      default:
-        moduleToUpdate.params[param.key] = emailHashes ? emailHashes[param.hashType] : undefined;
-        break;
-    }
-  });
-}
+// The duplicate functions have been removed
+// Only one version of each function is kept:
+// - updateModuleParams (at line ~650)
+// - getRawPDString (at line ~620)
+// - getHexToBase64 (at line ~640)
 
 function generateModuleLists() {
-  let primaryModulesList = (window.IHPWT && window.IHPWT.OVERRIDES_PRIMARY_MODULES) || (window.PWT && window.PWT.OVERRIDES_PRIMARY_MODULES) || REFRESH_IDMODULES_LIST.PRIMARY_MODULES;
-  let scriptBasedModulesList = (window.IHPWT && window.IHPWT.OVERRIDES_SCRIPT_BASED_MODULES) || (window.PWT && window.PWT.OVERRIDES_SCRIPT_BASED_MODULES) || REFRESH_IDMODULES_LIST.SCRIPT_BASED_MODULES;
+  let primaryModulesList = ((window as any).IHPWT && (window as any).IHPWT.OVERRIDES_PRIMARY_MODULES) || ((window as any).PWT && (window as any).PWT.OVERRIDES_PRIMARY_MODULES) || REFRESH_IDMODULES_LIST.PRIMARY_MODULES;
+  let scriptBasedModulesList = ((window as any).IHPWT && (window as any).IHPWT.OVERRIDES_SCRIPT_BASED_MODULES) || ((window as any).PWT && (window as any).PWT.OVERRIDES_SCRIPT_BASED_MODULES) || REFRESH_IDMODULES_LIST.SCRIPT_BASED_MODULES;
   for (let index in configRegistry) {
     let moduleName = configRegistry[index].name;
     if (primaryModulesList.indexOf(moduleName) >= 0) {
@@ -870,39 +895,39 @@ export function reTriggerPartnerCallsWithEmailHashes() {
   reTriggerScriptBasedAPICalls(scriptBasedModulesToRefresh);
 }
 
-export function reTriggerScriptBasedAPICalls(modulesToRefresh) {
+export function reTriggerScriptBasedAPICalls(modulesToRefresh: string[]) {
   let i = 0;
   let userIdentity = getUserIdentities() || {};
   for (i in modulesToRefresh) {
     switch (modulesToRefresh[i]) {
       case 'zeotapIdPlus':
-        if (window.zeotap && isFn(window.zeotap.callMethod)) {
+        if ((window as any).zeotap && isFn((window as any).zeotap.callMethod)) {
           var userIdentityObject = {
-            email: userIdentity.emailHash['SHA256']
+            email: userIdentity.emailHash?.['SHA256']
           };
-          window.zeotap.callMethod('setUserIdentities', userIdentityObject, true);
+          (window as any).zeotap.callMethod('setUserIdentities', userIdentityObject, true);
         }
         break;
       case 'identityLink':
-        if (window.ats) {
-          var atsObject = window.ats.outputCurrentConfiguration();
+        if ((window as any).ats) {
+          var atsObject = (window as any).ats.outputCurrentConfiguration();
           atsObject.emailHashes = userIdentity.emailHash ? [userIdentity.emailHash['MD5'], userIdentity.emailHash['SHA1'], userIdentity.emailHash['SHA256']] : undefined;
-          window.ats.start && isFn(window.ats.start) && window.ats.start(atsObject);
-          window.ats.setAdditionalData && isFn(window.ats.setAdditionalData) && window.ats.setAdditionalData({'type': 'emailHashes', 'id': atsObject.emailHashes});
+          (window as any).ats.start && isFn((window as any).ats.start) && (window as any).ats.start(atsObject);
+          (window as any).ats.setAdditionalData && isFn((window as any).ats.setAdditionalData) && (window as any).ats.setAdditionalData({'type': 'emailHashes', 'id': atsObject.emailHashes});
         }
         break;
       case 'publinkId':
-        if (window.conversant && isFn(window.conversant.launch)) {
-          let launchObject = window.conversant.getLauncherObject();
+        if ((window as any).conversant && isFn((window as any).conversant.launch)) {
+          let launchObject = (window as any).conversant.getLauncherObject();
           launchObject.emailHashes = userIdentity.emailHash ? [userIdentity.emailHash['MD5'], userIdentity.emailHash['SHA256']] : undefined;
-          window.conversant.launch('publink', 'start', launchObject);
+          (window as any).conversant.launch('publink', 'start', launchObject);
         }
         break;
     }
   }
 }
 
-function getUserIdentities() {
+function getUserIdentities(): any {
   return userIdentity;
 }
 
@@ -983,12 +1008,12 @@ function updatePPID(priorityMaps) {
     const ppid = getPPID(eids);
     if (ppid) {
       if (isGptPubadsDefined()) {
-        window.googletag.pubads().setPublisherProvidedId(ppid);
+        (window as any).googletag.pubads().setPublisherProvidedId(ppid);
       } else {
-        (window as any).googletag = window.googletag || {};
-        (window.googletag as any).cmd = window.googletag.cmd || [];
-        window.googletag.cmd.push(function() {
-          window.googletag.pubads().setPublisherProvidedId(ppid);
+        (window as any).googletag = (window as any).googletag || {};
+        (window as any).googletag.cmd = (window as any).googletag.cmd || [];
+        (window as any).googletag.cmd.push(function() {
+          (window as any).googletag.pubads().setPublisherProvidedId(ppid);
         });
       }
     }
