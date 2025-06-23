@@ -143,9 +143,8 @@ function copyRequiredBidDetails(bid) {
   ]);
 }
 
-function setBidStatus(bid, args) {
-  if (bid?.status === ERROR && bid?.error?.code === TIMEOUT_ERROR) { return; }
-  switch (args.getStatusCode()) {
+function setBidStatus(bid, status) {
+  switch (status) {
     case STATUS.GOOD:
       bid.status = SUCCESS;
       delete bid.error; // it's possible for this to be set by a previous timeout
@@ -709,6 +708,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['dmv'] = '$prebid.version$' || '-1';
   outputObj['bm'] = getBrowserType();
   outputObj['ctr'] = country ? country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '';
+  outputObj['lip'] = getListOfIdentityPartners();
 
   if (floorData) {
     const floorRootValues = getFloorsCommonField(floorData?.floorRequestData);
@@ -953,7 +953,7 @@ function bidResponseHandler(args) {
 
   bid.adId = args.adId;
   bid.source = formatSource(bid.source || args.source);
-  setBidStatus(bid, args);
+  setBidStatus(bid, 1);
   const latency = args?.timeToRespond || Date.now() - cache.auctions[args.auctionId].timestamp;
   const auctionTime = cache.auctions[args.auctionId].timeout;
   // Check if latency is greater than auctiontime+150, then log auctiontime+150 to avoid large numbers

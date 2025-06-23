@@ -27,7 +27,7 @@ describe('bridgeuppBidAdapter_spec', function () {
   });
 
   beforeEach(function () {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     utilsMock = sinon.mock(utils);
     ajaxStub = sandbox.stub(ajax, 'ajax');
     fetchStub = sinon.stub(global, 'fetch').resolves(new Response('OK'));
@@ -45,14 +45,6 @@ describe('bridgeuppBidAdapter_spec', function () {
     });
     it('should return true when required params found', function () {
       expect(spec.isBidRequestValid(bid)).to.equal(true);
-    });
-    it('should return false when missing bidder', function () {
-      delete bid.bidder;
-      expect(spec.isBidRequestValid(bid)).to.equal(false);
-    });
-    it('should return false when bidder is not valid', function () {
-      bid.bidder = 'invalid-bidder';
-      expect(spec.isBidRequestValid(bid)).to.equal(false);
     });
     it('should return false when missing siteId', function () {
       delete bid.params.siteId;
@@ -250,7 +242,9 @@ describe('bridgeuppBidAdapter_spec', function () {
       const ortb2 = {
         source: {
           pchain: 'sonarads',
-          schain: expectedSchain
+          ext: {
+            schain: expectedSchain
+          }
         }
       };
       const bidRequests = [
@@ -269,7 +263,7 @@ describe('bridgeuppBidAdapter_spec', function () {
         },
       ];
       const ortbRequest = spec.buildRequests(bidRequests, await addFPDToBidderRequest({...bidderRequest, ortb2})).data;
-      expect(ortbRequest.source.schain).to.deep.equal(expectedSchain);
+      expect(ortbRequest.source.ext.schain).to.deep.equal(expectedSchain);
       expect(ortbRequest.source.pchain).to.equal('sonarads');
     });
 

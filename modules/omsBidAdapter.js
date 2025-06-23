@@ -52,6 +52,12 @@ function buildRequests(bidReqs, bidderRequest) {
 
       const imp = {
         id: bid.bidId,
+        banner: {
+          format: processedSizes,
+          ext: {
+            viewability: viewabilityAmountRounded,
+          }
+        },
         ext: {
           ...gpidData
         },
@@ -61,13 +67,6 @@ function buildRequests(bidReqs, bidderRequest) {
       if (bid?.mediaTypes?.video) {
         imp.video = {
           ...bid.mediaTypes.video,
-        }
-      } else {
-        imp.banner = {
-          format: processedSizes,
-          ext: {
-            viewability: viewabilityAmountRounded,
-          }
         }
       }
 
@@ -115,8 +114,9 @@ function buildRequests(bidReqs, bidderRequest) {
       deepSetValue(payload, 'regs.coppa', 1);
     }
 
-    if (bidReqs?.[0]?.schain) {
-      deepSetValue(payload, 'source.ext.schain', bidReqs[0].schain)
+    const schain = bidReqs?.[0]?.ortb2?.source?.ext?.schain;
+    if (schain) {
+      deepSetValue(payload, 'source.ext.schain', schain)
     }
 
     if (bidderRequest?.ortb2?.user) {

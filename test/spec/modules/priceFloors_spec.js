@@ -2,7 +2,7 @@
 import {expect} from 'chai';
 import * as utils from 'src/utils.js';
 import { getGlobal } from 'src/prebidGlobal.js';
-import { EVENTS, STATUS } from 'src/constants.js';
+import { EVENTS } from 'src/constants.js';
 import {
   FLOOR_SKIPPED_REASON,
   _floorDataForAuction,
@@ -131,7 +131,7 @@ describe('the price floors module', function () {
   }
   beforeEach(function() {
     clock = sinon.useFakeTimers();
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     logErrorSpy = sinon.spy(utils, 'logError');
     logWarnSpy = sinon.spy(utils, 'logWarn');
   });
@@ -2255,7 +2255,7 @@ describe('the price floors module', function () {
       let next = (adUnitCode, bid) => {
         returnedBidResponse = bid;
       };
-      addBidResponseHook(next, bidResp.adUnitCode, Object.assign(createBid(STATUS.GOOD, { auctionId: AUCTION_ID }), bidResp), reject);
+      addBidResponseHook(next, bidResp.adUnitCode, Object.assign(createBid({ auctionId: AUCTION_ID }), bidResp), reject);
     };
     it('continues with the auction if not floors data is present without any flooring', function () {
       runBidResponse();
@@ -2421,7 +2421,7 @@ describe('the price floors module', function () {
     }
 
     beforeEach(() => {
-      sandbox = sinon.sandbox.create();
+      sandbox = sinon.createSandbox();
       sandbox.stub(auctionManager, 'index').get(() => stubAuctionIndex({
         adUnits: [
           {

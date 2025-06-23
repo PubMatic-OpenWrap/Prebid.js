@@ -40,7 +40,7 @@ describe('paapi module', () => {
   let sandbox;
   before(reset);
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
   });
   afterEach(() => {
     sandbox.restore();
@@ -1961,7 +1961,7 @@ describe('paapi module', () => {
                   startParallel();
                   await mockAuction.requestsDone;
                   expectInvoked(!delayed);
-                  onAuctionConfig.reset();
+                  onAuctionConfig.resetHistory();
                   returnRemainder();
                   endAuction();
                   expectInvoked(delayed);
