@@ -896,9 +896,9 @@ export function reTriggerPartnerCallsWithEmailHashes() {
 }
 
 export function reTriggerScriptBasedAPICalls(modulesToRefresh: string[]) {
-  let i = 0;
   let userIdentity = getUserIdentities() || {};
-  for (i in modulesToRefresh) {
+  // Use a standard for loop with index instead of for...in to avoid TypeScript errors
+  for (let i = 0; i < modulesToRefresh.length; i++) {
     switch (modulesToRefresh[i]) {
       case 'zeotapIdPlus':
         if ((window as any).zeotap && isFn((window as any).zeotap.callMethod)) {

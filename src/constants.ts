@@ -121,7 +121,28 @@ export const DEFAULT_TARGETING_KEYS = {
   CRID: 'hb_crid',
   DSP: 'hb_dsp'
 };
-export const NATIVE_KEYS = '%%TG_NATIVE_KEYS%%';
+export const NATIVE_KEYS = {
+  "title": "hb_native_title",
+  "body": "hb_native_body",
+  "body2": "hb_native_body2",
+  "privacyLink": "hb_native_privacy",
+  "privacyIcon": "hb_native_privicon",
+  "sponsoredBy": "hb_native_brand",
+  "image": "hb_native_image",
+  "icon": "hb_native_icon",
+  "clickUrl": "hb_native_linkurl",
+  "displayUrl": "hb_native_displayurl",
+  "cta": "hb_native_cta",
+  "rating": "hb_native_rating",
+  "address": "hb_native_address",
+  "downloads": "hb_native_downloads",
+  "likes": "hb_native_likes",
+  "phone": "hb_native_phone",
+  "price": "hb_native_price",
+  "salePrice": "hb_native_saleprice",
+  "rendererUrl": "hb_renderer_url",
+  "adTemplate": "hb_adTemplate",
+};
 
 export const S2S = {
   SRC: 's2s',
