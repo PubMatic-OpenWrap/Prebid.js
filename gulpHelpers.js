@@ -76,11 +76,13 @@ module.exports = {
 
     return modules;
   },
-  getModules: _.memoize(function(externalModules) {
+  getModules: _.memoize(function(externalModules, mPath) {
     externalModules = externalModules || [];
     var internalModules;
     try {
-      var absoluteModulePath = path.join(__dirname, MODULE_PATH);
+      console.log("dirname",__dirname, mPath)
+      var absoluteModulePath = path.join(__dirname, mPath ? mPath : MODULE_PATH);
+      console.log("absoluteModulePath",absoluteModulePath);
       internalModules = fs.readdirSync(absoluteModulePath)
         .filter(file => (/^[^\.]+(\.js)?$/).test(file))
         .reduce((memo, file) => {
@@ -136,8 +138,8 @@ module.exports = {
     return Object.keys(modules);
   },
 
-  getModuleNames: function(externalModules) {
-    return _.values(this.getModules(externalModules));
+  getModuleNames: function(externalModules, mPath) {
+    return _.values(this.getModules(externalModules, mPath));
   },
 
   nameModules: function(externalModules) {

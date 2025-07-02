@@ -291,6 +291,7 @@ function wrapWithHeaderAndFooter(dev, modules) {
 
 function bundle(dev, moduleArr, mPath) {
   var modules = moduleArr || helpers.getArgModules();
+  console.log("mPath = ", mPath, modules)
   var allModules = helpers.getModuleNames(modules, mPath);
   const sm = dev || argv.sourceMaps;
 
@@ -298,6 +299,7 @@ function bundle(dev, moduleArr, mPath) {
     modules = allModules.filter(module => explicitModules.indexOf(module) === -1);
   } else {
     var diff = _.difference(modules, allModules);
+    console.log("diff = ", diff);
     if (diff.length !== 0) {
       throw new gutil.PluginError({
         plugin: 'bundle',
