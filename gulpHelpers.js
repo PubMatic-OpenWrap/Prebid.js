@@ -9,8 +9,8 @@ const gutil = require('gulp-util');
 const submodules = require('./modules/.submodules.json').parentModules;
 
 const MODULE_PATH = './modules';
-export const BUILD_PATH = './build/dist';
-export const DEV_PATH = './build/dev';
+const BUILD_PATH = './build/dist';
+const DEV_PATH = './build/dev';
 const ANALYTICS_PATH = '../analytics';
 
 // get only subdirectories that contain package.json with 'main' property
@@ -25,6 +25,12 @@ function isModuleDirectory(filePath) {
 }
 
 module.exports = {
+  getDevPath: function(){
+    return DEV_PATH;
+  },
+  getBuildPath: function(){
+    return BUILD_PATH;
+  },
   parseBrowserArgs: function (argv) {
     return (argv.browsers) ? argv.browsers.split(',') : [];
   },

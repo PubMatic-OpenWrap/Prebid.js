@@ -232,7 +232,7 @@ function getModulesListToAddInBanner(modules) {
 }
 
 function gulpBundle(dev) {
-  return bundle(dev, undefined, dev ? helpers.DEV_PATH : helpers.BUILD_PATH).pipe(gulp.dest('build/' + (dev ? 'dev' : 'dist')));
+  return bundle(dev, undefined, dev ? helpers.getDevPath() : helpers.getBuildPath()).pipe(gulp.dest('build/' + (dev ? 'dev' : 'dist')));
 }
 
 function nodeBundle(modules, dev = false) {
