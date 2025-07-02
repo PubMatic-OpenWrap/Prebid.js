@@ -232,7 +232,7 @@ function getModulesListToAddInBanner(modules) {
 }
 
 function gulpBundle(dev) {
-  return bundle(dev).pipe(gulp.dest('build/' + (dev ? 'dev' : 'dist')));
+  return bundle(dev, undefined, dev ? helpers.DEV_PATH : helpers.BUILD_PATH).pipe(gulp.dest('build/' + (dev ? 'dev' : 'dist')));
 }
 
 function nodeBundle(modules, dev = false) {
@@ -289,9 +289,9 @@ function wrapWithHeaderAndFooter(dev, modules) {
   }
 }
 
-function bundle(dev, moduleArr) {
+function bundle(dev, moduleArr, path) {
   var modules = moduleArr || helpers.getArgModules();
-  var allModules = helpers.getModuleNames(modules);
+  var allModules = helpers.getModuleNames(modules, path);
   const sm = dev || argv.sourceMaps;
 
   if (modules.length === 0) {
