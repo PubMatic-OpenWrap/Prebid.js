@@ -289,9 +289,9 @@ function wrapWithHeaderAndFooter(dev, modules) {
   }
 }
 
-function bundle(dev, moduleArr, path) {
+function bundle(dev, moduleArr, mPath) {
   var modules = moduleArr || helpers.getArgModules();
-  var allModules = helpers.getModuleNames(modules, path);
+  var allModules = helpers.getModuleNames(modules, mPath);
   const sm = dev || argv.sourceMaps;
 
   if (modules.length === 0) {
