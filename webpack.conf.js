@@ -105,7 +105,7 @@ module.exports = {
         }
       })
     ],
-    splitChunks: {
+    splitChunks: (argv._ && argv._.includes('bundle')) ? false : {
       chunks: 'initial',
       minChunks: 1,
       minSize: 0,
