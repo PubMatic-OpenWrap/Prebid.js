@@ -1,4 +1,4 @@
-import { logWarn, isStr, isArray, deepAccess, deepSetValue, isBoolean, isInteger, logInfo, logError, deepClone, uniques, generateUUID, isPlainObject, isFn } from '../src/utils.js';
+import { logWarn, isStr, isArray, deepAccess, deepSetValue, isBoolean, isInteger, logInfo, logError, deepClone, uniques, generateUUID, isPlainObject, isFn, collectOtherIds } from '../src/utils.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
@@ -445,9 +445,14 @@ const updateUserSiteDevice = (req, bidRequest) => {
 
   // start - IH eids for Prebid
   const userIdAsEids = deepAccess(bidRequest, '0.userIdAsEids');
-  if (bidRequest.length && userIdAsEids?.length && !req.user.ext?.eids) {
-    req.user.ext = req.user.ext || {};
-    req.user.ext.eids = userIdAsEids;
+  console.log("### in pubmaticBidAdapter userIdAsEids", userIdAsEids)
+  if (bidRequest.length && userIdAsEids?.length) {
+    if (!req.user.ext?.eids) {
+      req.user.ext = req.user.ext || {};
+      req.user.ext.eids = collectOtherIds(userIdAsEids);
+    } else {
+      req.user.ext.eids = collectOtherIds(req.user.ext.eids);
+    }
   } // end - IH eids for Prebid
 
   if (req.site?.publisher) {
@@ -681,6 +686,8 @@ export const spec = {
     if (!(bid && bid.params)) return false;
     const { publisherId } = bid.params;
     const mediaTypes = bid.mediaTypes || {};
+    delete mediaTypes.video;
+    delete mediaTypes.native;
     const videoMediaTypes = mediaTypes[VIDEO] || {};
     if (!isStr(publisherId)) {
       logWarn(LOG_WARN_PREFIX + 'Error: publisherId is mandatory and cannot be numeric (wrap it in quotes in your config). Call to OpenBid will not be sent for ad unit: ' + JSON.stringify(bid));
