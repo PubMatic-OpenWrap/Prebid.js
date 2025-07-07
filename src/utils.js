@@ -1436,12 +1436,14 @@ export async function compressDataWithGZip(data) {
 
 export function collectOtherIds(existingUserIds) {
   // Get all other namespaces except the primary one
-  var globalNS = (_pbjsGlobals ? _pbjsGlobals : _pbjsGlobals_pubmatic).filter(function(item) {
-    return item !== window.pubmaticNameSpace; //window.pubmaticNameSpace should be declared in the prepend code snippet
+  window._pbjsGlobals = window._pbjsGlobals || [];
+  var globalNS = (window._pbjsGlobals || window._pbjsGlobals_pubmatic).filter(function(item) {
+    return item !== window.pubmaticNameSpace; // window.pubmaticNameSpace should be declared in the prepend code snippet
   });
   // Initialize merged IDs array with existing IDs
+  existingUserIds = existingUserIds || [];
   var mergedIds = existingUserIds.slice();
-  console.log("### (prebid)eids.jsexistingUserIds", existingUserIds);
+  logInfo("### in collectOtherIds existingUserIds", existingUserIds);
   // Track sources that are already present
   var usedSources = {};
   var i;
@@ -1470,6 +1472,6 @@ export function collectOtherIds(existingUserIds) {
       }
     }
   }
-  console.log("### in (prebid)eids.js mergedIds", mergedIds);
+  logInfo("### in collectOtherIds mergedIds", mergedIds);
   return mergedIds;
 }
