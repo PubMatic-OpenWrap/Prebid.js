@@ -1433,3 +1433,43 @@ export async function compressDataWithGZip(data) {
   const compressedArrayBuffer = await compressedBlob.arrayBuffer();
   return new Uint8Array(compressedArrayBuffer);
 }
+
+export function collectOtherIds(existingUserIds) {
+  // Get all other namespaces except the primary one
+  var globalNS = (_pbjsGlobals ? _pbjsGlobals : _pbjsGlobals_pubmatic).filter(function(item) {
+    return item !== window.pubmaticNameSpace; //window.pubmaticNameSpace should be declared in the prepend code snippet
+  });
+  // Initialize merged IDs array with existing IDs
+  var mergedIds = existingUserIds.slice();
+  console.log("### (prebid)eids.jsexistingUserIds", existingUserIds);
+  // Track sources that are already present
+  var usedSources = {};
+  var i;
+  // First mark all sources from existingUserIds as used
+  for (i = 0; i < existingUserIds.length; i++) {
+    if (existingUserIds[i].source) {
+      usedSources[existingUserIds[i].source] = true;
+    }
+  }
+  
+  // Process each namespace in order
+  for (i = 0; i < globalNS.length; i++) {
+    var namespace = globalNS[i];
+    if (isFn(window[namespace].getUserIdsAsEids)) {
+      var eids = window[namespace].getUserIdsAsEids();
+      if (Array.isArray(eids)) {
+        var j;
+        for (j = 0; j < eids.length; j++) {
+          var id = eids[j];
+          // Only add if this source hasn't been used yet
+          if (id.source && !usedSources[id.source]) {
+            mergedIds.push(id);
+            usedSources[id.source] = true;
+          }
+        }
+      }
+    }
+  }
+  console.log("### in (prebid)eids.js mergedIds", mergedIds);
+  return mergedIds;
+}

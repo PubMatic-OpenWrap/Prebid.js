@@ -1,4 +1,4 @@
-import { logWarn, isStr, isArray, deepAccess, deepSetValue, isBoolean, isInteger, logInfo, logError, deepClone, uniques, generateUUID, isPlainObject, isFn } from '../src/utils.js';
+import { logWarn, isStr, isArray, deepAccess, deepSetValue, isBoolean, isInteger, logInfo, logError, deepClone, uniques, generateUUID, isPlainObject, isFn, collectOtherIds  } from '../src/utils.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
@@ -445,10 +445,15 @@ const updateUserSiteDevice = (req, bidRequest) => {
 
   // start - IH eids for Prebid
   const userIdAsEids = deepAccess(bidRequest, '0.userIdAsEids');
-  if (bidRequest.length && userIdAsEids?.length && !req.user.ext?.eids) {
-    req.user.ext = req.user.ext || {};
-    req.user.ext.eids = userIdAsEids;
-  } // end - IH eids for Prebid
+  console.log("### in pubmaticBidAdapter userIdAsEids", userIdAsEids)
+  if (bidRequest.length && userIdAsEids?.length) {
+      if (!req.user.ext?.eids) {
+        req.user.ext = req.user.ext || {};
+        req.user.ext.eids = collectOtherIds(userIdAsEids);
+      } else {
+        req.user.ext.eids = collectOtherIds(req.user.ext.eids);
+      }
+    } // end - IH eids for Prebid
 
   if (req.site?.publisher) {
     req.site.ref = req.site.ref || refURL;
