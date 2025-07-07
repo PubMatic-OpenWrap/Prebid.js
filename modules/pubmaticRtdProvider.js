@@ -3,6 +3,7 @@ import { logError, isStr, isPlainObject, isEmpty, isFn, mergeDeep } from '../src
 import { config as conf } from '../src/config.js';
 import { getDeviceType as fetchDeviceType, getOS } from '../libraries/userAgentUtils/index.js';
 import { getLowEntropySUA } from '../src/fpd/sua.js';
+import { getGlobal } from '../src/prebidGlobal.js';
 
 /**
  * @typedef {import('../modules/rtdModule/index.js').RtdSubmodule} RtdSubmodule
@@ -65,6 +66,11 @@ export let configMerged;
 // configMerged is a reference to the function that can resolve configMergedPromise whenever we want
 let configMergedPromise = new Promise((resolve) => { configMerged = resolve; });
 export let _country;
+
+let floorsConfig;
+export function setFloorsConfig(config) {
+  floorsConfig = config;
+}
 
 // Waits for a given promise to resolve within a timeout
 export function withTimeout(promise, ms) {
@@ -192,42 +198,42 @@ export const fetchData = async (publisherId, profileId, type) => {
  * @returns {boolean}
  */
 const init = (config, _userConsent) => {
-    initTime = Date.now(); // Capture the initialization time
-    const { publisherId, profileId } = config?.params || {};
+  initTime = Date.now(); // Capture the initialization time
+  const { publisherId, profileId } = config?.params || {};
 
-    if (!publisherId || !isStr(publisherId) || !profileId || !isStr(profileId)) {
-      logError(
-        `${CONSTANTS.LOG_PRE_FIX} ${!publisherId ? 'Missing publisher Id.'
-          : !isStr(publisherId) ? 'Publisher Id should be a string.'
-            : !profileId ? 'Missing profile Id.'
-              : 'Profile Id should be a string.'
-        }`
-      );
-      return false;
-    }
+  if (!publisherId || !isStr(publisherId) || !profileId || !isStr(profileId)) {
+    logError(
+      `${CONSTANTS.LOG_PRE_FIX} ${!publisherId ? 'Missing publisher Id.'
+        : !isStr(publisherId) ? 'Publisher Id should be a string.'
+          : !profileId ? 'Missing profile Id.'
+            : 'Profile Id should be a string.'
+      }`
+    );
+    return false;
+  }
 
-    if (!isFn(continueAuction)) {
-      logError(`${CONSTANTS.LOG_PRE_FIX} continueAuction is not a function. Please ensure to add priceFloors module.`);
-      return false;
-    }
+  if (!isFn(continueAuction)) {
+    logError(`${CONSTANTS.LOG_PRE_FIX} continueAuction is not a function. Please ensure to add priceFloors module.`);
+    return false;
+  }
 
-    _fetchFloorRulesPromise = fetchData(publisherId, profileId, "FLOORS");
-    _fetchConfigPromise = fetchData(publisherId, profileId, "CONFIGS");
+  _fetchFloorRulesPromise = fetchData(publisherId, profileId, "FLOORS");
+  _fetchConfigPromise = fetchData(publisherId, profileId, "CONFIGS");
 
-    _fetchConfigPromise.then(async (profileConfigs) => {
-      const auctionDelay = conf.getConfig('realTimeData').auctionDelay;
-      const maxWaitTime = 0.8 * auctionDelay;
+  _fetchConfigPromise.then(async (profileConfigs) => {
+    const auctionDelay = conf.getConfig('realTimeData').auctionDelay;
+    const maxWaitTime = 0.8 * auctionDelay;
 
-      const elapsedTime = Date.now() - initTime;
-      const remainingTime = Math.max(maxWaitTime - elapsedTime, 0);
-      const floorsData = await withTimeout(_fetchFloorRulesPromise, remainingTime);
+    const elapsedTime = Date.now() - initTime;
+    const remainingTime = Math.max(maxWaitTime - elapsedTime, 0);
+    const floorsData = await withTimeout(_fetchFloorRulesPromise, remainingTime);
 
-      const floorsConfig = getFloorsConfig(floorsData, profileConfigs);
-      floorsConfig && conf.setConfig(floorsConfig);
-      configMerged();
-    });
+    floorsConfig = getFloorsConfig(floorsData, profileConfigs);
+    floorsConfig && conf.setConfig(floorsConfig);
+    configMerged();
+  });
 
-    return true;
+  return true;
 };
 
 /**
@@ -237,10 +243,33 @@ const init = (config, _userConsent) => {
  * @param {Object} userConsent
  */
 const getBidRequestData = (reqBidsConfigObj, callback) => {
-    configMergedPromise.then(() => {
-        const hookConfig = {
-            reqBidsConfigObj,
-            context: this,
+  configMergedPromise.then(() => {
+    if(conf.getConfig('useBidCache')) {
+      reqBidsConfigObj.adUnits.forEach(adUnit => {
+        let highestCachedBid;
+        highestCachedBid = getGlobal().getHighestUnusedBidResponseForAdUnitCode(adUnit.code);
+        const globalFloor = floorsConfig?.floors?.floorMin;
+        const adUnitFloor = adUnit?.ortb2Imp?.ext?.prebid?.floors?.floorMin;
+        const bidCpm = highestCachedBid?.cpm;
+        if (conf.getConfig('useBidCache') && 
+        (!globalFloor || (bidCpm > globalFloor && (!adUnitFloor || (bidCpm > adUnitFloor))))) {
+          let ortb2Imp = {
+            ext: {
+              prebid: {
+                floors: {
+                  floorMin: bidCpm
+                }
+              }
+            }
+          }
+          mergeDeep(adUnit, { ortb2Imp: ortb2Imp });
+        }        
+      });
+    }
+
+    const hookConfig = {
+      reqBidsConfigObj,
+      context: this,
             nextFn: () => true,
             haveExited: false,
             timer: null
