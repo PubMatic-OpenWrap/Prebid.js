@@ -9,11 +9,6 @@ export const JSON_MAPPING = {
   BD_SETTING_STANDARD: 'standard'
 } as const;
 
-export const FLOOR_SKIPPED_REASON = {
-  NOT_FOUND: 'not_found',
-  RANDOM: 'random'
-};
-
 export const DEBUG_MODE = 'pbjs_debug';
 
 export const STATUS = {
@@ -87,22 +82,23 @@ export const GRANULARITY_OPTIONS = {
   AUTO: 'auto',
   DENSE: 'dense',
   CUSTOM: 'custom'
-};
+} as const;
+
 export const TARGETING_KEYS = {
-  "BIDDER": "hb_bidder",
-  "AD_ID": "hb_adid",
-  "PRICE_BUCKET": "hb_pb",
-  "SIZE": "hb_size",
-  "DEAL": "hb_deal",
-  "SOURCE": "hb_source",
-  "FORMAT": "hb_format",
-  "UUID": "hb_uuid",
-  "CACHE_ID": "hb_cache_id",
-  "CACHE_HOST": "hb_cache_host",
-  "ADOMAIN": "hb_adomain",
-  "ACAT": "hb_acat",
-  "CRID": "hb_crid",
-  "DSP": "hb_dsp"
+    BIDDER: 'hb_bidder',
+    AD_ID: 'hb_adid',
+    PRICE_BUCKET: 'hb_pb',
+    SIZE: 'hb_size',
+    DEAL: 'hb_deal',
+    SOURCE: 'hb_source',
+    FORMAT: 'hb_format',
+    UUID: 'hb_uuid',
+    CACHE_ID: 'hb_cache_id',
+    CACHE_HOST: 'hb_cache_host',
+    ADOMAIN: 'hb_adomain',
+    ACAT: 'hb_acat',
+    CRID: 'hb_crid',
+    DSP: 'hb_dsp'
 } as const;
 
 export const DEFAULT_TARGETING_KEYS = {
@@ -156,53 +152,6 @@ export const BID_STATUS = {
   BID_REJECTED: 'bidRejected'
 } as const;
 
-export const REFRESH_IDMODULES_LIST = {
-  PRIMARY_MODULES: [
-    'id5Id',
-    'publinkId',
-    'connectId',
-    'liveIntentId',
-    'uid2'
-  ],
-  SCRIPT_BASED_MODULES: [
-    'zeotapIdPlus',
-    'identityLink',
-    'publinkId'
-  ]
-};
-
-export const MODULE_PARAM_TO_UPDATE_FOR_SSO = {
-  id5Id: [
-    {
-      key: 'pd'
-    }
-  ],
-  publinkId: [
-    {
-      key: 'e',
-      hashType: 'MD5'
-    }
-  ],
-  connectId: [
-    {
-      key: 'he',
-      hashType: 'SHA256'
-    }
-  ],
-  liveIntentId: [
-    {
-      key: 'emailHash',
-      hashType: 'SHA256' // Default Hex encoding
-    }
-  ],
-  uid2: [
-    {
-      key: 'emailHash',
-      hashType: 'SHA256_BASE64' // SHA256 Base64 encoding
-    }
-  ]
-};
-
 export const REJECTION_REASON = {
   INVALID: 'Bid has missing or invalid properties',
   INVALID_REQUEST_ID: 'Invalid request ID',
@@ -252,7 +201,6 @@ export const NATIVE_IMAGE_TYPES = {
 export const NATIVE_KEYS_THAT_ARE_NOT_ASSETS = [
   'privacyIcon',
   'clickUrl',
-  'sendTargetingKeys',
   'adTemplate',
   'rendererUrl',
   'type'
@@ -277,3 +225,50 @@ export const MESSAGES = {
 };
 
 export const PB_LOCATOR = '__pb_locator__';
+
+export const MODULE_PARAM_TO_UPDATE_FOR_SSO = {
+  id5Id: [
+    {
+      key: 'pd'
+    }
+  ],
+  publinkId: [
+    {
+      key: 'e',
+      hashType: 'MD5'
+    }
+  ],
+  connectId: [
+    {
+      key: 'he',
+      hashType: 'SHA256'
+    }
+  ],
+  liveIntentId: [
+    {
+      key: 'emailHash',
+      hashType: 'SHA256' // Default Hex encoding
+    }
+  ],
+  uid2: [
+    {
+      key: 'emailHash',
+      hashType: 'SHA256_BASE64' // SHA256 Base64 encoding
+    }
+  ]
+};
+
+export const REFRESH_IDMODULES_LIST = {
+  PRIMARY_MODULES: [
+    'id5Id',
+    'publinkId',
+    'connectId',
+    'liveIntentId',
+    'uid2'
+  ],
+  SCRIPT_BASED_MODULES: [
+    'zeotapIdPlus',
+    'identityLink',
+    'publinkId'
+  ]
+};

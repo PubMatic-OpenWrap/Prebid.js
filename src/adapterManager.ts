@@ -59,7 +59,7 @@ import type {
     ContextIdentifiers,
     Identifier,
     ORTBFragments,
-    Size
+    Size, StorageDisclosure
 } from "./types/common.d.ts";
 import type {DeepPartial} from "./types/objects.d.ts";
 import type {ORTBRequest} from "./types/ortb/request.d.ts";
@@ -237,7 +237,7 @@ export type AliasBidderOptions = {
     skipPbsAliasing?: boolean
 }
 
-export type AnalyticsAdapter<P extends AnalyticsProvider> = {
+export type AnalyticsAdapter<P extends AnalyticsProvider> = StorageDisclosure & {
     code?: P;
     enableAnalytics(config: AnalyticsConfig<P>): void;
     gvlid?: number | ((config: AnalyticsConfig<P>) => number);
@@ -348,11 +348,14 @@ function getAdUnitCopyForPrebidServer(adUnits: AdUnit[], s2sConfig) {
         return bid;
       });
   });
+  adUnitsCopy = adUnitsCopy.filter(adUnit => {
+      if (s2sConfig.filterBidderlessCalls) {
+          if (adUnit.bids.length === 1 && adUnit.bids[0].bidder == null) return false;
+      }
+      return adUnit.bids.length !== 0 || adUnit.s2sBid != null;
+  });
 
   // don't send empty requests
-  adUnitsCopy = adUnitsCopy.filter(adUnit => {
-    return adUnit.bids.length !== 0 || adUnit.s2sBid != null;
-  });
   return {adUnits: adUnitsCopy, hasModuleBids};
 }
 
@@ -435,6 +438,7 @@ declare module './hook' {
 
 const adapterManager = {
     bidderRegistry: _bidderRegistry,
+    analyticsRegistry: _analyticsRegistry,
     /**
      * Map from alias codes to the bidder code they alias.
      */

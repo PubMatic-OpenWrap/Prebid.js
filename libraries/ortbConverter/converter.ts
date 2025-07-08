@@ -1,5 +1,5 @@
 import {compose} from './lib/composer.js';
-import {deepClone, logError, memoize, timestamp} from '../../src/utils.js';
+import {logError, memoize} from '../../src/utils.js';
 import {DEFAULT_PROCESSORS} from './processors/default.js';
 import {BID_RESPONSE, DEFAULT, getProcessors, IMP, REQUEST, RESPONSE} from '../../src/pbjsORTB.js';
 import {mergeProcessors} from './lib/mergeProcessors.js';
@@ -117,10 +117,6 @@ export function ortbConverter<B extends BidderCode>({
   response,
 }: ConverterConfig<B> = {}) {
   const REQ_CTX = new WeakMap();
-  let impressionReqIdMap: { [id: string]: string } = {};
-  let firstBidRequest: BidderRequest<B>;
-  (window as any).partnersWithoutErrorAndBids = {};
-  (window as any).matchedimpressions = {};
 
   function builder(slot, wrapperFn, builderFn, errorHandler) {
     let build;
@@ -202,38 +198,14 @@ export function ortbConverter<B extends BidderCode>({
     }
   );
 
-  function createLatencyMap(impressionID: string, id: string) {
-    (window as any).pbsLatency = (window as any).pbsLatency || {};
-    impressionReqIdMap[id] = impressionID;
-    (window as any).pbsLatency[impressionID] = {
-      'startTime': timestamp()
-    };
-  }
-
-  // Get list of all errored partners
-  function getErroredPartners(responseExt: any): string[] | undefined {
-    if (responseExt && responseExt.errors) {
-      return Object.keys(responseExt.errors);
-    }
-  }
-
-  function findPartnersWithoutErrorsAndBids(erroredPartners: string[], listofPartnersWithmi: string[], responseExt: any, impValue: string) {
-    (window as any).partnersWithoutErrorAndBids[impValue] = listofPartnersWithmi.filter(partner => !erroredPartners.includes(partner));
-    erroredPartners.forEach(partner => {
-      if (responseExt.errors[partner] && responseExt.errors[partner][0].code == 1) {
-        (window as any).partnersWithoutErrorAndBids[impValue].push(partner);
-      }
-    })
-  }
-
   return {
     toORTB({bidderRequest, bidRequests, context = {}}: {
         bidderRequest: BidderRequest<B>,
-        bidRequests?: BidRequest<B>[],
+        bidRequests: BidRequest<B>[],
         context?: Context
     }): ORTBRequest {
       bidRequests = bidRequests || bidderRequest.bids;
-      const ctx: any = {
+      const ctx = {
         req: Object.assign({bidRequests}, defaultContext, context),
         imp: {}
       }
@@ -241,20 +213,13 @@ export function ortbConverter<B extends BidderCode>({
       const imps = bidRequests.map(bidRequest => {
         const impContext = Object.assign({bidderRequest, reqContext: ctx.req}, defaultContext, context);
         const result = buildImp(bidRequest, impContext);
-        let resultCopy = deepClone(result);
-        if (resultCopy?.ext?.prebid?.bidder) {
-          for (let bidderCode in resultCopy.ext.prebid.bidder) {
-            let bid = resultCopy.ext.prebid.bidder[bidderCode];
-            delete bid?.kgpv;
-          }
-        }
         if (result != null) {
           if (result.hasOwnProperty('id')) {
             Object.assign(impContext, {bidRequest, imp: result});
             ctx.imp[result.id] = impContext;
             return result;
           }
-          logError('Converted ORTB imp does not specify an id, ignoring bid request', bidRequest, resultCopy);
+          logError('Converted ORTB imp does not specify an id, ignoring bid request', bidRequest, result);
         }
       }).filter(Boolean);
 
@@ -263,29 +228,12 @@ export function ortbConverter<B extends BidderCode>({
       if (request != null) {
         REQ_CTX.set(request, ctx);
       }
-
-      firstBidRequest = ctx.req?.actualBidderRequests?.[0];
-      // check if isPrebidPubMaticAnalyticsEnabled in s2sConfig and if it is then get auctionId from adUnit
-      const s2sConfig = ctx.req?.s2sBidRequest?.s2sConfig;
-      let isAnalyticsEnabled = s2sConfig?.extPrebid?.isPrebidPubMaticAnalyticsEnabled;
-      if (firstBidRequest) {
-        const iidValue = isAnalyticsEnabled ? firstBidRequest.auctionId : firstBidRequest?.bids[0]?.params?.wiid;
-        if (iidValue) {
-          createLatencyMap(String(iidValue), firstBidRequest.auctionId);
-        }
-      }
       return request;
     },
     fromORTB({request, response}: {
         request: ORTBRequest;
         response: ORTBResponse;
     }): AdapterResponse {
-      // Get impressionID from impressionReqIdMap to check response belongs to same request
-      let impValue = impressionReqIdMap[(response as any).id];
-      if (impValue && (window as any).pbsLatency && (window as any).pbsLatency[impValue]) {
-        (window as any).pbsLatency[impValue]['endTime'] = timestamp();
-      }
-
       const ctx = REQ_CTX.get(request);
       if (ctx == null) {
         throw new Error('ortbRequest passed to `fromORTB` must be the same object returned by `toORTB`')
@@ -294,37 +242,13 @@ export function ortbConverter<B extends BidderCode>({
         return Object.assign(ctx, {ortbRequest: request}, extraParams);
       }
       const impsById = Object.fromEntries((request.imp || []).map(imp => [imp.id, imp]));
-      let impForSlots, partnerBidsForslots;
-      if (firstBidRequest && (firstBidRequest as any).hasOwnProperty('adUnitsS2SCopy')) {
-        impForSlots = (firstBidRequest as any).adUnitsS2SCopy.length;
-      }
-
-      let extObj = (response as any).ext || {};
-      let miObj = extObj.matchedimpression || {};
-      (window as any).matchedimpressions = {...(window as any).matchedimpressions, ...miObj};
-
-      const listofPartnersWithmi = Object.keys(miObj);
-      (window as any).partnersWithoutErrorAndBids[impValue] = listofPartnersWithmi;
-      const erroredPartners = getErroredPartners(extObj);
-      if (erroredPartners) {
-        findPartnersWithoutErrorsAndBids(erroredPartners, listofPartnersWithmi, extObj, impValue);
-      }
-
-      const bidResponses = (response.seatbid || []).flatMap(seatbid => {
-        if (seatbid.hasOwnProperty('bid')) {
-          partnerBidsForslots = seatbid.bid.length;
-        }
-        (window as any).partnersWithoutErrorAndBids[impValue] = (window as any).partnersWithoutErrorAndBids[impValue].filter((partner) => {
-          return ((partner !== (seatbid as any).seat) || (impForSlots !== partnerBidsForslots));
-        });
-
-        return (seatbid.bid || []).map((bid) => {
+      const bidResponses = (response.seatbid || []).flatMap(seatbid =>
+        (seatbid.bid || []).map((bid) => {
           if (impsById.hasOwnProperty(bid.impid) && ctx.imp.hasOwnProperty(bid.impid)) {
             return buildBidResponse(bid, augmentContext(ctx.imp[bid.impid], {imp: impsById[bid.impid], seatbid, ortbResponse: response}));
           }
           logError('ORTB response seatbid[].bid[].impid does not match any imp in request; ignoring bid', bid);
         })
-      }
       ).filter(Boolean);
       return buildResponse(bidResponses, response, augmentContext(ctx.req));
     }

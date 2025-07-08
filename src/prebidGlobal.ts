@@ -19,6 +19,10 @@ export interface PrebidJS {
      * Names of all installed modules.
      */
     installedModules: string[]
+    /**
+     * Optional scheduler used by pbYield().
+     */
+    scheduler?: { yield: () => Promise<void> }
 }
 
 // if $$PREBID_GLOBAL$$ already exists in global document scope, use it, if not, create the object
@@ -28,6 +32,7 @@ if ((window as any).$$PREBID_GLOBAL$$) { console.warn(`Namespace clash happened,
 /* eslint-disable */
 
 // if $$PREBID_GLOBAL$$ already exists in global document scope, use it, if not, create the object
+
 declare const $$DEFINE_PREBID_GLOBAL$$: boolean;
 const scope: any = !$$DEFINE_PREBID_GLOBAL$$ ? {} : window;
 const global: PrebidJS = scope.$$PREBID_GLOBAL$$ = scope.$$PREBID_GLOBAL$$ || {};

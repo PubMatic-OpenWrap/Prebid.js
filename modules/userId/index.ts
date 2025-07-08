@@ -7,12 +7,13 @@ import {config} from '../../src/config.js';
 import * as events from '../../src/events.js';
 import {addApiMethod, startAuction, type StartAuctionOptions} from '../../src/prebid.js';
 import adapterManager from '../../src/adapterManager.js';
-import { EVENTS, MODULE_PARAM_TO_UPDATE_FOR_SSO, REFRESH_IDMODULES_LIST } from '../../src/constants.js';
+import {EVENTS} from '../../src/constants.js';
 import {module, ready as hooksReady} from '../../src/hook.js';
 import {EID_CONFIG, getEids} from './eids.js';
 import {
+    discloseStorageUse,
     getCoreStorageManager,
-    getStorageManager,
+    newStorageManager,
     STORAGE_TYPE_COOKIES,
     STORAGE_TYPE_LOCALSTORAGE,
     type StorageManager,
@@ -38,13 +39,14 @@ import {newMetrics, timedAuctionHook, useMetrics} from '../../src/utils/perfMetr
 import {findRootDomain} from '../../src/fpd/rootDomain.js';
 import {allConsent, GDPR_GVLIDS} from '../../src/consentHandler.js';
 import {MODULE_TYPE_UID} from '../../src/activities/modules.js';
-import {isActivityAllowed} from '../../src/activities/rules.js';
-import {ACTIVITY_ENRICH_EIDS} from '../../src/activities/activities.js';
+import {isActivityAllowed, registerActivityControl} from '../../src/activities/rules.js';
+import {ACTIVITY_ACCESS_DEVICE, ACTIVITY_ENRICH_EIDS} from '../../src/activities/activities.js';
 import {activityParams} from '../../src/activities/activityParams.js';
 import {USERSYNC_DEFAULT_CONFIG, type UserSyncConfig} from '../../src/userSync.js';
 import type {ORTBRequest} from "../../src/types/ortb/request.d.ts";
 import type {AnyFunction, Wraps} from "../../src/types/functions.d.ts";
 import type {ProviderParams, UserId, UserIdProvider, UserIdConfig, IdProviderSpec, ProviderResponse} from "./spec.ts";
+import { ACTIVITY_PARAM_COMPONENT_NAME, ACTIVITY_PARAM_COMPONENT_TYPE, ACTIVITY_PARAM_STORAGE_TYPE } from '../../src/activities/params.js';
 
 const MODULE_NAME = 'User ID';
 const COOKIE = STORAGE_TYPE_COOKIES;
@@ -95,12 +97,16 @@ declare module '../../src/userSync' {
          * If true, updating userSync.userIds will automatically refresh IDs that have not yet been fetched.
          */
         autoRefresh?: boolean;
+
+        /**
+         * If true, user ID modules will only be allowed to save data in the location specified in the configuration.
+         */
+        enforceStorageType?: boolean;
     }
 }
 
 let submodules: SubmoduleContainer<UserIdProvider>[] = [];
 let initializedSubmodules;
-let initializedSubmodulesUpdated = false;
 let configRegistry = [];
 let idPriority = {};
 let submoduleRegistry: IdProviderSpec<UserIdProvider>[] = [];
@@ -109,17 +115,6 @@ export let syncDelay;
 export let auctionDelay;
 
 let ppidSource;
-
-// Track user identities for SSO and email hash functionality
-let userIdentity: any = {};
-
-// Lists to track modules that need refreshing
-let modulesToRefresh: string[] = [];
-let scriptBasedModulesToRefresh: string[] = [];
-
-// Import skipUndefinedValues and getGlobal from respective modules
-import { skipUndefinedValues } from '../../src/utils.js';
-import { getGlobal } from '../../src/prebidGlobal.js';
 
 let configListener;
 
@@ -196,11 +191,13 @@ export function setStoredValue(submodule, value) {
   }
 }
 
+export const COOKIE_SUFFIXES = ['', '_last', '_cst'];
+
 function deleteValueFromCookie(submodule) {
   const setCookie = cookieSetter(submodule, coreStorage);
   const expiry = (new Date(Date.now() - 1000 * 60 * 60 * 24)).toUTCString();
 
-  ['', '_last', '_cst'].forEach(suffix => {
+  COOKIE_SUFFIXES.forEach(suffix => {
     try {
       setCookie(suffix, '', expiry);
     } catch (e) {
@@ -209,8 +206,10 @@ function deleteValueFromCookie(submodule) {
   })
 }
 
+export const HTML5_SUFFIXES = ['', '_last', '_exp', '_cst'];
+
 function deleteValueFromLocalStorage(submodule) {
-  ['', '_last', '_exp', '_cst'].forEach(suffix => {
+  HTML5_SUFFIXES.forEach(suffix => {
     try {
       coreStorage.removeDataFromLocalStorage(submodule.config.storage.name + suffix);
     } catch (e) {
@@ -460,8 +459,7 @@ export function enrichEids(ortb2Fragments) {
 
 declare module '../../src/adapterManager' {
     interface BaseBidRequest {
-        userId: UserId;
-        userIdAsEids: any; // This was previously ORTBRequest['user']['eids'], changed to 'any' to fix TypeScript error
+        userIdAsEids: ORTBRequest['user']['eids'];
     }
 }
 
@@ -471,17 +469,12 @@ export function addIdData({adUnits, ortb2Fragments}) {
   if ([adUnits].some(i => !Array.isArray(i) || !i.length)) {
     return;
   }
-  const globalIds = getIds(initializedSubmodules.global);
   const globalEids = ortb2Fragments.global.user?.ext?.eids || [];
   adUnits.forEach(adUnit => {
     if (adUnit.bids && isArray(adUnit.bids)) {
       adUnit.bids.forEach(bid => {
-        const bidderIds = Object.assign({}, globalIds, getIds(initializedSubmodules.bidder[bid.bidder] ?? {}));
         const bidderEids = globalEids.concat(ortb2Fragments.bidder?.[bid.bidder]?.user?.ext?.eids || []);
-        if (Object.keys(bidderIds).length > 0) {
-          bid.userId = bidderIds;
-        }
-        if (bidderEids.length >= 0) {
+        if (bidderEids.length > 0) {
           bid.userIdAsEids = bidderEids;
         }
       });
@@ -599,80 +592,6 @@ function getPPID(eids = getUserIdsAsEids() || []) {
   }
 }
 
-function setUserIdentities(userIdentityData: any): void {
-  if (isEmpty(userIdentityData)) {
-    userIdentity = {};
-    return;
-  }
-  Object.assign(userIdentity, userIdentityData);
-  if (((window as any).IHPWT && (window as any).IHPWT.loginEvent) || ((window as any).PWT && (window as any).PWT.loginEvent)) {
-    reTriggerPartnerCallsWithEmailHashes();
-    if ((window as any).IHPWT) {
-      (window as any).IHPWT.loginEvent = false;
-    }
-    if ((window as any).PWT) {
-      (window as any).PWT.loginEvent = false;
-    }
-  }
-}
-
-export function getRawPDString(emailHashes: any, userID: string): string {
-  let params = {
-    1: (emailHashes && emailHashes['SHA256']) || undefined, // Email
-    5: userID ? btoa(userID) : undefined, // UserID
-    12: navigator?.userAgent
-  };
-  let pdString = Object.keys(skipUndefinedValues(params)).map(function(key) {
-    return params[key] && key + '=' + params[key];
-  }).join('&');
-  return btoa(pdString);
-}
-
-function hexToBytes(hex: string): Uint8Array {
-  return Uint8Array.from(
-    hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
-  );
-}
-
-// Module to convert byte array to Base64
-function bytesToBase64(bytes: Uint8Array): string {
-  const binaryString = String.fromCharCode(...bytes);
-  return btoa(binaryString);
-}
-
-export function getHexToBase64(hex: string): string | undefined {
-  if (!hex || typeof hex !== 'string' || hex.trim() === '') {
-    logWarn(`Invalid hex input: hex string is undefined, null, or empty. This message applies only to UID2 client-side integration.`);
-    return undefined;
-  }
-  return bytesToBase64(hexToBytes(hex)); // Convert byte array to Base64
-}
-
-export function updateModuleParams(moduleToUpdate: any): void {
-  let params = MODULE_PARAM_TO_UPDATE_FOR_SSO[moduleToUpdate.name];
-  if (!params) return;
-
-  let userIdentity = getUserIdentities() || {};
-  let enableSSO = ((window as any).IHPWT && (window as any).IHPWT.ssoEnabled) || ((window as any).PWT && (window as any).PWT.ssoEnabled) || false;
-  let emailHashes = enableSSO && userIdentity.emailHash ? userIdentity.emailHash : userIdentity.pubProvidedEmailHash ? userIdentity.pubProvidedEmailHash : undefined;
-  
-  params.forEach(function(param: any) {
-    switch (moduleToUpdate.name) {
-      case 'id5Id':
-        moduleToUpdate.params[param.key] = getRawPDString(emailHashes, userIdentity.userID);
-        break;
-      case 'uid2':
-        moduleToUpdate.params[param.key] = emailHashes && emailHashes[param.hashType]
-          ? emailHashes[param.hashType]
-          : getHexToBase64(emailHashes?.SHA256);
-        break;
-      default:
-        moduleToUpdate.params[param.key] = emailHashes ? emailHashes[param.hashType] : undefined;
-        break;
-    }
-  });
-}
-
 /**
  * Hook is executed before adapters, but after consentManagement. Consent data is requied because
  * this module requires GDPR consent with Purpose #1 to save data locally.
@@ -687,12 +606,6 @@ export const startAuctionHook = timedAuctionHook('userId', function requestBidsH
     getIds().catch(() => null),
     mkDelay(auctionDelay)
   ]).then(() => {
-    // initializedSubmodulesUpdated - flag to identify if any module has been added from the page post module initialization. This is specifically for OW use case
-    if (initializedSubmodulesUpdated && initializedSubmodules !== undefined) {
-      for (var index in initializedSubmodules) {
-        submodules.push(initializedSubmodules[index]);
-      }
-    }
     addIdData(reqBidsConfigObj);
     uidMetrics().join(useMetrics(reqBidsConfigObj.metrics), {propagate: false, includeGroups: true});
     // calling fn allows prebid to continue processing
@@ -731,7 +644,7 @@ function getUserIds() {
  * This function will be exposed in global-name-space so that userIds stored by Prebid UserId module can be used by external codes as well.
  * Simple use case will be passing these UserIds to A9 wrapper solution
  */
-function getUserIdsAsEids(): any {
+function getUserIdsAsEids(): ORTBRequest['user']['eids'] {
   return getEids(initializedSubmodules.combined)
 }
 
@@ -774,7 +687,7 @@ function encryptSignals(signals, version = 1) {
   let encryptedSig = '';
   switch (version) {
     case 1: // Base64 Encryption
-      encryptedSig = typeof signals === 'object' ? (window as any).btoa(JSON.stringify(signals)) : (window as any).btoa(signals); // Test encryption. To be replaced with better algo
+      encryptedSig = typeof signals === 'object' ? window.btoa(JSON.stringify(signals)) : window.btoa(signals); // Test encryption. To be replaced with better algo
       break;
     default:
       break;
@@ -789,14 +702,14 @@ function registerSignalSources() {
   if (!isGptPubadsDefined()) {
     return;
   }
-  (window as any).googletag.secureSignalProviders = (window as any).googletag.secureSignalProviders || [];
+  window.googletag.secureSignalProviders = window.googletag.secureSignalProviders || [];
   const encryptedSignalSources = config.getConfig('userSync.encryptedSignalSources');
   if (encryptedSignalSources) {
     const registerDelay = encryptedSignalSources.registerDelay || 0;
     setTimeout(() => {
       encryptedSignalSources['sources'] && encryptedSignalSources['sources'].forEach(({ source, encrypt, customFunc }) => {
         source.forEach((src) => {
-          (window as any).googletag.secureSignalProviders.push({
+          window.googletag.secureSignalProviders.push({
             id: src,
             collectorFunction: () => getEncryptedEidsForSource(src, encrypt, customFunc)
           });
@@ -837,10 +750,7 @@ function retryOnCancel(initParams?) {
  */
 function refreshUserIds({submoduleNames}: {
     submoduleNames?: string[]
-} = {}, callback?: () => void, moduleUpdated?: boolean): Promise<Partial<UserId>> {
-  if (moduleUpdated !== undefined) {
-    initializedSubmodulesUpdated = moduleUpdated;
-  }
+} = {}, callback?: () => void): Promise<Partial<UserId>> {
   return retryOnCancel({refresh: true, submoduleNames})
     .then((userIds) => {
       if (callback && isFn(callback)) {
@@ -863,72 +773,6 @@ function refreshUserIds({submoduleNames}: {
 
 function getUserIdsAsync(): Promise<Partial<UserId>> {
   return retryOnCancel();
-}
-
-// Function moved to setUserIdentities at line 602
-// The duplicate is removed to fix TypeScript errors;
-
-// The duplicate functions have been removed
-// Only one version of each function is kept:
-// - updateModuleParams (at line ~650)
-// - getRawPDString (at line ~620)
-// - getHexToBase64 (at line ~640)
-
-function generateModuleLists() {
-  let primaryModulesList = ((window as any).IHPWT && (window as any).IHPWT.OVERRIDES_PRIMARY_MODULES) || ((window as any).PWT && (window as any).PWT.OVERRIDES_PRIMARY_MODULES) || REFRESH_IDMODULES_LIST.PRIMARY_MODULES;
-  let scriptBasedModulesList = ((window as any).IHPWT && (window as any).IHPWT.OVERRIDES_SCRIPT_BASED_MODULES) || ((window as any).PWT && (window as any).PWT.OVERRIDES_SCRIPT_BASED_MODULES) || REFRESH_IDMODULES_LIST.SCRIPT_BASED_MODULES;
-  for (let index in configRegistry) {
-    let moduleName = configRegistry[index].name;
-    if (primaryModulesList.indexOf(moduleName) >= 0) {
-      !modulesToRefresh.includes(moduleName) && modulesToRefresh.push(moduleName);
-      updateModuleParams(configRegistry[index]);
-    }
-    if (scriptBasedModulesList.indexOf(moduleName) >= 0) {
-      !scriptBasedModulesToRefresh.includes(moduleName) && scriptBasedModulesToRefresh.push(moduleName);
-    }
-  }
-}
-
-export function reTriggerPartnerCallsWithEmailHashes() {
-  generateModuleLists();
-  getGlobal().refreshUserIds({'submoduleNames': modulesToRefresh});
-  reTriggerScriptBasedAPICalls(scriptBasedModulesToRefresh);
-}
-
-export function reTriggerScriptBasedAPICalls(modulesToRefresh: string[]) {
-  let userIdentity = getUserIdentities() || {};
-  // Use a standard for loop with index instead of for...in to avoid TypeScript errors
-  for (let i = 0; i < modulesToRefresh.length; i++) {
-    switch (modulesToRefresh[i]) {
-      case 'zeotapIdPlus':
-        if ((window as any).zeotap && isFn((window as any).zeotap.callMethod)) {
-          var userIdentityObject = {
-            email: userIdentity.emailHash?.['SHA256']
-          };
-          (window as any).zeotap.callMethod('setUserIdentities', userIdentityObject, true);
-        }
-        break;
-      case 'identityLink':
-        if ((window as any).ats) {
-          var atsObject = (window as any).ats.outputCurrentConfiguration();
-          atsObject.emailHashes = userIdentity.emailHash ? [userIdentity.emailHash['MD5'], userIdentity.emailHash['SHA1'], userIdentity.emailHash['SHA256']] : undefined;
-          (window as any).ats.start && isFn((window as any).ats.start) && (window as any).ats.start(atsObject);
-          (window as any).ats.setAdditionalData && isFn((window as any).ats.setAdditionalData) && (window as any).ats.setAdditionalData({'type': 'emailHashes', 'id': atsObject.emailHashes});
-        }
-        break;
-      case 'publinkId':
-        if ((window as any).conversant && isFn((window as any).conversant.launch)) {
-          let launchObject = (window as any).conversant.getLauncherObject();
-          launchObject.emailHashes = userIdentity.emailHash ? [userIdentity.emailHash['MD5'], userIdentity.emailHash['SHA256']] : undefined;
-          (window as any).conversant.launch('publink', 'start', launchObject);
-        }
-        break;
-    }
-  }
-}
-
-function getUserIdentities(): any {
-  return userIdentity;
 }
 
 export function getConsentHash() {
@@ -1008,12 +852,12 @@ function updatePPID(priorityMaps) {
     const ppid = getPPID(eids);
     if (ppid) {
       if (isGptPubadsDefined()) {
-        (window as any).googletag.pubads().setPublisherProvidedId(ppid);
+        window.googletag.pubads().setPublisherProvidedId(ppid);
       } else {
-        (window as any).googletag = (window as any).googletag || {};
-        (window as any).googletag.cmd = (window as any).googletag.cmd || [];
-        (window as any).googletag.cmd.push(function() {
-          (window as any).googletag.pubads().setPublisherProvidedId(ppid);
+        (window as any).googletag = window.googletag || {};
+        (window.googletag as any).cmd = window.googletag.cmd || [];
+        window.googletag.cmd.push(function() {
+          window.googletag.pubads().setPublisherProvidedId(ppid);
         });
       }
     }
@@ -1023,7 +867,6 @@ function updatePPID(priorityMaps) {
 function initSubmodules(priorityMaps, submodules, forceRefresh = false) {
   return uidMetrics().fork().measureTime('userId.init.modules', function () {
     if (!submodules.length) return []; // to simplify log messages from here on
-
     submodules.forEach(submod => populateEnabledStorageTypes(submod));
 
     /**
@@ -1138,6 +981,8 @@ function canUseCookies(submodule) {
   return true
 }
 
+const STORAGE_PURPOSES = [1, 2, 3, 4, 7];
+
 function populateEnabledStorageTypes(submodule: SubmoduleContainer<UserIdProvider>) {
   if (submodule.enabledStorageTypes) {
     return;
@@ -1148,8 +993,24 @@ function populateEnabledStorageTypes(submodule: SubmoduleContainer<UserIdProvide
   submodule.enabledStorageTypes = storageTypes.filter(type => {
     switch (type) {
       case LOCAL_STORAGE:
+        HTML5_SUFFIXES.forEach(suffix => {
+            discloseStorageUse('userId', {
+                type: 'web',
+                identifier: submodule.config.storage.name + suffix,
+                purposes: STORAGE_PURPOSES
+            })
+        })
         return canUseLocalStorage(submodule);
       case COOKIE:
+        COOKIE_SUFFIXES.forEach(suffix => {
+            discloseStorageUse('userId', {
+                type: 'cookie',
+                identifier: submodule.config.storage.name + suffix,
+                purposes: STORAGE_PURPOSES,
+                maxAgeSeconds: (submodule.config.storage.expires ?? 0) * 24 * 60 * 60,
+                cookieRefresh: true
+            })
+        })
         return canUseCookies(submodule);
     }
 
@@ -1170,16 +1031,6 @@ function updateEIDConfig(submodules) {
       (mod) => mod
     )
   ).forEach(([key, submodules]) => EID_CONFIG.set(key, submodules[0].eids[key]))
-}
-
-type SubmoduleContainer<P extends UserIdProvider> = {
-    submodule: IdProviderSpec<P>;
-    enabledStorageTypes?: StorageType[];
-    config: UserIdConfig<P>;
-    callback?: ProviderResponse['callback'];
-    idObj;
-    storageMgr: StorageManager;
-    refreshIds?: boolean;
 }
 
 export function generateSubmoduleContainers(options, configs, prevSubmodules = submodules, registry = submoduleRegistry) {
@@ -1204,7 +1055,13 @@ export function generateSubmoduleContainers(options, configs, prevSubmodules = s
         },
         callback: undefined,
         idObj: undefined,
-        storageMgr: getStorageManager({moduleType: MODULE_TYPE_UID, moduleName: submoduleConfig.name})
+        storageMgr: newStorageManager({
+            moduleType: MODULE_TYPE_UID,
+            moduleName: submoduleConfig.name,
+            // since this manager is only using keys provided directly by the publisher,
+            // turn off storageControl checks
+            advertiseKeys: false,
+        })
       };
 
       if (autoRefresh) {
@@ -1214,6 +1071,16 @@ export function generateSubmoduleContainers(options, configs, prevSubmodules = s
 
       return [...acc, newSubmoduleContainer];
     }, []);
+}
+
+type SubmoduleContainer<P extends UserIdProvider> = {
+    submodule: IdProviderSpec<P>;
+    enabledStorageTypes?: StorageType[];
+    config: UserIdConfig<P>;
+    callback?: ProviderResponse['callback'];
+    idObj;
+    storageMgr: StorageManager;
+    refreshIds?: boolean;
 }
 
 /**
@@ -1310,6 +1177,26 @@ declare module '../../src/prebidGlobal' {
     }
 }
 
+const enforceStorageTypeRule = (userIdsConfig, enforceStorageType) => {
+  return (params) => {
+    if (params[ACTIVITY_PARAM_COMPONENT_TYPE] !== MODULE_TYPE_UID) return;
+
+    const matchesName = (query) => params[ACTIVITY_PARAM_COMPONENT_NAME]?.toLowerCase() === query?.toLowerCase();
+    const submoduleConfig = userIdsConfig.find((configItem) => matchesName(configItem.name));
+
+    if (!submoduleConfig || !submoduleConfig.storage) return;
+
+    if (params[ACTIVITY_PARAM_STORAGE_TYPE] !== submoduleConfig.storage.type) {
+      const reason = `${submoduleConfig.name} attempts to store data in ${params[ACTIVITY_PARAM_STORAGE_TYPE]} while configuration allows ${submoduleConfig.storage.type}.`;
+      if (enforceStorageType) {
+        return {allow: false, reason};
+      } else {
+        logWarn(reason);
+      }
+    }
+  }
+}
+
 /**
  * test browser support for storage config types (local storage or cookie), initializes submodules but consentManagement is required,
  * so a callback is added to fire after the consentManagement module.
@@ -1325,6 +1212,7 @@ export function init(config, {mkDelay = delay} = {}) {
     configListener();
   }
   submoduleRegistry = [];
+  let unregisterEnforceStorageTypeRule: () => void
 
   // listen for config userSyncs to be set
   configListener = config.getConfig('userSync', conf => {
@@ -1333,11 +1221,13 @@ export function init(config, {mkDelay = delay} = {}) {
     if (userSync) {
       ppidSource = userSync.ppid;
       if (userSync.userIds) {
-        const {autoRefresh = false, retainConfig = true} = userSync;
+        const {autoRefresh = false, retainConfig = true, enforceStorageType} = userSync;
         configRegistry = userSync.userIds;
         syncDelay = isNumber(userSync.syncDelay) ? userSync.syncDelay : USERSYNC_DEFAULT_CONFIG.syncDelay
         auctionDelay = isNumber(userSync.auctionDelay) ? userSync.auctionDelay : USERSYNC_DEFAULT_CONFIG.auctionDelay;
         updateSubmodules({retainConfig, autoRefresh});
+        unregisterEnforceStorageTypeRule?.();
+        unregisterEnforceStorageTypeRule = registerActivityControl(ACTIVITY_ACCESS_DEVICE, 'enforceStorageTypeRule', enforceStorageTypeRule(submodules.map(({config}) => config), enforceStorageType));
         updateIdPriority(userSync.idPriority, submoduleRegistry);
         initIdSystem({ready: true});
         const submodulesToRefresh = submodules.filter(item => item.refreshIds);

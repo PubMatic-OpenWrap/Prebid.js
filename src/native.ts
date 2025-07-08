@@ -1,5 +1,4 @@
 import {
-    deepAccess,
     deepClone,
     getDefinedParams,
     insertHtmlIntoIframe,
@@ -103,10 +102,6 @@ export interface NativeMediaType extends LegacyNativeRequest {
 }
 
 export const nativeAdapters = [];
-
-export const NATIVE_TARGETING_KEYS = Object.keys(NATIVE_KEYS).map(
-  key => NATIVE_KEYS[key]
-);
 
 export const IMAGE: NativeMediaType = {
   ortb: {
@@ -420,58 +415,6 @@ export function setNativeResponseProperties(bid, adUnit) {
   });
 }
 
-/**
- * Gets native targeting key-value pairs
- * @param {Object} bid
- * @return {Object} targeting
- */
-export function getNativeTargeting(bid, {index = auctionManager.index} = {}) {
-  let keyValues = {};
-  const adUnit = index.getAdUnit(bid);
-
-  const globalSendTargetingKeys = deepAccess(
-    adUnit,
-    `nativeParams.sendTargetingKeys`
-  ) !== false;
-
-  const nativeKeys = getNativeKeys(adUnit);
-
-  const flatBidNativeKeys = { ...bid.native, ...bid.native.ext };
-  delete flatBidNativeKeys.ext;
-
-  Object.keys(flatBidNativeKeys).forEach(asset => {
-    const key = nativeKeys[asset];
-    let value = getAssetValue(bid.native[asset]) || getAssetValue(bid?.native?.ext?.[asset]);
-
-    if (asset === 'adTemplate' || !key || !value) {
-      return;
-    }
-
-    let sendPlaceholder = adUnit?.nativeParams?.[asset]?.sendId;
-    if (typeof sendPlaceholder !== 'boolean') {
-      sendPlaceholder = adUnit?.nativeParams?.ext?.[asset]?.sendId;
-    }
-
-    if (sendPlaceholder) {
-      const placeholder = `${key}:${bid.adId}`;
-      value = placeholder;
-    }
-
-    let assetSendTargetingKeys = adUnit?.nativeParams?.[asset]?.sendTargetingKeys;
-    if (typeof assetSendTargetingKeys !== 'boolean') {
-      assetSendTargetingKeys = adUnit?.nativeParams?.ext?.[asset]?.sendTargetingKeys;
-    }
-
-    const sendTargeting = typeof assetSendTargetingKeys === 'boolean' ? assetSendTargetingKeys : globalSendTargetingKeys;
-
-    if (sendTargeting) {
-      keyValues[key] = value;
-    }
-  });
-
-  return keyValues;
-}
-
 function getNativeAssets(nativeProps, keys, ext = false) {
   let assets = [];
   Object.entries(nativeProps)
@@ -544,22 +487,6 @@ export function getAllAssetsMessage(data, adObject) {
 function getAssetValue(value) {
   return value?.url || value;
 }
-
-function getNativeKeys(adUnit) {
-  const extraNativeKeys = {}
-
-  if (adUnit?.nativeParams?.ext) {
-    Object.keys(adUnit.nativeParams.ext).forEach(extKey => {
-      extraNativeKeys[extKey] = `hb_native_${extKey}`;
-    })
-  }
-
-  return {
-    ...NATIVE_KEYS,
-    ...extraNativeKeys
-  }
-}
-
 /**
  * converts Prebid legacy native assets request to OpenRTB format
  * @param {object} legacyNativeAssets an object that describes a native bid request in Prebid proprietary format
@@ -870,24 +797,7 @@ export function toOrtbNativeResponse(legacyResponse: LegacyNativeResponse, ortbR
  * @returns an object containing the response in legacy native format: { title: "this is a title", image: ... }
  */
 export function toLegacyResponse(ortbResponse: NativeResponse, ortbRequest: NativeRequest) {
-  // Add explicit type assertion to handle all possible native response fields
-  const legacyResponse = {} as LegacyNativeResponse & {
-    title?: string;
-    image?: { url: string; width?: number; height?: number };
-    icon?: { url: string; width?: number; height?: number };
-    sponsoredBy?: string;
-    body?: string;
-    cta?: string;
-    rating?: string;
-    downloads?: string;
-    likes?: string;
-    price?: string;
-    salePrice?: string;
-    phone?: string;
-    address?: string;
-    displayUrl?: string;
-    [key: string]: any; // Allow for dynamic keys
-  };
+  const legacyResponse = {} as LegacyNativeResponse;
   const requestAssets = ortbRequest?.assets || [];
   
   // Handle link and privacy data with proper null checking

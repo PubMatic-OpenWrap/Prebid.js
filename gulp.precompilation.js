@@ -23,7 +23,8 @@ function babelPrecomp({distUrlBase = null, disableFeatures = null, dev = false} 
   if (!PRECOMP_TASKS.has(key)) {
     const babelConfig = require('./babelConfig.js')({
       disableFeatures: disableFeatures ?? helpers.getDisabledFeatures(),
-      prebidDistUrlBase: distUrlBase ?? argv.distUrlBase
+      prebidDistUrlBase: distUrlBase ?? argv.distUrlBase,
+      ES5: argv.ES5
     });
     const precompile = function () {
       // `since: gulp.lastRun(task)` selects files that have been modified since the last time this gulp process ran `task`
@@ -38,6 +39,34 @@ function babelPrecomp({distUrlBase = null, disableFeatures = null, dev = false} 
   return PRECOMP_TASKS.get(key);
 }
 
+/**
+ * Generate a "metadata module" for each json file in metadata/modules
+ * These are wrappers around the JSON that register themselves with the `metadata` library
+ */
+function generateMetadataModules() {
+  const tpl = _.template(`import {metadata} from '../../libraries/metadata/metadata.js';\nmetadata.register(<%= moduleName %>, <%= data %>)`);
+  function cleanMetadata(file) {
+    const data = JSON.parse(file.contents.toString())
+    delete data.NOTICE;
+    data.components.forEach(component => {
+      delete component.gvlid;
+      if (component.aliasOf == null) {
+        delete component.aliasOf;
+      }
+    })
+    return JSON.stringify(data);
+  }
+  return  gulp.src('./metadata/modules/*.json')
+    .pipe(tap(file => {
+      const {dir, name} = path.parse(file.path);
+      file.contents = Buffer.from(tpl({
+        moduleName: JSON.stringify(name),
+        data: cleanMetadata(file)
+      }));
+      file.path = path.join(dir, `${name}.js`);
+    }))
+    .pipe(gulp.dest(helpers.getPrecompiledPath('metadata/modules')));
+}
 
 /**
  * .json and .d.ts files are used at runtime, so make them part of the precompilation output
@@ -144,7 +173,7 @@ function generateGlobalDef(options) {
 
 function precompile(options = {}) {
   return gulp.series([
-    'ts',
+    gulp.parallel(['ts', generateMetadataModules]),
     gulp.parallel([copyVerbatim, babelPrecomp(options)]),
     gulp.parallel([publicModules, generateCoreSummary, generateModuleSummary, generateGlobalDef(options)])
   ]);
