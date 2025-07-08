@@ -1435,43 +1435,40 @@ export async function compressDataWithGZip(data) {
 }
 
 export function collectOtherIds(existingUserIds) {
+  const logger = prefixLog('Collect Other IDs: ');
+  logger.logInfo("In collectOtherIds existingUserIds", existingUserIds);
+
   // Get all other namespaces except the primary one
   window._pbjsGlobals = window._pbjsGlobals || [];
-  var globalNS = (window._pbjsGlobals || window._pbjsGlobals_pubmatic).filter(function(item) {
-    return item !== window.pubmaticNameSpace; // window.pubmaticNameSpace should be declared in the prepend code snippet
+  let globalNS = (window._pbjsGlobals).filter(function(item) {
+    return item !== window.pubmaticNameSpace;
   });
   // Initialize merged IDs array with existing IDs
   existingUserIds = existingUserIds || [];
-  var mergedIds = existingUserIds.slice();
-  logInfo("### in collectOtherIds existingUserIds", existingUserIds);
+  const mergedIds = [...existingUserIds];
+
   // Track sources that are already present
-  var usedSources = {};
-  var i;
+  const usedSources = new Set();
   // First mark all sources from existingUserIds as used
-  for (i = 0; i < existingUserIds.length; i++) {
-    if (existingUserIds[i].source) {
-      usedSources[existingUserIds[i].source] = true;
+  existingUserIds.forEach(id => {
+    if (id?.source) {
+      usedSources.add(id.source);
     }
-  }
-  
+  });
+
   // Process each namespace in order
-  for (i = 0; i < globalNS.length; i++) {
-    var namespace = globalNS[i];
-    if (isFn(window[namespace].getUserIdsAsEids)) {
-      var eids = window[namespace].getUserIdsAsEids();
-      if (Array.isArray(eids)) {
-        var j;
-        for (j = 0; j < eids.length; j++) {
-          var id = eids[j];
-          // Only add if this source hasn't been used yet
-          if (id.source && !usedSources[id.source]) {
-            mergedIds.push(id);
-            usedSources[id.source] = true;
-          }
+  globalNS.forEach(namespace => {
+    const eids = window[namespace]?.getUserIdsAsEids?.();
+    if (isArray(eids)) {
+      eids.forEach(id => {
+        // Only add if this source hasn't been used yet
+        if (id?.source && !usedSources.has(id.source)) {
+          mergedIds.push(id);
+          usedSources.add(id.source);
         }
-      }
+      });
     }
-  }
-  logInfo("### in collectOtherIds mergedIds", mergedIds);
+  });
+  logger.logInfo("In collectOtherIds mergedIds", mergedIds);
   return mergedIds;
 }
