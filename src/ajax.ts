@@ -70,6 +70,38 @@ export const processRequestOptions = hook('async', function(options = {}, module
   return options;
 }, 'processRequestOptions');
 
+export interface AjaxOptions {
+    /**
+     * HTTP method.
+     */
+    method?: string;
+    /**
+     * Custom HTTP headers.
+     */
+    customHeaders?: Record<string, string>;
+    /**
+     * Content type.
+     */
+    contentType?: string;
+    /**
+     * Whether 3rd party cookies (and some other less relevant features, like HTTP auth)_
+     * should be enabled.
+     */
+    withCredentials?: boolean;
+    /**
+     * Fetch keepalive flag.
+     */
+    keepalive?: boolean
+    /**
+     * Whether chrome's `Sec-Browing-Topics` header should be sent
+     */
+    browsingTopics?: boolean
+    /**
+     * Whether chrome's PAAPI headers should be sent.
+     */
+    adAuctionHeaders?: boolean;
+}
+
 /**
  * transform legacy `ajax` parameters into a fetch request.
  * @returns {Request}

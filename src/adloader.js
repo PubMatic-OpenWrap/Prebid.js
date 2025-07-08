@@ -36,6 +36,7 @@ const _approvedLoadExternalJSList = [
   'nodalsAi',
   'anonymised',
   'optable',
+  'pbjs-debug-ui',
   // UserId Submodules
   'justtag',
   'tncId',
