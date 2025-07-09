@@ -448,19 +448,20 @@ const updateUserSiteDevice = (req, bidRequest) => {
   const userIdAsEids = deepAccess(bidRequest, '0.userIdAsEids');
 
   if (bidRequest.length) {
-    // Ensure req.user.ext exists
-    req.user.ext = req.user.ext || {};
-
     if (window.PWT.collectIdsFromWrappers) {
       logInfo(`${COLLECT_IDS_PREFIX} In pubmaticBidAdapter existing userIdAsEids`, userIdAsEids);
       // Apply collectOtherIds to either existing eids or userIdAsEids
+      // Ensure req.user.ext exists
+      req.user.ext = req.user.ext || {};
       req.user.ext.eids = req.user.ext.eids
         ? collectOtherIds(req.user.ext.eids)
         : collectOtherIds(userIdAsEids);
       logInfo(`${COLLECT_IDS_PREFIX} In pubmaticBidAdapter updated userIdAsEids`, req.user.ext.eids);
-    } else if (!req.user.ext.eids) {
+    } else if (userIdAsEids?.length && !req.user.ext?.eids) {
       // Only set if eids don't already exist
       logInfo(`${COLLECT_IDS_PREFIX} In pubmaticBidAdapter window.PWT.collectIdsFromWrappers is false, setting default userIdAsEids`);
+      // Ensure req.user.ext exists
+      req.user.ext = req.user.ext || {};
       req.user.ext.eids = userIdAsEids;
     }
   }
