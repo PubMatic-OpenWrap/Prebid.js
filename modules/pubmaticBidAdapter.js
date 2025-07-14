@@ -54,7 +54,7 @@ let conf = {};
 let blockedIabCategories = [];
 let allowedIabCategories = [];
 let pubId = 0;
-// export let cpmAdjustment;
+export let cpmAdjustment;
 
 const converter = ortbConverter({
   context: {
@@ -169,41 +169,41 @@ const converter = ortbConverter({
   }
 });
 
-// export function _calculateBidCpmAdjustment(bid) {
-//   if (!bid) return;
+export function _calculateBidCpmAdjustment(bid) {
+  if (!bid) return;
 
-//   const { originalCurrency, currency, cpm, originalCpm, meta } = bid;
-//   const convertedCpm = originalCurrency !== currency && isFn(bid.getCpmInNewCurrency)
-//     ? bid.getCpmInNewCurrency(originalCurrency)
-//     : cpm;
+  const { originalCurrency, currency, cpm, originalCpm, meta } = bid;
+  const convertedCpm = originalCurrency !== currency && isFn(bid.getCpmInNewCurrency)
+    ? bid.getCpmInNewCurrency(originalCurrency)
+    : cpm;
 
-//   const mediaType = bid.mediaType;
-//   const metaMediaType = meta?.mediaType;
+  const mediaType = bid.mediaType;
+  const metaMediaType = meta?.mediaType;
 
-//   cpmAdjustment = cpmAdjustment || {
-//     currency,
-//     originalCurrency,
-//     adjustment: []
-//   };
+  cpmAdjustment = cpmAdjustment || {
+    currency,
+    originalCurrency,
+    adjustment: []
+  };
 
-//   const adjustmentValue = Number(((originalCpm - convertedCpm) / originalCpm).toFixed(2));
+  const adjustmentValue = Number(((originalCpm - convertedCpm) / originalCpm).toFixed(2));
 
-//   const adjustmentEntry = {
-//     cpmAdjustment: adjustmentValue,
-//     mediaType,
-//     metaMediaType,
-//     cpm: convertedCpm,
-//     originalCpm
-//   };
+  const adjustmentEntry = {
+    cpmAdjustment: adjustmentValue,
+    mediaType,
+    metaMediaType,
+    cpm: convertedCpm,
+    originalCpm
+  };
 
-//   const existingIndex = cpmAdjustment?.adjustment?.findIndex(
-//     (entry) => entry?.mediaType === mediaType && entry?.metaMediaType === metaMediaType
-//   );
+  const existingIndex = cpmAdjustment?.adjustment?.findIndex(
+    (entry) => entry?.mediaType === mediaType && entry?.metaMediaType === metaMediaType
+  );
 
-//   existingIndex !== -1
-//     ? cpmAdjustment.adjustment.splice(existingIndex, 1, adjustmentEntry)
-//     : cpmAdjustment.adjustment.push(adjustmentEntry);
-// }
+  existingIndex !== -1
+    ? cpmAdjustment.adjustment.splice(existingIndex, 1, adjustmentEntry)
+    : cpmAdjustment.adjustment.push(adjustmentEntry);
+}
 
 const handleImageProperties = asset => {
   const imgProps = {};
@@ -528,7 +528,7 @@ const addExtenstionParams = (req) => {
       transactionId,
       wp: 'pbjs'
     },
-    // cpmAdjustment: cpmAdjustment
+    cpmAdjustment: cpmAdjustment
   }
 }
 
@@ -816,9 +816,9 @@ export const spec = {
     return [{ type, url }];
   },
 
-  // onBidWon: (bid) => {
-  //   _calculateBidCpmAdjustment(bid);
-  // }
+  onBidWon: (bid) => {
+    _calculateBidCpmAdjustment(bid);
+  }
 };
 
 registerBidder(spec);

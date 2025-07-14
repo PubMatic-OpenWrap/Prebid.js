@@ -1,4 +1,331 @@
 {
+    "Analytics Module": [
+        {
+            "name": "browsiAnalyticsAdapter",
+            "path": "/modules/browsiAnalyticsAdapter.js",
+            "module": "browsiAnalyticsAdapter"
+        },
+        {
+            "name": "yieldoneAnalyticsAdapter",
+            "path": "/modules/yieldoneAnalyticsAdapter.js",
+            "module": "yieldoneAnalyticsAdapter"
+        },
+        {
+            "name": "fintezaAnalyticsAdapter",
+            "path": "/modules/fintezaAnalyticsAdapter.js",
+            "module": "fintezaAnalyticsAdapter"
+        },
+        {
+            "name": "genericAnalyticsAdapter",
+            "path": "/modules/genericAnalyticsAdapter.js",
+            "module": "genericAnalyticsAdapter"
+        },
+        {
+            "name": "greenbidsAnalyticsAdapter",
+            "path": "/modules/greenbidsAnalyticsAdapter.js",
+            "module": "greenbidsAnalyticsAdapter"
+        },
+        {
+            "name": "ucfunnelAnalyticsAdapter",
+            "path": "/modules/ucfunnelAnalyticsAdapter.js",
+            "module": "ucfunnelAnalyticsAdapter"
+        },
+        {
+            "name": "growthCodeAnalyticsAdapter",
+            "path": "/modules/growthCodeAnalyticsAdapter.js",
+            "module": "growthCodeAnalyticsAdapter"
+        },
+        {
+            "name": "byDataAnalyticsAdapter",
+            "path": "/modules/byDataAnalyticsAdapter.js",
+            "module": "byDataAnalyticsAdapter"
+        },
+        {
+            "name": "scaleableAnalyticsAdapter",
+            "path": "/modules/scaleableAnalyticsAdapter.js",
+            "module": "scaleableAnalyticsAdapter"
+        },
+        {
+            "name": "intentIqAnalyticsAdapter",
+            "path": "/modules/intentIqAnalyticsAdapter.js",
+            "module": "intentIqAnalyticsAdapter"
+        },
+        {
+            "name": "adxcgAnalyticsAdapter",
+            "path": "/modules/adxcgAnalyticsAdapter.js",
+            "module": "adxcgAnalyticsAdapter"
+        },
+        {
+            "name": "zeta_global_sspAnalyticsAdapter",
+            "path": "/modules/zeta_global_sspAnalyticsAdapter.js",
+            "module": "zeta_global_sspAnalyticsAdapter"
+        },
+        {
+            "name": "adWMGAnalyticsAdapter",
+            "path": "/modules/adWMGAnalyticsAdapter.js",
+            "module": "adWMGAnalyticsAdapter"
+        },
+        {
+            "name": "atsAnalyticsAdapter",
+            "path": "/modules/atsAnalyticsAdapter.js",
+            "module": "atsAnalyticsAdapter"
+        },
+        {
+            "name": "magniteAnalyticsAdapter",
+            "path": "/modules/magniteAnalyticsAdapter.js",
+            "module": "magniteAnalyticsAdapter"
+        },
+        {
+            "name": "pubmaticAnalyticsAdapter",
+            "path": "/modules/pubmaticAnalyticsAdapter.js",
+            "module": "pubmaticAnalyticsAdapter"
+        },
+        {
+            "name": "AsteriobidPbmAnalyticsAdapter",
+            "path": "/modules/AsteriobidPbmAnalyticsAdapter.js",
+            "module": "AsteriobidPbmAnalyticsAdapter"
+        },
+        {
+            "name": "yuktamediaAnalyticsAdapter",
+            "path": "/modules/yuktamediaAnalyticsAdapter.js",
+            "module": "yuktamediaAnalyticsAdapter"
+        },
+        {
+            "name": "malltvAnalyticsAdapter",
+            "path": "/modules/malltvAnalyticsAdapter.js",
+            "module": "malltvAnalyticsAdapter"
+        },
+        {
+            "name": "oxxionAnalyticsAdapter",
+            "path": "/modules/oxxionAnalyticsAdapter.js",
+            "module": "oxxionAnalyticsAdapter"
+        },
+        {
+            "name": "agmaAnalyticsAdapter",
+            "path": "/modules/agmaAnalyticsAdapter.js",
+            "module": "agmaAnalyticsAdapter"
+        },
+        {
+            "name": "medianetAnalyticsAdapter",
+            "path": "/modules/medianetAnalyticsAdapter.js",
+            "module": "medianetAnalyticsAdapter"
+        },
+        {
+            "name": "concertAnalyticsAdapter",
+            "path": "/modules/concertAnalyticsAdapter.js",
+            "module": "concertAnalyticsAdapter"
+        },
+        {
+            "name": "yandexAnalyticsAdapter",
+            "path": "/modules/yandexAnalyticsAdapter.js",
+            "module": "yandexAnalyticsAdapter"
+        },
+        {
+            "name": "hadronAnalyticsAdapter",
+            "path": "/modules/hadronAnalyticsAdapter.js",
+            "module": "hadronAnalyticsAdapter"
+        },
+        {
+            "name": "id5AnalyticsAdapter",
+            "path": "/modules/id5AnalyticsAdapter.js",
+            "module": "id5AnalyticsAdapter"
+        },
+        {
+            "name": "ooloAnalyticsAdapter",
+            "path": "/modules/ooloAnalyticsAdapter.js",
+            "module": "ooloAnalyticsAdapter"
+        },
+        {
+            "name": "r2b2AnalyticsAdapter",
+            "path": "/modules/r2b2AnalyticsAdapter.js",
+            "module": "r2b2AnalyticsAdapter"
+        },
+        {
+            "name": "kargoAnalyticsAdapter",
+            "path": "/modules/kargoAnalyticsAdapter.js",
+            "module": "kargoAnalyticsAdapter"
+        },
+        {
+            "name": "asteriobidAnalyticsAdapter",
+            "path": "/modules/asteriobidAnalyticsAdapter.js",
+            "module": "asteriobidAnalyticsAdapter"
+        },
+        {
+            "name": "adxpremiumAnalyticsAdapter",
+            "path": "/modules/adxpremiumAnalyticsAdapter.js",
+            "module": "adxpremiumAnalyticsAdapter"
+        },
+        {
+            "name": "liveIntentAnalyticsAdapter",
+            "path": "/modules/liveIntentAnalyticsAdapter.js",
+            "module": "liveIntentAnalyticsAdapter"
+        },
+        {
+            "name": "terceptAnalyticsAdapter",
+            "path": "/modules/terceptAnalyticsAdapter.js",
+            "module": "terceptAnalyticsAdapter"
+        },
+        {
+            "name": "invisiblyAnalyticsAdapter",
+            "path": "/modules/invisiblyAnalyticsAdapter.js",
+            "module": "invisiblyAnalyticsAdapter"
+        },
+        {
+            "name": "adagioAnalyticsAdapter",
+            "path": "/modules/adagioAnalyticsAdapter.js",
+            "module": "adagioAnalyticsAdapter"
+        },
+        {
+            "name": "optimonAnalyticsAdapter",
+            "path": "/modules/optimonAnalyticsAdapter.js",
+            "module": "optimonAnalyticsAdapter"
+        },
+        {
+            "name": "advRedAnalyticsAdapter",
+            "path": "/modules/advRedAnalyticsAdapter.js",
+            "module": "advRedAnalyticsAdapter"
+        },
+        {
+            "name": "pubxaiAnalyticsAdapter",
+            "path": "/modules/pubxaiAnalyticsAdapter.js",
+            "module": "pubxaiAnalyticsAdapter"
+        },
+        {
+            "name": "symitriAnalyticsAdapter",
+            "path": "/modules/symitriAnalyticsAdapter.js",
+            "module": "symitriAnalyticsAdapter"
+        },
+        {
+            "name": "33acrossAnalyticsAdapter",
+            "path": "/modules/33acrossAnalyticsAdapter.js",
+            "module": "33acrossAnalyticsAdapter"
+        },
+        {
+            "name": "mobkoiAnalyticsAdapter",
+            "path": "/modules/mobkoiAnalyticsAdapter.js",
+            "module": "mobkoiAnalyticsAdapter"
+        },
+        {
+            "name": "appierAnalyticsAdapter",
+            "path": "/modules/appierAnalyticsAdapter.js",
+            "module": "appierAnalyticsAdapter"
+        },
+        {
+            "name": "sharethroughAnalyticsAdapter",
+            "path": "/modules/sharethroughAnalyticsAdapter.js",
+            "module": "sharethroughAnalyticsAdapter"
+        },
+        {
+            "name": "konduitAnalyticsAdapter",
+            "path": "/modules/konduitAnalyticsAdapter.js",
+            "module": "konduitAnalyticsAdapter"
+        },
+        {
+            "name": "pianoDmpAnalyticsAdapter",
+            "path": "/modules/pianoDmpAnalyticsAdapter.js",
+            "module": "pianoDmpAnalyticsAdapter"
+        },
+        {
+            "name": "smartyadsAnalyticsAdapter",
+            "path": "/modules/smartyadsAnalyticsAdapter.js",
+            "module": "smartyadsAnalyticsAdapter"
+        },
+        {
+            "name": "livewrappedAnalyticsAdapter",
+            "path": "/modules/livewrappedAnalyticsAdapter.js",
+            "module": "livewrappedAnalyticsAdapter"
+        },
+        {
+            "name": "pulsepointAnalyticsAdapter",
+            "path": "/modules/pulsepointAnalyticsAdapter.js",
+            "module": "pulsepointAnalyticsAdapter"
+        },
+        {
+            "name": "bidwatchAnalyticsAdapter",
+            "path": "/modules/bidwatchAnalyticsAdapter.js",
+            "module": "bidwatchAnalyticsAdapter"
+        },
+        {
+            "name": "pubmaticIHAnalyticsAdapter",
+            "path": "/modules/pubmaticIHAnalyticsAdapter.js",
+            "module": "pubmaticIHAnalyticsAdapter"
+        },
+        {
+            "name": "pubstackAnalyticsAdapter",
+            "path": "/modules/pubstackAnalyticsAdapter.js",
+            "module": "pubstackAnalyticsAdapter"
+        },
+        {
+            "name": "datablocksAnalyticsAdapter",
+            "path": "/modules/datablocksAnalyticsAdapter.js",
+            "module": "datablocksAnalyticsAdapter"
+        },
+        {
+            "name": "adkernelAdnAnalyticsAdapter",
+            "path": "/modules/adkernelAdnAnalyticsAdapter.js",
+            "module": "adkernelAdnAnalyticsAdapter"
+        },
+        {
+            "name": "automatadAnalyticsAdapter",
+            "path": "/modules/automatadAnalyticsAdapter.js",
+            "module": "automatadAnalyticsAdapter"
+        },
+        {
+            "name": "adnuntiusAnalyticsAdapter",
+            "path": "/modules/adnuntiusAnalyticsAdapter.js",
+            "module": "adnuntiusAnalyticsAdapter"
+        },
+        {
+            "name": "pubperfAnalyticsAdapter",
+            "path": "/modules/pubperfAnalyticsAdapter.js",
+            "module": "pubperfAnalyticsAdapter"
+        },
+        {
+            "name": "nobidAnalyticsAdapter",
+            "path": "/modules/nobidAnalyticsAdapter.js",
+            "module": "nobidAnalyticsAdapter"
+        },
+        {
+            "name": "eightPodAnalyticsAdapter",
+            "path": "/modules/eightPodAnalyticsAdapter.js",
+            "module": "eightPodAnalyticsAdapter"
+        },
+        {
+            "name": "uniquestAnalyticsAdapter",
+            "path": "/modules/uniquestAnalyticsAdapter.js",
+            "module": "uniquestAnalyticsAdapter"
+        },
+        {
+            "name": "conversantAnalyticsAdapter",
+            "path": "/modules/conversantAnalyticsAdapter.js",
+            "module": "conversantAnalyticsAdapter"
+        },
+        {
+            "name": "roxotAnalyticsAdapter",
+            "path": "/modules/roxotAnalyticsAdapter.js",
+            "module": "roxotAnalyticsAdapter"
+        },
+        {
+            "name": "pubwiseAnalyticsAdapter",
+            "path": "/modules/pubwiseAnalyticsAdapter.js",
+            "module": "pubwiseAnalyticsAdapter"
+        },
+        {
+            "name": "rivrAnalyticsAdapter",
+            "path": "/modules/rivrAnalyticsAdapter.js",
+            "module": "rivrAnalyticsAdapter"
+        },
+        {
+            "name": "adlooxAnalyticsAdapter",
+            "path": "/modules/adlooxAnalyticsAdapter.js",
+            "module": "adlooxAnalyticsAdapter"
+        },
+        {
+            "name": "relevantAnalyticsAdapter",
+            "path": "/modules/relevantAnalyticsAdapter.js",
+            "module": "relevantAnalyticsAdapter"
+        }
+    ],
     "Others": [
         {
             "name": "bidViewabilityIO",
@@ -101,7 +428,7 @@
             "module": "topLevelPaapi"
         },
         {
-            "name": "gppControl_usnat",
+            "name": "bidViewabilityIO",
             "path": "/modules/gppControl_usnat.js",
             "module": "gppControl_usnat"
         },
@@ -184,6 +511,11 @@
             "name": "fanAdapter",
             "path": "/modules/fanAdapter.js",
             "module": "fanAdapter"
+        },
+        {
+            "name": "previousAuctionInfo",
+            "path": "/modules/previousAuctionInfo/index.js",
+            "module": "previousAuctionInfo"
         }
     ],
     "Video": [
@@ -215,6 +547,11 @@
             "module": "imRtdProvider"
         },
         {
+            "name": "raveltechRtdProvider",
+            "path": "/modules/raveltechRtdProvider.js",
+            "module": "raveltechRtdProvider"
+        },
+        {
             "name": "humansecurityRtdProvider",
             "path": "/modules/humansecurityRtdProvider.js",
             "module": "humansecurityRtdProvider"
@@ -223,6 +560,11 @@
             "name": "relevadRtdProvider",
             "path": "/modules/relevadRtdProvider.js",
             "module": "relevadRtdProvider"
+        },
+        {
+            "name": "optableRtdProvider",
+            "path": "/modules/optableRtdProvider.js",
+            "module": "optableRtdProvider"
         },
         {
             "name": "1plusXRtdProvider",
@@ -260,6 +602,11 @@
             "module": "medianetRtdProvider"
         },
         {
+            "name": "pubmaticRtdProvider",
+            "path": "/modules/pubmaticRtdProvider.js",
+            "module": "pubmaticRtdProvider"
+        },
+        {
             "name": "goldfishAdsRtdProvider",
             "path": "/modules/goldfishAdsRtdProvider.js",
             "module": "goldfishAdsRtdProvider"
@@ -278,6 +625,11 @@
             "name": "sirdataRtdProvider",
             "path": "/modules/sirdataRtdProvider.js",
             "module": "sirdataRtdProvider"
+        },
+        {
+            "name": "nodalsAiRtdProvider",
+            "path": "/modules/nodalsAiRtdProvider.js",
+            "module": "nodalsAiRtdProvider"
         },
         {
             "name": "timeoutRtdProvider",
@@ -310,9 +662,19 @@
             "module": "reconciliationRtdProvider"
         },
         {
+            "name": "overtoneRtdProvider",
+            "path": "/modules/overtoneRtdProvider.js",
+            "module": "overtoneRtdProvider"
+        },
+        {
             "name": "optimeraRtdProvider",
             "path": "/modules/optimeraRtdProvider.js",
             "module": "optimeraRtdProvider"
+        },
+        {
+            "name": "semantiqRtdProvider",
+            "path": "/modules/semantiqRtdProvider.js",
+            "module": "semantiqRtdProvider"
         },
         {
             "name": "aaxBlockmeterRtdProvider",
@@ -473,308 +835,6 @@
             "name": "brandmetricsRtdProvider",
             "path": "/modules/brandmetricsRtdProvider.js",
             "module": "brandmetricsRtdProvider"
-        }
-    ],
-    "Analytics Module": [
-        {
-            "name": "yieldoneAnalyticsAdapter",
-            "path": "/modules/yieldoneAnalyticsAdapter.js",
-            "module": "yieldoneAnalyticsAdapter"
-        },
-        {
-            "name": "fintezaAnalyticsAdapter",
-            "path": "/modules/fintezaAnalyticsAdapter.js",
-            "module": "fintezaAnalyticsAdapter"
-        },
-        {
-            "name": "genericAnalyticsAdapter",
-            "path": "/modules/genericAnalyticsAdapter.js",
-            "module": "genericAnalyticsAdapter"
-        },
-        {
-            "name": "greenbidsAnalyticsAdapter",
-            "path": "/modules/greenbidsAnalyticsAdapter.js",
-            "module": "greenbidsAnalyticsAdapter"
-        },
-        {
-            "name": "ucfunnelAnalyticsAdapter",
-            "path": "/modules/ucfunnelAnalyticsAdapter.js",
-            "module": "ucfunnelAnalyticsAdapter"
-        },
-        {
-            "name": "growthCodeAnalyticsAdapter",
-            "path": "/modules/growthCodeAnalyticsAdapter.js",
-            "module": "growthCodeAnalyticsAdapter"
-        },
-        {
-            "name": "byDataAnalyticsAdapter",
-            "path": "/modules/byDataAnalyticsAdapter.js",
-            "module": "byDataAnalyticsAdapter"
-        },
-        {
-            "name": "scaleableAnalyticsAdapter",
-            "path": "/modules/scaleableAnalyticsAdapter.js",
-            "module": "scaleableAnalyticsAdapter"
-        },
-        {
-            "name": "intentIqAnalyticsAdapter",
-            "path": "/modules/intentIqAnalyticsAdapter.js",
-            "module": "intentIqAnalyticsAdapter"
-        },
-        {
-            "name": "adxcgAnalyticsAdapter",
-            "path": "/modules/adxcgAnalyticsAdapter.js",
-            "module": "adxcgAnalyticsAdapter"
-        },
-        {
-            "name": "zeta_global_sspAnalyticsAdapter",
-            "path": "/modules/zeta_global_sspAnalyticsAdapter.js",
-            "module": "zeta_global_sspAnalyticsAdapter"
-        },
-        {
-            "name": "adWMGAnalyticsAdapter",
-            "path": "/modules/adWMGAnalyticsAdapter.js",
-            "module": "adWMGAnalyticsAdapter"
-        },
-        {
-            "name": "atsAnalyticsAdapter",
-            "path": "/modules/atsAnalyticsAdapter.js",
-            "module": "atsAnalyticsAdapter"
-        },
-        {
-            "name": "magniteAnalyticsAdapter",
-            "path": "/modules/magniteAnalyticsAdapter.js",
-            "module": "magniteAnalyticsAdapter"
-        },
-        {
-            "name": "pubmaticAnalyticsAdapter",
-            "path": "/modules/pubmaticAnalyticsAdapter.js",
-            "module": "pubmaticAnalyticsAdapter"
-        },
-        {
-            "name": "AsteriobidPbmAnalyticsAdapter",
-            "path": "/modules/AsteriobidPbmAnalyticsAdapter.js",
-            "module": "AsteriobidPbmAnalyticsAdapter"
-        },
-        {
-            "name": "yuktamediaAnalyticsAdapter",
-            "path": "/modules/yuktamediaAnalyticsAdapter.js",
-            "module": "yuktamediaAnalyticsAdapter"
-        },
-        {
-            "name": "malltvAnalyticsAdapter",
-            "path": "/modules/malltvAnalyticsAdapter.js",
-            "module": "malltvAnalyticsAdapter"
-        },
-        {
-            "name": "oxxionAnalyticsAdapter",
-            "path": "/modules/oxxionAnalyticsAdapter.js",
-            "module": "oxxionAnalyticsAdapter"
-        },
-        {
-            "name": "agmaAnalyticsAdapter",
-            "path": "/modules/agmaAnalyticsAdapter.js",
-            "module": "agmaAnalyticsAdapter"
-        },
-        {
-            "name": "medianetAnalyticsAdapter",
-            "path": "/modules/medianetAnalyticsAdapter.js",
-            "module": "medianetAnalyticsAdapter"
-        },
-        {
-            "name": "concertAnalyticsAdapter",
-            "path": "/modules/concertAnalyticsAdapter.js",
-            "module": "concertAnalyticsAdapter"
-        },
-        {
-            "name": "yandexAnalyticsAdapter",
-            "path": "/modules/yandexAnalyticsAdapter.js",
-            "module": "yandexAnalyticsAdapter"
-        },
-        {
-            "name": "hadronAnalyticsAdapter",
-            "path": "/modules/hadronAnalyticsAdapter.js",
-            "module": "hadronAnalyticsAdapter"
-        },
-        {
-            "name": "id5AnalyticsAdapter",
-            "path": "/modules/id5AnalyticsAdapter.js",
-            "module": "id5AnalyticsAdapter"
-        },
-        {
-            "name": "ooloAnalyticsAdapter",
-            "path": "/modules/ooloAnalyticsAdapter.js",
-            "module": "ooloAnalyticsAdapter"
-        },
-        {
-            "name": "kargoAnalyticsAdapter",
-            "path": "/modules/kargoAnalyticsAdapter.js",
-            "module": "kargoAnalyticsAdapter"
-        },
-        {
-            "name": "asteriobidAnalyticsAdapter",
-            "path": "/modules/asteriobidAnalyticsAdapter.js",
-            "module": "asteriobidAnalyticsAdapter"
-        },
-        {
-            "name": "adxpremiumAnalyticsAdapter",
-            "path": "/modules/adxpremiumAnalyticsAdapter.js",
-            "module": "adxpremiumAnalyticsAdapter"
-        },
-        {
-            "name": "liveIntentAnalyticsAdapter",
-            "path": "/modules/liveIntentAnalyticsAdapter.js",
-            "module": "liveIntentAnalyticsAdapter"
-        },
-        {
-            "name": "terceptAnalyticsAdapter",
-            "path": "/modules/terceptAnalyticsAdapter.js",
-            "module": "terceptAnalyticsAdapter"
-        },
-        {
-            "name": "invisiblyAnalyticsAdapter",
-            "path": "/modules/invisiblyAnalyticsAdapter.js",
-            "module": "invisiblyAnalyticsAdapter"
-        },
-        {
-            "name": "adagioAnalyticsAdapter",
-            "path": "/modules/adagioAnalyticsAdapter.js",
-            "module": "adagioAnalyticsAdapter"
-        },
-        {
-            "name": "optimonAnalyticsAdapter",
-            "path": "/modules/optimonAnalyticsAdapter.js",
-            "module": "optimonAnalyticsAdapter"
-        },
-        {
-            "name": "advRedAnalyticsAdapter",
-            "path": "/modules/advRedAnalyticsAdapter.js",
-            "module": "advRedAnalyticsAdapter"
-        },
-        {
-            "name": "pubxaiAnalyticsAdapter",
-            "path": "/modules/pubxaiAnalyticsAdapter.js",
-            "module": "pubxaiAnalyticsAdapter"
-        },
-        {
-            "name": "symitriAnalyticsAdapter",
-            "path": "/modules/symitriAnalyticsAdapter.js",
-            "module": "symitriAnalyticsAdapter"
-        },
-        {
-            "name": "33acrossAnalyticsAdapter",
-            "path": "/modules/33acrossAnalyticsAdapter.js",
-            "module": "33acrossAnalyticsAdapter"
-        },
-        {
-            "name": "appierAnalyticsAdapter",
-            "path": "/modules/appierAnalyticsAdapter.js",
-            "module": "appierAnalyticsAdapter"
-        },
-        {
-            "name": "sharethroughAnalyticsAdapter",
-            "path": "/modules/sharethroughAnalyticsAdapter.js",
-            "module": "sharethroughAnalyticsAdapter"
-        },
-        {
-            "name": "konduitAnalyticsAdapter",
-            "path": "/modules/konduitAnalyticsAdapter.js",
-            "module": "konduitAnalyticsAdapter"
-        },
-        {
-            "name": "pianoDmpAnalyticsAdapter",
-            "path": "/modules/pianoDmpAnalyticsAdapter.js",
-            "module": "pianoDmpAnalyticsAdapter"
-        },
-        {
-            "name": "smartyadsAnalyticsAdapter",
-            "path": "/modules/smartyadsAnalyticsAdapter.js",
-            "module": "smartyadsAnalyticsAdapter"
-        },
-        {
-            "name": "livewrappedAnalyticsAdapter",
-            "path": "/modules/livewrappedAnalyticsAdapter.js",
-            "module": "livewrappedAnalyticsAdapter"
-        },
-        {
-            "name": "pulsepointAnalyticsAdapter",
-            "path": "/modules/pulsepointAnalyticsAdapter.js",
-            "module": "pulsepointAnalyticsAdapter"
-        },
-        {
-            "name": "bidwatchAnalyticsAdapter",
-            "path": "/modules/bidwatchAnalyticsAdapter.js",
-            "module": "bidwatchAnalyticsAdapter"
-        },
-        {
-            "name": "pubmaticIHAnalyticsAdapter",
-            "path": "/modules/pubmaticIHAnalyticsAdapter.js",
-            "module": "pubmaticIHAnalyticsAdapter"
-        },
-        {
-            "name": "pubstackAnalyticsAdapter",
-            "path": "/modules/pubstackAnalyticsAdapter.js",
-            "module": "pubstackAnalyticsAdapter"
-        },
-        {
-            "name": "datablocksAnalyticsAdapter",
-            "path": "/modules/datablocksAnalyticsAdapter.js",
-            "module": "datablocksAnalyticsAdapter"
-        },
-        {
-            "name": "adkernelAdnAnalyticsAdapter",
-            "path": "/modules/adkernelAdnAnalyticsAdapter.js",
-            "module": "adkernelAdnAnalyticsAdapter"
-        },
-        {
-            "name": "automatadAnalyticsAdapter",
-            "path": "/modules/automatadAnalyticsAdapter.js",
-            "module": "automatadAnalyticsAdapter"
-        },
-        {
-            "name": "pubperfAnalyticsAdapter",
-            "path": "/modules/pubperfAnalyticsAdapter.js",
-            "module": "pubperfAnalyticsAdapter"
-        },
-        {
-            "name": "nobidAnalyticsAdapter",
-            "path": "/modules/nobidAnalyticsAdapter.js",
-            "module": "nobidAnalyticsAdapter"
-        },
-        {
-            "name": "eightPodAnalyticsAdapter",
-            "path": "/modules/eightPodAnalyticsAdapter.js",
-            "module": "eightPodAnalyticsAdapter"
-        },
-        {
-            "name": "conversantAnalyticsAdapter",
-            "path": "/modules/conversantAnalyticsAdapter.js",
-            "module": "conversantAnalyticsAdapter"
-        },
-        {
-            "name": "roxotAnalyticsAdapter",
-            "path": "/modules/roxotAnalyticsAdapter.js",
-            "module": "roxotAnalyticsAdapter"
-        },
-        {
-            "name": "pubwiseAnalyticsAdapter",
-            "path": "/modules/pubwiseAnalyticsAdapter.js",
-            "module": "pubwiseAnalyticsAdapter"
-        },
-        {
-            "name": "rivrAnalyticsAdapter",
-            "path": "/modules/rivrAnalyticsAdapter.js",
-            "module": "rivrAnalyticsAdapter"
-        },
-        {
-            "name": "adlooxAnalyticsAdapter",
-            "path": "/modules/adlooxAnalyticsAdapter.js",
-            "module": "adlooxAnalyticsAdapter"
-        },
-        {
-            "name": "relevantAnalyticsAdapter",
-            "path": "/modules/relevantAnalyticsAdapter.js",
-            "module": "relevantAnalyticsAdapter"
         }
     ],
     "AD Pod": [
