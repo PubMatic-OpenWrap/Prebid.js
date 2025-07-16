@@ -1,6 +1,6 @@
 import { logInfo, logError } from './../src/utils.js';
 import { ajaxBuilder } from '../src/ajax.js';
-import { getCoreStorageManager } from '../src/storageManager.js';
+import { getStorageManager } from '../src/storageManager.js';
 import { getGlobal } from '../src/prebidGlobal.js';
 
 /*
@@ -29,9 +29,9 @@ getGlobal().detectLocation = function(URL, passBack) {
     passBack({error: e}, false);
   }
 }
-// Previously this module is being registed as moduleType:bidder and moduleName: pubmatic, this is not correct as it was checking pubmatic bidder has permission to read/write in localstorage.
-// Now this module is being registered as moduleType:prebid and moduleName: geoDetection
-var storage = getCoreStorageManager('geoDetection');
+
+var BIDDER_CODE = 'pubmatic';
+var storage = getStorageManager({bidderCode: BIDDER_CODE});
 
 getGlobal().getDataFromLocalStorage = function(key, expiry) {
   try {
