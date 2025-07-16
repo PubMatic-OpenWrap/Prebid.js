@@ -76,6 +76,7 @@ let profileVersionId = DEFAULT_PROFILE_VERSION_ID; // int: optional
 let s2sBidders = [];
 let identityOnly = DEFAULT_ISIDENTITY_ONLY;
 const storage = getStorageManager({bidderCode: ADAPTER_CODE});
+let _country;
 
 /// /////////// HELPER FUNCTIONS //////////////
 
@@ -541,6 +542,30 @@ function getFloorFetchStatus(floorData) {
   return isDataValid && (isAdUnitOrSetConfig || isFetchSuccessful);
 }
 
+function getListOfIdentityPartners() {
+  const namespace = getGlobal();
+  const publisherProvidedEids = namespace.getConfig("ortb2.user.eids") || [];
+  const availableUserIds = namespace.adUnits[0]?.bids[0]?.userId || {};
+  const identityModules = namespace.getConfig('userSync')?.userIds || [];
+  const identityModuleNameMap = identityModules.reduce((mapping, module) => {
+    if (module.storage?.name) {
+      mapping[module.storage.name] = module.name;
+    }
+    return mapping;
+  }, {});
+
+  const userIdPartners = Object.keys(availableUserIds).map(storageName =>
+    identityModuleNameMap[storageName] || storageName
+  );
+
+  const publisherProvidedEidList = publisherProvidedEids.map(eid =>
+    identityModuleNameMap[eid.source] || eid.source
+  );
+
+  const identityPartners = Array.from(new Set([...userIdPartners, ...publisherProvidedEidList]));
+  return identityPartners.length > 0 ? identityPartners : undefined;
+}
+
 function getCDSData() {
   return config.getConfig('cds');
 }
@@ -678,10 +703,6 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   let outputObj = { s: [] };
   let pixelURL = END_POINT_BID_LOGGER;
 
-  const country = e.bidderRequests?.length > 0
-    ? e.bidderRequests.find(bidder => bidder?.bidderCode === ADAPTER_CODE)?.ortb2?.user?.ext?.ctr || ''
-    : '';
-
   if (!auctionCache || auctionCache.sent) {
     return;
   }
@@ -708,7 +729,8 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['dm'] = DISPLAY_MANAGER;
   outputObj['dmv'] = '$prebid.version$' || '-1';
   outputObj['bm'] = getBrowserType();
-  outputObj['ctr'] = country ? country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '';
+  outputObj['ctr'] = _country ? _country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '';
+  outputObj['lip'] = getListOfIdentityPartners();
 
   if (floorData) {
     const floorRootValues = getFloorsCommonField(floorData?.floorRequestData);
@@ -803,6 +825,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   let pixelURL = END_POINT_WIN_BID_LOGGER;
 
   pixelURL += 'pubid=' + publisherId;
+  pixelURL += '&to=' + enc(auctionCache?.timeout);
   pixelURL += '&purl=' + enc(config.getConfig('pageUrl') || cache.auctions[auctionId]?.referer || '');
   pixelURL += '&tst=' + Math.round((new window.Date()).getTime() / 1000);
   pixelURL += '&iid=' + enc(wiid);
@@ -859,6 +882,19 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
 
   pixelURL += '&af=' + enc(winningBid.bidResponse ? (winningBid.bidResponse.mediaType || undefined) : undefined);
   pixelURL += '&cds=' + getCDSDataLoggerStr(); // encoded string is returned from function
+  (window.PWT?.versionDetails?.openwrap_version) &&
+  (pixelURL += '&owv=' + (window.PWT?.versionDetails?.openwrap_version) || '-1');
+
+  const bm = getBrowserType();
+  (bm !== undefined) && (pixelURL += '&bm=' + enc(bm));
+
+  (_country !== undefined) && (pixelURL += '&ctr=' + enc(_country));
+
+  const dealChannel = winningBid?.bidResponse?.dealChannel;
+  (dealChannel !== undefined) && (pixelURL += '&dc=' + enc(dealChannel));
+
+  const identityPartners = getListOfIdentityPartners();
+  (identityPartners !== undefined) && (pixelURL += '&lip=' + enc(identityPartners));
 
   if (isFn(window.PWT?.recordExitTime)) {
     window.PWT.recordExitTime('TRACKER_CALLING_TIME');
@@ -1034,9 +1070,16 @@ getGlobal().injectTrackerForIMA = function (args, vast) {
   }
 };
 
+function readSaveCountry(e) {
+  _country = e.bidderRequests?.length > 0
+    ? e.bidderRequests.find(bidder => bidder?.bidderCode === ADAPTER_CODE)?.ortb2?.user?.ext?.ctr || EMPTY_STRING
+    : EMPTY_STRING;
+}
+
 function auctionEndHandler(args) {
   // if for the given auction bidderDonePendingCount == 0 then execute logger call sooners
   let highestCpmBids = getGlobal().getHighestCpmBids() || [];
+  readSaveCountry(args);
   setTimeout(() => {
     executeBidsLoggerCall.call(this, args, highestCpmBids);
   }, (cache.auctions[args.auctionId]?.bidderDonePendingCount === 0 ? 500 : SEND_TIMEOUT));
