@@ -17,11 +17,12 @@ import { NATIVE_ASSET_TYPES, NATIVE_IMAGE_TYPES, PREBID_NATIVE_DATA_KEYS_TO_ORTB
 
 const BIDDER_CODE = 'pubmatic';
 const LOG_WARN_PREFIX = 'PubMatic: ';
-const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator?source=prebid-client';
+const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator?source=ow-client';
 const USER_SYNC_URL_IFRAME = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=';
 const USER_SYNC_URL_IMAGE = 'https://image8.pubmatic.com/AdServer/ImgSync?p=';
 const DEFAULT_CURRENCY = 'USD';
 const AUCTION_TYPE = 1;
+const PUBMATIC_ALIAS = 'pubmatic2';
 const UNDEFINED = undefined;
 const DEFAULT_WIDTH = 0;
 const DEFAULT_HEIGHT = 0;
@@ -144,6 +145,25 @@ const converter = ortbConverter({
     return bidResponse;
   },
   response(buildResponse, bidResponses, ortbResponse, context) {
+    // Adding a zero bid for each no-bid
+    const { imp, site } = context?.ortbRequest;
+    const impIds = imp.map(impObj => impObj.id);
+    const responseIds = bidResponses.map(response => response.requestId);
+    const noBidImps = impIds.filter(id => !responseIds.includes(id));
+    noBidImps.forEach(noBidImp => {
+      bidResponses.push({
+        requestId: noBidImp,
+        width: 0,
+        height: 0,
+        ttl: DEFAULT_TTL,
+        ad: '',
+        creativeId: 0,
+        netRevenue: true,
+        cpm: 0,
+        currency: ortbResponse.cur || DEFAULT_CURRENCY,
+        referrer: site?.ref || ''
+      })
+    })
     return buildResponse(bidResponses, ortbResponse, context);
   },
   overrides: {
@@ -700,6 +720,7 @@ export const spec = {
   code: BIDDER_CODE,
   gvlid: 76,
   supportedMediaTypes: [BANNER, VIDEO, NATIVE],
+  aliases: [PUBMATIC_ALIAS],
   /**
    * Determines whether or not the given bid request is valid. Valid bid request must have placementId and hbid
    *

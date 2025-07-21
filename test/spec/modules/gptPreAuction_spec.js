@@ -644,4 +644,59 @@ describe('GPT pre-auction module', () => {
       expect(Object.keys(signals)).to.contain.members(taxonomies);
     });
   });
+
+  describe('pps gpt config', () => {
+    it('should parse segments from fpd', () => {
+      const twoSegments = getSegments(mocksAuctions[0].getFPD().global, ['user.data'], 4);
+      expect(JSON.stringify(twoSegments)).to.equal(JSON.stringify(['1', '2']));
+      const zeroSegments = getSegments(mocksAuctions[0].getFPD().global, ['user.data'], 6);
+      expect(zeroSegments).to.length(0);
+    });
+
+    it('should return signals from fpd', () => {
+      const signals = getSignals(mocksAuctions[0].getFPD().global);
+      const expectedSignals = [{ taxonomy: taxonomies[0], values: ['1', '2'] }];
+      expect(signals).to.eql(expectedSignals);
+    });
+
+    it('should properly get auctions ids from targeting', () => {
+      const auctionsIds = getAuctionsIdsFromTargeting(mockTargeting, mockAuctionManager);
+      expect(auctionsIds).to.eql([mocksAuctions[0].auctionId, mocksAuctions[1].auctionId])
+    });
+
+    it('should filter out adIds that do not map to any auction', () => {
+      const auctionsIds = getAuctionsIdsFromTargeting({
+        ...mockTargeting,
+        'au': {'hb_adid': 'missing'},
+      }, mockAuctionManager);
+      expect(auctionsIds).to.eql([mocksAuctions[0].auctionId, mocksAuctions[1].auctionId]);
+    })
+
+    it('should properly return empty array of auction ids for invalid targeting', () => {
+      let auctionsIds = getAuctionsIdsFromTargeting({}, mockAuctionManager);
+      expect(Array.isArray(auctionsIds)).to.equal(true);
+      expect(auctionsIds).to.length(0);
+      auctionsIds = getAuctionsIdsFromTargeting({'/123456/header-bid-tag-0/bg': {'invalidContent': '123'}}, mockAuctionManager);
+      expect(Array.isArray(auctionsIds)).to.equal(true);
+      expect(auctionsIds).to.length(0);
+    });
+
+    it('should properly get signals from auctions', () => {
+      const signals = getSignalsArrayByAuctionsIds(['1111', '234234', '234324234'], mockAuctionManager.index);
+      const intersection = getSignalsIntersection(signals);
+      const expectedResult = { IAB_AUDIENCE_1_1: { values: ['2'] }, IAB_CONTENT_2_2: { values: [] } };
+      expect(JSON.stringify(intersection)).to.be.equal(JSON.stringify(expectedResult));
+    });
+
+    it('should return empty signals array for empty auctions ids array', () => {
+      const signals = getSignalsArrayByAuctionsIds([], mockAuctionManager.index);
+      expect(Array.isArray(signals)).to.equal(true);
+      expect(signals).to.length(0);
+    });
+
+    it('should return properly formatted object for getSignalsIntersection invoked with empty array', () => {
+      const signals = getSignalsIntersection([]);
+      expect(Object.keys(signals)).to.contain.members(taxonomies);
+    });
+  });
 });
