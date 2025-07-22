@@ -30,7 +30,7 @@ const CONSTANTS = Object.freeze({
     NIGHT: 'night',
   },
   ENDPOINTS: {
-    BASEURL: 'https://ads.pubmatic.com/AdServer/js/pwt',
+    BASEURL: 'http://127.0.0.1:8080',
     FLOORS: 'floors.json',
     CONFIGS: 'config.json'
   }
@@ -185,6 +185,73 @@ export const fetchData = async (publisherId, profileId, type) => {
     }
 };
 
+const handleForOW = (config) => {
+  console.log("----------------> pri handleForOW -" + conf.isFloorPriceModuleEnabled());
+  if(conf.isFloorPriceModuleEnabled()) {
+    const { publisherId, profileId } = config?.params || {};
+
+    _fetchFloorRulesPromise = fetchData(publisherId, profileId, "FLOORS");
+    _fetchFloorRulesPromise.then(async (floorsData) => {
+      console.log("----------------> pri _fetchFloorRulesPromise ", floorsData);
+      const floorsConfig = getFloorsConfigForOW(floorsData);
+      console.log("----------------> pri floorsConfig "+ floorsConfig);
+      floorsConfig && conf.setConfig(floorsConfig);
+      configMerged();
+    });
+  }
+}
+
+const getFloorsConfigForOW = (floorData) => {
+  // Do we need to handle floors config set through maybe code snippet here ??
+  const PWT = window.PWT;
+  let finalFloorsData = floorData;
+  PWT.skipRate && (finalFloorsData.skipRate = PWT.skipRate);
+  return stitchDataAndSchema({
+    enforcement: {
+      floorDeals: PWT.floorDeals || false, // Default will be do not enforce floors for deal bid requests
+      enforceJS: PWT.enforceJS || false, // Default will be soft floor
+    },
+    auctionDelay: PWT.floorAuctionDelay, // We do not need this
+    data: finalFloorsData,
+  });
+};
+
+const stitchDataAndSchema = (data) => {
+  return {
+    floors: {
+        ...data,
+        additionalSchemaFields: {
+            deviceType: getDeviceType,
+            timeOfDay: getCurrentTimeOfDay,
+            browser: getBrowserType,
+            os: getOs,
+            utm: getUtm,
+            country: getCountry,
+        },
+    },
+  }
+}
+
+const validateInputs = (publisherId, profileId) => {
+  if (!publisherId || !isStr(publisherId) || !profileId || !isStr(profileId)) {
+    logError(
+      `${CONSTANTS.LOG_PRE_FIX} ${!publisherId ? 'Missing publisher Id.'
+        : !isStr(publisherId) ? 'Publisher Id should be a string.'
+          : !profileId ? 'Missing profile Id.'
+            : 'Profile Id should be a string.'
+      }`
+    );
+    return false;
+  }
+
+  if (!isFn(continueAuction)) {
+    logError(`${CONSTANTS.LOG_PRE_FIX} continueAuction is not a function. Please ensure to add priceFloors module.`);
+    return false;
+  }
+
+  return true;
+}
+
 /**
  * Initialize the Pubmatic RTD Module.
  * @param {Object} config
@@ -195,38 +262,30 @@ const init = (config, _userConsent) => {
     initTime = Date.now(); // Capture the initialization time
     const { publisherId, profileId } = config?.params || {};
 
-    if (!publisherId || !isStr(publisherId) || !profileId || !isStr(profileId)) {
-      logError(
-        `${CONSTANTS.LOG_PRE_FIX} ${!publisherId ? 'Missing publisher Id.'
-          : !isStr(publisherId) ? 'Publisher Id should be a string.'
-            : !profileId ? 'Missing profile Id.'
-              : 'Profile Id should be a string.'
-        }`
-      );
+    if (!validateInputs(publisherId, profileId)) {
       return false;
     }
 
-    if (!isFn(continueAuction)) {
-      logError(`${CONSTANTS.LOG_PRE_FIX} continueAuction is not a function. Please ensure to add priceFloors module.`);
-      return false;
+    if(window.PWT) {
+      console.log("----------------> pri OW");
+      handleForOW(config);
+    } else {
+      _fetchFloorRulesPromise = fetchData(publisherId, profileId, "FLOORS");
+      _fetchConfigPromise = fetchData(publisherId, profileId, "CONFIGS");
+  
+      _fetchConfigPromise.then(async (profileConfigs) => {
+        const auctionDelay = conf.getConfig('realTimeData').auctionDelay;
+        const maxWaitTime = 0.8 * auctionDelay;
+  
+        const elapsedTime = Date.now() - initTime;
+        const remainingTime = Math.max(maxWaitTime - elapsedTime, 0);
+        const floorsData = await withTimeout(_fetchFloorRulesPromise, remainingTime);
+  
+        const floorsConfig = getFloorsConfig(floorsData, profileConfigs);
+        floorsConfig && conf.setConfig(floorsConfig);
+        configMerged();
+      });  
     }
-
-    _fetchFloorRulesPromise = fetchData(publisherId, profileId, "FLOORS");
-    _fetchConfigPromise = fetchData(publisherId, profileId, "CONFIGS");
-
-    _fetchConfigPromise.then(async (profileConfigs) => {
-      const auctionDelay = conf.getConfig('realTimeData').auctionDelay;
-      const maxWaitTime = 0.8 * auctionDelay;
-
-      const elapsedTime = Date.now() - initTime;
-      const remainingTime = Math.max(maxWaitTime - elapsedTime, 0);
-      const floorsData = await withTimeout(_fetchFloorRulesPromise, remainingTime);
-
-      const floorsConfig = getFloorsConfig(floorsData, profileConfigs);
-      floorsConfig && conf.setConfig(floorsConfig);
-      configMerged();
-    });
-
     return true;
 };
 
