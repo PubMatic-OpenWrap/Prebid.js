@@ -730,7 +730,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['dmv'] = '$prebid.version$' || '-1';
   outputObj['bm'] = getBrowserType();
   outputObj['ctr'] = _country ? _country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '';
-  outputObj['lip'] = getListOfIdentityPartners();
+  outputObj['lip'] = enc(getListOfIdentityPartners());
 
   if (floorData) {
     const floorRootValues = getFloorsCommonField(floorData?.floorRequestData);
@@ -757,8 +757,8 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     let slotObject = {
       'sn': adUnitId,
       'au': origAdUnit.owAdUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId,
-      'mt': getAdUnitAdFormats(origAdUnit),
-      'sz': getSizesForAdUnit(adUnit, adUnitId),
+      'mt': enc(getAdUnitAdFormats(origAdUnit)),
+      'sz': enc(getSizesForAdUnit(adUnit, adUnitId)),
       'ps': gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestCpmBids.filter(bid => bid.adUnitCode === adUnitId), e),
       'bs': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.owAdUnitId]?.bidServed,
       'is': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.owAdUnitId]?.impressionServed,
@@ -815,6 +815,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   let origAdUnit = getAdUnit(cache.auctions[auctionId]?.origAdUnits, adUnitId) || {};
   let owAdUnitId = origAdUnit.owAdUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId;
   let auctionCache = cache.auctions[auctionId];
+  let adUnit = auctionCache.adUnitCodes[adUnitId];
   let floorData = auctionCache?.floorData;
   let wiid = cache.auctions[auctionId]?.wiid || auctionId;
   let referrer = config.getConfig('pageUrl') || cache.auctions[auctionId]?.referer || '';
@@ -890,11 +891,17 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
 
   (_country !== undefined) && (pixelURL += '&ctr=' + enc(_country));
 
-  const dealChannel = winningBid?.bidResponse?.dealChannel;
-  (dealChannel !== undefined) && (pixelURL += '&dc=' + enc(dealChannel));
-
   const identityPartners = getListOfIdentityPartners();
   (identityPartners !== undefined) && (pixelURL += '&lip=' + enc(identityPartners));
+
+  let mt = getAdUnitAdFormats(origAdUnit);
+  (mt !== undefined) && (pixelURL += '&mt=' + enc(mt));
+  let sz = getSizesForAdUnit(adUnit, adUnitId);
+  (sz !== undefined) && (pixelURL += '&sz=' + enc(sz));
+  pixelURL += '&it=' + enc(getIntegrationType());
+
+  const dealChannel = winningBid?.bidResponse?.dealChannel;
+  (dealChannel !== undefined) && (pixelURL += '&dc=' + enc(dealChannel));
 
   if (isFn(window.PWT?.recordExitTime)) {
     window.PWT.recordExitTime('TRACKER_CALLING_TIME');
