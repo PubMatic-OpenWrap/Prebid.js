@@ -730,7 +730,8 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['dmv'] = '$prebid.version$' || '-1';
   outputObj['bm'] = getBrowserType();
   outputObj['ctr'] = _country ? _country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '';
-  outputObj['lip'] = enc(getListOfIdentityPartners());
+  let lip = getListOfIdentityPartners();
+  (lip !== undefined) && (outputObj['lip'] = enc(lip));
 
   if (floorData) {
     const floorRootValues = getFloorsCommonField(floorData?.floorRequestData);
@@ -889,15 +890,14 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   const bm = getBrowserType();
   (bm !== undefined) && (pixelURL += '&bm=' + enc(bm));
 
-  (_country !== undefined) && (pixelURL += '&ctr=' + enc(_country));
+  const ctr = _country ? _country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '';
+  pixelURL += '&ctr=' + enc(ctr);
 
   const identityPartners = getListOfIdentityPartners();
   (identityPartners !== undefined) && (pixelURL += '&lip=' + enc(identityPartners));
 
-  let mt = getAdUnitAdFormats(origAdUnit);
-  (mt !== undefined) && (pixelURL += '&mt=' + enc(mt));
-  let sz = getSizesForAdUnit(adUnit, adUnitId);
-  (sz !== undefined) && (pixelURL += '&sz=' + enc(sz));
+  pixelURL += '&mt=' + enc(getAdUnitAdFormats(origAdUnit));
+  pixelURL += '&sz=' + enc(getSizesForAdUnit(adUnit, adUnitId));
   pixelURL += '&it=' + enc(getIntegrationType());
 
   const dealChannel = winningBid?.bidResponse?.dealChannel;
