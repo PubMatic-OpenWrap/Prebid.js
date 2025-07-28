@@ -4,6 +4,16 @@ import * as utils from 'src/utils.js';
 import { bidderSettings } from 'src/bidderSettings.js';
 
 describe('PubMatic adapter', () => {
+  // Set up window.PWT mock for tests
+  before(() => {
+    window.PWT = window.PWT || {};
+    window.PWT.collectIdsFromWrappers = false;
+  });
+  
+  after(() => {
+    delete window.PWT;
+  });
+  
   let firstBid, videoBid, firstResponse, response, videoResponse;
   let request = {};
   firstBid = {
