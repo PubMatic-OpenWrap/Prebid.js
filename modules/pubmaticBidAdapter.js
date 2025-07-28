@@ -1,4 +1,4 @@
-import { logWarn, isStr, isArray, deepAccess, deepSetValue, isBoolean, isInteger, logInfo, logError, deepClone, uniques, generateUUID, isPlainObject, isFn } from '../src/utils.js';
+import { logWarn, isStr, isArray, deepAccess, deepSetValue, isBoolean, isInteger, logInfo, logError, deepClone, uniques, generateUUID, isPlainObject, isFn, collectOtherIds } from '../src/utils.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
@@ -15,6 +15,7 @@ import { NATIVE_ASSET_TYPES, NATIVE_IMAGE_TYPES, PREBID_NATIVE_DATA_KEYS_TO_ORTB
 
 const BIDDER_CODE = 'pubmatic';
 const LOG_WARN_PREFIX = 'PubMatic: ';
+const COLLECT_IDS_PREFIX = "Collect Other IDs: ";
 const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator?source=ow-client';
 const USER_SYNC_URL_IFRAME = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=';
 const USER_SYNC_URL_IMAGE = 'https://image8.pubmatic.com/AdServer/ImgSync?p=';
@@ -445,11 +446,25 @@ const updateUserSiteDevice = (req, bidRequest) => {
 
   // start - IH eids for Prebid
   const userIdAsEids = deepAccess(bidRequest, '0.userIdAsEids');
-  if (bidRequest.length && userIdAsEids?.length && !req.user.ext?.eids) {
-    req.user.ext = req.user.ext || {};
-    req.user.ext.eids = userIdAsEids;
-  } // end - IH eids for Prebid
 
+  if (bidRequest.length) {
+    if (window.PWT.collectIdsFromWrappers) {
+      logInfo(`${COLLECT_IDS_PREFIX} In pubmaticBidAdapter existing userIdAsEids`, userIdAsEids);
+      // Apply collectOtherIds to either existing eids or userIdAsEids
+      // Ensure req.user.ext exists
+      req.user.ext = req.user.ext || {};
+      req.user.ext.eids = req.user.ext.eids
+        ? collectOtherIds(req.user.ext.eids)
+        : collectOtherIds(userIdAsEids);
+      logInfo(`${COLLECT_IDS_PREFIX} In pubmaticBidAdapter updated userIdAsEids`, req.user.ext.eids);
+    } else if (userIdAsEids?.length && !req.user.ext?.eids) {
+      // Only set if eids don't already exist
+      logInfo(`${COLLECT_IDS_PREFIX} In pubmaticBidAdapter window.PWT.collectIdsFromWrappers is false, setting default userIdAsEids`);
+      // Ensure req.user.ext exists
+      req.user.ext = req.user.ext || {};
+      req.user.ext.eids = userIdAsEids;
+    }
+  }
   if (req.site?.publisher) {
     req.site.ref = req.site.ref || refURL;
     req.site.publisher.id = pubId?.trim();
