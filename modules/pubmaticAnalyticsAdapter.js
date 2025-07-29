@@ -898,7 +898,6 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
 
   pixelURL += '&mt=' + enc(getAdUnitAdFormats(origAdUnit));
   pixelURL += '&sz=' + enc(getSizesForAdUnit(adUnit, adUnitId));
-  pixelURL += '&it=' + enc(getIntegrationType());
 
   const dealChannel = winningBid?.bidResponse?.dealChannel;
   (dealChannel !== undefined) && (pixelURL += '&dc=' + enc(dealChannel));
