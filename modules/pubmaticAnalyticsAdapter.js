@@ -732,7 +732,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['dm'] = DISPLAY_MANAGER;
   outputObj['dmv'] = '$prebid.version$' || '-1';
   outputObj['bm'] = getBrowserType();
-  outputObj['ctr'] = country || '';
+  outputObj['ctr'] = country ? country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '';
   outputObj['lip'] = getListOfIdentityPartners();
 
   if (floorData) {
