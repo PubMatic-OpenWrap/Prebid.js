@@ -900,7 +900,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   pixelURL += '&sz=' + enc(getSizesForAdUnit(adUnit, adUnitId));
 
   const dealChannel = winningBid?.bidResponse?.dealChannel;
-  (dealChannel !== undefined) && (pixelURL += '&dc=' + enc(dealChannel));
+  pixelURL += '&dc=' + enc(dealChannel || EMPTY_STRING);
 
   if (isFn(window.PWT?.recordExitTime)) {
     window.PWT.recordExitTime('TRACKER_CALLING_TIME');
