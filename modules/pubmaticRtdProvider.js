@@ -3,7 +3,6 @@ import { logError, isStr, mergeDeep, isPlainObject, isEmpty } from '../src/utils
 
 import { PluginManager } from '../libraries/pubmaticUtils/plugins/pluginManager.js';
 import { FloorProvider } from '../libraries/pubmaticUtils/plugins/floorProvider.js';
-import { BidderOptimization } from '../libraries/pubmaticUtils/plugins/bidderOptimization.js';
 import { UnifiedPricingRule } from '../libraries/pubmaticUtils/plugins/unifiedPricingRule.js';
 
 /**
@@ -40,7 +39,7 @@ export function ConfigJsonManager() {
    */
   async function fetchConfig(publisherId, profileId) {
     try {
-      const url = `${CONSTANTS.ENDPOINTS.BASEURL}/${publisherId}/${profileId}/${CONSTANTS.ENDPOINTS.CONFIGS}`;      
+      const url = `${CONSTANTS.ENDPOINTS.BASEURL}/${publisherId}/${profileId}/${CONSTANTS.ENDPOINTS.CONFIGS}`;
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -93,7 +92,6 @@ const configJsonManager = ConfigJsonManager();
 
 // Register plugins
 pluginManager.register('dynamicFloors', FloorProvider);
-pluginManager.register('dynamicBidderOptimisation', BidderOptimization);
 pluginManager.register('unifiedPricingRule', UnifiedPricingRule);
 
 /**
