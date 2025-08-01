@@ -248,12 +248,14 @@ export function newTargeting(auctionManager) {
           if (addedKeys != null && allowedKeys != null) {
               throw new Error(TARGETING_KEY_CONFIGURATION_ERROR_MSG);
           } else if (addedKeys != null) {
+              // @ts-ignore
               allowedKeys = defaultKeys.concat(addedKeys) as any;
           } else {
               allowedKeys = allowedKeys || defaultKeys as any;
           }
 
           if (Array.isArray(allowedKeys) && allowedKeys.length > 0) {
+            // @ts-ignore
               targeting = getAllowedTargetingKeyValues(targeting, allowedKeys);
           }
 
