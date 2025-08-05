@@ -1948,7 +1948,7 @@ describe('pubmatic analytics adapter', function () {
     it('Logger: pass floors additional data points', function() {
       this.timeout(5000)
 
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobal(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 
@@ -1999,7 +1999,7 @@ describe('pubmatic analytics adapter', function () {
     it('Logger: check value of ih field when userid module is enabled', function() {
       this.timeout(5000)
 
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobal(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 
@@ -2036,7 +2036,7 @@ describe('pubmatic analytics adapter', function () {
           identityOnly: 0
         }
       });
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobal(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 
@@ -2065,7 +2065,7 @@ describe('pubmatic analytics adapter', function () {
     it('Logger: check value of it field incase of empty bidders in s2sConfig', function() {
       this.timeout(5000)
 
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobal(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 
@@ -2175,7 +2175,7 @@ describe('pubmatic analytics adapter', function () {
     it('Custom dimension data', function() {
       this.timeout(5000)
 
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobal(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 
