@@ -1,6 +1,8 @@
 /* eslint-disable no-console */
 'use strict';
 
+console.time('Loading Plugins in Prebid');
+
 var _ = require('lodash');
 var argv = require('yargs').argv;
 var gulp = require('gulp');
@@ -36,6 +38,7 @@ const INTEG_SERVER_HOST = argv.host ? argv.host : 'localhost';
 const INTEG_SERVER_PORT = 4444;
 const { spawn, fork } = require('child_process');
 const TerserPlugin = require('terser-webpack-plugin');
+console.timeEnd('Loading Plugins in Prebid');
 
 const {precompile, babelPrecomp} = require('./gulp.precompilation.js');
 

@@ -118,7 +118,7 @@ module.exports = {
     return entry;
   })(),
   output: {
-    chunkLoadingGlobal: prebid.globalVarName + 'Chunk',
+    chunkLoadingGlobal: (argv.profile === 'IH' ? prebid.ihGlobalVarName : prebid.globalVarName) + 'Chunk',
     chunkLoading: 'jsonp',
   },
   optimization: {

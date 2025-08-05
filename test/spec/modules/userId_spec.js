@@ -2597,14 +2597,14 @@ describe('User ID', function () {
         it('should return the string base64 encryption if encryption is true', (done) => {
           const encrypt = true;
           (getGlobal()).getEncryptedEidsForSource(signalSources[0], encrypt).then((result) => {
-            expect(result.startsWith('1||')).to.true;
-            done();
+			  expect(result.startsWith('1||')).to.true;
+			  done();
           }).catch(done);
         });
 
         it('pbjs.getEncryptedEidsForSource should return string if custom function is defined', () => {
           const getCustomSignal = () => {
-            return '{"keywords":["tech","auto"]}';
+			  return '{"keywords":["tech","auto"]}';
           }
           const expectedString = '1||eyJrZXl3b3JkcyI6WyJ0ZWNoIiwiYXV0byJdfQ==';
           const encrypt = false;
