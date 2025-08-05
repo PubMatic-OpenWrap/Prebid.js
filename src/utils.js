@@ -2,18 +2,18 @@ import {config} from './config.js';
 
 import {EVENTS} from './constants.js';
 import {PbPromise} from './utils/promise.js';
-import { default as deepAccess } from 'dlv/index.js';
+import deepAccess from 'dlv/index.js';
 import {isArray, isFn, isStr, isPlainObject} from './utils/objects.js';
 
 export { deepAccess };
 export { dset as deepSetValue } from 'dset';
 export * from './utils/objects.js'
 
-let consoleExists = Boolean(window.console);
-let consoleLogExists = Boolean(consoleExists && window.console.log);
-let consoleInfoExists = Boolean(consoleExists && window.console.info);
-let consoleWarnExists = Boolean(consoleExists && window.console.warn);
-let consoleErrorExists = Boolean(consoleExists && window.console.error);
+const consoleExists = Boolean(window.console);
+const consoleLogExists = Boolean(consoleExists && window.console.log);
+const consoleInfoExists = Boolean(consoleExists && window.console.info);
+const consoleWarnExists = Boolean(consoleExists && window.console.warn);
+const consoleErrorExists = Boolean(consoleExists && window.console.error);
 
 let eventEmitter;
 let windowDimensions;
@@ -101,7 +101,7 @@ export const internal = {
   skipUndefinedValues
 };
 
-let prebidInternal = {};
+const prebidInternal = {};
 /**
  * Returns object that is used as internal prebid namespace
  */
@@ -261,6 +261,7 @@ export function canAccessWindowTop() {
 /**
  * Wrappers to console.(log | info | warn | error). Takes N arguments, the same as the native methods
  */
+// eslint-disable-next-line no-restricted-syntax
 export function logMessage() {
   if (debugTurnedOn() && consoleLogExists) {
     // eslint-disable-next-line no-console
@@ -268,6 +269,7 @@ export function logMessage() {
   }
 }
 
+// eslint-disable-next-line no-restricted-syntax
 export function logInfo() {
   if (debugTurnedOn() && consoleInfoExists) {
     // eslint-disable-next-line no-console
@@ -275,6 +277,7 @@ export function logInfo() {
   }
 }
 
+// eslint-disable-next-line no-restricted-syntax
 export function logWarn() {
   if (debugTurnedOn() && consoleWarnExists) {
     // eslint-disable-next-line no-console
@@ -283,6 +286,7 @@ export function logWarn() {
   emitEvent(EVENTS.AUCTION_DEBUG, { type: 'WARNING', arguments: arguments });
 }
 
+// eslint-disable-next-line no-restricted-syntax
 export function logError() {
   if (debugTurnedOn() && consoleErrorExists) {
     // eslint-disable-next-line no-console
@@ -307,7 +311,7 @@ export function prefixLog(prefix) {
 
 function decorateLog(args, prefix) {
   args = [].slice.call(args);
-  let bidder = config.getCurrentBidder();
+  const bidder = config.getCurrentBidder();
 
   prefix && args.unshift(prefix);
   if (bidder) {
@@ -442,7 +446,7 @@ export function insertElement(elm, doc, target, asLastChildChild) {
     parentEl = parentEl.length ? parentEl : doc.getElementsByTagName('body');
     if (parentEl.length) {
       parentEl = parentEl[0];
-      let insertBeforeEl = asLastChildChild ? null : parentEl.firstChild;
+      const insertBeforeEl = asLastChildChild ? null : parentEl.firstChild;
       return parentEl.insertBefore(elm, insertBeforeEl);
     }
   } catch (e) {}
@@ -515,10 +519,10 @@ export function insertHtmlIntoIframe(htmlCode) {
  * @param  {Number} [timeout] an optional timeout in milliseconds for the iframe to load before calling `done`
  */
 export function insertUserSyncIframe(url, done, timeout) {
-  let iframeHtml = internal.createTrackPixelIframeHtml(url, false, 'allow-scripts allow-same-origin');
-  let div = document.createElement('div');
+  const iframeHtml = internal.createTrackPixelIframeHtml(url, false, 'allow-scripts allow-same-origin');
+  const div = document.createElement('div');
   div.innerHTML = iframeHtml;
-  let iframe = div.firstChild;
+  const iframe = div.firstChild;
   if (done && internal.isFn(done)) {
     waitForElementToLoad(iframe, timeout).then(done);
   }
@@ -536,7 +540,7 @@ export function createTrackPixelHtml(url, encode = encodeURI) {
     return '';
   }
 
-  let escapedUrl = encode(url);
+  const escapedUrl = encode(url);
   let img = '<div style="position:absolute;left:0px;top:0px;visibility:hidden;">';
   img += '<img src="' + escapedUrl + '"></div>';
   return img;
@@ -637,13 +641,13 @@ export function shuffle(array) {
   // while there are elements in the array
   while (counter > 0) {
     // pick a random index
-    let index = Math.floor(Math.random() * counter);
+    const index = Math.floor(Math.random() * counter);
 
     // decrease counter by 1
     counter--;
 
     // and swap the last element with it
-    let temp = array[counter];
+    const temp = array[counter];
     array[counter] = array[index];
     array[index] = temp;
   }
@@ -807,7 +811,7 @@ export function groupBy(xs, key) {
  * @return If object is valid
  */
 export function isValidMediaTypes(mediaTypes) {
-  const SUPPORTED_MEDIA_TYPES = ['banner', 'native', 'video'];
+  const SUPPORTED_MEDIA_TYPES = ['banner', 'native', 'video', 'audio'];
   const SUPPORTED_STREAM_TYPES = ['instream', 'outstream', 'adpod'];
 
   const types = Object.keys(mediaTypes);
@@ -895,7 +899,7 @@ export function pick(obj, properties) {
     }
 
     let newProp = prop;
-    let match = prop.match(/^(.+?)\sas\s(.+?)$/i);
+    const match = prop.match(/^(.+?)\sas\s(.+?)$/i);
 
     if (match) {
       prop = match[1];
@@ -941,14 +945,14 @@ export function formatQS(query) {
 }
 
 export function parseUrl(url, options) {
-  let parsed = document.createElement('a');
+  const parsed = document.createElement('a');
   if (options && 'noDecodeWholeURL' in options && options.noDecodeWholeURL) {
     parsed.href = url;
   } else {
     parsed.href = decodeURIComponent(url);
   }
   // in window.location 'search' is string, not object
-  let qsAsString = (options && 'decodeSearchAsString' in options && options.decodeSearchAsString);
+  const qsAsString = (options && 'decodeSearchAsString' in options && options.decodeSearchAsString);
   return {
     href: parsed.href,
     protocol: (parsed.protocol || '').replace(/:$/, ''),
@@ -1087,7 +1091,7 @@ function mergeDeepHelper(target, source) {
 export function cyrb53Hash(str, seed = 0) {
   // IE doesn't support imul
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/imul#Polyfill
-  let imul = function(opA, opB) {
+  const imul = function(opA, opB) {
     if (isFn(Math.imul)) {
       return Math.imul(opA, opB);
     } else {
@@ -1291,7 +1295,7 @@ export function setOnAny(collection, key) {
 export function extractDomainFromHost(pageHost) {
   let domain = null;
   try {
-    let domains = /[-\w]+\.([-\w]+|[-\w]{3,}|[-\w]{1,3}\.[-\w]{2})$/i.exec(pageHost);
+    const domains = /[-\w]+\.([-\w]+|[-\w]{3,}|[-\w]{1,3}\.[-\w]{2})$/i.exec(pageHost);
     if (domains != null && domains.length > 0) {
       domain = domains[0];
       for (let i = 1; i < domains.length; i++) {
