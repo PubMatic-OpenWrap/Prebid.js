@@ -2,6 +2,7 @@ import * as utils from '../src/utils.js';
 import * as ajax from '../src/ajax.js';
 import {userSync} from '../src/userSync.js';
 import { config } from '../src/config.js';
+import { getGlobal } from '../src/prebidGlobal.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO } from '../src/mediaTypes.js';
 import constants from '../src/constants.js';
@@ -266,7 +267,7 @@ function cookieSyncCallBack(response, XMLReqObj) {
       } else {
         utils.logWarn(bidder.bidder + ': Please provide valid user sync type.');
       }
-      window.$$PREBID_GLOBAL$$.triggerUserSyncs();
+      getGlobal().triggerUserSyncs();
     }
   });
 }
