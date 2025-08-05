@@ -1,4 +1,4 @@
-import {generateUUID, mergeDeep} from '../../../src/utils.js';
+import {generateUUID, mergeDeep, logWarn} from '../../../src/utils.js';
 import {bannerResponseProcessor, fillBannerImp} from './banner.js';
 import {fillVideoImp, fillVideoResponse} from './video.js';
 import {setResponseMediaType} from './mediaType.js';

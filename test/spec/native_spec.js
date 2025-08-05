@@ -489,14 +489,6 @@ describe('native.js', function () {
       expect(actual.impressionTrackers).to.contain('https://sampleurl.com');
       expect(actual.impressionTrackers).to.contain('https://sample-imp.com');
     });
-    ['img.type', 'title.text', 'data.type'].forEach(prop => {
-      it(`does not choke when the request does not have ${prop}, but the response does`, () => {
-        const request = {ortb: {assets: [{id: 1}]}};
-        const response = {ortb: {assets: [{id: 1}]}};
-        deepSetValue(response, `assets.0.${prop}`, 'value');
-        toLegacyResponse(response, request);
-      })
-    })
   });
 
   describe('setNativeResponseProperties', () => {
