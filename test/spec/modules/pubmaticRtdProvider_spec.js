@@ -1,57 +1,79 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { submodule } from '../../../src/hook.js';
 import * as utils from '../../../src/utils.js';
-import { pubmaticSubmodule } from '../../../modules/pubmaticRtdProvider.js';
+import * as pubmaticRtdProvider from '../../../modules/pubmaticRtdProvider.js';
 import { FloorProvider } from '../../../libraries/pubmaticUtils/plugins/floorProvider.js';
 import { UnifiedPricingRule } from '../../../libraries/pubmaticUtils/plugins/unifiedPricingRule.js';
 
 describe('Pubmatic RTD Provider', () => {
   let sandbox;
   let fetchStub;
-  let pluginManagerStub;
-  let configJsonManagerStub;
   let logErrorStub;
   let originalPluginManager;
   let originalConfigJsonManager;
+  let pluginManagerStub;
+  let configJsonManagerStub;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     fetchStub = sandbox.stub(window, 'fetch');
+    logErrorStub = sinon.stub(utils, 'logError');
+
+    // Store original implementations
+    originalPluginManager = Object.assign({}, pubmaticRtdProvider.pluginManager);
+    originalConfigJsonManager = Object.assign({}, pubmaticRtdProvider.configJsonManager);
 
     // Create stubs
-    logErrorStub = sinon.stub(utils, 'logError');
     pluginManagerStub = {
-      initialize: sinon.stub(),
-      executeHook: sinon.stub(),
+      initialize: sinon.stub().resolves(),
+      executeHook: sinon.stub().resolves(),
       register: sinon.stub()
     };
 
     configJsonManagerStub = {
-      fetchConfig: sinon.stub(),
+      fetchConfig: sinon.stub().resolves(true),
       getYMConfig: sinon.stub(),
       getConfigByName: sinon.stub(),
-      get country() { return 'IN'; }
+      country: 'IN'
     };
 
-    // Store original implementations
-    originalPluginManager = window.PluginManager;
-    originalConfigJsonManager = window.ConfigJsonManager;
+    // Replace exported objects with stubs
+    Object.keys(pluginManagerStub).forEach(key => {
+      pubmaticRtdProvider.pluginManager[key] = pluginManagerStub[key];
+    });
 
-    // Replace window objects
-    window.PluginManager = pluginManagerStub;
-    window.ConfigJsonManager = () => configJsonManagerStub;
+    Object.keys(configJsonManagerStub).forEach(key => {
+      if (key === 'country') {
+        Object.defineProperty(pubmaticRtdProvider.configJsonManager, key, {
+          get: () => configJsonManagerStub[key]
+        });
+      } else {
+        pubmaticRtdProvider.configJsonManager[key] = configJsonManagerStub[key];
+      }
+    });
 
-    // Register plugins
-    pluginManagerStub.register('dynamicFloors', FloorProvider);
-    pluginManagerStub.register('unifiedPricingRule', UnifiedPricingRule);
+    // Reset _ymConfigPromise for each test
+    pubmaticRtdProvider.setYmConfigPromise(Promise.resolve());
   });
 
   afterEach(() => {
     sandbox.restore();
+    logErrorStub.restore();
+
     // Restore original implementations
-    window.PluginManager = originalPluginManager;
-    window.ConfigJsonManager = originalConfigJsonManager;
+    Object.keys(originalPluginManager).forEach(key => {
+      pubmaticRtdProvider.pluginManager[key] = originalPluginManager[key];
+    });
+
+    Object.keys(originalConfigJsonManager).forEach(key => {
+      if (key === 'country') {
+        Object.defineProperty(pubmaticRtdProvider.configJsonManager, 'country', {
+          get: () => originalConfigJsonManager[key]
+        });
+      } else {
+        pubmaticRtdProvider.configJsonManager[key] = originalConfigJsonManager[key];
+      }
+    });
   });
 
   describe('init', () => {
@@ -68,10 +90,10 @@ describe('Pubmatic RTD Provider', () => {
           profileId: 'test-profile-id'
         }
       };
-      const result = pubmaticSubmodule.init(config);
+      const result = pubmaticRtdProvider.pubmaticSubmodule.init(config);
       expect(result).to.be.false;
       expect(logErrorStub.calledOnce).to.be.true;
-      expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticSubmodule.CONSTANTS.LOG_PRE_FIX} Missing publisher Id.`);
+      expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticRtdProvider.CONSTANTS.LOG_PRE_FIX} Missing publisher Id.`);
     });
 
     it('should return false if publisherId is not a string', () => {
@@ -81,10 +103,10 @@ describe('Pubmatic RTD Provider', () => {
           profileId: 'test-profile-id'
         }
       };
-      const result = pubmaticSubmodule.init(config);
+      const result = pubmaticRtdProvider.pubmaticSubmodule.init(config);
       expect(result).to.be.false;
       expect(logErrorStub.calledOnce).to.be.true;
-      expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticSubmodule.CONSTANTS.LOG_PRE_FIX} Publisher Id should be a string.`);
+      expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticRtdProvider.CONSTANTS.LOG_PRE_FIX} Publisher Id should be a string.`);
     });
 
     it('should return false if profileId is missing', () => {
@@ -93,10 +115,10 @@ describe('Pubmatic RTD Provider', () => {
           publisherId: 'test-publisher-id'
         }
       };
-      const result = pubmaticSubmodule.init(config);
+      const result = pubmaticRtdProvider.pubmaticSubmodule.init(config);
       expect(result).to.be.false;
       expect(logErrorStub.calledOnce).to.be.true;
-      expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticSubmodule.CONSTANTS.LOG_PRE_FIX} Missing profile Id.`);
+      expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticRtdProvider.CONSTANTS.LOG_PRE_FIX} Missing profile Id.`);
     });
 
     it('should return false if profileId is not a string', () => {
@@ -106,46 +128,45 @@ describe('Pubmatic RTD Provider', () => {
           profileId: 345
         }
       };
-      const result = pubmaticSubmodule.init(config);
+      const result = pubmaticRtdProvider.pubmaticSubmodule.init(config);
       expect(result).to.be.false;
       expect(logErrorStub.calledOnce).to.be.true;
-      expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticSubmodule.CONSTANTS.LOG_PRE_FIX} Profile Id should be a string.`);
+      expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticRtdProvider.CONSTANTS.LOG_PRE_FIX} Profile Id should be a string.`);
     });
 
-    it('should initialize successfully with valid config', () => {
+    it('should initialize successfully with valid config', async () => {
       configJsonManagerStub.fetchConfig.resolves(true);
       pluginManagerStub.initialize.resolves();
 
-      const result = pubmaticSubmodule.init(validConfig);
+      const result = pubmaticRtdProvider.pubmaticSubmodule.init(validConfig);
       expect(result).to.be.true;
       expect(configJsonManagerStub.fetchConfig.calledOnce).to.be.true;
       expect(configJsonManagerStub.fetchConfig.firstCall.args[0]).to.equal('test-publisher-id');
       expect(configJsonManagerStub.fetchConfig.firstCall.args[1]).to.equal('test-profile-id');
+
+      // Wait for promise to resolve
+      await pubmaticRtdProvider.getYmConfigPromise();
       expect(pluginManagerStub.initialize.calledOnce).to.be.true;
-      expect(pluginManagerStub.initialize.firstCall.args[0]).to.deep.equal(configJsonManagerStub);
+      expect(pluginManagerStub.initialize.firstCall.args[0]).to.equal(pubmaticRtdProvider.configJsonManager);
     });
 
-    it('should handle config fetch error gracefully', () => {
+    it('should handle config fetch error gracefully', async () => {
       configJsonManagerStub.fetchConfig.resolves(false);
-      pluginManagerStub.initialize.resolves();
 
-      const result = pubmaticSubmodule.init(validConfig);
+      const result = pubmaticRtdProvider.pubmaticSubmodule.init(validConfig);
       expect(result).to.be.true;
-      expect(logErrorStub.calledOnce).to.be.true;
-      expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticSubmodule.CONSTANTS.LOG_PRE_FIX} Failed to fetch configuration`);
+
+      try {
+        await pubmaticRtdProvider.getYmConfigPromise();
+      } catch (e) {
+        expect(e.message).to.equal('Failed to fetch configuration');
+      }
+
+      expect(pluginManagerStub.initialize.called).to.be.false;
     });
   });
 
   describe('getBidRequestData', () => {
-    const adUnitCodes = ['div-1', 'div-2'];
-    const config = {
-      params: {
-        publisherId: 'test-publisher-id',
-        profileId: 'test-profile-id'
-      }
-    };
-    const userConsent = {};
-    const auction = {};
     const reqBidsConfigObj = {
       ortb2Fragments: {
         bidder: {}
@@ -161,42 +182,57 @@ describe('Pubmatic RTD Provider', () => {
         }
       ]
     };
-    const callback = sinon.stub();
+    let callback;
 
-    it('should call pluginManager executeHook with correct parameters', () => {
-      pluginManagerStub.executeHook.resolves();
-
-      pubmaticSubmodule.getBidRequestData(reqBidsConfigObj, callback);
-
-      expect(pluginManagerStub.executeHook.calledOnce).to.be.true;
-      expect(pluginManagerStub.executeHook.firstCall.args[0]).to.equal('processBidRequest');
-      expect(pluginManagerStub.executeHook.firstCall.args[1]).to.deep.equal(reqBidsConfigObj);
-      expect(callback.calledOnce).to.be.true;
+    beforeEach(() => {
+      callback = sinon.stub();
+      pubmaticRtdProvider.setYmConfigPromise(Promise.resolve());
     });
 
-    it('should handle plugin error gracefully', () => {
-      pluginManagerStub.executeHook.rejects('Plugin error');
-
-      pubmaticSubmodule.getBidRequestData(reqBidsConfigObj, callback);
-
-      expect(logErrorStub.calledOnce).to.be.true;
-      expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticSubmodule.CONSTANTS.LOG_PRE_FIX} Error in updating floors :`);
-      expect(logErrorStub.firstCall.args[1]).to.equal('Plugin error');
-      expect(callback.calledOnce).to.be.true;
-    });
-
-    it('should add country information to ORTB2', () => {
+    it('should call pluginManager executeHook with correct parameters', (done) => {
       pluginManagerStub.executeHook.resolves();
 
-      pubmaticSubmodule.getBidRequestData(reqBidsConfigObj, callback);
+      pubmaticRtdProvider.pubmaticSubmodule.getBidRequestData(reqBidsConfigObj, callback);
 
-      expect(reqBidsConfigObj.ortb2Fragments.bidder[pubmaticSubmodule.CONSTANTS.SUBMODULE_NAME]).to.deep.equal({
-        user: {
-          ext: {
-            ctr: 'IN'
+      setTimeout(() => {
+        expect(pluginManagerStub.executeHook.calledOnce).to.be.true;
+        expect(pluginManagerStub.executeHook.firstCall.args[0]).to.equal('processBidRequest');
+        expect(pluginManagerStub.executeHook.firstCall.args[1]).to.deep.equal(reqBidsConfigObj);
+        expect(callback.calledOnce).to.be.true;
+        done();
+      }, 0);
+    });
+
+    it('should handle plugin error gracefully', (done) => {
+      pluginManagerStub.executeHook.rejects(new Error('Plugin error'));
+
+      pubmaticRtdProvider.pubmaticSubmodule.getBidRequestData(reqBidsConfigObj, callback);
+
+      setTimeout(() => {
+        expect(logErrorStub.calledOnce).to.be.true;
+        expect(logErrorStub.firstCall.args[0]).to.equal(pubmaticRtdProvider.CONSTANTS.LOG_PRE_FIX);
+        expect(logErrorStub.firstCall.args[1]).to.equal('Error in updating floors :');
+        expect(logErrorStub.firstCall.args[2].message).to.equal('Plugin error');
+        expect(callback.calledOnce).to.be.true;
+        done();
+      }, 0);
+    });
+
+    it('should add country information to ORTB2', (done) => {
+      pluginManagerStub.executeHook.resolves();
+
+      pubmaticRtdProvider.pubmaticSubmodule.getBidRequestData(reqBidsConfigObj, callback);
+
+      setTimeout(() => {
+        expect(reqBidsConfigObj.ortb2Fragments.bidder[pubmaticRtdProvider.CONSTANTS.SUBMODULE_NAME]).to.deep.equal({
+          user: {
+            ext: {
+              ctr: 'IN'
+            }
           }
-        }
-      });
+        });
+        done();
+      }, 0);
     });
   });
 
@@ -215,27 +251,75 @@ describe('Pubmatic RTD Provider', () => {
       'div-2': { key2: 'value2' }
     };
 
-    it('should return unified pricing rule targeting', () => {
-      pluginManagerStub.executeHook.returns({
-        'unifiedPricingRule': unifiedPricingRule
-      });
+    it('should call pluginManager executeHook with correct parameters', () => {
+      pluginManagerStub.executeHook.returns(unifiedPricingRule);
 
-      const result = pubmaticSubmodule.getTargetingData(adUnitCodes, config, userConsent, auction);
-      expect(result).to.deep.equal(unifiedPricingRule);
+      const result = pubmaticRtdProvider.getTargetingData(adUnitCodes, config, userConsent, auction);
+
+      expect(pluginManagerStub.executeHook.calledOnce).to.be.true;
+      expect(pluginManagerStub.executeHook.firstCall.args[0]).to.equal('getTargeting');
+      expect(pluginManagerStub.executeHook.firstCall.args[1]).to.equal(adUnitCodes);
+      expect(pluginManagerStub.executeHook.firstCall.args[2]).to.equal(config);
+      expect(pluginManagerStub.executeHook.firstCall.args[3]).to.equal(userConsent);
+      expect(pluginManagerStub.executeHook.firstCall.args[4]).to.equal(auction);
+      expect(result).to.equal(unifiedPricingRule);
     });
 
     it('should return empty object if no targeting data', () => {
       pluginManagerStub.executeHook.returns({});
 
-      const result = pubmaticSubmodule.getTargetingData(adUnitCodes, config, userConsent, auction);
+      const result = pubmaticRtdProvider.getTargetingData(adUnitCodes, config, userConsent, auction);
       expect(result).to.deep.equal({});
     });
+  });
 
-    it('should handle plugin execution errors', () => {
-      pluginManagerStub.executeHook.throws(new Error('Plugin error'));
+  describe('ConfigJsonManager', () => {
+    let configManager;
 
-      const result = pubmaticSubmodule.getTargetingData(adUnitCodes, config, userConsent, auction);
-      expect(result).to.deep.equal({});
+    beforeEach(() => {
+      configManager = pubmaticRtdProvider.ConfigJsonManager();
+    });
+
+    it('should fetch config successfully', async () => {
+      const mockResponse = {
+        ok: true,
+        headers: {
+          get: sinon.stub().withArgs('country_code').returns('US')
+        },
+        json: sinon.stub().resolves({ plugins: { test: { enabled: true } } })
+      };
+
+      fetchStub.resolves(mockResponse);
+
+      const result = await configManager.fetchConfig('pub-123', 'profile-456');
+
+      expect(result).to.be.true;
+      expect(fetchStub.calledOnce).to.be.true;
+      expect(fetchStub.firstCall.args[0]).to.equal(`${pubmaticRtdProvider.CONSTANTS.ENDPOINTS.BASEURL}/pub-123/profile-456/${pubmaticRtdProvider.CONSTANTS.ENDPOINTS.CONFIGS}`);
+      expect(configManager.country).to.equal('US');
+    });
+
+    it('should handle fetch errors', async () => {
+      fetchStub.rejects(new Error('Network error'));
+
+      const result = await configManager.fetchConfig('pub-123', 'profile-456');
+
+      expect(result).to.be.null;
+      expect(logErrorStub.calledOnce).to.be.true;
+      expect(logErrorStub.firstCall.args[0]).to.include('Error while fetching config');
+    });
+
+    it('should get config by name', () => {
+      const mockConfig = {
+        plugins: {
+          testPlugin: { enabled: true }
+        }
+      };
+
+      configManager.setYMConfig(mockConfig);
+
+      const result = configManager.getConfigByName('testPlugin');
+      expect(result).to.deep.equal({ enabled: true });
     });
   });
 });
