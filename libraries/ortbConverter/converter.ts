@@ -1,5 +1,5 @@
 import {compose} from './lib/composer.js';
-import {logError, memoize} from '../../src/utils.js';
+import {deepClone, logError, memoize, timestamp} from '../../src/utils.js';
 import {DEFAULT_PROCESSORS} from './processors/default.js';
 import {BID_RESPONSE, DEFAULT, getProcessors, IMP, REQUEST, RESPONSE} from '../../src/pbjsORTB.js';
 import {mergeProcessors} from './lib/mergeProcessors.js';
@@ -13,56 +13,27 @@ import type {AdapterResponse} from "../../src/adapters/bidderFactory.ts";
 import type {ORTBResponse} from "../../src/types/ortb/response";
 
 type Context = {
-  [key: string]: unknown;
-  /**
-   * A currency string (e.g. `'EUR'`). If specified, overrides the currency to use for computing price floors and `request.cur`.
-   * If omitted, both default to `getConfig('currency.adServerCurrency')`.
-   */
+  [key: string]: any;
   currency?: Currency;
-  /**
-   * A bid mediaType (`'banner'`, `'video'`, or `'native'`). If specified:
-   *  - disables `imp` generation for other media types (i.e., if `context.mediaType === 'banner'`, only `imp.banner` will be populated; `imp.video` and `imp.native` will not, even if the bid request specifies them);
-   *  - is passed as the `mediaType` option to `bidRequest.getFloor` when computing price floors;
-   *  - sets `bidResponse.mediaType`.
-   */
   mediaType?: MediaType;
-  /**
-   * A plain object that serves as the base value for `imp.native.request` (and is relevant only for native bid requests).
-   * If not specified, the only property that is guaranteed to be populated is `assets`, since Prebid does not
-   * require anything else to define a native adUnit. You can use `context.nativeRequest` to provide other properties;
-   * for example, you may want to signal support for native impression trackers by setting it to `{eventtrackers: [{event: 1, methods: [1, 2]}]}` (see also the [ORTB Native spec](https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf)).
-   */
   nativeRequest?: Partial<NativeRequest>;
-  /**
-   * The value to set as `bidResponse.netRevenue`. This is a required property of bid responses that does not have a clear ORTB counterpart.
-   */
   netRevenue?: boolean;
-  /**
-   * the default value to use for `bidResponse.ttl` (if the ORTB response does not provide one in `seatbid[].bid[].exp`).
-   */
   ttl?: number;
 }
 
 type RequestContext = Context & {
-  /**
-   * Map from imp id to the context object used to generate that imp.
-   */
   impContext: { [impId: string]: Context };
 }
 
 type Params<B extends BidderCode> = {
   [IMP]: (
     bidRequest: BidRequest<B>,
-    context: Context & {
-      bidderRequest: BidderRequest<B>
-    }
+    context: Context & { bidderRequest: BidderRequest<B> }
   ) => ORTBImp;
   [REQUEST]: (
     imps: ORTBImp[],
     bidderRequest: BidderRequest<B>,
-    context: RequestContext & {
-      bidRequests: BidRequest<B>[]
-    }
+    context: RequestContext & { bidRequests: BidRequest<B>[] }
   ) => ORTBRequest;
   [BID_RESPONSE]: (
     bid: ORTBResponse['seatbid'][number]['bid'][number],
@@ -82,7 +53,7 @@ type Params<B extends BidderCode> = {
       bidderRequest: BidderRequest<B>;
       bidRequests: BidRequest<B>[];
     }
-  ) => AdapterResponse
+  ) => AdapterResponse;
 }
 
 type Processors<B extends BidderCode> = {
@@ -117,6 +88,12 @@ export function ortbConverter<B extends BidderCode>({
   response,
 }: ConverterConfig<B> = {}) {
   const REQ_CTX = new WeakMap();
+  let impressionReqIdMap: Record<string, string> = {};
+  let firstBidRequest: BidRequest<B> | undefined;
+
+  (window as any).partnersWithoutErrorAndBids = (window as any).partnersWithoutErrorAndBids || {};
+  (window as any).matchedimpressions = (window as any).matchedimpressions || {};
+  (window as any).pbsLatency = (window as any).pbsLatency || {};
 
   function builder(slot, wrapperFn, builderFn, errorHandler) {
     let build;
@@ -156,13 +133,12 @@ export function ortbConverter<B extends BidderCode>({
       const ortbRequest: any = {imp: imps};
       process(ortbRequest, bidderRequest, context);
 
-      // PM: Stop overwriting page, domain and ref as mentioned in UOE-8675 for s2s partners
       const page = bidderRequest?.refererInfo?.page || '';
       const domain = bidderRequest?.refererInfo?.domain || '';
       const ref = (window as any)?.document?.referrer;
       if (bidderRequest?.src === 's2s' && ortbRequest.site) {
         ortbRequest.site = Object.assign(ortbRequest.site, { page, domain });
-        if (ref && ref.length) {
+        if (ref?.length) {
           ortbRequest.site.ref = ref;
         }
       }
@@ -198,6 +174,33 @@ export function ortbConverter<B extends BidderCode>({
     }
   );
 
+  function createLatencyMap(impressionID: string, id: string) {
+    impressionReqIdMap[id] = impressionID;
+    (window as any).pbsLatency[impressionID] = {
+      startTime: timestamp()
+    };
+  }
+
+  function getErroredPartners(responseExt: any): string[] | undefined {
+    if (responseExt?.errors) {
+      return Object.keys(responseExt.errors);
+    }
+  }
+
+  function findPartnersWithoutErrorsAndBids(
+    erroredPartners: string[],
+    partnerList: string[],
+    responseExt: any,
+    impValue: string
+  ) {
+    (window as any).partnersWithoutErrorAndBids[impValue] = partnerList.filter(partner => !erroredPartners.includes(partner));
+    erroredPartners.forEach(partner => {
+      if (responseExt?.errors[partner]?.[0]?.code === 1) {
+        (window as any).partnersWithoutErrorAndBids[impValue].push(partner);
+      }
+    });
+  }
+
   return {
     toORTB({bidderRequest, bidRequests, context = {}}: {
       bidderRequest: BidderRequest<B>,
@@ -213,14 +216,19 @@ export function ortbConverter<B extends BidderCode>({
       const imps = bidRequests.map(bidRequest => {
         const impContext = Object.assign({bidderRequest, reqContext: ctx.req}, defaultContext, context);
         const result = buildImp(bidRequest, impContext);
-        if (result != null) {
-          if (result.hasOwnProperty('id')) {
-            Object.assign(impContext, {bidRequest, imp: result});
-            ctx.imp[result.id] = impContext;
-            return result;
+        let resultCopy = deepClone(result);
+        if (resultCopy?.ext?.prebid?.bidder) {
+          for (let bidderCode in resultCopy.ext.prebid.bidder) {
+            let bid = resultCopy.ext.prebid.bidder[bidderCode];
+            delete bid?.kgpv;
           }
-          logError('Converted ORTB imp does not specify an id, ignoring bid request', bidRequest, result);
         }
+        if (result != null && result.hasOwnProperty('id')) {
+          Object.assign(impContext, {bidRequest, imp: result});
+          ctx.imp[result.id] = impContext;
+          return result;
+        }
+        logError('Converted ORTB imp does not specify an id, ignoring bid request', bidRequest, resultCopy);
       }).filter(Boolean);
 
       const request = buildRequest(imps, bidderRequest, ctx.req);
@@ -228,12 +236,24 @@ export function ortbConverter<B extends BidderCode>({
       if (request != null) {
         REQ_CTX.set(request, ctx);
       }
+      firstBidRequest = ctx.req?.actualBidderRequests?.[0];
+      const s2sConfig = ctx.req?.s2sBidRequest?.s2sConfig;
+      let isAnalyticsEnabled = s2sConfig?.extPrebid?.isPrebidPubMaticAnalyticsEnabled;
+      if (firstBidRequest) {
+        const iidValue = isAnalyticsEnabled ? firstBidRequest.auctionId : firstBidRequest?.bids[0]?.params?.wiid;
+        createLatencyMap(iidValue, firstBidRequest.auctionId);
+      }
       return request;
     },
+
     fromORTB({request, response}: {
       request: ORTBRequest;
       response: ORTBResponse | null;
     }): AdapterResponse {
+      let impValue = impressionReqIdMap[response?.id];
+      if (impValue && (window as any).pbsLatency[impValue]) {
+        (window as any).pbsLatency[impValue]['endTime'] = timestamp();
+      }
       const ctx = REQ_CTX.get(request);
       if (ctx == null) {
         throw new Error('ortbRequest passed to `fromORTB` must be the same object returned by `toORTB`')
@@ -242,14 +262,33 @@ export function ortbConverter<B extends BidderCode>({
         return Object.assign(ctx, {ortbRequest: request}, extraParams);
       }
       const impsById = Object.fromEntries((request.imp || []).map(imp => [imp.id, imp]));
-      const bidResponses = (response?.seatbid || []).flatMap(seatbid =>
-        (seatbid.bid || []).map((bid) => {
+      let impForSlots, partnerBidsForslots;
+      if (firstBidRequest && firstBidRequest.hasOwnProperty('adUnitsS2SCopy')) {
+        impForSlots = (firstBidRequest as any).adUnitsS2SCopy.length;
+      }
+      let extObj = response?.ext || {};
+      let miObj = extObj.matchedimpression || {};
+      (window as any).matchedimpressions = {...(window as any).matchedimpressions, ...miObj};
+      const listofPartnersWithmi = Object.keys(miObj);
+      (window as any).partnersWithoutErrorAndBids[impValue] = listofPartnersWithmi;
+      const erroredPartners = getErroredPartners(extObj);
+      if (erroredPartners) {
+        findPartnersWithoutErrorsAndBids(erroredPartners, listofPartnersWithmi, extObj, impValue);
+      }
+      const bidResponses = (response?.seatbid || []).flatMap(seatbid => {
+        if (seatbid.hasOwnProperty('bid')) {
+          partnerBidsForslots = seatbid.bid.length;
+        }
+        (window as any).partnersWithoutErrorAndBids[impValue] = (window as any).partnersWithoutErrorAndBids[impValue].filter((partner) => {
+          return ((partner !== seatbid.seat) || (impForSlots !== partnerBidsForslots));
+        });
+        return (seatbid.bid || []).map((bid) => {
           if (impsById.hasOwnProperty(bid.impid) && ctx.imp.hasOwnProperty(bid.impid)) {
             return buildBidResponse(bid, augmentContext(ctx.imp[bid.impid], {imp: impsById[bid.impid], seatbid, ortbResponse: response}));
           }
           logError('ORTB response seatbid[].bid[].impid does not match any imp in request; ignoring bid', bid);
         })
-      ).filter(Boolean);
+      }).filter(Boolean);
       return buildResponse(bidResponses, response, augmentContext(ctx.req));
     }
   }
