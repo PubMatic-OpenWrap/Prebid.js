@@ -731,7 +731,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['bm'] = getBrowserType();
   outputObj['ctr'] = _country ? _country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '';
   let lip = getListOfIdentityPartners();
-  (lip !== undefined) && (outputObj['lip'] = enc(lip));
+  (lip !== undefined) && (outputObj['elip'] = enc(lip));
 
   if (floorData) {
     const floorRootValues = getFloorsCommonField(floorData?.floorRequestData);
@@ -758,8 +758,10 @@ function executeBidsLoggerCall(e, highestCpmBids) {
     let slotObject = {
       'sn': adUnitId,
       'au': origAdUnit.owAdUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId,
-      'mt': enc(getAdUnitAdFormats(origAdUnit)),
-      'sz': enc(getSizesForAdUnit(adUnit, adUnitId)),
+      'mt': getAdUnitAdFormats(origAdUnit),
+      'sz': getSizesForAdUnit(adUnit, adUnitId),
+      'emt': enc(getAdUnitAdFormats(origAdUnit)),
+      'esz': enc(getSizesForAdUnit(adUnit, adUnitId)),
       'ps': gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestCpmBids.filter(bid => bid.adUnitCode === adUnitId), e),
       'bs': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.owAdUnitId]?.bidServed,
       'is': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.owAdUnitId]?.impressionServed,
@@ -894,10 +896,10 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   pixelURL += '&ctr=' + enc(ctr);
 
   const identityPartners = getListOfIdentityPartners();
-  (identityPartners !== undefined) && (pixelURL += '&lip=' + enc(identityPartners));
+  (identityPartners !== undefined) && (pixelURL += '&elip=' + enc(identityPartners));
 
-  pixelURL += '&mt=' + enc(getAdUnitAdFormats(origAdUnit));
-  pixelURL += '&sz=' + enc(getSizesForAdUnit(adUnit, adUnitId));
+  pixelURL += '&emt=' + enc(getAdUnitAdFormats(origAdUnit));
+  pixelURL += '&esz=' + enc(getSizesForAdUnit(adUnit, adUnitId));
 
   const dealChannel = winningBid?.bidResponse?.dealChannel;
   pixelURL += '&dc=' + enc(dealChannel || EMPTY_STRING);
