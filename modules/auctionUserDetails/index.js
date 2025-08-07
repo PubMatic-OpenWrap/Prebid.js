@@ -83,7 +83,7 @@ export function auctionBidResponseHandler(bid) {
 
 export function auctionEndHandler() {
   if (frequencyDepth) {
-    frequencyDepth.lip = window.owpbjs.getUserIds() && Object.keys(window.owpbjs.getUserIds());
+    frequencyDepth.lip = window.owpbjs?.getUserIds() && Object.keys(window.owpbjs?.getUserIds());
     storage.setDataInLocalStorage(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
   }
   return frequencyDepth;
