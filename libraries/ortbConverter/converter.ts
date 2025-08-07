@@ -240,8 +240,10 @@ export function ortbConverter<B extends BidderCode>({
       const s2sConfig = ctx.req?.s2sBidRequest?.s2sConfig;
       let isAnalyticsEnabled = s2sConfig?.extPrebid?.isPrebidPubMaticAnalyticsEnabled;
       if (firstBidRequest) {
-        const iidValue = isAnalyticsEnabled ? firstBidRequest.auctionId : firstBidRequest?.bids[0]?.params?.wiid;
-        createLatencyMap(iidValue, firstBidRequest.auctionId);
+        // Access wiid from params if analytics is not enabled
+        const wiid = firstBidRequest.params?.wiid || (firstBidRequest as any).bids?.[0]?.params?.wiid;
+        const iidValue = isAnalyticsEnabled ? firstBidRequest?.auctionId : wiid;
+        createLatencyMap(iidValue, firstBidRequest?.auctionId);
       }
       return request;
     },
@@ -268,7 +270,7 @@ export function ortbConverter<B extends BidderCode>({
       }
       let extObj = response?.ext || {};
       let miObj = extObj.matchedimpression || {};
-      (window as any).matchedimpressions = {...(window as any).matchedimpressions, ...miObj};
+      (window as any).matchedimpressions = Object.assign({}, (window as any).matchedimpressions, miObj || {});
       const listofPartnersWithmi = Object.keys(miObj);
       (window as any).partnersWithoutErrorAndBids[impValue] = listofPartnersWithmi;
       const erroredPartners = getErroredPartners(extObj);
