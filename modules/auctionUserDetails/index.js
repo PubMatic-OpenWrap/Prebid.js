@@ -21,7 +21,7 @@ let frequencyDepth = {
     date: new Date().getDate()
   },
   userAgentDetails: getUserAgentDetails(),
-  lip: []
+  lip: undefined
 };
 let codeAdUnitMap = {};
 
