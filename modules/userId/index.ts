@@ -7,7 +7,7 @@ import {config} from '../../src/config.js';
 import * as events from '../../src/events.js';
 import {addApiMethod, startAuction, type StartAuctionOptions} from '../../src/prebid.js';
 import adapterManager from '../../src/adapterManager.js';
-import {EVENTS} from '../../src/constants.js';
+import {EVENTS, MODULE_PARAM_TO_UPDATE_FOR_SSO, REFRESH_IDMODULES_LIST} from '../../src/constants.js';
 import {module, ready as hooksReady} from '../../src/hook.js';
 import {EID_CONFIG, getEids} from './eids.js';
 import {
@@ -52,6 +52,7 @@ import {
   ACTIVITY_PARAM_STORAGE_TYPE,
   ACTIVITY_PARAM_STORAGE_WRITE
 } from '../../src/activities/params.js';
+import { getGlobal } from '../../src/prebidGlobal.ts';
 
 const MODULE_NAME = 'User ID';
 const COOKIE = STORAGE_TYPE_COOKIES;
@@ -1249,6 +1250,196 @@ export function init(config, {mkDelay = delay} = {}) {
   addApiMethod('refreshUserIds', normalizePromise(refreshUserIds));
   addApiMethod('getUserIdsAsync', normalizePromise(getUserIdsAsync));
   addApiMethod('getUserIdsAsEidBySource', getUserIdsAsEidBySource);
+}
+// -----------------------------------------------------------------------------
+// Partner Refresh Logic for Email Hash / SSO Identity
+// -----------------------------------------------------------------------------
+
+let modulesToRefresh: string[] = [];
+let scriptBasedModulesToRefresh: string[] = [];
+
+/**
+ * Retrieve the current set of stored user identity values.
+ */
+export function getUserIdentities(): Record<string, any> {
+  return (window as any).__userIdentities || {};
+}
+
+/**
+ * Save new user identity values, and reinitialize submodules if loginEvent flags are set.
+ */
+export function setUserIdentities(userIdentityData: Record<string, any>) {
+  if (!isPlainObject(userIdentityData) || isEmpty(userIdentityData)) {
+    (window as any).__userIdentities = {};
+    return;
+  }
+
+  (window as any).__userIdentities = userIdentityData;
+
+  if ((window as any).IHPWT?.loginEvent || (window as any).PWT?.loginEvent) {
+    reTriggerPartnerCallsWithEmailHashes();
+
+    if ((window as any).IHPWT) {
+      (window as any).IHPWT.loginEvent = false;
+    }
+    if ((window as any).PWT) {
+      (window as any).PWT.loginEvent = false;
+    }
+  }
+}
+
+/**
+ * Refresh appropriate submodules following a login or identity update.
+ */
+export function reTriggerPartnerCallsWithEmailHashes() {
+  generateModuleLists();
+  getGlobal().refreshUserIds({ submoduleNames: modulesToRefresh });
+  reTriggerScriptBasedAPICalls(scriptBasedModulesToRefresh);
+}
+
+/**
+ * Reinvoke script-based user ID modules (e.g., Zeotap, ATS, Conversant).
+ */
+export function reTriggerScriptBasedAPICalls(modules: string[]) {
+  const userIdentity = getUserIdentities();
+
+  modules.forEach(module => {
+    switch (module) {
+      case 'zeotapIdPlus':
+        if ((window as any).zeotap?.callMethod) {
+          const userIdentityObject = {
+            email: userIdentity?.emailHash?.SHA256
+          };
+          (window as any).zeotap.callMethod('setUserIdentities', userIdentityObject, true);
+        }
+        break;
+
+      case 'identityLink':
+        const ats = (window as any).ats;
+        const emailHashes = userIdentity?.emailHash
+          ? [userIdentity.emailHash.MD5, userIdentity.emailHash.SHA1, userIdentity.emailHash.SHA256]
+          : undefined;
+
+        if (ats) {
+          const config = ats.outputCurrentConfiguration?.();
+          if (config) {
+            config.emailHashes = emailHashes;
+            ats.start?.(config);
+            ats.setAdditionalData?.({ type: 'emailHashes', id: emailHashes });
+          }
+        }
+        break;
+
+      case 'publinkId':
+        const conversant = (window as any).conversant;
+        if (conversant?.launch) {
+          const launchObject = conversant.getLauncherObject?.();
+          if (launchObject) {
+            launchObject.emailHashes = userIdentity?.emailHash
+              ? [userIdentity.emailHash.MD5, userIdentity.emailHash.SHA256]
+              : undefined;
+            conversant.launch('publink', 'start', launchObject);
+          }
+        }
+        break;
+    }
+  });
+}
+
+/**
+ * Build SSO-linked module refresh lists based on login events and config.
+ */
+export function generateModuleLists() {
+  const defaultPrimary = (window as any).IHPWT?.OVERRIDES_PRIMARY_MODULES ||
+                         (window as any).PWT?.OVERRIDES_PRIMARY_MODULES ||
+                         REFRESH_IDMODULES_LIST.PRIMARY_MODULES;
+
+  const defaultScriptBased = (window as any).IHPWT?.OVERRIDES_SCRIPT_BASED_MODULES ||
+                             (window as any).PWT?.OVERRIDES_SCRIPT_BASED_MODULES ||
+                             REFRESH_IDMODULES_LIST.SCRIPT_BASED_MODULES;
+
+  configRegistry.forEach(config => {
+    const moduleName = config.name;
+
+    if (defaultPrimary.includes(moduleName)) {
+      if (!modulesToRefresh.includes(moduleName)) {
+        modulesToRefresh.push(moduleName);
+        updateModuleParams(config);
+      }
+    }
+
+    if (defaultScriptBased.includes(moduleName)) {
+      if (!scriptBasedModulesToRefresh.includes(moduleName)) {
+        scriptBasedModulesToRefresh.push(moduleName);
+      }
+    }
+  });
+}
+
+/**
+ * Attach hashed email/identity values into submodule parameters.
+ */
+export function updateModuleParams(moduleToUpdate: any) {
+  const paramMap = MODULE_PARAM_TO_UPDATE_FOR_SSO[moduleToUpdate.name];
+  if (!paramMap) return;
+
+  const userIdentity = getUserIdentities();
+  const enableSSO = (window as any).IHPWT?.ssoEnabled || (window as any).PWT?.ssoEnabled;
+
+  const emailHashes = enableSSO && userIdentity.emailHash
+    ? userIdentity.emailHash
+    : userIdentity.pubProvidedEmailHash;
+
+  paramMap.forEach((param: { key: string; hashType: string }) => {
+    switch (moduleToUpdate.name) {
+      case 'id5Id':
+        moduleToUpdate.params[param.key] = getRawPDString(emailHashes, userIdentity.userID);
+        break;
+      case 'uid2':
+        moduleToUpdate.params[param.key] =
+          emailHashes?.[param.hashType] || getHexToBase64(emailHashes?.SHA256);
+        break;
+      default:
+        moduleToUpdate.params[param.key] = emailHashes?.[param.hashType];
+        break;
+    }
+  });
+}
+
+/**
+ * Transform consented identity into base64-encoded PD string.
+ */
+export function getRawPDString(emailHashes: Record<string, string>, userID?: string): string {
+  const params: Record<number, string | undefined> = {
+    1: emailHashes?.SHA256,
+    5: userID ? btoa(userID) : undefined,
+    12: navigator?.userAgent,
+  };
+
+  const query = Object.entries(params)
+    .filter(([, v]) => !!v)
+    .map(([k, v]) => `${k}=${v}`)
+    .join('&');
+
+  return btoa(query);
+}
+
+/**
+ * Convert SHA256 hex string to base64 string for UID2.
+ */
+export function getHexToBase64(hex: string): string | undefined {
+  if (!hex || typeof hex !== 'string' || hex.trim() === '') {
+    logWarn('Invalid hex input: hex string is undefined, null, or empty. Applies to UID2 integration only.');
+    return;
+  }
+  return btoa(String.fromCharCode(...hexToBytes(hex)));
+}
+
+/**
+ * Helper to decode hex to byte array.
+ */
+export function hexToBytes(hex: string): Uint8Array {
+  return Uint8Array.from(hex.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []);
 }
 
 export function resetUserIds() {

@@ -318,6 +318,11 @@
             "module": "bidViewabilityIO"
         },
         {
+            "name": "dchain",
+            "path": "/modules/dchain.ts",
+            "module": "dchain"
+        },
+        {
             "name": "iABCategoryTranslation",
             "path": "/modules/categoryTranslation.js",
             "module": "categoryTranslation"
