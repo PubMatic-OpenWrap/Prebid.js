@@ -318,9 +318,24 @@
             "module": "bidViewabilityIO"
         },
         {
-            "name": "dchain",
-            "path": "/modules/dchain.ts",
-            "module": "dchain"
+            "name": "gptPreAuction",
+            "path": "/modules/gptPreAuction.ts",
+            "module": "gptPreAuction"
+        },
+        {
+            "name": "consentManagementGpp",
+            "path": "/modules/consentManagementGpp.ts",
+            "module": "consentManagementGpp"
+        },
+        {
+            "name": "Currency",
+            "path": "/modules/currency.ts",
+            "module": "currency"
+        },
+        {
+            "name": "consentManagementTcf",
+            "path": "/modules/consentManagementTcf.ts",
+            "module": "consentManagementTcf"
         },
         {
             "name": "iABCategoryTranslation",
@@ -338,6 +353,16 @@
             "module": "idImportLibrary"
         },
         {
+            "name": "tcfControl",
+            "path": "/modules/tcfControl.ts",
+            "module": "tcfControl"
+        },
+        {
+            "name": "priceFloors",
+            "path": "/modules/priceFloors.ts",
+            "module": "priceFloors"
+        },
+        {
             "name": "dsaControl",
             "path": "/modules/dsaControl.js",
             "module": "dsaControl"
@@ -351,6 +376,11 @@
             "name": "paapi",
             "path": "/modules/paapi.js",
             "module": "paapi"
+        },
+        {
+            "name": "CCPA",
+            "path": "/modules/consentManagementUsp.ts",
+            "module": "consentManagementUsp"
         },
         {
             "name": "sizeMappingV2",
@@ -393,6 +423,16 @@
             "module": "express"
         },
         {
+            "name": "dchain",
+            "path": "/modules/dchain.ts",
+            "module": "dchain"
+        },
+        {
+            "name": "gppControl_usstates",
+            "path": "/modules/gppControl_usstates.ts",
+            "module": "gppControl_usstates"
+        },
+        {
             "name": "instreamTracking",
             "path": "/modules/instreamTracking.js",
             "module": "instreamTracking"
@@ -401,6 +441,11 @@
             "name": "Server-to-Server Testing",
             "path": "/modules/s2sTesting.js",
             "module": "s2sTesting"
+        },
+        {
+            "name": "supplyChainObject",
+            "path": "/modules/schain.ts",
+            "module": "schain"
         },
         {
             "name": "topicsFpdModule",
@@ -421,11 +466,6 @@
             "name": "dfpAdpod",
             "path": "/modules/dfpAdpod.js",
             "module": "dfpAdpod"
-        },
-        {
-            "name": "gamAdpod",
-            "path": "/modules/gamAdpod.js",
-            "module": "gamAdpod"
         },
         {
             "name": "multibid",
