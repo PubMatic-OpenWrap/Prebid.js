@@ -104,7 +104,7 @@ const converter = ortbConverter({
     updateUserSiteDevice(request, context?.bidRequests);
     addExtenstionParams(request);
     if(bidderRequest.bidderCode !== BIDDER_CODE){
-      request.ext.alias  = 1;
+      request.ext.alias.wrapper  = 'pubmaticalias';
     }
     const marketPlaceEnabled = bidderRequest?.bidderCode
       ? bidderSettings.get(bidderRequest.bidderCode, 'allowAlternateBidderCodes') : undefined;
