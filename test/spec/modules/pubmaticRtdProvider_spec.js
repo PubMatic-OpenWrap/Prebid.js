@@ -6,7 +6,7 @@ import { config as conf } from '../../../src/config';
 import * as hook from '../../../src/hook.js';
 import {
     registerSubModule, pubmaticSubmodule, getFloorsConfig, fetchData,
-    getCurrentTimeOfDay, getBrowserType, getOs, getDeviceType, getCountry, getUtm, _country,
+    getCurrentTimeOfDay, getBrowserType, getOs, getDeviceType, getCountry, getBidder, getHasId, getUtm, _country,
     _profileConfigs, _floorsData, defaultValueTemplate, withTimeout, configMerged
 } from '../../../modules/pubmaticRtdProvider.js';
 import sinon from 'sinon';
@@ -234,6 +234,18 @@ describe('Pubmatic RTD Provider', () => {
             expect(getUtm()).to.be.a('string');
             expect(getUtm()).to.be.oneOf(['0', '1']);
         });
+
+        // it('should set hasId correctly', () => {
+        //     expect(getHasId()).to.be.a('string');
+        //     expect(getHasId()).to.be.oneOf(['0', '1']);
+        // });
+
+        it('should extract bidder correctly', () => {
+            expect(getBidder({ bidder: 'pubmatic' })).to.equal('pubmatic');
+            expect(getBidder({})).to.be.undefined;
+            expect(getBidder(null)).to.be.undefined;
+            expect(getBidder(undefined)).to.be.undefined;
+        });
     });
 
     describe('getFloorsConfig', () => {
@@ -305,7 +317,9 @@ describe('Pubmatic RTD Provider', () => {
                 'browser',
                 'os',
                 'country',
-                'utm'
+                'utm',
+                'bidder',
+                'hasId'
             ]);
 
             Object.values(result.floors.additionalSchemaFields).forEach(field => {
@@ -353,6 +367,8 @@ describe('Pubmatic RTD Provider', () => {
             expect(result.floors.additionalSchemaFields.os).to.equal(getOs);
             expect(result.floors.additionalSchemaFields.country).to.equal(getCountry);
             expect(result.floors.additionalSchemaFields.utm).to.equal(getUtm);
+            expect(result.floors.additionalSchemaFields.bidder).to.equal(getBidder);
+            expect(result.floors.additionalSchemaFields.hasId).to.equal(getHasId);
         });
 
         it('should log error when profileConfigs is not an object', () => {

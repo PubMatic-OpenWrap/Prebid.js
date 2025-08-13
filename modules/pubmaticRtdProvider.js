@@ -3,6 +3,7 @@ import { logError, isStr, isPlainObject, isEmpty, isFn, mergeDeep } from '../src
 import { config as conf } from '../src/config.js';
 import { getDeviceType as fetchDeviceType, getOS } from '../libraries/userAgentUtils/index.js';
 import { getLowEntropySUA } from '../src/fpd/sua.js';
+import {getGlobal} from '../src/prebidGlobal.js';
 
 /**
  * @typedef {import('../modules/rtdModule/index.js').RtdSubmodule} RtdSubmodule
@@ -23,6 +24,11 @@ const CONSTANTS = Object.freeze({
     TRUE: '1',
     FALSE: '0'
   },
+  HAS_ID_VALUES: {
+    TRUE: '1',
+    FALSE: '0'
+  },
+  TARGET_HAS_IDS: ['id5id', 'pubcid', 'criteoId', 'tdid', 'lotamePanoramaId', '33acrossId', 'idl_env', 'pairId', 'uid2', 'publinkId'],
   TIME_OF_DAY_VALUES: {
     MORNING: 'morning',
     AFTERNOON: 'afternoon',
@@ -108,10 +114,38 @@ export const getBrowserType = () => {
 export const getOs = () => getOS().toString();
 export const getDeviceType = () => fetchDeviceType().toString();
 export const getCountry = () => _country;
+export const getBidder = (request) => request?.bidder;
 export const getUtm = () => {
   const url = new URL(window.location?.href);
   const urlParams = new URLSearchParams(url?.search);
   return urlParams && urlParams.toString().includes(CONSTANTS.UTM) ? CONSTANTS.UTM_VALUES.TRUE : CONSTANTS.UTM_VALUES.FALSE;
+}
+
+export const getHasId = () => {
+  const namespace = getGlobal();
+  const publisherProvidedEids = namespace.getConfig("ortb2.user.eids") || [];
+  const availableUserIds = namespace.adUnits[0]?.bids[0]?.userId || {};
+  const identityModules = namespace.getConfig('userSync')?.userIds || [];
+  const identityModuleNameMap = identityModules.reduce((mapping, module) => {
+    if (module.storage?.name) {
+      mapping[module.storage.name] = module.name;
+    }
+    return mapping;
+  }, {});
+
+  const userIdPartners = Object.keys(availableUserIds).map(storageName =>
+    identityModuleNameMap[storageName] || storageName
+  );
+
+  const publisherProvidedEidList = publisherProvidedEids.map(eid =>
+    identityModuleNameMap[eid.source] || eid.source
+  );
+
+  const identityPartners = Array.from(new Set([...userIdPartners, ...publisherProvidedEidList]));
+  if (identityPartners.length === 0) {
+    return CONSTANTS.HAS_ID_VALUES.FALSE;
+  }
+  return CONSTANTS.TARGET_HAS_IDS.some(partner => identityPartners.includes(partner)) ? CONSTANTS.HAS_ID_VALUES.TRUE : CONSTANTS.HAS_ID_VALUES.FALSE;
 }
 
 export const getFloorsConfig = (floorsData, profileConfigs) => {
@@ -157,6 +191,8 @@ export const getFloorsConfig = (floorsData, profileConfigs) => {
                 os: getOs,
                 utm: getUtm,
                 country: getCountry,
+                bidder: getBidder,
+                hasId: getHasId
             },
         },
     };
