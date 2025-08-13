@@ -98,7 +98,6 @@ export const configJsonManager = ConfigJsonManager();
 // Register plugins
 pluginManager.register('dynamicFloors', FloorProvider);
 pluginManager.register('unifiedPricingRule', UnifiedPricingRule);
-pluginManager.register('dynamicTimeout', DynamicTimeout);
 pluginManager.register('dynamicBidderOptimisation', BidderOptimization);
 
 /**
