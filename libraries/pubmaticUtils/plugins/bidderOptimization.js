@@ -1,15 +1,21 @@
 // plugins/bidderOptimization.js
 import { getBrowserType } from '../pubmaticUtils.js';
-import { logInfo, logError, deepClone, logWarn, parseUrl, generateUUID } from '../../../src/utils.js';
+import { logInfo, logError, deepClone, logWarn, parseUrl, generateUUID, parseGPTSingleSizeArray } from '../../../src/utils.js';
 import { getRefererInfo } from '../../../src/refererDetection.js';
 import { auctionManager } from '../../../src/auctionManager.js';
+import { getCurrentTimeOfDay, getHasId } from '../pubmaticUtils.js';
 
 const CONSTANTS = Object.freeze({
   LOG_PRE_FIX: 'PubMatic-Bidder-Optimization: '
 });
 
+let _configJsonManager = null;
+export const getConfigJsonManager = () => _configJsonManager;
+export const setConfigJsonManager = (configJsonManager) => { _configJsonManager = configJsonManager; }
+
 // The normalised config supplied via pubmaticRtdProvider
 let _optConfig = null;
+let targetHasIds = [];
 
 /**
  * Initialize the bidder optimization plugin
@@ -29,10 +35,15 @@ export async function init(pluginName, configJsonManager) {
     logInfo(`${CONSTANTS.LOG_PRE_FIX} Bidder optimization configuration is disabled`);
     return false;
   }
-
+setConfigJsonManager(configJsonManager);
   try {
-    setBidderOptimisationConfig(config);
-    logInfo(`${CONSTANTS.LOG_PRE_FIX} Bidder optimization configuration set successfully`);
+    setBidderOptimisationConfig(config.data);
+    targetHasIds = config.data.userIds;
+    if (_optConfig) {
+      logInfo(`${CONSTANTS.LOG_PRE_FIX}: setBidderOptimisationConfig config Decision loaded - version %s`, _optConfig.modelVersion);
+    } else {
+      logError(`${CONSTANTS.LOG_PRE_FIX} Bidder optimization configuration rejected due to schema validation errors`);
+    }
   } catch (error) {
     logError(`${CONSTANTS.LOG_PRE_FIX} Error setting bidder optimization config: ${error}`);
   }
@@ -46,25 +57,28 @@ export async function init(pluginName, configJsonManager) {
  * @returns {Object} - Updated bid request config object
  */
 export function processBidRequest(reqBidsConfigObj) {
-  try {
-    const decision = getBidderDecision({
-      auctionId: reqBidsConfigObj?.auctionId,
-      browser: getBrowserType(),
-      reqBidsConfigObj
-    });
-
-    // Apply bidder decisions
-    if (decision && decision.excludedBiddersByAdUnit) {
-      for (const [adUnitCode, bidderList] of Object.entries(decision.excludedBiddersByAdUnit)) {
-        filterBidders(bidderList, reqBidsConfigObj, adUnitCode);
+  if(_optConfig){
+    try {
+      const decision = getBidderDecision({
+        auctionId: reqBidsConfigObj?.auctionId,
+        browser: getBrowserType(),
+        hasId: getHasId(targetHasIds),
+        reqBidsConfigObj
+      });
+  
+      // Apply bidder decisions
+      if (decision && decision.excludedBiddersByAdUnit) {
+        for (const [adUnitCode, bidderList] of Object.entries(decision.excludedBiddersByAdUnit)) {
+          filterBidders(bidderList, reqBidsConfigObj, adUnitCode);
+        }
+        logInfo(`${CONSTANTS.LOG_PRE_FIX} Applied bidder optimization decisions`);
       }
-      logInfo(`${CONSTANTS.LOG_PRE_FIX} Applied bidder optimization decisions`);
+  
+      return reqBidsConfigObj;
+    } catch (error) {
+      logError(`${CONSTANTS.LOG_PRE_FIX} Error in bidder optimization: ${error}`);
+      return reqBidsConfigObj;
     }
-
-    return reqBidsConfigObj;
-  } catch (error) {
-    logError(`${CONSTANTS.LOG_PRE_FIX} Error in bidder optimization: ${error}`);
-    return reqBidsConfigObj;
   }
 }
 
@@ -117,6 +131,10 @@ const fieldMatchingFunctions = {
   domain: (ctx) => ctx.domain || getHostname(),
   mediaType: (ctx) => ctx.mediaType || deriveMediaType(ctx.bidRequest, ctx.bidResponse),
   browser: (ctx) => ctx.browser || '*',
+  country: (ctx) => ctx.country || getConfigJsonManager()?.country || '*',
+  timeOfDay: (ctx) => ctx.timeOfDay || getCurrentTimeOfDay() || '*',
+  hasId: (ctx) => (ctx.hasId !== undefined ? ctx.hasId : getHasId(targetHasIds)),
+  //size: (ctx) => ctx.size || deriveSize(ctx) || '*',
   adUnitCode: (ctx) => ctx.adUnitCode || '*'
 };
 
@@ -156,40 +174,77 @@ const _auctionDataCache = {};
  *
  * @param {Object} cfg The JSON using the two-map schema of “Approach A”.
  */
-export function setBidderOptimisationConfig(cfg) {
-  if (!cfg || typeof cfg !== 'object') {
-    logWarn(`${CONSTANTS.LOG_PRE_FIX}: invalid config supplied`, cfg);
-    return;
+function pickRandomModel(modelGroups) {
+  const valid = modelGroups.filter(m => typeof m.modelWeight === 'number' && m.modelWeight > 0);
+  const weightSum = valid.reduce((s, m) => s + m.modelWeight, 0);
+  if (!weightSum) return valid[0] || modelGroups[0];
+  let rnd = Math.floor(Math.random() * weightSum) + 1;
+  for (let m of valid) {
+    rnd -= m.modelWeight;
+    if (rnd <= 0) return m;
   }
-  _optConfig = normaliseConfig(cfg);
-  logInfo(`${CONSTANTS.LOG_PRE_FIX}: setBidderOptimisationConfig config loaded - version %s`, _optConfig.modelVersion);
+  return valid[0] || modelGroups[0];
 }
 
-/**
- * Returns the bidder decision for a single impression context.
- *
- * @param {Object} context  { domain, mediaType, browser, adUnitCode, auctionId }
- * @returns {Object} { excludedBidders, clientBidders, serverBidders, clientSequence, skipped }
- */
-// /**
-//  * Helper to derive adUnitCode if not provided, mimicking priceFloors logic
-//  * Uses auctionManager index to resolve from bidRequest or bidResponse
-//  * @param {Object} bidRequest
-//  * @param {Object} bidResponse
-//  */
-// function deriveAdUnitCode(bidRequest, bidResponse) {
-//   if (bidRequest?.adUnitCode) return bidRequest.adUnitCode;
-//   if (bidResponse?.adUnitCode) return bidResponse.adUnitCode;
-//   const adUnit = bidResponse ? auctionManager.index.getAdUnit(bidResponse) : null;
-//   return adUnit?.code || '*';
-// }
+function validateSchema(schema) {
+  const allowed = new Set(['domain','mediaType','browser','country','timeOfDay','hasId','adUnitCode']);
+  if (!schema || !Array.isArray(schema.auctionKeyFields) || !Array.isArray(schema.adUnitKeyFields)) {
+    logError(`${CONSTANTS.LOG_PRE_FIX} schema missing keyFields arrays`);
+    return false;
+  }
+  const validAuction = schema.auctionKeyFields.every(f => allowed.has(f));
+  const validAdUnit  = schema.adUnitKeyFields.every(f => allowed.has(f));
+  if (!validAuction || !validAdUnit) {
+    logError(`${CONSTANTS.LOG_PRE_FIX} Fields received do not match allowed fields`);
+    return false;
+  }
+  // ensure adUnitKeyFields extends auctionKeyFields and contains adUnitCode
+  if (!schema.adUnitKeyFields.includes('adUnitCode')) {
+    logError(`${CONSTANTS.LOG_PRE_FIX} adUnitKeyFields must include adUnitCode`);
+    return false;
+  }
+  return true;
+}
 
-/**
- * Derive mediaType if not supplied.
- */
+export function setBidderOptimisationConfig(cfg) {
+  if (!cfg || typeof cfg !== 'object') {
+    logError(`${CONSTANTS.LOG_PRE_FIX}: invalid config supplied`, cfg);
+    return;
+  }
+  // Handle multiple models with weights
+  let modelCfg = cfg;
+  if (Array.isArray(cfg.modelGroups) && cfg.modelGroups.length) {
+    modelCfg = pickRandomModel(cfg.modelGroups);
+  }
+  // inherit top-level skipRate if present
+  if (cfg.skipRate != null && modelCfg.skipRate == null) {
+    modelCfg.skipRate = cfg.skipRate;
+  }
+  if (!validateSchema(modelCfg.schema)) {
+    return;
+  }
+  _optConfig = normaliseConfig(modelCfg);
+}
+
 function deriveAuctionId(ctx) {
   return ctx.auctionId || ctx.bidRequest?.auctionId || auctionManager.getLastAuctionId() || generateUUID();
 }
+
+// function deriveSize(ctx) {
+//   // size from bidResponse if present
+//   const br = ctx.bidResponse;
+//   if (br?.size) {
+//     return parseGPTSingleSizeArray(br.size) || '*';
+//   }
+//   // from current adUnit banner sizes
+//   const au = ctx.currentAdUnit;
+//   const bannerSizes = au?.mediaTypes?.banner?.sizes || au?.sizes || [];
+//   if (Array.isArray(bannerSizes) && bannerSizes.length) {
+//     const first = Array.isArray(bannerSizes[0]) ? bannerSizes[0] : bannerSizes;
+//     return parseGPTSingleSizeArray(first) || '*';
+//   }
+//   return '*';
+// }
 
 function deriveMediaType(bidRequest, bidResponse) {
   if (bidResponse?.mediaType) return bidResponse.mediaType;
@@ -220,7 +275,7 @@ export function getBidderDecision(context = {}) {
 
   // Random skip handling – same semantics as priceFloors
   if (shouldSkip(_optConfig.skipRate)) {
-    return { ..._optConfig.default, skipped: true };
+    return { skipped: true };
   }
 
   // Pull / build auction-level prepared data once per auction
@@ -231,8 +286,8 @@ export function getBidderDecision(context = {}) {
   const prep = _auctionDataCache[auctionId];
 
   // If multiple adUnits, build decision map per adUnit for excluded bidders
-  const adUnitsArr = context.reqBidsConfigObj?.adUnits;
-  let excludedByAdUnit;
+  const adUnitsArr = context.reqBidsConfigObj?.adUnits || [];
+  let excludedByAdUnit = undefined;
   if (Array.isArray(adUnitsArr) && adUnitsArr.length) {
     excludedByAdUnit = {};
     adUnitsArr.forEach(au => {
