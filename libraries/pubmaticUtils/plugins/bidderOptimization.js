@@ -1,6 +1,6 @@
 // plugins/bidderOptimization.js
 import { getBrowserType } from '../pubmaticUtils.js';
-import { logInfo, logError, deepClone, logWarn, parseUrl, generateUUID, parseGPTSingleSizeArray } from '../../../src/utils.js';
+import { logInfo, logError, deepClone, logWarn, parseUrl, generateUUID, isPlainObject, isArray, isNumber } from '../../../src/utils.js';
 import { getRefererInfo } from '../../../src/refererDetection.js';
 import { auctionManager } from '../../../src/auctionManager.js';
 import { getCurrentTimeOfDay, getHasId } from '../pubmaticUtils.js';
@@ -13,8 +13,7 @@ let _configJsonManager = null;
 export const getConfigJsonManager = () => _configJsonManager;
 export const setConfigJsonManager = (configJsonManager) => { _configJsonManager = configJsonManager; }
 
-// The normalised config supplied via pubmaticRtdProvider
-let _optConfig = null;
+let selectedbidderOptimisationModel = null;
 let targetHasIds = [];
 
 /**
@@ -35,14 +34,14 @@ export async function init(pluginName, configJsonManager) {
     logInfo(`${CONSTANTS.LOG_PRE_FIX} Bidder optimization configuration is disabled`);
     return false;
   }
-setConfigJsonManager(configJsonManager);
+  setConfigJsonManager(configJsonManager);
   try {
-    setBidderOptimisationConfig(config.data);
-    targetHasIds = config.data.userIds;
-    if (_optConfig) {
-      logInfo(`${CONSTANTS.LOG_PRE_FIX}: setBidderOptimisationConfig config Decision loaded - version %s`, _optConfig.modelVersion);
+    setBidderOptimisationConfig(config?.data);
+    targetHasIds = config?.data?.userIds;
+    if (selectedbidderOptimisationModel) {
+      logInfo(`${CONSTANTS.LOG_PRE_FIX}: Model version selected: ${selectedbidderOptimisationModel.modelVersion}`);
     } else {
-      logError(`${CONSTANTS.LOG_PRE_FIX} Bidder optimization configuration rejected due to schema validation errors`);
+      logError(`${CONSTANTS.LOG_PRE_FIX} Rejected due to schema validation errors`);
     }
   } catch (error) {
     logError(`${CONSTANTS.LOG_PRE_FIX} Error setting bidder optimization config: ${error}`);
@@ -57,7 +56,7 @@ setConfigJsonManager(configJsonManager);
  * @returns {Object} - Updated bid request config object
  */
 export function processBidRequest(reqBidsConfigObj) {
-  if(_optConfig){
+  if(selectedbidderOptimisationModel){
     try {
       const decision = getBidderDecision({
         auctionId: reqBidsConfigObj?.auctionId,
@@ -124,18 +123,15 @@ export const filterBidders = (bidderList, reqBidsConfigObj, adUnitCode) => {
   }
 };
 
-/* PriceFloors-style helpers for auto-derivation */
-
 // Field matching functions for each schema field
 const fieldMatchingFunctions = {
-  domain: (ctx) => ctx.domain || getHostname(),
-  mediaType: (ctx) => ctx.mediaType || deriveMediaType(ctx.bidRequest, ctx.bidResponse),
-  browser: (ctx) => ctx.browser || '*',
-  country: (ctx) => ctx.country || getConfigJsonManager()?.country || '*',
-  timeOfDay: (ctx) => ctx.timeOfDay || getCurrentTimeOfDay() || '*',
-  hasId: (ctx) => (ctx.hasId !== undefined ? ctx.hasId : getHasId(targetHasIds)),
-  //size: (ctx) => ctx.size || deriveSize(ctx) || '*',
-  adUnitCode: (ctx) => ctx.adUnitCode || '*'
+  domain: (context) => context.domain || getHostname(),
+  mediaType: (context) => context.mediaType || deriveMediaType(context.bidRequest, context.bidResponse),
+  browser: (context) => context.browser || '*',
+  country: (context) => context.country || getConfigJsonManager()?.country || '*',
+  timeOfDay: (context) => context.timeOfDay || getCurrentTimeOfDay() || '*',
+  hasId: (context) => (context.hasId !== undefined ? context.hasId : getHasId(targetHasIds)),
+  adUnitCode: (context) => context.adUnitCode || '*'
 };
 
 function enumeratePossibleFieldValues(keyFields = [], context) {
@@ -157,31 +153,17 @@ const getHostname = (() => {
   };
 })();
 
-/* -------------------------------------------------------------------------- */
-/*                       Internal, mutable module state                       */
-/* -------------------------------------------------------------------------- */
-
 // Cache: auctionId => prepared optimisation data (lower-cased maps etc.)
 const _auctionDataCache = {};
 
-/* -------------------------------------------------------------------------- */
-/*                                Public API                                  */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Injects the optimisation schema coming from pubmaticRtdProvider.
- * A shallow validation + normalisation (lower-casing keys) is performed.
- *
- * @param {Object} cfg The JSON using the two-map schema of “Approach A”.
- */
 function pickRandomModel(modelGroups) {
-  const valid = modelGroups.filter(m => typeof m.modelWeight === 'number' && m.modelWeight > 0);
+  const valid = modelGroups.filter(m => isNumber(m.modelWeight) && m.modelWeight > 0);
   const weightSum = valid.reduce((s, m) => s + m.modelWeight, 0);
   if (!weightSum) return valid[0] || modelGroups[0];
-  let rnd = Math.floor(Math.random() * weightSum) + 1;
+  let random = Math.floor(Math.random() * weightSum) + 1;
   for (let m of valid) {
-    rnd -= m.modelWeight;
-    if (rnd <= 0) return m;
+    random -= m.modelWeight;
+    if (random <= 0) return m;
   }
   return valid[0] || modelGroups[0];
 }
@@ -194,6 +176,7 @@ function validateSchema(schema) {
   }
   const validAuction = schema.auctionKeyFields.every(f => allowed.has(f));
   const validAdUnit  = schema.adUnitKeyFields.every(f => allowed.has(f));
+
   if (!validAuction || !validAdUnit) {
     logError(`${CONSTANTS.LOG_PRE_FIX} Fields received do not match allowed fields`);
     return false;
@@ -206,45 +189,26 @@ function validateSchema(schema) {
   return true;
 }
 
-export function setBidderOptimisationConfig(cfg) {
-  if (!cfg || typeof cfg !== 'object') {
-    logError(`${CONSTANTS.LOG_PRE_FIX}: invalid config supplied`, cfg);
+export function setBidderOptimisationConfig(bidderOptimisationSchema) {
+  if (!bidderOptimisationSchema || !isPlainObject(bidderOptimisationSchema)) {
+    logError(`${CONSTANTS.LOG_PRE_FIX}: invalid schema supplied`, bidderOptimisationSchema);
     return;
   }
   // Handle multiple models with weights
-  let modelCfg = cfg;
-  if (Array.isArray(cfg.modelGroups) && cfg.modelGroups.length) {
-    modelCfg = pickRandomModel(cfg.modelGroups);
+  let selectedModel = bidderOptimisationSchema;
+  if (isArray(bidderOptimisationSchema.modelGroups) && bidderOptimisationSchema.modelGroups.length) {
+    selectedModel = pickRandomModel(bidderOptimisationSchema.modelGroups);
   }
-  // inherit top-level skipRate if present
-  if (cfg.skipRate != null && modelCfg.skipRate == null) {
-    modelCfg.skipRate = cfg.skipRate;
-  }
-  if (!validateSchema(modelCfg.schema)) {
+ 
+  if (!validateSchema(selectedModel.schema)) {
     return;
   }
-  _optConfig = normaliseConfig(modelCfg);
+  selectedbidderOptimisationModel = normaliseConfig(selectedModel);
 }
 
-function deriveAuctionId(ctx) {
-  return ctx.auctionId || ctx.bidRequest?.auctionId || auctionManager.getLastAuctionId() || generateUUID();
+function deriveAuctionId(context) {
+  return context.auctionId || context.bidRequest?.auctionId || auctionManager.getLastAuctionId() || generateUUID();
 }
-
-// function deriveSize(ctx) {
-//   // size from bidResponse if present
-//   const br = ctx.bidResponse;
-//   if (br?.size) {
-//     return parseGPTSingleSizeArray(br.size) || '*';
-//   }
-//   // from current adUnit banner sizes
-//   const au = ctx.currentAdUnit;
-//   const bannerSizes = au?.mediaTypes?.banner?.sizes || au?.sizes || [];
-//   if (Array.isArray(bannerSizes) && bannerSizes.length) {
-//     const first = Array.isArray(bannerSizes[0]) ? bannerSizes[0] : bannerSizes;
-//     return parseGPTSingleSizeArray(first) || '*';
-//   }
-//   return '*';
-// }
 
 function deriveMediaType(bidRequest, bidResponse) {
   if (bidResponse?.mediaType) return bidResponse.mediaType;
@@ -261,29 +225,29 @@ function deriveMediaTypeFromAdUnit(adUnit) {
 }
 
 export function getBidderDecision(context = {}) {
-  // Auto-fill context fields if caller omitted them
+  // Auto-fill context fields
   if (!context.domain) {
     context.domain = getHostname();
   }
   if (!context.mediaType) {
     context.mediaType = deriveMediaType(context.bidRequest, context.bidResponse);
   }
-  if (!_optConfig) {
+  if (!selectedbidderOptimisationModel) {
     logWarn(`${CONSTANTS.LOG_PRE_FIX}: getBidderDecision called before config is set`);
     return fallbackDecision();
   }
 
   // Random skip handling – same semantics as priceFloors
-  if (shouldSkip(_optConfig.skipRate)) {
+  if (shouldSkip(selectedbidderOptimisationModel.skipRate)) {
     return { skipped: true };
   }
 
   // Pull / build auction-level prepared data once per auction
   const auctionId = deriveAuctionId(context);
   if (!_auctionDataCache[auctionId]) {
-    _auctionDataCache[auctionId] = buildPreparedData(_optConfig);
+    _auctionDataCache[auctionId] = buildPreparedData(selectedbidderOptimisationModel);
   }
-  const prep = _auctionDataCache[auctionId];
+  const selectedData = _auctionDataCache[auctionId];
 
   // If multiple adUnits, build decision map per adUnit for excluded bidders
   const adUnitsArr = context.reqBidsConfigObj?.adUnits || [];
@@ -291,35 +255,27 @@ export function getBidderDecision(context = {}) {
   if (Array.isArray(adUnitsArr) && adUnitsArr.length) {
     excludedByAdUnit = {};
     adUnitsArr.forEach(au => {
-      const auCtx = {
+      const adUnitContext = {
         ...context,
         adUnitCode: au.code,
         mediaType: deriveMediaTypeFromAdUnit(au)
       };
-      const rule = getFirstMatchingValue(prep.adUnitOverrides, _optConfig.schema.adUnitKeyFields, auCtx, _optConfig.schema.delimiter);
-      excludedByAdUnit[au.code] = rule?.excludedBidders ?? _optConfig.default.excludedBidders;
+      const rule = getFirstMatchingValue(selectedData.adUnitOverrides, selectedbidderOptimisationModel.schema.adUnitKeyFields, adUnitContext, selectedbidderOptimisationModel.schema.delimiter);
+      excludedByAdUnit[au.code] = rule?.excludedBidders ?? selectedbidderOptimisationModel.default.excludedBidders;
     });
   }
 
   const auctionRule = getFirstMatchingValue(
-    prep.auctionValues,
-    _optConfig.schema.auctionKeyFields,
+    selectedData.auctionValues,
+    selectedbidderOptimisationModel.schema.auctionKeyFields,
     context,
-    _optConfig.schema.delimiter
+    selectedbidderOptimisationModel.schema.delimiter
   );
 
-  // 2) ad-unit overrides (excludedBidders only)
-  // const adUnitRuleSingle = getFirstMatchingValue(
-  //   prep.adUnitOverrides,
-  //   _optConfig.schema.adUnitKeyFields,
-  //   context,
-  //   _optConfig.schema.delimiter
-  // );
-
   return {
-    clientBidders: auctionRule?.clientBidders ?? _optConfig.default.clientBidders,
-    serverBidders: auctionRule?.serverBidders ?? _optConfig.default.serverBidders,
-    clientSequence: auctionRule?.clientSequence ?? _optConfig.default.clientSequence,
+    clientBidders: auctionRule?.clientBidders ?? selectedbidderOptimisationModel.default.clientBidders,
+    serverBidders: auctionRule?.serverBidders ?? selectedbidderOptimisationModel.default.serverBidders,
+    clientSequence: auctionRule?.clientSequence ?? selectedbidderOptimisationModel.default.clientSequence,
     skipped: false,
     excludedBiddersByAdUnit: excludedByAdUnit
   };
@@ -339,8 +295,8 @@ function shouldSkip(skipRate = 0) {
 }
 
 /** Lower-cases all rule keys so lookups are case-insensitive */
-function normaliseConfig(cfg) {
-  const copy = deepClone(cfg);
+function normaliseConfig(bidderOptimisationSchema) {
+  const copy = deepClone(bidderOptimisationSchema);
   const lowerCaseKeys = (obj) =>
     Object.keys(obj || {}).reduce((acc, k) => {
       acc[k.toLowerCase()] = obj[k];
@@ -352,20 +308,20 @@ function normaliseConfig(cfg) {
   return copy;
 }
 
-function buildPreparedData(cfg) {
+function buildPreparedData(bidderOptimisationSchema) {
   // For now just expose the lower-cased maps; more pre-processing could happen here later.
   return {
-    auctionValues: cfg.auctionValues,
-    adUnitOverrides: cfg.adUnitOverrides
+    auctionValues: bidderOptimisationSchema.auctionValues,
+    adUnitOverrides: bidderOptimisationSchema.adUnitOverrides
   };
 }
 
 /**
  * Generates all key permutations (exact-to-wildcard) and returns the first hit.
  */
-function getFirstMatchingValue(valuesMap, keyFieldOrder, ctx, delim) {
+function getFirstMatchingValue(valuesMap, keyFieldOrder, context, delim) {
   if (!valuesMap || !keyFieldOrder?.length) return undefined;
-  const fieldValues = enumeratePossibleFieldValues(keyFieldOrder, ctx);
+  const fieldValues = enumeratePossibleFieldValues(keyFieldOrder, context);
   if (!fieldValues.length) return undefined;
   const possibleKeys = generatePossibleEnumerations(fieldValues, delim);
   for (let k of possibleKeys) {
