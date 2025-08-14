@@ -50,7 +50,7 @@ import {
   ACTIVITY_PARAM_COMPONENT_NAME,
   ACTIVITY_PARAM_COMPONENT_TYPE,
   ACTIVITY_PARAM_STORAGE_TYPE,
-  ACTIVITY_PARAM_STORAGE_WRITE
+  ACTIVITY_PARAM_STORAGE_TYPE
 } from '../../src/activities/params.js';
 import { getGlobal } from '../../src/prebidGlobal.ts';
 
@@ -703,6 +703,8 @@ function registerSignalSources() {
   }
 
   const providers: googletag.secureSignals.SecureSignalProvider[] = window.googletag.secureSignalProviders = (window.googletag.secureSignalProviders || []) as googletag.secureSignals.SecureSignalProvider[];
+  if(!providers)
+    return;
   const existingIds = new Set(providers.map(p => 'id' in p ? p.id : p.networkCode));
   const encryptedSignalSources = config.getConfig('userSync.encryptedSignalSources');
   if (encryptedSignalSources) {
@@ -1177,6 +1179,7 @@ declare module '../../src/prebidGlobal' {
     registerSignalSources: typeof registerSignalSources;
     refreshUserIds: typeof refreshUserIds;
     getUserIdsAsEidBySource: typeof getUserIdsAsEidBySource;
+    setUserIdentities: typeof setUserIdentities;
   }
 }
 
@@ -1250,6 +1253,7 @@ export function init(config, {mkDelay = delay} = {}) {
   addApiMethod('refreshUserIds', normalizePromise(refreshUserIds));
   addApiMethod('getUserIdsAsync', normalizePromise(getUserIdsAsync));
   addApiMethod('getUserIdsAsEidBySource', getUserIdsAsEidBySource);
+  addApiMethod('setUserIdentities', setUserIdentities);
 }
 // -----------------------------------------------------------------------------
 // Partner Refresh Logic for Email Hash / SSO Identity
