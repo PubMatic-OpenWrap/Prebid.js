@@ -50,7 +50,7 @@ import {
   ACTIVITY_PARAM_COMPONENT_NAME,
   ACTIVITY_PARAM_COMPONENT_TYPE,
   ACTIVITY_PARAM_STORAGE_TYPE,
-  ACTIVITY_PARAM_STORAGE_TYPE
+  ACTIVITY_PARAM_STORAGE_WRITE
 } from '../../src/activities/params.js';
 import { getGlobal } from '../../src/prebidGlobal.ts';
 
