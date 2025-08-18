@@ -430,7 +430,7 @@ function getFloorType(floorResponseData) {
   return floorResponseData ? (floorResponseData.enforcements.enforceJS == false ? 0 : 1) : undefined;
 }
 
-function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid, e) {
+function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid, e, timeout) {
   highestBid = (highestBid && highestBid.length > 0) ? highestBid[0] : null;
   return Object.keys(adUnit.bids).reduce(function (partnerBids, bidId) {
     adUnit.bids[bidId].forEach(function(bid) {
@@ -450,6 +450,7 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid, e) {
         });
       }
 
+      let l1 = bid.serverLatencyTimeMs ? bid.serverLatencyTimeMs : (bid.partnerTimeToRespond || 0)
       partnerBids.push({
         'pn': adapterName,
         'bc': bid.bidderCode || bid.bidder,
@@ -463,12 +464,12 @@ function gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestBid, e) {
         'en': bid.bidResponse ? bid.bidResponse.bidPriceUSD : 0,
         'di': bid.bidResponse ? (bid.bidResponse.dealId || OPEN_AUCTION_DEAL_ID) : OPEN_AUCTION_DEAL_ID,
         'dc': bid.bidResponse ? (bid.bidResponse.dealChannel || EMPTY_STRING) : EMPTY_STRING,
-        'l1': bid.serverLatencyTimeMs ? bid.serverLatencyTimeMs : (bid.partnerTimeToRespond || 0),
-        'ol1': bid.bidResponse ? bid.clientLatencyTimeMs : 0,
+        'l1': l1,
+        'ol1': bid.bidResponse ? bid.clientLatencyTimeMs : timeout,
         'l2': 0,
         'adv': bid.bidResponse ? getAdDomain(bid.bidResponse) || undefined : undefined,
         'ss': isS2SBidder(bid.bidder),
-        't': (bid.status == ERROR && bid.error.code == TIMEOUT_ERROR) ? 1 : 0,
+        't': (bid.status == ERROR && bid.error.code == TIMEOUT_ERROR) ? 1 : ((l1 > timeout) ? 1 : 0),
         'wb': (highestBid && highestBid.adId === bid.adId ? 1 : 0),
         'mi': bid.bidResponse ? bid.bidResponse.mi : (window.matchedimpressions && window.matchedimpressions[bid.bidder]),
         'af': bid.bidResponse ? (bid.bidResponse.mediaType || undefined) : undefined,
@@ -736,7 +737,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
       'au': origAdUnit.owAdUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId,
       'mt': getAdUnitAdFormats(origAdUnit),
       'sz': getSizesForAdUnit(adUnit, adUnitId),
-      'ps': gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestCpmBids.filter(bid => bid.adUnitCode === adUnitId), e),
+      'ps': gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestCpmBids.filter(bid => bid.adUnitCode === adUnitId), e, auctionCache.timeout) ,
       'bs': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.owAdUnitId]?.bidServed,
       'is': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.owAdUnitId]?.impressionServed,
       'rc': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.owAdUnitId]?.slotCnt,
