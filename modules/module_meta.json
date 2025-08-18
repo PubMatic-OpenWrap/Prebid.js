@@ -469,7 +469,7 @@
         },
         {
             "name": "multibid",
-            "path": "/modules/multibid/index.js",
+            "path": "/modules/multibid/index.ts",
             "module": "multibid"
         }
     ],
