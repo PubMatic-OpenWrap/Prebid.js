@@ -543,7 +543,7 @@ const addExtenstionParams = (req, bidderRequest) => {
       wv: '$$REPO_AND_VERSION$$',
       transactionId,
       wp: 'pbjs',
-      bidderCode: bidderRequest.bidderCode
+      biddercode: bidderRequest.bidderCode
     },
     cpmAdjustment: cpmAdjustment
   }
