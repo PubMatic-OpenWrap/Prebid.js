@@ -130,7 +130,8 @@ let pubmaticIHAdapter = Object.assign({}, baseAdapter, {
 
 adapterManager.registerAnalyticsAdapter({
   adapter: pubmaticIHAdapter,
-  code: ADAPTER_CODE
+  code: ADAPTER_CODE,
+  gvlid: 76
 });
 
 (getGlobal()).firePubMaticIHLoggerCall = firePubMaticIHLoggerCall;
