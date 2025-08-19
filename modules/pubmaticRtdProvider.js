@@ -5,7 +5,6 @@ import { PluginManager } from '../libraries/pubmaticUtils/plugins/pluginManager.
 import { FloorProvider } from '../libraries/pubmaticUtils/plugins/floorProvider.js';
 import { BidderOptimization } from '../libraries/pubmaticUtils/plugins/bidderOptimization.js';
 import { UnifiedPricingRule } from '../libraries/pubmaticUtils/plugins/unifiedPricingRule.js';
-import { DynamicTimeout } from '../libraries/pubmaticUtils/plugins/dynamicTimeout.js';
 
 /**
  * @typedef {import('./rtdModule/index.js').RtdSubmodule} RtdSubmodule

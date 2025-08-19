@@ -169,7 +169,7 @@ function pickRandomModel(modelGroups) {
 }
 
 function validateSchema(schema) {
-  const allowed = new Set(['domain','mediaType','browser','country','timeOfDay','hasId','adUnitCode']);
+  const allowed = new Set(['domain','mediaType','browser','country','timeOfDay','hasId','adUnitCode']); // schema filed name - mediaTypes - check PRD
   if (!schema || !Array.isArray(schema.auctionKeyFields) || !Array.isArray(schema.adUnitKeyFields)) {
     logError(`${CONSTANTS.LOG_PRE_FIX} schema missing keyFields arrays`);
     return false;
@@ -191,14 +191,14 @@ function validateSchema(schema) {
 
 export function setBidderOptimisationConfig(bidderOptimisationSchema) {
   if (!bidderOptimisationSchema || !isPlainObject(bidderOptimisationSchema)) {
-    logError(`${CONSTANTS.LOG_PRE_FIX}: invalid schema supplied`, bidderOptimisationSchema);
+    logWarn(`${CONSTANTS.LOG_PRE_FIX}: invalid schema supplied`, bidderOptimisationSchema); //logWarn
     return;
   }
   // Handle multiple models with weights
   let selectedModel = bidderOptimisationSchema;
   if (isArray(bidderOptimisationSchema.modelGroups) && bidderOptimisationSchema.modelGroups.length) {
-    selectedModel = pickRandomModel(bidderOptimisationSchema.modelGroups);
-  }
+    selectedModel = pickRandomModel(bidderOptimisationSchema.modelGroups); // extract common functions from priceFloors in UTILS 
+  }                                                                        // Our bidder Optimisation schema can change when ML will start
  
   if (!validateSchema(selectedModel.schema)) {
     return;
@@ -227,7 +227,7 @@ function deriveMediaTypeFromAdUnit(adUnit) {
 export function getBidderDecision(context = {}) {
   // Auto-fill context fields
   if (!context.domain) {
-    context.domain = getHostname();
+    context.domain = getHostname(); // extract common functions from priceFloors in UTILS 
   }
   if (!context.mediaType) {
     context.mediaType = deriveMediaType(context.bidRequest, context.bidResponse);
