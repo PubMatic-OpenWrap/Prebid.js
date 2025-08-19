@@ -544,8 +544,10 @@ function getFloorFetchStatus(floorData) {
 
 function getListOfIdentityPartners() {
   const namespace = getGlobal();
+  if(!isFn(namespace.getUserIds)) 
+    return
   const publisherProvidedEids = namespace.getConfig("ortb2.user.eids") || [];
-  const availableUserIds = namespace.adUnits[0]?.bids[0]?.userId || {};
+  const availableUserIds = namespace.getUserIds() || {};
   const identityModules = namespace.getConfig('userSync')?.userIds || [];
   const identityModuleNameMap = identityModules.reduce((mapping, module) => {
     if (module.storage?.name) {
