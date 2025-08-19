@@ -5,6 +5,16 @@ import { bidderSettings } from 'src/bidderSettings.js';
 import { config } from 'src/config.js';
 
 describe('PubMatic adapter', () => {
+  // Set up window.PWT mock for tests
+  before(() => {
+    window.PWT = window.PWT || {};
+    window.PWT.collectIdsFromWrappers = false;
+  });
+  
+  after(() => {
+    delete window.PWT;
+  });
+  
   let firstBid, videoBid, firstResponse, response, videoResponse;
   const request = {};
   firstBid = {

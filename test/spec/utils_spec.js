@@ -1430,7 +1430,153 @@ describe('memoize', () => {
         });
       });
     })
-  })
+  });
+
+  describe('collectOtherIds', () => {
+    let sandbox;
+    let logInfoStub;
+
+    beforeEach(() => {
+      sandbox = sinon.sandbox.create();
+      logInfoStub = sandbox.stub(utils.prefixLog('Collect Other IDs: '), 'logInfo');
+      
+      // Reset global variables
+      window._pbjsGlobals = [];
+      window.pubmaticNameSpace = 'pubmatic';
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+      delete window.pubmaticNameSpace;
+      delete window._pbjsGlobals;
+      delete window.namespace1;
+      delete window.namespace2;
+    });
+
+    it('should return the same array when no other namespaces exist', () => {
+      const existingUserIds = [
+        { source: 'source1', id: 'id1' },
+        { source: 'source2', id: 'id2' }
+      ];
+      
+      const result = utils.collectOtherIds(existingUserIds);
+      expect(result).to.deep.equal(existingUserIds);
+      expect(result).to.not.equal(existingUserIds); // Should be a new array
+    });
+
+    it('should handle empty or undefined input', () => {
+      expect(utils.collectOtherIds()).to.deep.equal([]);
+      expect(utils.collectOtherIds([])).to.deep.equal([]);
+      expect(utils.collectOtherIds(null)).to.deep.equal([]);
+    });
+
+    it('should merge IDs from other namespaces', () => {
+      // Setup existing IDs
+      const existingUserIds = [
+        { source: 'source1', id: 'id1' },
+        { source: 'source2', id: 'id2' }
+      ];
+      
+      // Setup global namespaces
+      window._pbjsGlobals = ['pubmatic', 'namespace1', 'namespace2'];
+      
+      // Setup namespace objects with getUserIdsAsEids functions
+      window.namespace1 = {
+        getUserIdsAsEids: sandbox.stub().returns([
+          { source: 'source3', id: 'id3' },
+          { source: 'source4', id: 'id4' }
+        ])
+      };
+      
+      window.namespace2 = {
+        getUserIdsAsEids: sandbox.stub().returns([
+          { source: 'source5', id: 'id5' },
+          { source: 'source1', id: 'different-id1' } // Duplicate source, should be ignored
+        ])
+      };
+      
+      const result = utils.collectOtherIds(existingUserIds);
+      
+      // Should contain original IDs plus new ones from other namespaces
+      expect(result).to.deep.equal([
+        { source: 'source1', id: 'id1' },
+        { source: 'source2', id: 'id2' },
+        { source: 'source3', id: 'id3' },
+        { source: 'source4', id: 'id4' },
+        { source: 'source5', id: 'id5' }
+      ]);
+      
+      // Verify namespace functions were called
+      sinon.assert.calledOnce(window.namespace1.getUserIdsAsEids);
+      sinon.assert.calledOnce(window.namespace2.getUserIdsAsEids);
+    });
+
+    it('should handle namespaces without getUserIdsAsEids method', () => {
+      const existingUserIds = [{ source: 'source1', id: 'id1' }];
+      
+      window._pbjsGlobals = ['pubmatic', 'namespace1', 'namespace2'];
+      
+      window.namespace1 = {}; // No getUserIdsAsEids method
+      
+      window.namespace2 = {
+        getUserIdsAsEids: sandbox.stub().returns([
+          { source: 'source2', id: 'id2' }
+        ])
+      };
+      
+      const result = utils.collectOtherIds(existingUserIds);
+      
+      expect(result).to.deep.equal([
+        { source: 'source1', id: 'id1' },
+        { source: 'source2', id: 'id2' }
+      ]);
+    });
+
+    it('should handle non-array return values from getUserIdsAsEids', () => {
+      const existingUserIds = [{ source: 'source1', id: 'id1' }];
+      
+      window._pbjsGlobals = ['pubmatic', 'namespace1', 'namespace2'];
+      
+      window.namespace1 = {
+        getUserIdsAsEids: sandbox.stub().returns('not an array')
+      };
+      
+      window.namespace2 = {
+        getUserIdsAsEids: sandbox.stub().returns([
+          { source: 'source2', id: 'id2' }
+        ])
+      };
+      
+      const result = utils.collectOtherIds(existingUserIds);
+      
+      expect(result).to.deep.equal([
+        { source: 'source1', id: 'id1' },
+        { source: 'source2', id: 'id2' }
+      ]);
+    });
+
+    it('should handle IDs without source property', () => {
+      const existingUserIds = [{ source: 'source1', id: 'id1' }];
+      
+      window._pbjsGlobals = ['pubmatic', 'namespace1'];
+      
+      window.namespace1 = {
+        getUserIdsAsEids: sandbox.stub().returns([
+          { source: 'source2', id: 'id2' },
+          { id: 'id3' }, // No source property
+          { source: 'source4', id: 'id4' }
+        ])
+      };
+      
+      const result = utils.collectOtherIds(existingUserIds);
+      
+      expect(result).to.deep.equal([
+        { source: 'source1', id: 'id1' },
+        { source: 'source2', id: 'id2' },
+        { source: 'source4', id: 'id4' }
+      ]);
+    });
+  });
 })
 
 describe('getWinDimensions', () => {
