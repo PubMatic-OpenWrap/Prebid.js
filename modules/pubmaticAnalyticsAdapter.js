@@ -764,7 +764,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
       'sz': getSizesForAdUnit(adUnit, adUnitId),
       'emt': enc(getAdUnitAdFormats(origAdUnit)),
       'esz': enc(getSizesForAdUnit(adUnit, adUnitId)),
-      'ps': gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestCpmBids.filter(bid => bid.adUnitCode === adUnitId), e),
+      'ps': gatherPartnerBidsForAdUnitForLogger(adUnit, adUnitId, highestCpmBids.filter(bid => bid.adUnitCode === adUnitId), e, auctionCache.timeout),
       'bs': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.owAdUnitId]?.bidServed,
       'is': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.owAdUnitId]?.impressionServed,
       'rc': frequencyDepth?.slotLevelFrquencyDepth?.[origAdUnit.owAdUnitId]?.slotCnt,
