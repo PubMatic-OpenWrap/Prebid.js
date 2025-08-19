@@ -640,6 +640,7 @@ describe('PubMatic adapter', () => {
           expect(request.data).to.have.property('ext').to.have.property('wrapper').to.have.property('wiid');
           expect(request.data).to.have.property('ext').to.have.property('wrapper').to.have.property('wv');
           expect(request.data).to.have.property('ext').to.have.property('wrapper').to.have.property('wp');
+          expect(request.data).to.have.property('ext').to.have.property('wrapper').to.have.property('biddercode');
         });
 
         it('should have url with post method', () => {
