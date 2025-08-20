@@ -1179,6 +1179,7 @@ declare module '../../src/prebidGlobal' {
     registerSignalSources: typeof registerSignalSources;
     refreshUserIds: typeof refreshUserIds;
     getUserIdsAsEidBySource: typeof getUserIdsAsEidBySource;
+    getUserIdentities: typeof getUserIdentities;
     setUserIdentities: typeof setUserIdentities;
   }
 }
@@ -1253,6 +1254,7 @@ export function init(config, {mkDelay = delay} = {}) {
   addApiMethod('refreshUserIds', normalizePromise(refreshUserIds));
   addApiMethod('getUserIdsAsync', normalizePromise(getUserIdsAsync));
   addApiMethod('getUserIdsAsEidBySource', getUserIdsAsEidBySource);
+  addApiMethod('getUserIdentities', getUserIdentities);
   addApiMethod('setUserIdentities', setUserIdentities);
 }
 // -----------------------------------------------------------------------------
