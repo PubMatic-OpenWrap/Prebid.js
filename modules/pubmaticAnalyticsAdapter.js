@@ -926,13 +926,24 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
 /// /////////// ADAPTER EVENT HANDLER FUNCTIONS //////////////
 
 function auctionInitHandler(args) {
-  // Initialize the Consent fields loggedBy trcker and logger
+  // Initialize the Consent fields loggedBy tracker and logger
   consentFieldsLoggedBy.initialize(args.auctionId);
   s2sBidders = (function () {
-    let s2sConf = config.getConfig('s2sConfig');
     let s2sBidders = [];
-    s2sConf &&
-      (isArray(s2sConf) ? s2sConf.map(conf => s2sBidders.push(...conf.bidders)) : s2sBidders.push(...s2sConf.bidders));
+    try {
+      let s2sConf = config.getConfig('s2sConfig');
+      if (isArray(s2sConf)) {
+        s2sConf.forEach(conf => {
+          if (conf?.bidders) {
+            s2sBidders.push(...conf.bidders);
+          }
+        });
+      } else if (s2sConf?.bidders) {
+        s2sBidders.push(...s2sConf.bidders);
+      }
+    } catch (e) {
+      logError('Error processing s2s bidders:', e);
+    }
     return s2sBidders || [];
   }());
   let cacheEntry = pick(args, [

@@ -7,7 +7,7 @@ import {nativeBidIsValid} from '../native.js';
 import {isValidVideoBid} from '../video.js';
 import {EVENTS, REJECTION_REASON, STATUS, DEBUG_MODE} from '../constants.js';
 import * as events from '../events.js';
-import {includes} from '../polyfill.js';
+
 import {
   delayExecution,
   isArray,
@@ -473,14 +473,20 @@ export const processBidderRequests = hook('async', function (spec, bids, bidderR
 
     const networkDone = requestMetrics.startTiming('net');
 
+    const debugMode = getParameterByName(DEBUG_MODE).toUpperCase() === 'TRUE' || debugTurnedOn();
+
     function getOptions(defaults) {
       const ro = request.options;
       return Object.assign(defaults, ro, {
         browsingTopics: ro?.hasOwnProperty('browsingTopics') && !ro.browsingTopics
           ? false
-          : (bidderSettings.get(spec.code, 'topicsHeader') ?? true) && isActivityAllowed(ACTIVITY_TRANSMIT_UFPD, activityParams(MODULE_TYPE_BIDDER, spec.code))
+          : (bidderSettings.get(spec.code, 'topicsHeader') ?? true) && isActivityAllowed(ACTIVITY_TRANSMIT_UFPD, activityParams(MODULE_TYPE_BIDDER, spec.code)),
+        suppressTopicsEnrollmentWarning: ro?.hasOwnProperty('suppressTopicsEnrollmentWarning')
+          ? ro.suppressTopicsEnrollmentWarning
+          : !debugMode
       })
     }
+
     switch (request.method) {
       case 'GET':
         ajax(
@@ -604,7 +610,7 @@ function validBidSize(adUnitCode, bid, {index = auctionManager.index} = {}) {
 export function isValid(adUnitCode, bid, {index = auctionManager.index} = {}) {
   function hasValidKeys() {
     let bidKeys = Object.keys(bid);
-    return COMMON_BID_RESPONSE_KEYS.every(key => includes(bidKeys, key) && !includes([undefined, null], bid[key]));
+    return COMMON_BID_RESPONSE_KEYS.every(key => bidKeys.includes(key) && ![undefined, null].includes(bid[key]));
   }
 
   function errorMessage(msg) {
