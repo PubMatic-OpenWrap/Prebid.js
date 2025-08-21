@@ -704,6 +704,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   let floorFetchStatus = getFloorFetchStatus(floorData);
   let outputObj = { s: [] };
   let pixelURL = END_POINT_BID_LOGGER;
+  let lip = getListOfIdentityPartners();
 
   if (!auctionCache || auctionCache.sent) {
     return;
@@ -726,13 +727,12 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   outputObj['trc'] = frequencyDepth?.slotCnt;
   outputObj['tbs'] = frequencyDepth?.bidServed;
   outputObj['tis'] = frequencyDepth?.impressionServed;
-  outputObj['lip'] = frequencyDepth?.lip;
+  outputObj['lip'] = lip;
   outputObj['tgid'] = getTgId();
   outputObj['dm'] = DISPLAY_MANAGER;
   outputObj['dmv'] = '$prebid.version$' || '-1';
   outputObj['bm'] = getBrowserType();
   outputObj['ctr'] = _country ? _country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '';
-  let lip = getListOfIdentityPartners();
   (lip !== undefined) && (outputObj['elip'] = enc(lip));
 
   if (floorData) {
