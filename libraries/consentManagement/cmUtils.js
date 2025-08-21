@@ -139,16 +139,31 @@ export function configParser(
       getGlobal().requestBids.getHooks({hook: requestBidsHook}).remove();
       buildActivityParams.getHooks({hook: attachActivityParams}).remove();
       requestBidsHook = null;
+      logInfo(`${displayName} consentManagement module has been diactivated...`)
     }
   }
 
+  function resetConsentDataHandler() {
+    reset();
+    consentDataHandler.removeCmpEventListener();
+    consentDataHandler.reset();
+  }
+
   return function getConsentConfig(config) {
-    config = config?.[namespace];
-    if (!config || typeof config !== 'object') {
+    const cmConfig = config?.[namespace];
+    if (!cmConfig || typeof cmConfig !== 'object') {
       logWarn(msg(`config not defined, exiting consent manager module`));
       reset();
       return {};
     }
+
+    // Check if module is explicitly disabled
+    if (cmConfig?.enabled === false) {
+      logWarn(msg(`config enabled is set to false, disabling consent manager module`));
+      resetConsentDataHandler();
+      return {};
+    }
+
     let cmpHandler;
     if (isStr(config.cmpApi)) {
       cmpHandler = config.cmpApi;

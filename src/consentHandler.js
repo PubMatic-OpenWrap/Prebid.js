@@ -17,6 +17,8 @@ export class ConsentHandler {
   #ready;
   #dirty = true;
   #hash;
+  #listenerId = undefined;
+  #cmpApi = null;
   generatedTime;
   hashFields;
 
@@ -28,6 +30,43 @@ export class ConsentHandler {
     this.#ready = true;
     this.#data = data;
     this.#defer.resolve(data);
+  }
+
+  /**
+   * Set CMP API reference
+   * @param cmpApi - CMP API reference
+   */
+  setCmpApi(cmpApi) {
+    this.#cmpApi = cmpApi;
+  }
+
+  /**
+   * Get CMP API reference
+   */
+  getCmpApi() {
+    return this.#cmpApi;
+  }
+
+  /**
+   * Set CMP listener ID
+   * @param listenerId - Unique identifier for the CMP listener
+   */
+  setCmpListenerId(listenerId) {
+    this.#listenerId = listenerId;
+  }
+
+  /**
+   * Get CMP listener ID
+   */
+  getCmpListenerId() {
+    return this.#listenerId;
+  }
+
+  resetCmpApis(success) {
+    if (success) {
+      this.#cmpApi = null;
+      this.#listenerId = undefined;
+    }
   }
 
   /**
@@ -83,15 +122,40 @@ export class ConsentHandler {
   }
 
   getConsentData() {
-    return this.#data;
+    if (this.#enabled) {
+      return this.#data;
+    }
+    return null;
   }
 
   get hash() {
     if (this.#dirty) {
-      this.#hash = cyrb53Hash(JSON.stringify(this.#data && this.hashFields ? this.hashFields.map(f => this.#data[f]) : this.#data))
+      this.#hash = cyrb53Hash(
+        JSON.stringify(
+          this.#data && this.hashFields ? this.hashFields.map((f) => this.#data[f]) : this.#data
+        )
+      );
       this.#dirty = false;
     }
     return this.#hash;
+  }
+
+  addApiVersionToParams(params) {}
+
+  // Base class defines the algorithm structure
+  removeCmpEventListener() {
+    if (this.getCmpApi() && this.getCmpListenerId() !== undefined && this.getCmpListenerId() !== null) {
+      const params = {
+        command: "removeEventListener",
+        callback: this.resetCmpApis.bind(this),
+        parameter: this.getCmpListenerId(),
+      };
+
+      // Call the method that subclasses will override
+      this.addApiVersionToParams(params);
+
+      this.getCmpApi()(params);
+    }
   }
 }
 
@@ -107,7 +171,14 @@ class UspConsentHandler extends ConsentHandler {
 }
 
 class GdprConsentHandler extends ConsentHandler {
-  hashFields = ['gdprApplies', 'consentString']
+  hashFields = ["gdprApplies", "consentString"];
+  /**
+   * Remove CMP event listener using CMP API
+   */
+  addApiVersionToParams(params) {
+    const apiVersion = this.getConsentData()?.apiVersion || 2;
+    params.apiVersion = apiVersion;
+  }
   getConsentMeta() {
     const consentData = this.getConsentData();
     if (consentData && consentData.vendorData && this.generatedTime) {
@@ -115,8 +186,8 @@ class GdprConsentHandler extends ConsentHandler {
         gdprApplies: consentData.gdprApplies,
         consentStringSize: (isStr(consentData.vendorData.tcString)) ? consentData.vendorData.tcString.length : 0,
         generatedAt: this.generatedTime,
-        apiVersion: consentData.apiVersion
-      }
+        apiVersion: consentData.apiVersion,
+      };
     }
   }
 }
