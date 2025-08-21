@@ -145,7 +145,9 @@ export const getHasId = () => {
   if (identityPartners.length === 0) {
     return CONSTANTS.HAS_ID_VALUES.FALSE;
   }
-  return CONSTANTS.TARGET_HAS_IDS.some(partner => identityPartners.includes(partner)) ? CONSTANTS.HAS_ID_VALUES.TRUE : CONSTANTS.HAS_ID_VALUES.FALSE;
+  return CONSTANTS.TARGET_HAS_IDS.some(partner =>
+    identityPartners.some(id => id.toLowerCase() === partner.toLowerCase())
+  ) ? CONSTANTS.HAS_ID_VALUES.TRUE : CONSTANTS.HAS_ID_VALUES.FALSE;
 }
 
 function getAdapterNameForAlias(aliasName) {
