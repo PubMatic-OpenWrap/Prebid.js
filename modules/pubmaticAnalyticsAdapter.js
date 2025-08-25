@@ -829,6 +829,8 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   let fskp = floorData && floorFetchStatus ? (floorData.floorRequestData ? (floorData.floorRequestData.skipped == false ? 0 : 1) : undefined) : undefined;
   let pg = window.parseFloat(Number(winningBid?.bidResponse?.adserverTargeting?.hb_pb || winningBid?.bidResponse?.adserverTargeting?.pwtpb)) || undefined;
   let pixelURL = END_POINT_WIN_BID_LOGGER;
+  const storedObject = storage.getDataFromLocalStorage(PREFIX + HOSTNAME);
+  const frequencyDepth = storedObject !== null ? JSON.parse(storedObject) : {};
 
   pixelURL += 'pubid=' + publisherId;
   pixelURL += '&to=' + enc(auctionCache?.timeout);
@@ -897,7 +899,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma) {
   const ctr = _country ? _country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '';
   pixelURL += '&ctr=' + enc(ctr);
 
-  const identityPartners = getListOfIdentityPartners();
+  const identityPartners = frequencyDepth?.lip || undefined;
   (identityPartners !== undefined) && (pixelURL += '&elip=' + enc(identityPartners));
 
   pixelURL += '&emt=' + enc(getAdUnitAdFormats(origAdUnit));
