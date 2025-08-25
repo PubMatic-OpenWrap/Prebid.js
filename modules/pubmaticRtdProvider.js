@@ -114,7 +114,7 @@ export const getBrowserType = () => {
 export const getOs = () => getOS().toString();
 export const getDeviceType = () => fetchDeviceType().toString();
 export const getCountry = () => _country;
-export const getBidder = (request) => getAdapterNameForAlias(request?.bidder);
+export const getBidder = (request) => request?.bidder;
 export const getUtm = () => {
   const url = new URL(window.location?.href);
   const urlParams = new URLSearchParams(url?.search);
@@ -148,15 +148,6 @@ export const getHasId = () => {
   return CONSTANTS.TARGET_HAS_IDS.some(partner =>
     identityPartners.some(id => id.toLowerCase() === partner.toLowerCase())
   ) ? CONSTANTS.HAS_ID_VALUES.TRUE : CONSTANTS.HAS_ID_VALUES.FALSE;
-}
-
-function getAdapterNameForAlias(aliasName) {
-  // This condition  is OpenWrap specific, not to contribute to Prebid
-  if (window.PWT && isFn(window.PWT.getAdapterNameForAlias)) {
-    return window.PWT.getAdapterNameForAlias(aliasName)
-  }
-  // Fallback mechanism which is conrtibuted to Prebid
-  return adapterManager.aliasRegistry[aliasName] || aliasName;
 }
 
 export const getFloorsConfig = (floorsData, profileConfigs) => {
