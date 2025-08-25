@@ -150,15 +150,15 @@ export function configParser(
   }
 
   return function getConsentConfig(config) {
-    const cmConfig = config?.[namespace];
-    if (!cmConfig || typeof cmConfig !== 'object') {
+    config = config?.[namespace];
+    if (!config || typeof config !== 'object') {
       logWarn(msg(`config not defined, exiting consent manager module`));
       reset();
       return {};
     }
 
     // Check if module is explicitly disabled
-    if (cmConfig?.enabled === false) {
+    if (config?.enabled === false) {
       logWarn(msg(`config enabled is set to false, disabling consent manager module`));
       resetConsentDataHandler();
       return {};
