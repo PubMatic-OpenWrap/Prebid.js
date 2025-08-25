@@ -1099,6 +1099,8 @@ function updateSubmodules(options = {}) {
     return;
   }
 
+  generateModuleLists(); // this is to generate the list of modules to be updated wit sso/publisher provided email data
+
   const updatedContainers = generateSubmoduleContainers(options, configs);
   submodules.splice(0, submodules.length);
   submodules.push(...updatedContainers);

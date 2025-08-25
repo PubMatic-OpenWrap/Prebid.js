@@ -704,7 +704,7 @@ function executeBidsLoggerCall(e, highestCpmBids) {
   let floorFetchStatus = getFloorFetchStatus(floorData);
   let outputObj = { s: [] };
   let pixelURL = END_POINT_BID_LOGGER;
-  let lip = getListOfIdentityPartners();
+  let lip = frequencyDepth?.lip || undefined;
 
   if (!auctionCache || auctionCache.sent) {
     return;
