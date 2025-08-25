@@ -275,6 +275,80 @@ describe('UnifiedPricingRule - getTargeting scenarios', () => {
     expect(targeting[AD_UNIT_CODE].pm_ym_flrv).to.equal('20.00'); // 5 * 4
   });
 
+  it('Rejected bids present in object map', () => {
+    pbjsStub.getHighestCpmBids.withArgs(AD_UNIT_CODE).returns([]);
+
+    const rejectedBid = {
+      adUnitCode: AD_UNIT_CODE,
+      cpm: 0.4,
+      floorData: { floorProvider: 'PM', skipped: false, floorValue: 1.0 },
+      statusMessage: 'Bid rejected due to price floor'
+    };
+
+    const dummyBid = {
+      adUnitCode: 'dummy',
+      floorData: { floorProvider: 'PM', skipped: false, floorValue: 1.0 }
+    };
+
+    const auction = buildAuction({
+      adUnits: [{ bids: [dummyBid] }],
+      bidsReceived: [dummyBid],
+      bidsRejected: { pubmatic: [rejectedBid] }
+    });
+
+    const targeting = unifiedPricingRule.getTargeting([AD_UNIT_CODE], {}, {}, auction);
+    expect(targeting[AD_UNIT_CODE].pm_ym_flrs).to.equal(1);
+    expect(targeting[AD_UNIT_CODE].pm_ym_bid_s).to.equal(0);
+    expect(targeting[AD_UNIT_CODE].pm_ym_flrv).to.equal('0.00');
+  });
+
+  it('Rejected bids present as array', () => {
+    pbjsStub.getHighestCpmBids.withArgs(AD_UNIT_CODE).returns([]);
+
+    const rejectedBid = {
+      adUnitCode: AD_UNIT_CODE,
+      cpm: 0.3,
+      floorData: { floorProvider: 'PM', skipped: false, floorValue: 1.0 },
+      statusMessage: 'Bid rejected due to price floor'
+    };
+
+    const dummyBid = {
+      adUnitCode: 'dummy',
+      floorData: { floorProvider: 'PM', skipped: false, floorValue: 1.0 }
+    };
+
+    const auction = buildAuction({
+      adUnits: [{ bids: [dummyBid] }],
+      bidsReceived: [dummyBid],
+      bidsRejected: [rejectedBid]
+    });
+
+    const targeting = unifiedPricingRule.getTargeting([AD_UNIT_CODE], {}, {}, auction);
+    expect(targeting[AD_UNIT_CODE].pm_ym_flrs).to.equal(1);
+    expect(targeting[AD_UNIT_CODE].pm_ym_bid_s).to.equal(0);
+    expect(targeting[AD_UNIT_CODE].pm_ym_flrv).to.equal('0.00');
+  });
+
+  it('Rejected bids with invalid structure returns no bids', () => {
+    pbjsStub.getHighestCpmBids.withArgs(AD_UNIT_CODE).returns([]);
+
+    const dummyBid = {
+      adUnitCode: 'dummy',
+      floorData: { floorProvider: 'PM', skipped: false, floorValue: 1.0 }
+    };
+
+    const auction = buildAuction({
+      adUnits: [{ bids: [dummyBid] }],
+      bidsReceived: [dummyBid],
+      bidsRejected: 123 // invalid type triggers return []
+    });
+
+    const targeting = unifiedPricingRule.getTargeting([AD_UNIT_CODE], {}, {}, auction);
+    expect(targeting[AD_UNIT_CODE].pm_ym_flrs).to.equal(1);
+    expect(targeting[AD_UNIT_CODE].pm_ym_bid_s).to.equal(0);
+    expect(targeting[AD_UNIT_CODE].pm_ym_flrv).to.equal('0.00');
+  });
+
   it('Multiplier selection from floor.json when config multiplier missing', () => {
     // Re-init with profileConfigs having multiplier only in data.multiplier (floor.json)
     unifiedPricingRule.init('dynamicFloors', {
