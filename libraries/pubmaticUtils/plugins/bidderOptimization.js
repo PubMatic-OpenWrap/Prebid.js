@@ -1,9 +1,8 @@
 // plugins/bidderOptimization.js
-import { getBrowserType } from '../pubmaticUtils.js';
+import { getBrowserType, getCurrentTimeOfDay, getHasId } from '../pubmaticUtils.js';
 import { logInfo, logError, deepClone, logWarn, parseUrl, generateUUID, isPlainObject, isArray, isNumber } from '../../../src/utils.js';
 import { getRefererInfo } from '../../../src/refererDetection.js';
 import { auctionManager } from '../../../src/auctionManager.js';
-import { getCurrentTimeOfDay, getHasId } from '../pubmaticUtils.js';
 
 const CONSTANTS = Object.freeze({
   LOG_PRE_FIX: 'PubMatic-Bidder-Optimization: '
@@ -56,7 +55,7 @@ export async function init(pluginName, configJsonManager) {
  * @returns {Object} - Updated bid request config object
  */
 export function processBidRequest(reqBidsConfigObj) {
-  if(selectedbidderOptimisationModel){
+  if (selectedbidderOptimisationModel) {
     try {
       const decision = getBidderDecision({
         auctionId: reqBidsConfigObj?.auctionId,
@@ -64,7 +63,7 @@ export function processBidRequest(reqBidsConfigObj) {
         hasId: getHasId(targetHasIds),
         reqBidsConfigObj
       });
-  
+
       // Apply bidder decisions
       if (decision && decision.excludedBiddersByAdUnit) {
         for (const [adUnitCode, bidderList] of Object.entries(decision.excludedBiddersByAdUnit)) {
@@ -72,13 +71,14 @@ export function processBidRequest(reqBidsConfigObj) {
         }
         logInfo(`${CONSTANTS.LOG_PRE_FIX} Applied bidder optimization decisions`);
       }
-  
+
       return reqBidsConfigObj;
     } catch (error) {
       logError(`${CONSTANTS.LOG_PRE_FIX} Error in bidder optimization: ${error}`);
       return reqBidsConfigObj;
     }
   }
+  return reqBidsConfigObj;
 }
 
 /**
@@ -169,13 +169,13 @@ function pickRandomModel(modelGroups) {
 }
 
 function validateSchema(schema) {
-  const allowed = new Set(['domain','mediaType','browser','country','timeOfDay','hasId','adUnitCode']); // schema filed name - mediaTypes - check PRD
+  const allowed = new Set(['domain', 'mediaType', 'browser', 'country', 'timeOfDay', 'hasId', 'adUnitCode']); // schema filed name - mediaTypes - check PRD
   if (!schema || !Array.isArray(schema.auctionKeyFields) || !Array.isArray(schema.adUnitKeyFields)) {
     logError(`${CONSTANTS.LOG_PRE_FIX} schema missing keyFields arrays`);
     return false;
   }
   const validAuction = schema.auctionKeyFields.every(f => allowed.has(f));
-  const validAdUnit  = schema.adUnitKeyFields.every(f => allowed.has(f));
+  const validAdUnit = schema.adUnitKeyFields.every(f => allowed.has(f));
 
   if (!validAuction || !validAdUnit) {
     logError(`${CONSTANTS.LOG_PRE_FIX} Fields received do not match allowed fields`);
@@ -191,16 +191,20 @@ function validateSchema(schema) {
 
 export function setBidderOptimisationConfig(bidderOptimisationSchema) {
   if (!bidderOptimisationSchema || !isPlainObject(bidderOptimisationSchema)) {
-    logWarn(`${CONSTANTS.LOG_PRE_FIX}: invalid schema supplied`, bidderOptimisationSchema); //logWarn
+    logWarn(`${CONSTANTS.LOG_PRE_FIX}: invalid schema supplied`, bidderOptimisationSchema); // logWarn
     return;
   }
   // Handle multiple models with weights
   let selectedModel = bidderOptimisationSchema;
   if (isArray(bidderOptimisationSchema.modelGroups) && bidderOptimisationSchema.modelGroups.length) {
-    selectedModel = pickRandomModel(bidderOptimisationSchema.modelGroups); // extract common functions from priceFloors in UTILS 
+    selectedModel = pickRandomModel(bidderOptimisationSchema.modelGroups); // extract common functions from priceFloors in UTILS
   }                                                                        // Our bidder Optimisation schema can change when ML will start
- 
+  // inherit top-level skipRate if defined
+  if (isNumber(bidderOptimisationSchema.skipRate) && selectedModel.skipRate == null) {
+    selectedModel.skipRate = bidderOptimisationSchema.skipRate;
+  }
   if (!validateSchema(selectedModel.schema)) {
+    selectedbidderOptimisationModel = null;
     return;
   }
   selectedbidderOptimisationModel = normaliseConfig(selectedModel);
@@ -227,7 +231,7 @@ function deriveMediaTypeFromAdUnit(adUnit) {
 export function getBidderDecision(context = {}) {
   // Auto-fill context fields
   if (!context.domain) {
-    context.domain = getHostname(); // extract common functions from priceFloors in UTILS 
+    context.domain = getHostname(); // extract common functions from priceFloors in UTILS
   }
   if (!context.mediaType) {
     context.mediaType = deriveMediaType(context.bidRequest, context.bidResponse);
@@ -251,7 +255,7 @@ export function getBidderDecision(context = {}) {
 
   // If multiple adUnits, build decision map per adUnit for excluded bidders
   const adUnitsArr = context.reqBidsConfigObj?.adUnits || [];
-  let excludedByAdUnit = undefined;
+  let excludedByAdUnit;
   if (Array.isArray(adUnitsArr) && adUnitsArr.length) {
     excludedByAdUnit = {};
     adUnitsArr.forEach(au => {
