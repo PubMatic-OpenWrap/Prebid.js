@@ -471,6 +471,11 @@
             "name": "multibid",
             "path": "/modules/multibid/index.ts",
             "module": "multibid"
+        },
+        {
+            "name": "validationFpdModule",
+            "path": "/modules/validationFpdModule/index.ts",
+            "module": "validationFpdModule"
         }
     ],
     "Video": [
