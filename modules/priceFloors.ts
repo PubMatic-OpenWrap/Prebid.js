@@ -441,6 +441,7 @@ export function getFloorSourceType(resolvedFloorsData) {
  */
 export function createFloorsDataForAuction(adUnits, auctionId) {
   const resolvedFloorsData = deepClone(_floorsConfig);
+  const useResolvedFloorsData = getFloorSourceType(resolvedFloorsData);
   // if using schema 2 pick a model here:
   if (deepAccess(resolvedFloorsData, 'data.floorsSchemaVersion') === 2) {
     // merge the models specific stuff into the top level data settings (now it looks like floorsSchemaVersion 1!)
@@ -450,7 +451,7 @@ export function createFloorsDataForAuction(adUnits, auctionId) {
 
   // if we do not have a floors data set, we will try to use data set on adUnits
   const useAdUnitData = Object.keys(deepAccess(resolvedFloorsData, 'data.values') || {}).length === 0;
-  if (useAdUnitData) {
+  if (useAdUnitData || !useResolvedFloorsData) {
     resolvedFloorsData.data = getFloorDataFromAdUnits(adUnits);
     resolvedFloorsData.skipRate = resolvedFloorsData.data.skipRate || 0;
     resolvedFloorsData.floorProvider = resolvedFloorsData.data.floorProvider;
