@@ -33,16 +33,11 @@ let domain = '';
 export const coreStorage = getCoreStorageManager('userid');
 
 /// /////////// HELPER FUNCTIONS //////////////
-
 export function firePubMaticIHLoggerCall() {
   var ts = coreStorage.getDataFromLocalStorage(IH_LOGGER_STORAGE_KEY);
   const today = new Date();
-  const expiry = isNumber(window.IHPWT.ihAnalyticsAdapterExpiry) ? window.IHPWT.ihAnalyticsAdapterExpiry : IH_ANALYTICS_EXPIRY;
-
-  const expiresStr = (new Date(Date.now() + (expiry * (60 * 60 * 24 * 1000)))).toUTCString();
   if (ts === undefined || (ts !== undefined && new Date(ts) < today)) {
     logInfo('IHANALYTICS: Emitting event IH_INIT');
-    coreStorage.setDataInLocalStorage(IH_LOGGER_STORAGE_KEY, expiresStr);
     events.emit(IH_INIT);
   } else {
     logInfo('IHANALYTICS: Not triggering logger call');
@@ -67,6 +62,9 @@ function executeIHLoggerCall() {
       method: 'POST'
     }
   );
+  const expiry = isNumber(window.IHPWT.ihAnalyticsAdapterExpiry) ? window.IHPWT.ihAnalyticsAdapterExpiry : IH_ANALYTICS_EXPIRY;
+  const expiresStr = (new Date(Date.now() + (expiry * (60 * 60 * 24 * 1000)))).toUTCString();
+  coreStorage.setDataInLocalStorage(IH_LOGGER_STORAGE_KEY, expiresStr);
 };
 
 /// /////////// ADAPTER EVENT HANDLER FUNCTIONS //////////////

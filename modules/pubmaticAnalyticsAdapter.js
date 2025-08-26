@@ -1206,7 +1206,8 @@ let pubmaticAdapter = Object.assign({}, baseAdapter, {
 
 adapterManager.registerAnalyticsAdapter({
   adapter: pubmaticAdapter,
-  code: ADAPTER_CODE
+  code: ADAPTER_CODE,
+  gvlid: 76
 });
 
 // export default pubmaticAdapter;
