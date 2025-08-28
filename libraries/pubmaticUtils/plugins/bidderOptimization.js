@@ -4,7 +4,7 @@ import { logInfo, logError, deepClone, logWarn, parseUrl, generateUUID, isPlainO
 import { getRefererInfo } from '../../../src/refererDetection.js';
 import { auctionManager } from '../../../src/auctionManager.js';
 import { config as conf } from '../../../src/config.js';
-import * as utils from '../../../src/utils.js';
+
 const CONSTANTS = Object.freeze({
   LOG_PRE_FIX: 'PubMatic-Bidder-Optimization: '
 });
@@ -67,13 +67,12 @@ export function processBidRequest(reqBidsConfigObj) {
 
       // Apply bidder decisions
       if (decision) {
-       if(decision.excludedBiddersByAdUnit){
-        
-        for (const [adUnitCode, bidderList] of Object.entries(decision.excludedBiddersByAdUnit)) {
-         // filterBidders(bidderList, reqBidsConfigObj, adUnitCode);
+        if (decision.excludedBiddersByAdUnit) {
+          for (const [adUnitCode, bidderList] of Object.entries(decision.excludedBiddersByAdUnit)) {
+            filterBidders(bidderList, reqBidsConfigObj, adUnitCode);
+          }
         }
-       }
-      
+
         if (decision.clientSequence) {
           sequenceBidders(reqBidsConfigObj, decision.clientSequence);
         }
@@ -138,10 +137,10 @@ export const filterBidders = (bidderList, reqBidsConfigObj, adUnitCode) => {
  */
 export const sequenceBidders = (reqBidsConfigObj, clientSequence) => {
   // use from utils
-  if (!reqBidsConfigObj || !utils.isArray(reqBidsConfigObj.adUnits) || !utils.isArray(clientSequence)) return;
+  if (!reqBidsConfigObj || !isArray(reqBidsConfigObj.adUnits) || !isArray(clientSequence)) return;
 
   reqBidsConfigObj.adUnits.forEach(adUnit => {
-    if (utils.isArray(adUnit.bids)) {
+    if (isArray(adUnit.bids)) {
       // Bids in clientSequence order
       const prioritized = clientSequence
         .map(bidderName => adUnit.bids.find(bid => bid.bidder === bidderName))
@@ -150,7 +149,6 @@ export const sequenceBidders = (reqBidsConfigObj, clientSequence) => {
       const remaining = adUnit.bids.filter(bid => !clientSequence.includes(bid.bidder));
       adUnit.bids = [...prioritized, ...remaining];
     }
-
   });
   conf.setConfig({bidderSequence: 'fixed'});
 };
