@@ -436,6 +436,79 @@ export const getUtm = () => {
   return urlParams && urlParams.toString().includes(CONSTANTS.UTM) ? CONSTANTS.UTM_VALUES.TRUE : CONSTANTS.UTM_VALUES.FALSE;
 }
 
+export const getHasId = () => {
+  const namespace = getGlobal();
+  const publisherProvidedEids = namespace.getConfig("ortb2.user.eids") || [];
+  const availableUserIds = namespace.adUnits[0]?.bids[0]?.userId || {};
+  const identityModules = namespace.getConfig('userSync')?.userIds || [];
+  const identityModuleNameMap = identityModules.reduce((mapping, module) => {
+    if (module.storage?.name) {
+      mapping[module.storage.name] = module.name;
+    }
+    return mapping;
+  }, {});
+
+  const userIdPartners = Object.keys(availableUserIds).map(storageName =>
+    identityModuleNameMap[storageName] || storageName
+  );
+
+  const publisherProvidedEidList = publisherProvidedEids.map(eid =>
+    identityModuleNameMap[eid.source] || eid.source
+  );
+
+  const identityPartners = Array.from(new Set([...userIdPartners, ...publisherProvidedEidList]));
+  if (identityPartners.length === 0) {
+    return CONSTANTS.HAS_ID_VALUES.FALSE;
+  }
+  return CONSTANTS.TARGET_HAS_IDS.some(partner =>
+    identityPartners.some(id => id.toLowerCase() === partner.toLowerCase())
+  ) ? CONSTANTS.HAS_ID_VALUES.TRUE : CONSTANTS.HAS_ID_VALUES.FALSE;
+}
+
+const defaultSchemaFields = ['gptSlot', 'adUnitCode', 'mediaType', 'size', 'domain'];
+const supportedAdditionalSchemaFields = ['country', 'os', 'browser', 'utm', 'timeOfDay', 'deviceType', 'hasId', 'bidder'];
+
+function validateSchemaFields(schemaFields) {
+  const allSupportedFields = new Set([...defaultSchemaFields, ...supportedAdditionalSchemaFields]);
+  const unsupportedFields = schemaFields.filter(field => !allSupportedFields.has(field));
+  
+  return {
+    valid: unsupportedFields.length === 0,
+    unsupportedFields: unsupportedFields
+  };
+}
+
+function validateSchema1(data) {
+  let valid = true;
+  const fieldValidation = validateSchemaFields(data.schema.fields);
+  if (!fieldValidation.valid) {
+    console.log(`Unsupported schema fields: ${fieldValidation.unsupportedFields.join(', ')}`);
+    valid = false;
+  }
+
+  return valid;
+}
+
+function validateSchema2(data) {
+  let valid = true;
+  data.modelGroups.forEach((modelGroup, index) => {
+    const fieldValidation = validateSchemaFields(modelGroup.schema.fields);
+    if (!fieldValidation.valid) {
+      console.log(`Unsupported schema fields in modelGroup[${index}]: ${fieldValidation.unsupportedFields.join(', ')}`);
+      valid = false;
+    }
+  });
+  return valid;
+}
+
+function validateFloorPriceSchema(data) {
+  if (Array.isArray(data.modelGroups)) {
+    return validateSchema2(data);
+  } else {
+    return validateSchema1(data);
+  } 
+}
+
 export const getFloorsConfig = (floorsData, profileConfigs) => {
     if (!isPlainObject(profileConfigs) || isEmpty(profileConfigs)) {
       logError(`${CONSTANTS.LOG_PRE_FIX} profileConfigs is not an object or is empty`);
@@ -480,6 +553,7 @@ export const getFloorsConfig = (floorsData, profileConfigs) => {
                 utm: getUtm,
                 country: getCountry,
                 bidder: getBidder,
+                hasId: getHasId,
             },
         },
     };
@@ -571,8 +645,10 @@ const init = (config, _userConsent) => {
       // Store the profile configs globally
       setProfileConfigs(profileConfigs);
 
-      const floorsConfig = getFloorsConfig(floorsData, profileConfigs);
+      const floorsConfig = getFloorsConfig(
+        (floorsData && validateFloorPriceSchema(floorsData)) ? floorsData : undefined, profileConfigs);
       floorsConfig && conf?.setConfig(floorsConfig);
+
       configMerged();
     });
 
