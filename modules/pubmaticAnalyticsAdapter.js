@@ -106,35 +106,99 @@ function getCDSDataLoggerStr() {
   return enc(cdsStr);
 }
 
-// Logging this information to take informed decision on what consent config to be applied.
-export function getConsentInfo() {
-  const { cmConfig } = window.PWT || {};
-  if (!cmConfig || typeof cmConfig != 'object') return {};
-  const dimensions = {
-    ccmp: cmConfig?.cmpPresent,
-    ccmps: cmConfig?.complianceSupport,
-    ccmpid: cmConfig?.cmpId,
-    csc: cmConfig?.geoInfo?.sc
+export function setConsentFieldsLoggedBy() {
+  let loggedBy = {                  // This indicates whether the data is logged by tracker or logger for first auction.
+    // "auction-id" : {             // This property will be set at the time of auction init
+    //   tracker: false,
+    //   logger: false
+    // }
   };
- 
-  const getDurationOf = window.PWT?.getDurationOf;
-  const isGetDurationOfFn = isFn(getDurationOf);
+  return {
+    initialize: function(auctionId) {
+      if (isEmpty(loggedBy)) {
+        loggedBy[auctionId] = {
+          tracker: false,
+          logger: false
+        };
+      }
+    },
+    setLoggedBy: function(auctionId, loggingFor) {
+      if (loggedBy[auctionId]) {
+        loggedBy[auctionId][loggingFor] = true;
+      }
+    },
+    reset: function() {
+      loggedBy = {};
+    },
+    getLoggedBy: function() {
+      return loggedBy;
+    }
+  }
+}
+let consentFieldsLoggedBy = setConsentFieldsLoggedBy();
+
+export function getConsentFieldsLoggedBy() {
+  return consentFieldsLoggedBy;
+}
+
+function getConsentResolverConfig() {
+  return (window?.PWT?.getConsentResolverConfig && isFn(window.PWT.getConsentResolverConfig))
+    ? window.PWT?.getConsentResolverConfig()
+    : null;
+}
+
+// Logging this information to take informed decision on what consent config to be applied.
+export function getConsentInfo(auctionId, loggingFor) {
+  const crConfig = getConsentResolverConfig();
+  if (!crConfig || typeof crConfig != 'object') return {};
+
+  const baseObj = {
+    cecbo: crConfig?.cecbo,
+    ccmps: crConfig?.ccmps
+  };
+
+  const loggedBy = consentFieldsLoggedBy.getLoggedBy();
+
+  if (!crConfig.ccme || !loggedBy?.[auctionId] || loggedBy?.[auctionId][loggingFor]) {
+    return baseObj;
+  }
+
+  // Setting value to true for specific loggingFor inside loggedDataBy in ConsentResolverConfig of OW
+  consentFieldsLoggedBy.setLoggedBy(auctionId, loggingFor);
+
+  // In case of trackewr we need to log all the dimensions
+  const dimensions = {
+    ccme: crConfig.ccme,
+    ccmp: crConfig?.ccmp,
+    ccmpid: crConfig?.ccmpid,
+    csc: crConfig?.csc,
+    crgdf: crConfig?.crgdf,
+    cgm: crConfig?.cgm,
+  };
+  if (loggingFor === 'tracker') {
+    return {
+      ...baseObj,
+      ...dimensions
+    };
+  }
 
   // When PWT.getDurationOf function available
+  const getDurationOf = window.PWT?.getDurationOf;
+  const isGetDurationOfFn = isFn(getDurationOf);
   const metrics = isGetDurationOfFn ? {
     trnslt: getDurationOf('TRANSLATOR_CALLING_TIME'),
     lrt: getDurationOf('LOGGER_CALLING_TIME'),
-    trt: getDurationOf('TRACKER_CALLING_TIME')
+    trt: getDurationOf('TRACKER_CALLING_TIME'),
+    ccmt: isGetDurationOfFn ? getDurationOf('CONSENT_CONFIG_RESOLVER_TIME') : null,
+    cgst: isGetDurationOfFn ? getDurationOf('GEO_CALLING_TIME') : null,
+    ccmpt: isGetDurationOfFn ? getDurationOf('CMP_CALLING_TIME') : null
   } : {};
-  if (cmConfig?.allStatsAvailable) {
-    return {
-      ...dimensions,
-      ...metrics,
-      cgst: isGetDurationOfFn ? getDurationOf('GEO_CALLING_TIME') : null,
-      ccmpt: isGetDurationOfFn ? getDurationOf('CMP_CALLING_TIME') : null,
-    };
-  }
-  return metrics;
+
+  return {
+    ...baseObj,
+    ...dimensions,
+    ...metrics,
+  };
 }
 
 
@@ -165,7 +229,7 @@ function transformPayload(auctionId, currentPayload, adUnitInfo, bidWon = false)
       Object.assign(newPayload[key], {
         ...(cdsValue && { cds: cdsValue }),
         bdv: frequencyDepth,
-        cmp: getConsentInfo(),
+        cmp: getConsentInfo(auctionId, bidWon ? 'tracker' : 'logger'),
       });
     } else if (key === 'rd') {
       Object.assign(newPayload[key], {
@@ -371,6 +435,30 @@ function checkAndModifySizeOfKGPVIfRequired(bid) {
   return responseObject;
 }
 
+function getListOfIdentityPartners() {
+  const namespace = getGlobal();
+  const publisherProvidedEids = namespace.getConfig("ortb2.user.eids") || [];
+  const availableUserIds = namespace.adUnits[0]?.bids[0]?.userId || {};
+  const identityModules = namespace.getConfig('userSync')?.userIds || [];
+  const identityModuleNameMap = identityModules.reduce((mapping, module) => {
+    if (module.storage?.name) {
+      mapping[module.storage.name] = module.name;
+    }
+    return mapping;
+  }, {});
+
+  const userIdPartners = Object.keys(availableUserIds).map(storageName =>
+    identityModuleNameMap[storageName] || storageName
+  );
+
+  const publisherProvidedEidList = publisherProvidedEids.map(eid =>
+    identityModuleNameMap[eid.source] || eid.source
+  );
+
+  const identityPartners = Array.from(new Set([...userIdPartners, ...publisherProvidedEidList]));
+  return identityPartners.length > 0 ? identityPartners : undefined;
+}
+
 function getAdUnit(adUnits, adUnitId) {
   return adUnits.filter(adUnit => (adUnit.divID && adUnit.divID == adUnitId) || (adUnit.code == adUnitId))[0];
 }
@@ -389,14 +477,26 @@ function getIntegrationType() {
 }
 
 function getFeatureLevelDetails(auctionCache) {
+  const result = {};
 
-  if (!auctionCache?.floorData?.floorRequestData) return {};
-  const flrData = {
-    ...auctionCache.floorData.floorRequestData,
-    ...(auctionCache.floorData.floorResponseData?.enforcements && { enforcements: auctionCache.floorData.floorResponseData.enforcements })
-  };
-  return { flr: flrData };
+  // Add floor data if available
+  if (auctionCache?.floorData?.floorRequestData) {
+    const flrData = {
+      ...auctionCache.floorData.floorRequestData,
+      ...(auctionCache.floorData.floorResponseData?.enforcements && { enforcements: auctionCache.floorData.floorResponseData.enforcements })
+    };
+    result.flr = flrData;
+  }
 
+  // Add bdv object with list of identity partners
+  const identityPartners = getListOfIdentityPartners();
+  if (identityPartners) {
+    result.bdv = {
+      lip: identityPartners
+    };
+  }
+
+  return result;
 }
 
 
@@ -539,10 +639,21 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma=false) {
 const eventHandlers = {
   auctionInit: (args) => {
     s2sBidders = (function () {
-      let s2sConf = config.getConfig('s2sConfig');
       let s2sBidders = [];
-      (s2sConf || []) &&
-        isArray(s2sConf) ? s2sConf.map(conf => s2sBidders.push(...conf.bidders)) : s2sConf?.bidders ? s2sBidders.push(...s2sConf.bidders) : [];
+      try {
+        let s2sConf = config.getConfig('s2sConfig');
+        if (isArray(s2sConf)) {
+          s2sConf.forEach(conf => {
+            if (conf?.bidders) {
+              s2sBidders.push(...conf.bidders);
+            }
+          });
+        } else if (s2sConf?.bidders) {
+          s2sBidders.push(...s2sConf.bidders);
+        }
+      } catch (e) {
+        logError('Error processing s2s bidders:', e);
+      }
       return s2sBidders || [];
     }());
     let cacheEntry = pick(args, [
