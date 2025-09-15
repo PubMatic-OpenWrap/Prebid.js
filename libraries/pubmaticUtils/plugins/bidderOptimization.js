@@ -126,7 +126,6 @@ export const filterBidders = (bidderList, reqBidsConfigObj, adUnitCode) => {
 // Field matching functions for each schema field
 const fieldMatchingFunctions = {
   domain: (context) => context.domain || getHostname(),
-  mediaType: (context) => context.mediaType || deriveMediaType(context.bidRequest, context.bidResponse),
   browser: (context) => context.browser || '*',
   country: (context) => context.country || getConfigJsonManager()?.country || '*',
   timeOfDay: (context) => context.timeOfDay || getCurrentTimeOfDay() || '*',
@@ -169,7 +168,7 @@ function pickRandomModel(modelGroups) {
 }
 
 function validateSchema(schema) {
-  const allowed = new Set(['domain', 'mediaType', 'browser', 'country', 'timeOfDay', 'hasId', 'adUnitCode']); // schema filed name - mediaTypes - check PRD
+  const allowed = new Set(['domain', 'browser', 'country', 'timeOfDay', 'hasId', 'adUnitCode']);
   if (!schema || !Array.isArray(schema.auctionKeyFields) || !Array.isArray(schema.adUnitKeyFields)) {
     logError(`${CONSTANTS.LOG_PRE_FIX} schema missing keyFields arrays`);
     return false;
@@ -214,28 +213,12 @@ function deriveAuctionId(context) {
   return context.auctionId || context.bidRequest?.auctionId || auctionManager.getLastAuctionId() || generateUUID();
 }
 
-function deriveMediaType(bidRequest, bidResponse) {
-  if (bidResponse?.mediaType) return bidResponse.mediaType;
-  const mediaTypes = Object.keys(bidRequest?.mediaTypes || {});
-  return mediaTypes.length === 1 ? mediaTypes[0] : 'banner';
-}
-
-/**
- * Derive mediaType from adUnit definition
- */
-function deriveMediaTypeFromAdUnit(adUnit) {
-  const keys = Object.keys(adUnit?.mediaTypes || {});
-  return keys.length === 1 ? keys[0] : 'banner';
-}
-
 export function getBidderDecision(context = {}) {
   // Auto-fill context fields
   if (!context.domain) {
     context.domain = getHostname(); // extract common functions from priceFloors in UTILS
   }
-  if (!context.mediaType) {
-    context.mediaType = deriveMediaType(context.bidRequest, context.bidResponse);
-  }
+
   if (!selectedbidderOptimisationModel) {
     logWarn(`${CONSTANTS.LOG_PRE_FIX}: getBidderDecision called before config is set`);
     return fallbackDecision();
@@ -261,8 +244,7 @@ export function getBidderDecision(context = {}) {
     adUnitsArr.forEach(au => {
       const adUnitContext = {
         ...context,
-        adUnitCode: au.code,
-        mediaType: deriveMediaTypeFromAdUnit(au)
+        adUnitCode: au.code
       };
       const rule = getFirstMatchingValue(selectedData.adUnitOverrides, selectedbidderOptimisationModel.schema.adUnitKeyFields, adUnitContext, selectedbidderOptimisationModel.schema.delimiter);
       excludedByAdUnit[au.code] = rule?.excludedBidders ?? selectedbidderOptimisationModel.default.excludedBidders;

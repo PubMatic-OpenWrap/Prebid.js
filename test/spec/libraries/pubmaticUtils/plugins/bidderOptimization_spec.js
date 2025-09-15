@@ -14,15 +14,15 @@ function buildConfig(extra = {}) {
         modelVersion: 'testModel',
         modelWeight: 100,
         schema: {
-          auctionKeyFields: ['domain', 'mediaType', 'browser'],
-          adUnitKeyFields: ['domain', 'mediaType', 'browser', 'adUnitCode'],
+          auctionKeyFields: ['domain', 'browser'],
+          adUnitKeyFields: ['domain', 'browser', 'adUnitCode'],
           delimiter: '|'
         },
         auctionValues: {
-          '*|banner|*': { clientSequence: ['bidderA'] }
+          '*|*': { clientSequence: ['bidderA'] }
         },
         adUnitOverrides: {
-          '*|banner|*|div-1': { excludedBidders: ['bidderX'] }
+          '*|*|div-1': { excludedBidders: ['bidderX'] }
         },
         default: {
           excludedBidders: [],
@@ -67,7 +67,6 @@ describe('Bidder Optimisation Plugin', () => {
     it('should return excluded bidders per adunit', () => {
       const decision = getBidderDecision({
         domain: '*',
-        mediaType: 'banner',
         browser: '*',
         reqBidsConfigObj: { adUnits: [{ code: 'div-1' }] }
       });
