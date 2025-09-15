@@ -133,7 +133,7 @@ export const filterBidders = (bidderList, reqBidsConfigObj, adUnitCode) => {
 /**
  * Reorders the bids array in each adUnit according to the clientSequence in the decision object.
  * @param {Object} reqBidsConfigObj - The bid request configuration object
- * @param {Object} decision - The decision object containing clientSequence info
+ * @param {Object} clientSequence - The decision object containing clientSequence info
  */
 export const sequenceBidders = (reqBidsConfigObj, clientSequence) => {
   // use from utils
