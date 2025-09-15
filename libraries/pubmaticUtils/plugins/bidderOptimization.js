@@ -3,6 +3,7 @@ import { getBrowserType, getCurrentTimeOfDay, getHasId } from '../pubmaticUtils.
 import { logInfo, logError, deepClone, logWarn, parseUrl, generateUUID, isPlainObject, isArray, isNumber } from '../../../src/utils.js';
 import { getRefererInfo } from '../../../src/refererDetection.js';
 import { auctionManager } from '../../../src/auctionManager.js';
+import { config as conf } from '../../../src/config.js';
 
 const CONSTANTS = Object.freeze({
   LOG_PRE_FIX: 'PubMatic-Bidder-Optimization: '
@@ -65,9 +66,15 @@ export function processBidRequest(reqBidsConfigObj) {
       });
 
       // Apply bidder decisions
-      if (decision && decision.excludedBiddersByAdUnit) {
-        for (const [adUnitCode, bidderList] of Object.entries(decision.excludedBiddersByAdUnit)) {
-          filterBidders(bidderList, reqBidsConfigObj, adUnitCode);
+      if (decision) {
+        if (decision.excludedBiddersByAdUnit) {
+          for (const [adUnitCode, bidderList] of Object.entries(decision.excludedBiddersByAdUnit)) {
+            filterBidders(bidderList, reqBidsConfigObj, adUnitCode);
+          }
+        }
+
+        if (decision.clientSequence) {
+          sequenceBidders(reqBidsConfigObj, decision.clientSequence);
         }
         logInfo(`${CONSTANTS.LOG_PRE_FIX} Applied bidder optimization decisions`);
       }
@@ -121,6 +128,29 @@ export const filterBidders = (bidderList, reqBidsConfigObj, adUnitCode) => {
   if (adUnit && adUnit.bids && Array.isArray(adUnit.bids)) {
     adUnit.bids = adUnit.bids.filter(bid => !bidderList.includes(bid.bidder));
   }
+};
+
+/**
+ * Reorders the bids array in each adUnit according to the clientSequence in the decision object.
+ * @param {Object} reqBidsConfigObj - The bid request configuration object
+ * @param {Object} clientSequence - The decision object containing clientSequence info
+ */
+export const sequenceBidders = (reqBidsConfigObj, clientSequence) => {
+  // use from utils
+  if (!reqBidsConfigObj || !isArray(reqBidsConfigObj.adUnits) || !isArray(clientSequence)) return;
+
+  reqBidsConfigObj.adUnits.forEach(adUnit => {
+    if (isArray(adUnit.bids)) {
+      // Bids in clientSequence order
+      const prioritized = clientSequence
+        .map(bidderName => adUnit.bids.find(bid => bid.bidder === bidderName))
+        .filter(bid => !!bid);
+      // Bids NOT in clientSequence, keep original order
+      const remaining = adUnit.bids.filter(bid => !clientSequence.includes(bid.bidder));
+      adUnit.bids = [...prioritized, ...remaining];
+    }
+  });
+  conf.setConfig({bidderSequence: 'fixed'});
 };
 
 // Field matching functions for each schema field

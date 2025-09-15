@@ -87,7 +87,7 @@ export const shouldThrottle = (skipRate, maxRandomValue = 100) => {
  * @returns {boolean} - Returns true if conatins any specific identity partner, false otherwise.
  */
 export const getHasId = (targetEids) => {
-  const targetHasIds = targetEids.length ? targetEids : CONSTANTS.TARGET_HAS_IDS;
+  const targetHasIds = targetEids?.length ? targetEids : CONSTANTS.TARGET_HAS_IDS;
   const namespace = getGlobal();
   const publisherProvidedEids = namespace.getConfig("ortb2.user.eids") || [];
   const availableUserIds = namespace.adUnits[0]?.bids[0]?.userId || {};

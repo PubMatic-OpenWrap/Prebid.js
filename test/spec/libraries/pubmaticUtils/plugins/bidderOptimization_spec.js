@@ -19,7 +19,7 @@ function buildConfig(extra = {}) {
           delimiter: '|'
         },
         auctionValues: {
-          '*|banner|*': { clientSequence: ['bidderA'] }
+          '*|banner|*': { clientSequence: ['bidderA', 'bidderB'] }
         },
         adUnitOverrides: {
           '*|banner|*|div-1': { excludedBidders: ['bidderX'] }
@@ -135,6 +135,29 @@ describe('Bidder Optimisation Plugin', () => {
       expect(res).to.equal(req);
       // ensure bids filtered
       expect(res.adUnits[0].bids.some(b => b.bidder === 'bidderX')).to.be.false;
+    });
+
+    it('should reorder bidders according to clientSequence', () => {
+      const req = {
+        auctionId: 'auc2',
+        adUnits: [{ code: 'div-2', bids: [
+          { bidder: 'bidderB' },
+          { bidder: 'bidderA' },
+          { bidder: 'bidderC' }
+        ] }],
+        adUnitCodes: ['div-2']
+      };
+      // Override config to set clientSequence for this auction
+      const cfg = buildConfig({
+        auctionValues: {
+          '*|banner|*': { clientSequence: ['bidderA', 'bidderB'] }
+        }
+      });
+      setBidderOptimisationConfig(cfg);
+      const res = bidderOpt.processBidRequest(req);
+      expect(res).to.equal(req);
+      // Only bidderA and bidderB should be prioritized in order, bidderC remains at the end
+      expect(res.adUnits[0].bids.map(b => b.bidder)).to.eql(['bidderA', 'bidderB', 'bidderC']);
     });
 
     it('should return unmodified req when no model selected', () => {
