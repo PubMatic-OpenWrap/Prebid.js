@@ -1,5 +1,5 @@
 import { submodule } from '../src/hook.js';
-import { logError, isStr, mergeDeep, isPlainObject, isEmpty } from '../src/utils.js';
+import { logError, mergeDeep, isPlainObject, isEmpty } from '../src/utils.js';
 
 import { PluginManager } from '../libraries/pubmaticUtils/plugins/pluginManager.js';
 import { FloorProvider } from '../libraries/pubmaticUtils/plugins/floorProvider.js';
@@ -106,18 +106,15 @@ pluginManager.register('dynamicBidderOptimisation', BidderOptimization);
  * @returns {boolean}
  */
 const init = (config, _userConsent) => {
-  const { publisherId, profileId } = config?.params || {};
+  let { publisherId, profileId } = config?.params || {};
 
-  if (!publisherId || !isStr(publisherId) || !profileId || !isStr(profileId)) {
-    logError(
-      `${CONSTANTS.LOG_PRE_FIX} ${!publisherId ? 'Missing publisher Id.'
-        : !isStr(publisherId) ? 'Publisher Id should be a string.'
-          : !profileId ? 'Missing profile Id.'
-            : 'Profile Id should be a string.'
-      }`
-    );
+  if (!publisherId || !profileId) {
+    logError(`${CONSTANTS.LOG_PRE_FIX} ${!publisherId ? 'Missing publisher Id.' : 'Missing profile Id.'}`);
     return false;
   }
+
+  publisherId = String(publisherId).trim();
+  profileId = String(profileId).trim();
 
   // Fetch configuration and initialize plugins
   _ymConfigPromise = configJsonManager.fetchConfig(publisherId, profileId)

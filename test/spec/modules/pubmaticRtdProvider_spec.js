@@ -96,7 +96,7 @@ describe('Pubmatic RTD Provider', () => {
       expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticRtdProvider.CONSTANTS.LOG_PRE_FIX} Missing publisher Id.`);
     });
 
-    it('should return false if publisherId is not a string', () => {
+    it('should accept numeric publisherId by converting to string', () => {
       const config = {
         params: {
           publisherId: 123,
@@ -104,9 +104,7 @@ describe('Pubmatic RTD Provider', () => {
         }
       };
       const result = pubmaticRtdProvider.pubmaticSubmodule.init(config);
-      expect(result).to.be.false;
-      expect(logErrorStub.calledOnce).to.be.true;
-      expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticRtdProvider.CONSTANTS.LOG_PRE_FIX} Publisher Id should be a string.`);
+      expect(result).to.be.true;
     });
 
     it('should return false if profileId is missing', () => {
@@ -121,7 +119,7 @@ describe('Pubmatic RTD Provider', () => {
       expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticRtdProvider.CONSTANTS.LOG_PRE_FIX} Missing profile Id.`);
     });
 
-    it('should return false if profileId is not a string', () => {
+    it('should accept numeric profileId by converting to string', () => {
       const config = {
         params: {
           publisherId: 'test-publisher-id',
@@ -129,9 +127,7 @@ describe('Pubmatic RTD Provider', () => {
         }
       };
       const result = pubmaticRtdProvider.pubmaticSubmodule.init(config);
-      expect(result).to.be.false;
-      expect(logErrorStub.calledOnce).to.be.true;
-      expect(logErrorStub.firstCall.args[0]).to.equal(`${pubmaticRtdProvider.CONSTANTS.LOG_PRE_FIX} Profile Id should be a string.`);
+      expect(result).to.be.true;
     });
 
     it('should initialize successfully with valid config', async () => {
