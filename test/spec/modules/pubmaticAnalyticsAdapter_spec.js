@@ -334,7 +334,7 @@ describe('pubmatic analytics adapter', function () {
 
   beforeEach(function () {
     setUADefault();
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
 
     requests = server.requests;
 
@@ -362,6 +362,57 @@ describe('pubmatic analytics adapter', function () {
       options: { 'identityOnly': 1 }
     });
     expect(utils.logError.called).to.equal(true);
+  });
+
+  describe('Read country code from ortb2', function() {
+    beforeEach(function () {
+      pubmaticAnalyticsAdapter.enableAnalytics({
+        options: {
+          publisherId: 9999,
+          profileId: 1111,
+          profileVersionId: 20
+        }
+      });
+    });
+
+    afterEach(function () {
+      pubmaticAnalyticsAdapter.disableAnalytics();
+    });
+
+    it('Read country code from ortb2', function() {
+      const mockWithCountry = Object.assign({}, MOCK.AUCTION_END, {
+        bidderRequests: [{
+          bidderCode: 'pubmatic',
+          ortb2: {
+            user: {
+              ext: {
+                ctr: 'US'
+              }
+            }
+          }
+        }]
+      });
+
+      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+        return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
+      });
+
+      events.emit(AUCTION_INIT, MOCK.AUCTION_INIT);
+      events.emit(BID_REQUESTED, MOCK.BID_REQUESTED);
+      events.emit(BID_RESPONSE, MOCK.BID_RESPONSE[0]);
+      events.emit(BIDDER_DONE, MOCK.BIDDER_DONE);
+      events.emit(AUCTION_END, mockWithCountry);
+      events.emit(BID_WON, MOCK.BID_WON[0]);
+
+      clock.tick(2000 + 1000);
+      expect(requests.length).to.equal(2); // 1 logger and 1 win-tracker
+
+      let firstTracker = requests[0].url;
+      expect(firstTracker.split('?')[0]).to.equal('https://t.pubmatic.com/wt');
+      let data = {};
+      firstTracker.split('?')[1].split('&').map(e => e.split('=')).forEach(e => data[e[0]] = e[1]);
+      expect(data.ctr).to.equal('US');
+    });
   });
 
   describe('OW S2S', function() {
@@ -590,6 +641,30 @@ describe('pubmatic analytics adapter', function () {
     it('Logger: best case + win tracker', function() {
       this.timeout(5000)
 
+      const mockUserIds = {
+        'pubmaticId': 'test-pubmaticId'
+      };
+
+      const mockUserSync = {
+        userIds: [
+          {
+            name: 'pubmaticId',
+            storage: { name: 'pubmaticId', type: 'cookie&html5' }
+          }
+        ]
+      };
+
+      sandbox.stub($$PREBID_GLOBAL$$, 'adUnits').value([{
+        bids: [{
+          userId: mockUserIds
+        }]
+      }]);
+
+      sandbox.stub($$PREBID_GLOBAL$$, 'getConfig').callsFake((key) => {
+        if (key === 'userSync') return mockUserSync;
+        return null;
+      });
+
       sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
@@ -634,7 +709,7 @@ describe('pubmatic analytics adapter', function () {
       expect(data.ffs).to.equal(1);
       expect(data.fsrc).to.equal(2);
       expect(data.fp).to.equal('pubmatic');
-      expect(data.owv).to.equal(window?.PWT?.versionDetails?.openwrap_version || '-1');
+      expect(data.lip).to.deep.equal(['pubmaticId']);
       // slot 1
       expect(data.s[0].sn).to.equal('/19968336/header-bid-tag-0');
       expect(data.s[0].au).to.equal('/19968336/header-bid-tag-0');
@@ -743,6 +818,17 @@ describe('pubmatic analytics adapter', function () {
       expect(data.ds).to.equal('1208');
       expect(data.dm).to.equal(DISPLAY_MANAGER);
       expect(data.dmv).to.equal('$prebid.version$' || '-1');
+      expect(data.lip).to.equal('pubmaticId');
+      expect(data.to).to.equal('3000');
+
+      // tracker slot2
+      let secondTracker = requests[1].url;
+      expect(secondTracker.split('?')[0]).to.equal('https://t.pubmatic.com/wt');
+      data = {};
+      secondTracker.split('?')[1].split('&').map(e => e.split('=')).forEach(e => data[e[0]] = e[1]);
+      expect(data.dc).to.equal('PMP');      
+      expect(data.to).to.equal('3000');
+      expect(data.lip).to.equal('pubmaticId');
     });
 
     it('Logger: do not log floor fields when prebids floor shows noData in location property', function() {

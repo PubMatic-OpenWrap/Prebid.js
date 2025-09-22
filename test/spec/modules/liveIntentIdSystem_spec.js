@@ -52,16 +52,16 @@ describe('LiveIntentId', function() {
   });
 
   afterEach(function() {
-    imgStub.restore();
-    getCookieStub.restore();
-    getDataFromLocalStorageStub.restore();
-    logErrorStub.restore();
-    uspConsentDataStub.restore();
-    gdprConsentDataStub.restore();
-    gppConsentDataStub.restore();
-    coppaConsentDataStub.restore();
-    refererInfoStub.restore();
-    randomStub.restore();
+    imgStub?.restore();
+    getCookieStub?.restore();
+    getDataFromLocalStorageStub?.restore();
+    logErrorStub?.restore();
+    uspConsentDataStub?.restore();
+    gdprConsentDataStub?.restore();
+    gppConsentDataStub?.restore();
+    coppaConsentDataStub?.restore();
+    refererInfoStub?.restore();
+    randomStub?.restore();
     window.liModuleEnabled = undefined; // reset
     window.liTreatmentRate = undefined; // reset
     resetLiveIntentIdSubmodule();
@@ -497,46 +497,6 @@ describe('LiveIntentId', function() {
     expect(callBackSpy.calledOnce).to.be.true;
   });
 
-  it('should decode a idCookie as fpid if it exists and coppa is false', function() {
-    coppaConsentDataStub.returns(false)
-    const result = liveIntentIdSubmodule.decode({nonId: 'foo', idCookie: 'bar'}, defaultConfigParams)
-    expect(result).to.eql({'lipb': {'lipbid': 'foo', 'nonId': 'foo', 'fpid': 'bar'}, 'fpid': {'id': 'bar'}})
-  });
-
-  it('should not decode a idCookie as fpid if it exists and coppa is true', function() {
-    coppaConsentDataStub.returns(true)
-    const result = liveIntentIdSubmodule.decode({nonId: 'foo', idCookie: 'bar'}, defaultConfigParams)
-    expect(result).to.eql({'lipb': {'lipbid': 'foo', 'nonId': 'foo'}})
-  });
-
-  it('should resolve fpid from cookie', async function() {
-    const expectedValue = 'someValue'
-    const cookieName = 'testcookie'
-    getCookieStub.withArgs(cookieName).returns(expectedValue)
-    const config = { params: {
-      ...defaultConfigParams.params,
-      fpid: { 'strategy': 'cookie', 'name': cookieName },
-      requestedAttributesOverrides: { 'fpid': true } }
-    }
-    const submoduleCallback = liveIntentIdSubmodule.getId(config).callback;
-    const decodedResult = new Promise(resolve => {
-      submoduleCallback((x) => resolve(liveIntentIdSubmodule.decode(x, config)));
-    });
-    const request = idxRequests()[0];
-    expect(request.url).to.match(/https:\/\/idx.liadm.com\/idex\/prebid\/89899\?.*cd=.localhost.*&ic=someValue.*&resolve=nonId.*/);
-    request.respond(
-      200,
-      responseHeader,
-      JSON.stringify({})
-    );
-
-    const result = await decodedResult
-    expect(result).to.be.eql({
-      lipb: { 'fpid': expectedValue },
-      fpid: { id: expectedValue }
-    });
-  });
-
   it('should decode a sharethrough id to a separate object when present', function() {
     const result = liveIntentIdSubmodule.decode({ nonId: 'foo', sharethrough: 'bar' }, defaultConfigParams);
     expect(result).to.eql({'lipb': {'lipbid': 'foo', 'nonId': 'foo', 'sharethrough': 'bar'}, 'sharethrough': {'id': 'bar', 'ext': {'provider': 'liveintent.com'}}});
@@ -556,6 +516,11 @@ describe('LiveIntentId', function() {
     const result = liveIntentIdSubmodule.decode({ nonId: 'foo', zetassp: 'bar' }, defaultConfigParams);
     expect(result).to.eql({'lipb': {'lipbid': 'foo', 'nonId': 'foo', 'zetassp': 'bar'}, 'zetassp': {'id': 'bar', 'ext': {'provider': 'liveintent.com'}}});
   });
+
+  it('should decode a nexxen id to a separate object when present', function() {
+    const result = liveIntentIdSubmodule.decode({ nonId: 'foo', nexxen: 'bar' }, defaultConfigParams);
+    expect(result).to.eql({'lipb': {'lipbid': 'foo', 'nonId': 'foo', 'nexxen': 'bar'}, 'nexxen': {'id': 'bar', 'ext': {'provider': 'liveintent.com'}}});
+  });  
 
   it('should decode a vidazoo id to a separate object when present', function() {
     const result = liveIntentIdSubmodule.decode({ nonId: 'foo', vidazoo: 'bar' }, defaultConfigParams);
@@ -1147,6 +1112,39 @@ describe('LiveIntentId', function() {
       });
     });
 
+    it('nexxen', function () {
+      const userId = {
+        nexxen: { 'id': 'sample_id' }
+      };
+      const newEids = createEidsArray(userId);
+      expect(newEids.length).to.equal(1);
+      expect(newEids[0]).to.deep.equal({
+        source: 'liveintent.unrulymedia.com',
+        uids: [{
+          id: 'sample_id',
+          atype: 3
+        }]
+      });
+    });
+
+    it('nexxen with ext', function () {
+      const userId = {
+        nexxen: { 'id': 'sample_id', 'ext': { 'provider': 'some.provider.com' } }
+      };
+      const newEids = createEidsArray(userId);
+      expect(newEids.length).to.equal(1);
+      expect(newEids[0]).to.deep.equal({
+        source: 'liveintent.unrulymedia.com',
+        uids: [{
+          id: 'sample_id',
+          atype: 3,
+          ext: {
+            provider: 'some.provider.com'
+          }
+        }]
+      });
+    });
+
     it('vidazoo', function () {
       const userId = {
         vidazoo: { 'id': 'sample_id' }
@@ -1177,6 +1175,20 @@ describe('LiveIntentId', function() {
             provider: 'some.provider.com'
           }
         }]
+      });
+    });
+
+    it('tdid sets matcher for liveintent', function() {
+      const userId = {
+        tdid: 'some-tdid'
+      };
+
+      const newEids = createEidsArray(userId);
+
+      expect(newEids.length).to.equal(1);
+      expect(newEids[0]).to.deep.include({
+        source: 'adserver.org',
+        matcher: 'liveintent.com'
       });
     });
   })

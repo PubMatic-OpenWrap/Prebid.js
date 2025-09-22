@@ -19,7 +19,6 @@ import * as events from '../src/events.js';
 import { EVENTS } from '../src/constants.js';
 import { mergeDeep, logMessage, logWarn, pick, timestamp, isFn, isArray } from '../src/utils.js';
 import { getGlobal } from '../src/prebidGlobal.js';
-import { find } from '../src/polyfill.js';
 import { isSlotMatchingAdUnitCode, getGptSlotForAdUnitCode } from '../libraries/gptUtils/gptUtils.js';
 // import find from 'core-js-pure/features/array/find.js';
 
@@ -98,7 +97,7 @@ let openWrapSetup = {
       PWT.removeKeyValuePairsFromGPTSlots([gptSlot]);
     }
 
-    let isGptSlotPresent = find(window.googletag.pubads().getSlots(), isSlotMatchingAdUnitCode(gptSlot.getAdUnitPath()));
+    let isGptSlotPresent = window.googletag.pubads().getSlots().find(isSlotMatchingAdUnitCode(gptSlot.getAdUnitPath()));
     if (isGptSlotPresent) {
       if (isFn(PWT.requestBids) == true) {
         PWT.requestBids(
@@ -237,7 +236,7 @@ function refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf) {
   }
 
   // find the pbjsAdUnit and pass it
-  let pbjsAdUnit = find(Object.keys(pbjsAdUnits).map(code => pbjsAdUnits[code]),
+  let pbjsAdUnit = Object.keys(pbjsAdUnits).map(code => pbjsAdUnits[code]).find(
     pbjsAU => slotConf.gptSlotToPbjsAdUnitMapFunction(gptSlotName, gptSlot, pbjsAU)
   ) || null;
 
