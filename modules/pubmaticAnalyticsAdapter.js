@@ -43,6 +43,7 @@ let publisherId = DEFAULT_PUBLISHER_ID; // int: mandatory
 let profileId = DEFAULT_PROFILE_ID; // int: optional
 let profileVersionId = DEFAULT_PROFILE_VERSION_ID; // int: optional
 let s2sBidders = [];
+let _country = '';
 let identityOnly = DEFAULT_ISIDENTITY_ONLY;
 
 // ///////////// OPENWRAP CODE /////////////////////
@@ -559,7 +560,7 @@ function executeBidsLoggerCall(event, highestCpmBids) {
   const payload = {
     sd: auctionCache.adUnitCodes,
     fd: getFeatureLevelDetails(auctionCache),
-    rd: {ctr: country && country !== '' ? country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '', ...getRootLevelDetails(auctionCache, auctionId)}
+    rd: { ctr: _country || '', ...getRootLevelDetails(auctionCache, auctionId) }
   };
   auctionCache.sent = true;
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
@@ -600,7 +601,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma=false) {
  
   const payload = {
     fd: getFeatureLevelDetails(auctionCache),
-    rd: getRootLevelDetails(auctionCache, auctionId),
+    rd: { ctr: _country || '', ...getRootLevelDetails(auctionCache, auctionId) },
     sd: {
       adapterName,
       adUnitId,
@@ -633,6 +634,11 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma=false) {
   return ;
 }
 
+function readSaveCountry(e) {
+  _country = e.bidderRequests?.length > 0
+    ? e.bidderRequests.find(bidder => bidder?.bidderCode === ADAPTER_CODE)?.ortb2?.user?.ext?.ctr || EMPTY_STRING
+    : EMPTY_STRING;
+}
 
 /// /////////// ADAPTER EVENT HANDLER FUNCTIONS //////////////
 
@@ -788,6 +794,7 @@ const eventHandlers = {
   auctionEnd: (args) => {
     // if for the given auction bidderDonePendingCount == 0 then execute logger call sooners
     let highestCpmBids = getGlobal().getHighestCpmBids() || [];
+    readSaveCountry(args);
     setTimeout(() => {
       executeBidsLoggerCall.call(this, args, highestCpmBids);
     }, (cache.auctions[args.auctionId]?.bidderDonePendingCount === 0 ? 500 : SEND_TIMEOUT));
@@ -810,8 +817,6 @@ const eventHandlers = {
     });
   }
 }
-
-
 
 
 /// /////////// ADAPTER DEFINITION //////////////
