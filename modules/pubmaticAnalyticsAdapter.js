@@ -1,4 +1,4 @@
-import { _each, isArray, logError, logWarn, pick, isFn } from '../src/utils.js';
+import { _each, isArray, logError, logWarn, pick, isFn, isEmpty } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import { BID_STATUS, STATUS, REJECTION_REASON } from '../src/constants.js';
@@ -636,14 +636,15 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma=false) {
 
 function readSaveCountry(e) {
   _country = e.bidderRequests?.length > 0
-    ? e.bidderRequests.find(bidder => bidder?.bidderCode === ADAPTER_CODE)?.ortb2?.user?.ext?.ctr || EMPTY_STRING
-    : EMPTY_STRING;
+    ? e.bidderRequests.find(bidder => bidder?.bidderCode === ADAPTER_CODE)?.ortb2?.user?.ext?.ctr || ''
+    : '';
 }
 
 /// /////////// ADAPTER EVENT HANDLER FUNCTIONS //////////////
 
 const eventHandlers = {
   auctionInit: (args) => {
+    consentFieldsLoggedBy.initialize(args.auctionId);
     s2sBidders = (function () {
       let s2sBidders = [];
       try {
