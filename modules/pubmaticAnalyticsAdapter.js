@@ -560,7 +560,7 @@ function executeBidsLoggerCall(event, highestCpmBids) {
   const payload = {
     sd: auctionCache.adUnitCodes,
     fd: getFeatureLevelDetails(auctionCache),
-    rd: { ctr: _country || '', ...getRootLevelDetails(auctionCache, auctionId) }
+    rd: { ctr: _country && _country !== '' ? _country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '', ...getRootLevelDetails(auctionCache, auctionId) }
   };
   auctionCache.sent = true;
   const urlParams = new URLSearchParams(new URL(payload.rd.purl).search);
@@ -601,7 +601,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma=false) {
  
   const payload = {
     fd: getFeatureLevelDetails(auctionCache),
-    rd: { ctr: _country || '', ...getRootLevelDetails(auctionCache, auctionId) },
+    rd: { ctr: _country && _country !== '' ? _country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '', ...getRootLevelDetails(auctionCache, auctionId) },
     sd: {
       adapterName,
       adUnitId,
