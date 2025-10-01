@@ -139,7 +139,14 @@ export function configParser(
       getGlobal().requestBids.getHooks({hook: requestBidsHook}).remove();
       buildActivityParams.getHooks({hook: attachActivityParams}).remove();
       requestBidsHook = null;
+      logInfo(`${displayName} consentManagement module has been diactivated...`)
     }
+  }
+
+  function resetConsentDataHandler() {
+    reset();
+    consentDataHandler.removeCmpEventListener();
+    consentDataHandler.reset();
   }
 
   return function getConsentConfig(config) {
@@ -149,6 +156,14 @@ export function configParser(
       reset();
       return {};
     }
+
+    // Check if module is explicitly disabled
+    if (config?.enabled === false) {
+      logWarn(msg(`config enabled is set to false, disabling consent manager module`));
+      resetConsentDataHandler();
+      return {};
+    }
+
     let cmpHandler;
     if (isStr(config.cmpApi)) {
       cmpHandler = config.cmpApi;
