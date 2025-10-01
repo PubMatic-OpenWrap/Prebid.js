@@ -43,6 +43,7 @@ let publisherId = DEFAULT_PUBLISHER_ID; // int: mandatory
 let profileId = DEFAULT_PROFILE_ID; // int: optional
 let profileVersionId = DEFAULT_PROFILE_VERSION_ID; // int: optional
 let s2sBidders = [];
+let s2sBidderCodes = [];
 let _country = '';
 let identityOnly = DEFAULT_ISIDENTITY_ONLY;
 
@@ -515,7 +516,7 @@ function getRootLevelDetails(auctionCache, auctionId) {
     pdvid: `${profileVersionId}`,
     ortb2: auctionCache.ortb2,
     tgid: getTgId(),
-    s2sls: s2sBidders,
+    s2sls: config.getConfig('multibid')? [... new Set(s2sBidderCodes)] : s2sBidders,
     it: getIntegrationType(),
     dm: DISPLAY_MANAGER,
     dmv:'$prebid.version$' || '-1'
@@ -548,6 +549,9 @@ function executeBidsLoggerCall(event, highestCpmBids) {
           prebidBidsReceived.forEach(function(iBid) {
            if (iBid.adId === bid.adId) {
               bid.bidderCode = iBid.bidderCode;
+            }
+            if(config.getConfig('s2sConfig')){
+              s2sBidderCodes.push(bid.bidderCode);
             }
           });
         }
