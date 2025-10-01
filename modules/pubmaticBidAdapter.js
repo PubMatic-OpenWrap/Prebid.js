@@ -1,8 +1,9 @@
-import { logWarn, isStr, isArray, deepAccess, deepSetValue, isBoolean, isInteger, logInfo, logError, deepClone, uniques, generateUUID, isPlainObject, isFn } from '../src/utils.js';
+import { logWarn, isStr, isArray, deepAccess, deepSetValue, isBoolean, isInteger, logInfo, logError, deepClone, uniques, generateUUID, isPlainObject, isFn, collectOtherIds, getWindowTop} from '../src/utils.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
 import { Renderer } from '../src/Renderer.js';
+import { isViewabilityMeasurable, getViewability } from '../libraries/percentInView/percentInView.js';
 import { bidderSettings } from '../src/bidderSettings.js';
 import { ortbConverter } from '../libraries/ortbConverter/converter.js';
 import { NATIVE_ASSET_TYPES, NATIVE_IMAGE_TYPES, PREBID_NATIVE_DATA_KEYS_TO_ORTB, NATIVE_KEYS_THAT_ARE_NOT_ASSETS, NATIVE_KEYS } from '../src/constants.js';
@@ -11,10 +12,12 @@ import { NATIVE_ASSET_TYPES, NATIVE_IMAGE_TYPES, PREBID_NATIVE_DATA_KEYS_TO_ORTB
  * @typedef {import('../src/adapters/bidderFactory.js').BidRequest} BidRequest
  * @typedef {import('../src/adapters/bidderFactory.js').Bid} Bid
  * @typedef {import('../src/adapters/bidderFactory.js').validBidRequests} validBidRequests
+ * @typedef {import('../src/adapters/bidderFactory.js').ServerRequest} ServerRequest
  */
 
 const BIDDER_CODE = 'pubmatic';
 const LOG_WARN_PREFIX = 'PubMatic: ';
+const COLLECT_IDS_PREFIX = "Collect Other IDs: ";
 const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator?source=ow-client';
 const USER_SYNC_URL_IFRAME = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=';
 const USER_SYNC_URL_IMAGE = 'https://image8.pubmatic.com/AdServer/ImgSync?p=';
@@ -29,6 +32,7 @@ const RENDERER_URL = 'https://pubmatic.bbvms.com/r/'.concat('$RENDERER', '.js');
 const MSG_VIDEO_PLCMT_MISSING = 'Video.plcmt param missing';
 const PREBID_NATIVE_DATA_KEY_VALUES = Object.values(PREBID_NATIVE_DATA_KEYS_TO_ORTB);
 const DEFAULT_TTL = 360;
+const DEFAULT_GZIP_ENABLED = true;
 const CUSTOM_PARAMS = {
   'kadpageurl': '', // Custom page url
   'gender': '', // User gender
@@ -65,6 +69,12 @@ const converter = ortbConverter({
     const { kadfloor, currency, adSlot = '', deals, dctr, pmzoneid, hashedKey } = bidRequest.params;
     const { adUnitCode, mediaTypes, rtd } = bidRequest;
     const imp = buildImp(bidRequest, context);
+
+    // Check if the imp object does not have banner, video, or native
+
+    if (!imp.hasOwnProperty('banner') && !imp.hasOwnProperty('video') && !imp.hasOwnProperty('native')) {
+      return null;
+    }
     if (deals) addPMPDeals(imp, deals);
     if (dctr) addDealCustomTargetings(imp, dctr);
     if (rtd?.jwplayer) addJWPlayerSegmentData(imp, rtd.jwplayer);
@@ -72,12 +82,9 @@ const converter = ortbConverter({
     imp.bidfloorcur = currency ? _parseSlotParam('currency', currency) : DEFAULT_CURRENCY;
     setFloorInImp(imp, bidRequest);
     if (imp.hasOwnProperty('banner')) updateBannerImp(imp.banner, adSlot);
-    if (imp.hasOwnProperty('video')) updateVideoImp(imp.video, mediaTypes?.video, adUnitCode, imp);
+    if (imp.hasOwnProperty('video')) updateVideoImp(mediaTypes?.video, adUnitCode, imp);
     if (imp.hasOwnProperty('native')) updateNativeImp(imp, mediaTypes?.native);
-    // Check if the imp object does not have banner, video, or native
-    if (!imp.hasOwnProperty('banner') && !imp.hasOwnProperty('video') && !imp.hasOwnProperty('native')) {
-      return null;
-    }
+    if (imp.hasOwnProperty('banner') || imp.hasOwnProperty('video')) addViewabilityToImp(imp, adUnitCode, bidRequest?.sizes);
     if (pmzoneid) imp.ext.pmZoneId = pmzoneid;
     setImpTagId(imp, adSlot.trim(), hashedKey);
     setImpFields(imp);
@@ -105,6 +112,9 @@ const converter = ortbConverter({
     const marketPlaceEnabled = bidderRequest?.bidderCode
       ? bidderSettings.get(bidderRequest.bidderCode, 'allowAlternateBidderCodes') : undefined;
     if (marketPlaceEnabled) updateRequestExt(request, bidderRequest);
+    if (bidderRequest?.ortb2?.ext?.prebid?.previousauctioninfo) {
+      deepSetValue(request, 'ext.previousAuctionInfo', bidderRequest.ortb2.ext.prebid.previousauctioninfo);
+    }
     return request;
   },
   bidResponse(buildBidResponse, bid, context) {
@@ -339,7 +349,7 @@ const updateBannerImp = (bannerObj, adSlot) => {
   bannerObj.format = bannerObj.format.filter(
     (item) => !(item.w === bannerObj.w && item.h === bannerObj.h)
   );
-  if(!bannerObj.format?.length) delete bannerObj.format;
+  if (!bannerObj.format?.length) delete bannerObj.format;
   bannerObj.pos ??= 0;
 }
 
@@ -364,7 +374,8 @@ const updateNativeImp = (imp, nativeParams) => {
   }
 }
 
-const updateVideoImp = (videoImp, videoParams, adUnitCode, imp) => {
+const updateVideoImp = (videoParams, adUnitCode, imp) => {
+  const videoImp = imp.video;
   if (!deepAccess(videoParams, 'plcmt')) {
     logWarn(MSG_VIDEO_PLCMT_MISSING + ' for ' + adUnitCode);
   };
@@ -445,11 +456,25 @@ const updateUserSiteDevice = (req, bidRequest) => {
 
   // start - IH eids for Prebid
   const userIdAsEids = deepAccess(bidRequest, '0.userIdAsEids');
-  if (bidRequest.length && userIdAsEids?.length && !req.user.ext?.eids) {
-    req.user.ext = req.user.ext || {};
-    req.user.ext.eids = userIdAsEids;
-  } // end - IH eids for Prebid
 
+  if (bidRequest.length) {
+    if (window.PWT.collectIdsFromWrappers) {
+      logInfo(`${COLLECT_IDS_PREFIX} In pubmaticBidAdapter existing userIdAsEids`, userIdAsEids);
+      // Apply collectOtherIds to either existing eids or userIdAsEids
+      // Ensure req.user.ext exists
+      req.user.ext = req.user.ext || {};
+      req.user.ext.eids = req.user.ext.eids
+        ? collectOtherIds(req.user.ext.eids)
+        : collectOtherIds(userIdAsEids);
+      logInfo(`${COLLECT_IDS_PREFIX} In pubmaticBidAdapter updated userIdAsEids`, req.user.ext.eids);
+    } else if (userIdAsEids?.length && !req.user.ext?.eids) {
+      // Only set if eids don't already exist
+      logInfo(`${COLLECT_IDS_PREFIX} In pubmaticBidAdapter window.PWT.collectIdsFromWrappers is false, setting default userIdAsEids`);
+      // Ensure req.user.ext exists
+      req.user.ext = req.user.ext || {};
+      req.user.ext.eids = userIdAsEids;
+    }
+  }
   if (req.site?.publisher) {
     req.site.ref = req.site.ref || refURL;
     req.site.publisher.id = pubId?.trim();
@@ -484,7 +509,7 @@ const updateResponseWithCustomFields = (res, bid, ctx) => {
   }
 
   // add meta fields
-  // NOTE: We will not recieve below fields from the translator response also not sure on what will be the key names for these in the response,
+  // NOTE: We will not receive below fields from the translator response also not sure on what will be the key names for these in the response,
   // when we needed we can add it back.
   // New fields added, assignee fields name may change
   // if (bid.ext.networkName) res.meta.networkName = bid.ext.networkName;
@@ -652,6 +677,25 @@ const getPublisherId = (bids) =>
     ? bids.find(bid => bid.params?.publisherId?.trim())?.params.publisherId || null
     : null;
 
+function getGzipSetting() {
+  // Check bidder-specific configuration
+  try {
+    const gzipSetting = deepAccess(config.getBidderConfig(), 'pubmatic.gzipEnabled');
+    if (gzipSetting !== undefined) {
+      const gzipValue = String(gzipSetting).toLowerCase().trim();
+      if (gzipValue === 'true' || gzipValue === 'false') {
+        const parsedValue = gzipValue === 'true';
+        logInfo('PubMatic: Using bidder-specific gzipEnabled setting:', parsedValue);
+        return parsedValue;
+      }
+      logWarn('PubMatic: Invalid gzipEnabled value in bidder config:', gzipSetting);
+    }
+  } catch (e) { logWarn('PubMatic: Error accessing bidder config:', e); }
+
+  logInfo('PubMatic: Using default gzipEnabled setting:', DEFAULT_GZIP_ENABLED);
+  return DEFAULT_GZIP_ENABLED;
+}
+
 const _handleCustomParams = (params, conf) => {
   Object.keys(CUSTOM_PARAMS).forEach(key => {
     const value = params[key];
@@ -664,6 +708,47 @@ const _handleCustomParams = (params, conf) => {
     }
   });
   return conf;
+};
+
+/**
+ * Gets the minimum size from an array of sizes
+ * @param {Array} sizes - Array of size objects with w and h properties
+ * @returns {Object} The smallest size object
+ */
+function _getMinSize(sizes) {
+  return (!sizes || !sizes.length ? { w: 0, h: 0 } : sizes.reduce((min, size) => size.h * size.w < min.h * min.w ? size : min, sizes[0]));
+}
+
+/**
+ * Measures viewability for an element and adds it to the imp object at the ext level
+ * @param {Object} imp - The impression object
+ * @param {string} adUnitCode - The ad unit code for element identification
+ * @param {Object} sizes - Sizes object with width and height properties
+ */
+export const addViewabilityToImp = (imp, adUnitCode, sizes) => {
+  let elementSize = { w: 0, h: 0 };
+
+  if (imp.video?.w > 0 && imp.video?.h > 0) {
+    elementSize.w = imp.video.w;
+    elementSize.h = imp.video.h;
+  } else {
+    elementSize = _getMinSize(sizes);
+  }
+  const element = document.getElementById(adUnitCode);
+  if (!element) return;
+
+  const viewabilityAmount = isViewabilityMeasurable(element)
+    ? getViewability(element, getWindowTop(), elementSize)
+    : 'na';
+
+  if (!imp.ext) {
+    imp.ext = {};
+  }
+
+  // Add viewability data at the imp.ext level
+  imp.ext.viewability = {
+    amount: isNaN(viewabilityAmount) ? viewabilityAmount : Math.round(viewabilityAmount)
+  };
 };
 
 export const spec = {
@@ -715,8 +800,9 @@ export const spec = {
   /**
    * Make a server request from the list of BidRequests.
    *
-   * @param {validBidRequests} - an array of bids
-   * @return ServerRequest Info describing the request to the server.
+   * @param {Array} validBidRequests - an array of bids
+   * @param {Object} bidderRequest - bidder request object
+   * @return {ServerRequest} Info describing the request to the server.
    */
   buildRequests: (validBidRequests, bidderRequest) => {
     const { page, ref } = bidderRequest?.refererInfo || {};
@@ -755,8 +841,8 @@ export const spec = {
       data: data,
       bidderRequest: bidderRequest,
       options: {
-        endpointCompression: true
-      }
+        endpointCompression: getGzipSetting()
+      },
     };
     if (isFn(window.PWT?.recordExitTime)) {
       window.PWT.recordExitTime('TRANSLATOR_CALLING_TIME');

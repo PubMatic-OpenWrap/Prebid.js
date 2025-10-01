@@ -1,6 +1,6 @@
 import {config} from './config.js';
 import {klona} from 'klona/json';
-import {includes} from './polyfill.js';
+
 import {EVENTS} from './constants.js';
 import {PbPromise} from './utils/promise.js';
 import {getGlobal} from './prebidGlobal.js';
@@ -877,12 +877,12 @@ export function isValidMediaTypes(mediaTypes) {
 
   const types = Object.keys(mediaTypes);
 
-  if (!types.every(type => includes(SUPPORTED_MEDIA_TYPES, type))) {
+  if (!types.every(type => SUPPORTED_MEDIA_TYPES.includes(type))) {
     return false;
   }
 
   if (FEATURES.VIDEO && mediaTypes.video && mediaTypes.video.context) {
-    return includes(SUPPORTED_STREAM_TYPES, mediaTypes.video.context);
+    return SUPPORTED_STREAM_TYPES.includes(mediaTypes.video.context);
   }
 
   return true;
@@ -1432,4 +1432,43 @@ export async function compressDataWithGZip(data) {
   const compressedBlob = await new Response(compressedStream).blob();
   const compressedArrayBuffer = await compressedBlob.arrayBuffer();
   return new Uint8Array(compressedArrayBuffer);
+}
+
+export function collectOtherIds(existingUserIds) {
+  const logger = prefixLog('Collect Other IDs: ');
+  logger.logInfo("In collectOtherIds existingUserIds", existingUserIds);
+
+  // Get all other namespaces except the primary one
+  window._pbjsGlobals = window._pbjsGlobals || [];
+  let globalNS = (window._pbjsGlobals).filter(function(item) {
+    return item !== window.pubmaticNameSpace;
+  });
+  // Initialize merged IDs array with existing IDs
+  existingUserIds = existingUserIds || [];
+  const mergedIds = [...existingUserIds];
+
+  // Track sources that are already present
+  const usedSources = new Set();
+  // First mark all sources from existingUserIds as used
+  existingUserIds.forEach(id => {
+    if (id?.source) {
+      usedSources.add(id.source);
+    }
+  });
+
+  // Process each namespace in order
+  globalNS.forEach(namespace => {
+    const eids = window[namespace]?.getUserIdsAsEids?.();
+    if (isArray(eids)) {
+      eids.forEach(id => {
+        // Only add if this source hasn't been used yet
+        if (id?.source && !usedSources.has(id.source)) {
+          mergedIds.push(id);
+          usedSources.add(id.source);
+        }
+      });
+    }
+  });
+  logger.logInfo("In collectOtherIds mergedIds", mergedIds);
+  return mergedIds;
 }
