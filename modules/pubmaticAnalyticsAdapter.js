@@ -776,7 +776,7 @@ const eventHandlers = {
         }
         if (bid.floorData) {
           const frvData = bid.getFloor();
-          cache.auctions[args.auctionId]?.adUnitCodes[bid.adUnitCode]?.floorRuleValue = frvData?.floor;
+          cache.auctions[args.auctionId].adUnitCodes[bid.adUnitCode].floorRuleValue = frvData?.floor;
         }
         if (!cachedBid.clientLatencyTimeMs) {
           cachedBid.clientLatencyTimeMs = Date.now() - cache.auctions[bid.auctionId].timestamp;
