@@ -505,6 +505,7 @@ function getFeatureLevelDetails(auctionCache) {
 
 function getRootLevelDetails(auctionCache, auctionId) {
   const referrer = config.getConfig('pageUrl') || auctionCache.referer || '';
+  s2sBidderCodes = s2sBidderCodes.length ?[... new Set(s2sBidderCodes)]:(config.getConfig('multibid')? [... new Set(s2sBidderCodes)] : s2sBidders);
   
   return {
     pubid: `${publisherId}`,
@@ -516,7 +517,7 @@ function getRootLevelDetails(auctionCache, auctionId) {
     pdvid: `${profileVersionId}`,
     ortb2: auctionCache.ortb2,
     tgid: getTgId(),
-    s2sls: config.getConfig('multibid')? [... new Set(s2sBidderCodes)] : s2sBidders,
+    s2sls: s2sBidderCodes,
     it: getIntegrationType(),
     dm: DISPLAY_MANAGER,
     dmv:'$prebid.version$' || '-1'
