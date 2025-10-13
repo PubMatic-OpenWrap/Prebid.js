@@ -43,6 +43,7 @@ let publisherId = DEFAULT_PUBLISHER_ID; // int: mandatory
 let profileId = DEFAULT_PROFILE_ID; // int: optional
 let profileVersionId = DEFAULT_PROFILE_VERSION_ID; // int: optional
 let s2sBidders = [];
+let s2sBidderCodes = [];
 let _country = '';
 let identityOnly = DEFAULT_ISIDENTITY_ONLY;
 
@@ -504,7 +505,8 @@ function getFeatureLevelDetails(auctionCache) {
 
 function getRootLevelDetails(auctionCache, auctionId) {
   const referrer = config.getConfig('pageUrl') || auctionCache.referer || '';
-  
+ 
+   s2sBidderCodes = s2sBidderCodes.length ?[... new Set(s2sBidderCodes)]:(config.getConfig('multibid')? [... new Set(s2sBidderCodes)] : s2sBidders);
   return {
     pubid: `${publisherId}`,
     iid: `${auctionCache?.wiid || auctionId}`,
@@ -515,7 +517,7 @@ function getRootLevelDetails(auctionCache, auctionId) {
     pdvid: `${profileVersionId}`,
     ortb2: auctionCache.ortb2,
     tgid: getTgId(),
-    s2sls: s2sBidders,
+    s2sls: s2sBidderCodes,
     it: getIntegrationType(),
     dm: DISPLAY_MANAGER,
     dmv:'$prebid.version$' || '-1'
@@ -548,6 +550,9 @@ function executeBidsLoggerCall(event, highestCpmBids) {
           prebidBidsReceived.forEach(function(iBid) {
            if (iBid.adId === bid.adId) {
               bid.bidderCode = iBid.bidderCode;
+            }
+            if(config.getConfig('s2sConfig')){
+              s2sBidderCodes.push(bid.bidderCode);
             }
           });
         }
@@ -595,10 +600,10 @@ function executeBidWonLoggerCall(auctionId, adUnitId, isIma=false) {
   if (isOWPubmaticBid(adapterName) && isS2SBidder(winningBid.bidder)) {
     return;
   }
+ 
   let origAdUnit = getAdUnit(cache.auctions[auctionId]?.origAdUnits, adUnitId) || {};
   let owAdUnitId = origAdUnit.owAdUnitId || getGptSlotInfoForAdUnitCode(adUnitId)?.gptSlot || adUnitId;
   let auctionCache = cache.auctions[auctionId];
- 
   const payload = {
     fd: getFeatureLevelDetails(auctionCache),
     rd: { ctr: _country && _country !== '' ? _country : window.PWT?.CC?.cc ? window.PWT.CC.cc : '', ...getRootLevelDetails(auctionCache, auctionId) },
