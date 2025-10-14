@@ -506,7 +506,7 @@ function getFeatureLevelDetails(auctionCache) {
 function getRootLevelDetails(auctionCache, auctionId) {
   const referrer = config.getConfig('pageUrl') || auctionCache.referer || '';
  
-   s2sBidderCodes = s2sBidderCodes.length ?[... new Set(s2sBidderCodes)]:(config.getConfig('multibid')? [... new Set(s2sBidderCodes)] : s2sBidders);
+  const computedS2sBidderCodes = s2sBidderCodes.length ? [...new Set(s2sBidderCodes)] : s2sBidders;
   return {
     pubid: `${publisherId}`,
     iid: `${auctionCache?.wiid || auctionId}`,
@@ -517,7 +517,7 @@ function getRootLevelDetails(auctionCache, auctionId) {
     pdvid: `${profileVersionId}`,
     ortb2: auctionCache.ortb2,
     tgid: getTgId(),
-    s2sls: s2sBidderCodes,
+    s2sls: computedS2sBidderCodes,
     it: getIntegrationType(),
     dm: DISPLAY_MANAGER,
     dmv:'$prebid.version$' || '-1'
@@ -551,7 +551,7 @@ function executeBidsLoggerCall(event, highestCpmBids) {
            if (iBid.adId === bid.adId) {
               bid.bidderCode = iBid.bidderCode;
             }
-            if(config.getConfig('s2sConfig')){
+            if(config.getConfig('s2sConfig') && s2sBidders.includes(bid.bidder)){
               s2sBidderCodes.push(bid.bidderCode);
             }
           });
@@ -652,6 +652,7 @@ const eventHandlers = {
     consentFieldsLoggedBy.initialize(args.auctionId);
     s2sBidders = (function () {
       let s2sBidders = [];
+      s2sBidderCodes =[];
       try {
         let s2sConf = config.getConfig('s2sConfig');
         if (isArray(s2sConf)) {
