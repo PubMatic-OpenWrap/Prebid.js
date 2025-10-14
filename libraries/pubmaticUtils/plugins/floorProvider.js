@@ -159,6 +159,8 @@ export const prepareFloorsConfig = () => {
 
   let ymUiConfig = { ...getFloorConfig().config };
 
+  ymUiConfig.enforcement ??= {enforceJS: false};
+
   // default values provided by publisher on YM UI
   const defaultValues = ymUiConfig.defaultValues ?? {};
   // If floorsData is not present or is an empty object, use default values
