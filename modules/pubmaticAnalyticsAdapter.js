@@ -506,7 +506,6 @@ function getFeatureLevelDetails(auctionCache) {
 function getRootLevelDetails(auctionCache, auctionId) {
   const referrer = config.getConfig('pageUrl') || auctionCache.referer || '';
  
-  const computedS2sBidderCodes = s2sBidderCodes.length ? [...new Set(s2sBidderCodes)] : s2sBidders;
   return {
     pubid: `${publisherId}`,
     iid: `${auctionCache?.wiid || auctionId}`,
@@ -517,7 +516,7 @@ function getRootLevelDetails(auctionCache, auctionId) {
     pdvid: `${profileVersionId}`,
     ortb2: auctionCache.ortb2,
     tgid: getTgId(),
-    s2sls: computedS2sBidderCodes,
+    s2sls: [...new Set(s2sBidderCodes)],
     it: getIntegrationType(),
     dm: DISPLAY_MANAGER,
     dmv:'$prebid.version$' || '-1'
@@ -551,9 +550,7 @@ function executeBidsLoggerCall(event, highestCpmBids) {
            if (iBid.adId === bid.adId) {
               bid.bidderCode = iBid.bidderCode;
             }
-            if(config.getConfig('s2sConfig') && s2sBidders.includes(bid.bidder)){
-              s2sBidderCodes.push(bid.bidderCode);
-            }
+          
           });
         }
         let adapterName = getAdapterNameForAlias(bid.adapterCode || bid.bidder);
@@ -802,6 +799,13 @@ const eventHandlers = {
     // if for the given auction bidderDonePendingCount == 0 then execute logger call sooners
     let highestCpmBids = getGlobal().getHighestCpmBids() || [];
     readSaveCountry(args);
+    if (config.getConfig('s2sConfig')) {
+      args.bidsReceived.forEach(bid => {
+        if(config.getConfig('s2sConfig').bidders.includes(bid.bidder)){
+          s2sBidderCodes.push(bid.bidderCode);
+        } 
+      });
+    }
     setTimeout(() => {
       executeBidsLoggerCall.call(this, args, highestCpmBids);
     }, (cache.auctions[args.auctionId]?.bidderDonePendingCount === 0 ? 500 : SEND_TIMEOUT));
