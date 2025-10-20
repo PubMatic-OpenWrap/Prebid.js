@@ -43,7 +43,6 @@ let publisherId = DEFAULT_PUBLISHER_ID; // int: mandatory
 let profileId = DEFAULT_PROFILE_ID; // int: optional
 let profileVersionId = DEFAULT_PROFILE_VERSION_ID; // int: optional
 let s2sBidders = [];
-let s2sBidderCodes = [];
 let _country = '';
 let identityOnly = DEFAULT_ISIDENTITY_ONLY;
 
@@ -517,7 +516,7 @@ function getRootLevelDetails(auctionCache, auctionId) {
     ortb2: auctionCache.ortb2,
     tgid: getTgId(),
 
-    s2sls: [...new Set(s2sBidderCodes)],
+    s2sls: [...new Set(s2sBidders)],
     it: getIntegrationType(),
     dm: DISPLAY_MANAGER,
     dmv:'$prebid.version$' || '-1'
@@ -650,7 +649,6 @@ const eventHandlers = {
     consentFieldsLoggedBy.initialize(args.auctionId);
     s2sBidders = (function () {
       let s2sBidders = [];
-      s2sBidderCodes =[];
       try {
         let s2sConf = config.getConfig('s2sConfig');
         if (isArray(s2sConf)) {
@@ -830,12 +828,12 @@ function updateS2sBidders(args){
 
     args.bidsReceived.forEach(bid => {
       if(config.getConfig('s2sConfig').bidders.includes(bid.bidder)){
-        s2sBidderCodes.push(bid.bidderCode);
+        s2sBidders.push(bid.bidderCode);
       } 
     });
     args.noBids.forEach(bid => {
       if(config.getConfig('s2sConfig').bidders.includes(bid.bidder)){
-        s2sBidderCodes.push(bid.bidder);
+        s2sBidders.push(bid.bidder);
       } 
     });
   
