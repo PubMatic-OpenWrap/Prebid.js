@@ -516,6 +516,7 @@ function getRootLevelDetails(auctionCache, auctionId) {
     pdvid: `${profileVersionId}`,
     ortb2: auctionCache.ortb2,
     tgid: getTgId(),
+
     s2sls: [...new Set(s2sBidderCodes)],
     it: getIntegrationType(),
     dm: DISPLAY_MANAGER,
@@ -799,13 +800,7 @@ const eventHandlers = {
     // if for the given auction bidderDonePendingCount == 0 then execute logger call sooners
     let highestCpmBids = getGlobal().getHighestCpmBids() || [];
     readSaveCountry(args);
-    if (config.getConfig('s2sConfig')) {
-      args.bidsReceived.forEach(bid => {
-        if(config.getConfig('s2sConfig').bidders.includes(bid.bidder)){
-          s2sBidderCodes.push(bid.bidderCode);
-        } 
-      });
-    }
+    updateS2sBidders(args);
     setTimeout(() => {
       executeBidsLoggerCall.call(this, args, highestCpmBids);
     }, (cache.auctions[args.auctionId]?.bidderDonePendingCount === 0 ? 500 : SEND_TIMEOUT));
@@ -829,6 +824,22 @@ const eventHandlers = {
   }
 }
 
+function updateS2sBidders(args){
+  const s2sConf = config.getConfig('s2sConfig');
+  if (!s2sConf) return;
+
+    args.bidsReceived.forEach(bid => {
+      if(config.getConfig('s2sConfig').bidders.includes(bid.bidder)){
+        s2sBidderCodes.push(bid.bidderCode);
+      } 
+    });
+    args.noBids.forEach(bid => {
+      if(config.getConfig('s2sConfig').bidders.includes(bid.bidder)){
+        s2sBidderCodes.push(bid.bidder);
+      } 
+    });
+  
+}
 
 /// /////////// ADAPTER DEFINITION //////////////
 setDebounceDelay(0);
