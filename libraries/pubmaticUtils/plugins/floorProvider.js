@@ -153,9 +153,9 @@ export const prepareFloorsConfig = () => {
 
   // Floor configs from adunit / setconfig
   const defaultFloorConfig = conf.getConfig('floors') ?? {};
-  if (defaultFloorConfig?.endpoint) {
-    delete defaultFloorConfig.endpoint;
-  }
+  // if (defaultFloorConfig?.endpoint) {
+  //   delete defaultFloorConfig.endpoint;
+  // }
 
   let ymUiConfig = { ...getFloorConfig().config };
 
@@ -175,8 +175,8 @@ export const prepareFloorsConfig = () => {
   // merge default configs from page, configs
   return {
     floors: {
-      ...defaultFloorConfig,
       ...ymUiConfig,
+      ...defaultFloorConfig,
       data: ymFloorsData,
       additionalSchemaFields: {
         deviceType: getDeviceType,
