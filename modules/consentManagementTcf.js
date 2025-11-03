@@ -11,6 +11,7 @@ import {registerOrtbProcessor, REQUEST} from '../src/pbjsORTB.js';
 import {enrichFPD} from '../src/fpd/enrichment.js';
 import {cmpClient} from '../libraries/cmp/cmpClient.js';
 import {configParser} from '../libraries/consentManagement/cmUtils.js';
+import {createCmpEventManager} from '../libraries/cmp/cmpEventUtils.js';
 
 export let consentConfig = {};
 export let gdprScope;
@@ -22,6 +23,8 @@ const cmpCallMap = {
   'iab': lookupIabConsent,
 };
 
+// CMP event manager instance for TCF
+let tcfCmpEventManager = null;
 /**
  * This function handles interacting with an IAB compliant CMP to obtain the consent information of the user.
  */
@@ -38,7 +41,7 @@ function lookupIabConsent(setProvisionalConsent) {
         if (tcfData.gdprApplies === false || tcfData.eventStatus === 'tcloaded' || tcfData.eventStatus === 'useractioncomplete') {
           try {
             if (tcfData.listenerId !== null && tcfData.listenerId !== undefined) {
-              gdprDataHandler.setCmpListenerId(tcfData.listenerId);
+              tcfCmpEventManager?.setCmpListenerId(tcfData.listenerId);
             }
             gdprDataHandler.setConsentData(parseConsentData(tcfData));
             resolve();
@@ -66,7 +69,11 @@ function lookupIabConsent(setProvisionalConsent) {
       logInfo('Detected CMP is outside the current iframe where Prebid.js is located, calling it now...');
     }
 
-    gdprDataHandler.setCmpApi(cmp);
+    // Initialize CMP event manager and set CMP API
+    if (!tcfCmpEventManager) {
+      tcfCmpEventManager = createCmpEventManager('tcf', () => gdprDataHandler.getConsentData());
+    }
+    tcfCmpEventManager.setCmpApi(cmp);
     cmp({
       command: 'addEventListener',
       callback: cmpResponseCallback
@@ -113,13 +120,23 @@ export function resetConsentData() {
   gdprDataHandler.reset();
 }
 
+export function removeCmpListener() {
+  // Clean up CMP event listeners before resetting
+  if (tcfCmpEventManager) {
+    tcfCmpEventManager.removeCmpEventListener();
+    tcfCmpEventManager = null;
+  }
+  resetConsentData();
+}
+
 const parseConfig = configParser({
   namespace: 'gdpr',
   displayName: 'TCF',
   consentDataHandler: gdprDataHandler,
   cmpHandlers: cmpCallMap,
   parseConsentData,
-  getNullConsent: () => toConsentData(null)
+  getNullConsent: () => toConsentData(null),
+  cmpEventCleanup: removeCmpListener
 })
 /**
  * A configuration function that initializes some module variables, as well as add a hook into the requestBids function

@@ -108,6 +108,7 @@ export function configParser(
     parseConsentData,
     getNullConsent,
     cmpHandlers,
+    cmpEventCleanup,
     DEFAULT_CMP = 'iab',
     DEFAULT_CONSENT_TIMEOUT = 10000
   } = {}
@@ -145,8 +146,16 @@ export function configParser(
 
   function resetConsentDataHandler() {
     reset();
-    consentDataHandler.removeCmpEventListener();
-    consentDataHandler.reset();
+    // Call module-specific CMP event cleanup if provided
+    if (typeof cmpEventCleanup === 'function') {
+      try {
+        cmpEventCleanup();
+      } catch (e) {
+        logError(`Error during CMP event cleanup for ${displayName}:`, e);
+      }
+    }
+    // consentDataHandler.removeCmpEventListener();
+    // consentDataHandler.reset();
   }
 
   return function getConsentConfig(config) {
