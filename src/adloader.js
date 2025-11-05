@@ -38,6 +38,7 @@ const _approvedLoadExternalJSList = [
   'anonymised',
   'optable',
   'pbjs-debug-ui',
+  'oftmedia',
   // UserId Submodules
   'justtag',
   'tncId',

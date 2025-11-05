@@ -209,7 +209,7 @@ export const converter = ortbConverter({
   imp(buildImp, bidRequest, context) {
     // skip banner-only requests
     const bidRequestType = bidType(bidRequest);
-    if (bidRequestType.includes(BANNER) && bidRequestType.length == 1) return;
+    if (bidRequestType.includes(BANNER) && bidRequestType.length === 1) return;
 
     const imp = buildImp(bidRequest, context);
     imp.id = bidRequest.adUnitCode;
@@ -771,12 +771,11 @@ export const spec = {
     }
   },
   getUserSyncs: function (syncOptions, responses, gdprConsent, uspConsent, gppConsent) {
-    if (!hasSynced && syncOptions.iframeEnabled) {
+    if (syncOptions.iframeEnabled) {
       // data is only assigned if params are available to pass to syncEndpoint
       let params = getUserSyncParams(gdprConsent, uspConsent, gppConsent);
       params = Object.keys(params).length ? `?${formatQS(params)}` : '';
 
-      hasSynced = true;
       return {
         type: 'iframe',
         url: `https://${rubiConf.syncHost || 'eus'}.rubiconproject.com/usync.html` + params
@@ -937,16 +936,17 @@ function applyFPD(bidRequest, mediaType, data) {
           result.push(obj.id);
           return result;
         }, []);
-        if (segments.length > 0) return segments.toString();
+        return segments.length > 0 ? segments.toString() : '';
       }).toString();
     } else if (typeof prop === 'object' && !Array.isArray(prop)) {
       return undefined;
     } else if (typeof prop !== 'undefined') {
       return (Array.isArray(prop)) ? prop.filter(value => {
-        if (typeof value !== 'object' && typeof value !== 'undefined') return value.toString();
+        if (typeof value !== 'object' && typeof value !== 'undefined') return true;
 
         logWarn('Rubicon: Filtered value: ', value, 'for key', key, ': Expected value to be string, integer, or an array of strings/ints');
-      }).toString() : prop.toString();
+        return false;
+      }).map(value => value.toString()).toString() : prop.toString();
     }
   };
   const addBannerData = function(obj, name, key, isParent = true) {
@@ -1311,12 +1311,6 @@ function partitionArray(array, size) {
   return result;
 }
 
-var hasSynced = false;
-
-export function resetUserSync() {
-  hasSynced = false;
-}
-
 /**
  * Sets the floor on the bidRequest. imp.bidfloor and imp.bidfloorcur
  * should be already set by the conversion library. if they're not,
@@ -1325,7 +1319,7 @@ export function resetUserSync() {
  * @param {*} imp
  */
 function setBidFloors(bidRequest, imp) {
-  if (imp.bidfloorcur != 'USD') {
+  if (imp.bidfloorcur !== 'USD') {
     delete imp.bidfloor;
     delete imp.bidfloorcur;
   }

@@ -283,7 +283,7 @@ async function getVastForLocallyCachedBids(gamVastWrapper, localCacheMap) {
       .map(([uuid]) => uuid)
       .filter(uuid => localCacheMap.has(uuid));
 
-    if (uuidCandidates.length != 1) {
+    if (uuidCandidates.length !== 1) {
       logWarn(`Unable to determine unique uuid in ${VAST_TAG_URI_TAGNAME}`);
       return gamVastWrapper;
     }

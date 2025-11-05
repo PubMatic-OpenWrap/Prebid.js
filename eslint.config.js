@@ -8,7 +8,7 @@ const {includeIgnoreFile} = require('@eslint/compat');
 const path = require('path');
 const _ = require('lodash');
 const tseslint = require('typescript-eslint');
-const {getSourceFolders, getIgnoreSources} = require('./gulpHelpers.js');
+const {getSourceFolders} = require('./gulpHelpers.js');
 
 function jsPattern(name) {
   return [`${name}/**/*.js`, `${name}/**/*.mjs`]
@@ -33,6 +33,13 @@ const allowedImports = {
     'dlv',
     'dset'
   ],
+  // [false] means disallow ANY import outside of modules/debugging
+  // this is because debugging also gets built as a standalone module,
+  // and importing global state does not work as expected.
+  // in theory imports that do not involve global state are fine, but
+  // even innocuous imports can become problematic if the source changes,
+  // and it's too easy to forget this is a problem for debugging-standalone.
+  'modules/debugging': [false],
   libraries: [],
   creative: [],
 }
@@ -56,10 +63,10 @@ module.exports = [
   includeIgnoreFile(path.resolve(__dirname, '.gitignore')),
   {
     ignores: [
-      ...getIgnoreSources(),
       'integrationExamples/**/*',
       // do not lint build-related stuff
       '*.js',
+      '*.mjs',
       'metadata/**/*',
       'customize/**/*',
       ...jsPattern('plugins'),
@@ -121,8 +128,8 @@ module.exports = [
       //
       // See Issue #1111.
       // also see: reality. These are here to stay.
+      // we're working on them though :)
 
-      eqeqeq: 'off',
       'jsdoc/check-types': 'off',
       'jsdoc/no-defaults': 'off',
       'jsdoc/newline-after-description': 'off',
@@ -144,7 +151,6 @@ module.exports = [
       'jsdoc/tag-lines': 'off',
       'no-var': 'off',
       'no-void': 'off',
-      'array-callback-return': 'off',
       'prefer-const': 'off',
       'no-prototype-builtins': 'off',
       'object-shorthand': 'off',
@@ -163,7 +169,6 @@ module.exports = [
       '@stylistic/comma-dangle': 'off',
       '@stylistic/object-curly-newline': 'off',
       '@stylistic/object-property-newline': 'off',
-
     }
   },
   ...Object.entries(allowedImports).map(([path, allowed]) => {
