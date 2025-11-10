@@ -4,11 +4,14 @@ let util = {};
 // let bidManager = {};
 let SLOT = {};
 let prebid = {};
+let isInitialized = false;
 
 // var usePrebidKeys = {};
 // var isPrebidPubMaticAnalyticsEnabled = {};
 
 export function initializeModule(customUtils) {
+  if (isInitialized) return;
+  isInitialized = true;
   CONFIG = customUtils.CONFIG;
   CONSTANTS = customUtils.CONSTANTS;
   util = customUtils.util;

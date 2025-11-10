@@ -6,10 +6,13 @@ let SLOT = {};
 let prebid = {};
 // let IdHub = {};
 let consentConfigResolver = {};
+let isInitialized = false;
 // var usePrebidKeys = {};
 // var isPrebidPubMaticAnalyticsEnabled = {};
 
 export function initializeModule(gptUtils) {
+  if (isInitialized) return;
+  isInitialized = true;
   CONFIG = gptUtils.CONFIG;
   CONSTANTS = gptUtils.CONSTANTS;
   util = gptUtils.util;

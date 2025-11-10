@@ -5,8 +5,11 @@ let COMMON_CONFIG = {};
 let pbNameSpace = {};
 let isPubmaticIHAnalyticsEnabled = {};
 let consentConfigResolver = {};
+let isInitialized = false;
 
 export function initializeModule(idhubUtils) {
+  if (isInitialized) return;
+  isInitialized = true;
   CONFIG = idhubUtils.CONFIG;
   CONSTANTS = idhubUtils.CONSTANTS;
   util = idhubUtils.util;
