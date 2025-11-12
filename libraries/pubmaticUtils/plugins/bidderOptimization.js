@@ -14,6 +14,7 @@ export const setConfigJsonManager = (configJsonManager) => { _configJsonManager 
 
 let selectedbidderOptimisationModel = null;
 let targetHasIds = [];
+let exclusionRules = [];
 
 /**
  * Initialize the bidder optimization plugin
@@ -35,8 +36,18 @@ export async function init(pluginName, configJsonManager) {
   }
   setConfigJsonManager(configJsonManager);
   try {
+    // Set exclusion rules from config.config
+    if (config?.config?.exclusionRules && isArray(config.config.exclusionRules)) {
+      exclusionRules = config.config.exclusionRules;
+      logInfo(`${CONSTANTS.LOG_PRE_FIX}: Loaded ${exclusionRules.length} exclusion rules`);
+    }
+    
+    // Set bidder optimization model from config.data
     setBidderOptimisationConfig(config?.data);
-    targetHasIds = config?.data?.userIds;
+    
+    // Set user IDs from config.userIds or config.data.userIds
+    targetHasIds = config?.userIds || config?.data?.userIds || [];
+    
     if (selectedbidderOptimisationModel) {
       logInfo(`${CONSTANTS.LOG_PRE_FIX}: Model version selected: ${selectedbidderOptimisationModel.modelVersion}`);
     } else {
@@ -55,8 +66,44 @@ export async function init(pluginName, configJsonManager) {
  * @returns {Object} - Updated bid request config object
  */
 export function processBidRequest(reqBidsConfigObj) {
-  if (selectedbidderOptimisationModel) {
-    try {
+  try {
+    // Check exclusion rules first if configured
+    if (exclusionRules && isArray(exclusionRules) && exclusionRules.length > 0) {
+      const adUnitsArr = reqBidsConfigObj?.adUnits || [];
+      const excludedBiddersByAdUnit = {};
+      let hasBidders = false;
+
+      // Evaluate exclusion rules for each ad unit
+      adUnitsArr.forEach(adUnit => {
+        const context = {
+          auctionId: reqBidsConfigObj?.auctionId,
+          browser: getBrowserType(),
+          hasId: getHasId(targetHasIds),
+          adUnitCode: adUnit.code,
+          domain: getHostname(),
+          country: getConfigJsonManager()?.country,
+          timeOfDay: getCurrentTimeOfDay()
+        };
+
+        const excludedBidders = getExcludedBiddersFromRules(context);
+        if (excludedBidders && excludedBidders.length > 0) {
+          excludedBiddersByAdUnit[adUnit.code] = excludedBidders;
+          hasBidders = true;
+        }
+      });
+
+      // If any bidders found from exclusion rules, apply and return early
+      if (hasBidders) {
+        for (const [adUnitCode, bidderList] of Object.entries(excludedBiddersByAdUnit)) {
+          filterBidders(bidderList, reqBidsConfigObj, adUnitCode);
+        }
+        logInfo(`${CONSTANTS.LOG_PRE_FIX} Applied exclusion rules, excluded bidders from ${Object.keys(excludedBiddersByAdUnit).length} ad units`);
+        return reqBidsConfigObj;
+      }
+    }
+
+    // If no exclusion rules or no bidders found, proceed with getBidderDecision
+    if (selectedbidderOptimisationModel) {
       const decision = getBidderDecision({
         auctionId: reqBidsConfigObj?.auctionId,
         browser: getBrowserType(),
@@ -73,11 +120,11 @@ export function processBidRequest(reqBidsConfigObj) {
       }
 
       return reqBidsConfigObj;
-    } catch (error) {
-      logError(`${CONSTANTS.LOG_PRE_FIX} Error in bidder optimization: ${error}`);
-      return reqBidsConfigObj;
     }
+  } catch (error) {
+    logError(`${CONSTANTS.LOG_PRE_FIX} Error in bidder optimization: ${error}`);
   }
+  
   return reqBidsConfigObj;
 }
 
@@ -331,4 +378,92 @@ function generatePossibleEnumerations(arrayOfFields, delimiter) {
     }, [''])
     .filter(Boolean)
     .sort((a, b) => a.split('*').length - b.split('*').length);
+}
+
+/* -------------------------------------------------------------------------- */
+/*                          Exclusion Rules Logic                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Evaluate a single condition against context
+ * @param {Object} condition - Condition object with field, relation, value
+ * @param {Object} context - Context object with field values
+ * @returns {boolean} - Whether condition is satisfied
+ */
+function evaluateCondition(condition, context) {
+  if (!condition || !condition.field || !condition.relation) {
+    logWarn(`${CONSTANTS.LOG_PRE_FIX}: Invalid condition`, condition);
+    return false;
+  }
+
+  const { field, relation, value } = condition;
+  
+  // Get the actual field value from context using field matching functions
+  let actualValue;
+  if (fieldMatchingFunctions[field]) {
+    actualValue = fieldMatchingFunctions[field](context);
+  } else {
+    logWarn(`${CONSTANTS.LOG_PRE_FIX}: Unknown field in condition: ${field}`);
+    return false;
+  }
+
+  // Normalize values for comparison (case-insensitive string comparison)
+  const normalizedActual = String(actualValue).toLowerCase();
+  const normalizedExpected = String(value).toLowerCase();
+
+  // Evaluate based on relation type
+  switch (relation) {
+    case 'is':
+      return normalizedActual === normalizedExpected;
+    case 'isNot':
+      return normalizedActual !== normalizedExpected;
+    default:
+      logWarn(`${CONSTANTS.LOG_PRE_FIX}: Unknown relation type: ${relation}`);
+      return false;
+  }
+}
+
+/**
+ * Evaluate a single rule (all conditions must pass - AND relationship)
+ * @param {Object} rule - Rule object with conditions and bidderList
+ * @param {Object} context - Context object with field values
+ * @returns {Array|null} - BidderList if rule passes, null otherwise
+ */
+function evaluateRule(rule, context) {
+  if (!rule || !isArray(rule.conditions) || !isArray(rule.bidderList)) {
+    logWarn(`${CONSTANTS.LOG_PRE_FIX}: Invalid rule structure`, rule);
+    return null;
+  }
+
+  // All conditions must pass (AND relationship)
+  const allConditionsPass = rule.conditions.every(condition => 
+    evaluateCondition(condition, context)
+  );
+
+  return allConditionsPass ? rule.bidderList : null;
+}
+
+/**
+ * Evaluate all exclusion rules and collect bidder lists from matching rules
+ * Rules have OR relationship - return bidders from all matching rules
+ * @param {Object} context - Context object with field values
+ * @returns {Array} - Combined array of bidders to exclude from all matching rules
+ */
+export function getExcludedBiddersFromRules(context = {}) {
+  if (!exclusionRules || !isArray(exclusionRules) || exclusionRules.length === 0) {
+    return [];
+  }
+
+  const excludedBidders = [];
+  
+  // Evaluate each rule (OR relationship)
+  exclusionRules.forEach(rule => {
+    const bidderList = evaluateRule(rule, context);
+    if (bidderList && isArray(bidderList)) {
+      excludedBidders.push(...bidderList);
+    }
+  });
+
+  // Remove duplicates and return
+  return [...new Set(excludedBidders)];
 }
