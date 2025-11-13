@@ -1,5 +1,5 @@
 // plugins/floorProvider.js
-import { logInfo, logError, isFn, logMessage, isEmpty } from '../../../src/utils.js';
+import { logInfo, logError, isFn, logMessage, isEmpty, mergeDeep } from '../../../src/utils.js';
 import { getDeviceType as fetchDeviceType, getOS } from '../../userAgentUtils/index.js';
 import { getBrowserType, getCurrentTimeOfDay, getUtmValue } from '../pubmaticUtils.js';
 import { config as conf } from '../../../src/config.js';
@@ -172,11 +172,12 @@ export const prepareFloorsConfig = () => {
   // If skiprate is provided in configs, overwrite the value in ymFloorsData
   (ymUiConfig.skipRate !== undefined) && (ymFloorsData.skipRate = ymUiConfig.skipRate);
 
-  // merge default configs from page, configs
+  // merge default configs from page and configs from ui
+  const mergedConfig = mergeDeep(defaultFloorConfig, ymUiConfig);
+
   return {
     floors: {
-      ...ymUiConfig,
-      ...defaultFloorConfig,
+      ...mergedConfig,
       data: ymFloorsData,
       additionalSchemaFields: {
         deviceType: getDeviceType,

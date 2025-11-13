@@ -1,4 +1,5 @@
 import { deviceTypes, browserTypes, osTypes } from './userAgentTypes.enums.js';
+import { isStr } from '../../src/utils.js';
 
 /**
  * Get the approximate device type enum from the user agent
@@ -17,7 +18,9 @@ export const getDeviceType = () => {
         deviceType = deviceTypes.WEB;
       }
     }
-  } catch (ex) {}
+  } catch (ex) {
+    logError(ex);
+  }
   return deviceType;
 };
 
