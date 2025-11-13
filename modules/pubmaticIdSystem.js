@@ -99,7 +99,6 @@ function hasRequiredConfig(config) {
   if (config.params.publisherId) {
     config.params.publisherId = String(config.params.publisherId).trim();
   }
-
   if (!config.params.publisherId) {
     logError(LOG_PREFIX + 'config.params.publisherId (String) should be provided.');
     return false;

@@ -6,9 +6,18 @@ import { config } from 'src/config.js';
 import {getGlobal} from '../../../src/prebidGlobal.js';
 
 describe('PubMatic adapter', () => {
-  let firstBid, videoBid, firstResponse, response, videoResponse, firstAliasBid;
-  const PUBMATIC_ALIAS_BIDDER = 'pubmaticAlias';
-  const request = {};
+  // Set up window.PWT mock for tests
+  before(() => {
+    window.PWT = window.PWT || {};
+    window.PWT.collectIdsFromWrappers = false;
+  });
+  
+  after(() => {
+    delete window.PWT;
+  });
+  
+  let firstBid, videoBid, firstResponse, response, videoResponse;
+  let request = {};
   firstBid = {
     adUnitCode: 'Div1',
     bidder: 'pubmatic',

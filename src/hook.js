@@ -6,6 +6,7 @@ import {defer} from './utils/promise.js';
  * see https://github.com/snapwich/fun-hooks/issues/42
  */
 export let hook = funHooks({
+  useProxy: false,
   ready: funHooks.SYNC | funHooks.ASYNC | funHooks.QUEUE
 });
 

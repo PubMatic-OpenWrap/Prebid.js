@@ -504,6 +504,7 @@ export const processBidderRequests = hook('async', function (spec, bids, bidderR
         break;
       case 'POST':
         const enableGZipCompression = request.options?.endpointCompression;
+        const debugMode = getParameterByName(DEBUG_MODE).toUpperCase() === 'TRUE' || debugTurnedOn();
         const callAjax = ({ url, payload }) => {
           ajax(
             url,
