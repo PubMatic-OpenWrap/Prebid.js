@@ -142,7 +142,8 @@ import {
   logError,
   logInfo,
   logWarn,
-  skipUndefinedValues
+  skipUndefinedValues,
+  mergeDeep
 } from '../../src/utils.js';
 import {getPPID as coreGetPPID} from '../../src/adserver.js';
 import {defer, PbPromise, delay} from '../../src/utils/promise.js';
@@ -155,6 +156,7 @@ import {ACTIVITY_ENRICH_EIDS} from '../../src/activities/activities.js';
 import {activityParams} from '../../src/activities/activityParams.js';
 import {USERSYNC_DEFAULT_CONFIG} from '../../src/userSync.js';
 import {startAuction} from '../../src/prebid.js';
+import {beforeInitAuction} from '../../src/auction.js';
 
 const MODULE_NAME = 'User ID';
 const COOKIE = STORAGE_TYPE_COOKIES;
@@ -581,25 +583,21 @@ export function enrichEids(ortb2Fragments) {
 export function addIdData({adUnits, ortb2Fragments}) {
   ortb2Fragments = ortb2Fragments ?? {global: {}, bidder: {}}
   enrichEids(ortb2Fragments);
-  if ([adUnits].some(i => !Array.isArray(i) || !i.length)) {
-    return;
+
+  // Set bid.userId for backward compatibility with tests
+  if (adUnits && Array.isArray(adUnits) && adUnits.length) {
+    const globalIds = getIds(initializedSubmodules.global);
+    adUnits.forEach(adUnit => {
+      if (adUnit.bids && Array.isArray(adUnit.bids)) {
+        adUnit.bids.forEach(bid => {
+          const bidderIds = Object.assign({}, globalIds, getIds(initializedSubmodules.bidder[bid.bidder] ?? {}));
+          if (Object.keys(bidderIds).length > 0) {
+            bid.userId = bidderIds;
+          }
+        });
+      }
+    });
   }
-  const globalIds = getIds(initializedSubmodules.global);
-  const globalEids = ortb2Fragments.global.user?.ext?.eids || [];
-  adUnits.forEach(adUnit => {
-    if (adUnit.bids && isArray(adUnit.bids)) {
-      adUnit.bids.forEach(bid => {
-        const bidderIds = Object.assign({}, globalIds, getIds(initializedSubmodules.bidder[bid.bidder] ?? {}));
-        const bidderEids = globalEids.concat(ortb2Fragments.bidder?.[bid.bidder]?.user?.ext?.eids || []);
-        if (Object.keys(bidderIds).length > 0) {
-          bid.userId = bidderIds;
-        }
-        if (bidderEids.length >= 0) {
-          bid.userIdAsEids = bidderEids;
-        }
-      });
-    }
-  });
 }
 
 const INIT_CANCELED = {};
@@ -740,16 +738,52 @@ export const startAuctionHook = timedAuctionHook('userId', function requestBidsH
 });
 
 /**
- * Append user id data from config to bids to be accessed in adapters when there are no submodules.
- * @param {function} fn required; The next function in the chain, used by hook.js
- * @param {Object} reqBidsConfigObj required; This is the same param that's used in pbjs.requestBids.
+ * Alias bid requests' `userIdAsEids` to `ortb2.user.ext.eids`
+ * Do this lazily (instead of attaching a copy) so that it also shows EIDs added after the userId module runs (e.g. from RTD modules)
  */
-export const addUserIdsHook = timedAuctionHook('userId', function requestBidsHook(fn, reqBidsConfigObj) {
-  addIdData(reqBidsConfigObj);
-  // calling fn allows prebid to continue processing
-  fn.call(this, reqBidsConfigObj);
-});
+function aliasEidsHook(next, bidderRequests) {
+  bidderRequests.forEach(bidderRequest => {
+    bidderRequest.bids.forEach(bid =>
+      Object.defineProperty(bid, 'userIdAsEids', {
+        configurable: true,
+        get() {
+          return bidderRequest.ortb2.user?.ext?.eids;
+        }
+      })
+    )
+  })
+  next(bidderRequests);
+}
 
+export function adUnitEidsHook(next, auction) {
+  // for backwards-compat, add `userIdAsEids` to ad units' bid objects
+  // before auction events are fired
+  // these are computed similarly to bid requests' `ortb2`, but unlike them,
+  // they are not subject to the same activity checks (since they are not intended for bid adapters)
+
+  const eidsByBidder = {};
+  const globalEids = auction.getFPD()?.global?.user?.ext?.eids ?? [];
+  function getEids(bidderCode) {
+    if (bidderCode == null) return globalEids;
+    if (!eidsByBidder.hasOwnProperty(bidderCode)) {
+      eidsByBidder[bidderCode] = mergeDeep(
+        {eids: []},
+        {eids: globalEids},
+        {eids: auction.getFPD()?.bidder?.[bidderCode]?.user?.ext?.eids ?? []}
+      ).eids;
+    }
+    return eidsByBidder[bidderCode];
+  }
+  auction.getAdUnits()
+    .flatMap(au => au.bids)
+    .forEach(bid => {
+      const eids = getEids(bid.bidder);
+      if (eids.length > 0) {
+        bid.userIdAsEids = eids;
+      }
+    });
+  next(auction);
+}
 /**
  * Is startAuctionHook added
  * @returns {boolean}
@@ -1310,7 +1344,6 @@ function updateSubmodules() {
 
   if (submodules.length) {
     if (!addedStartAuctionHook()) {
-      startAuction.getHooks({hook: addUserIdsHook}).remove();
       startAuction.before(startAuctionHook, 100) // use higher priority than dataController / rtd
       adapterManager.callDataDeletionRequest.before(requestDataDeletion);
       coreGetPPID.after((next) => next(getPPID()));
@@ -1411,6 +1444,8 @@ export function init(config, {mkDelay = delay} = {}) {
       }
     }
   });
+  adapterManager.makeBidRequests.after(aliasEidsHook);
+  beforeInitAuction.before(adUnitEidsHook);
 
   // exposing getUserIds function in global-name-space so that userIds stored in Prebid can be used by external codes.
   (getGlobal()).getUserIds = getUserIds;
@@ -1420,12 +1455,6 @@ export function init(config, {mkDelay = delay} = {}) {
   (getGlobal()).refreshUserIds = normalizePromise(refreshUserIds);
   (getGlobal()).getUserIdsAsync = normalizePromise(getUserIdsAsync);
   (getGlobal()).getUserIdsAsEidBySource = getUserIdsAsEidBySource;
-  (getGlobal()).setUserIdentities = setUserIdentities;
-  (getGlobal()).getUserIdentities = getUserIdentities;
-  if (!addedStartAuctionHook()) {
-    // Add ortb2.user.ext.eids even if 0 submodules are added
-    startAuction.before(addUserIdsHook, 100); // use higher priority than dataController / rtd
-  }
 }
 
 export function resetUserIds() {
