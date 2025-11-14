@@ -1,7 +1,7 @@
 export const deviceTypes = Object.freeze({
-  DESKTOP: 0,
   MOBILE: 1,
-  TABLET: 2,
+  WEB: 2,
+  OTHER: 3
 })
 export const browserTypes = Object.freeze({
   CHROME: 0,
