@@ -1,7 +1,7 @@
 // plugins/floorProvider.js
 import { logInfo, logError, isFn, logMessage, isEmpty } from '../../../src/utils.js';
-import { getDeviceType as fetchDeviceType, getOS } from '../../userAgentUtils/index.js';
-import { getBrowserType, getCurrentTimeOfDay, getUtmValue } from '../pubmaticUtils.js';
+import { getOS } from '../../userAgentUtils/index.js';
+import { getBrowserType, getCurrentTimeOfDay, getUtmValue, getDeviceType as fetchDeviceType } from '../pubmaticUtils.js';
 import { config as conf } from '../../../src/config.js';
 
 /**
@@ -119,7 +119,7 @@ export const defaultValueTemplate = {
 export const getTimeOfDay = () => getCurrentTimeOfDay();
 export const getBrowser = () => getBrowserType();
 export const getOs = () => getOS().toString();
-export const getDeviceType = () => fetchDeviceType().toString();
+export const getDeviceType = () => fetchDeviceType();
 export const getCountry = () => getConfigJsonManager().country;
 export const getBidder = (request) => request?.bidder;
 export const getUtm = () => getUtmValue();
