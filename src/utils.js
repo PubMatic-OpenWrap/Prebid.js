@@ -1,8 +1,8 @@
 import {config} from './config.js';
 import {klona} from 'klona/json';
-import {includes} from './polyfill.js';
+
 import {EVENTS} from './constants.js';
-import {GreedyPromise} from './utils/promise.js';
+import {PbPromise} from './utils/promise.js';
 import {getGlobal} from './prebidGlobal.js';
 import { default as deepAccess } from 'dlv/index.js';
 
@@ -22,6 +22,7 @@ let consoleWarnExists = Boolean(consoleExists && window.console.warn);
 let consoleErrorExists = Boolean(consoleExists && window.console.error);
 
 let eventEmitter;
+let windowDimensions;
 
 const pbjsInstance = getGlobal();
 
@@ -34,6 +35,54 @@ function emitEvent(...args) {
   if (eventEmitter != null) {
     eventEmitter(...args);
   }
+}
+
+export const getWinDimensions = (function() {
+  let lastCheckTimestamp;
+  const CHECK_INTERVAL_MS = 20;
+  return () => {
+    if (!windowDimensions || !lastCheckTimestamp || (Date.now() - lastCheckTimestamp > CHECK_INTERVAL_MS)) {
+      internal.resetWinDimensions();
+      lastCheckTimestamp = Date.now();
+    }
+    return windowDimensions;
+  }
+})();
+
+export function resetWinDimensions() {
+  const top = canAccessWindowTop() ? internal.getWindowTop() : internal.getWindowSelf();
+
+  windowDimensions = {
+    screen: {
+      width: top.screen?.width,
+      height: top.screen?.height,
+      availWidth: top.screen?.availWidth,
+      availHeight: top.screen?.availHeight,
+      colorDepth: top.screen?.colorDepth,
+    },
+    innerHeight: top.innerHeight,
+    innerWidth: top.innerWidth,
+    outerWidth: top.outerWidth,
+    outerHeight: top.outerHeight,
+    visualViewport: {
+      height: top.visualViewport?.height,
+      width: top.visualViewport?.width,
+    },
+    document: {
+      documentElement: {
+        clientWidth: top.document?.documentElement?.clientWidth,
+        clientHeight: top.document?.documentElement?.clientHeight,
+        scrollTop: top.document?.documentElement?.scrollTop,
+        scrollLeft: top.document?.documentElement?.scrollLeft,
+      },
+      body: {
+        scrollTop: document.body?.scrollTop,
+        scrollLeft: document.body?.scrollLeft,
+        clientWidth: document.body?.clientWidth,
+        clientHeight: document.body?.clientHeight,
+      },
+    }
+  };
 }
 
 // this allows stubbing of utility functions that are used internally by other utility functions
@@ -55,6 +104,7 @@ export const internal = {
   parseQS,
   formatQS,
   deepEqual,
+  resetWinDimensions,
   isEmpty,
   skipUndefinedValues
 };
@@ -200,6 +250,10 @@ export function getWindowSelf() {
 
 export function getWindowLocation() {
   return window.location;
+}
+
+export function getDocument() {
+  return document;
 }
 
 export function canAccessWindowTop() {
@@ -445,7 +499,7 @@ export function insertElement(elm, doc, target, asLastChildChild) {
  */
 export function waitForElementToLoad(element, timeout) {
   let timer = null;
-  return new GreedyPromise((resolve) => {
+  return new PbPromise((resolve) => {
     const onLoad = function() {
       element.removeEventListener('load', onLoad);
       element.removeEventListener('error', onLoad);
@@ -748,7 +802,7 @@ export function hasDeviceAccess() {
  * @returns {(boolean|undefined)}
  */
 export function checkCookieSupport() {
-  // eslint-disable-next-line prebid/no-member
+  // eslint-disable-next-line no-restricted-properties
   if (window.navigator.cookieEnabled || !!document.cookie.length) {
     return true;
   }
@@ -823,12 +877,12 @@ export function isValidMediaTypes(mediaTypes) {
 
   const types = Object.keys(mediaTypes);
 
-  if (!types.every(type => includes(SUPPORTED_MEDIA_TYPES, type))) {
+  if (!types.every(type => SUPPORTED_MEDIA_TYPES.includes(type))) {
     return false;
   }
 
   if (FEATURES.VIDEO && mediaTypes.video && mediaTypes.video.context) {
-    return includes(SUPPORTED_STREAM_TYPES, mediaTypes.video.context);
+    return SUPPORTED_STREAM_TYPES.includes(mediaTypes.video.context);
   }
 
   return true;
@@ -1000,63 +1054,103 @@ export function buildUrl(obj) {
  * @param {boolean} [options.checkTypes=false] - If set, two objects with identical properties but different constructors will *not* be considered equivalent.
  * @returns {boolean} - Returns `true` if the objects are equivalent, `false` otherwise.
  */
-export function deepEqual(obj1, obj2, {checkTypes = false} = {}) {
+export function deepEqual(obj1, obj2, { checkTypes = false } = {}) {
+  // Quick reference check
   if (obj1 === obj2) return true;
-  else if (
-    (typeof obj1 === 'object' && obj1 !== null) &&
-    (typeof obj2 === 'object' && obj2 !== null) &&
-    (!checkTypes || (obj1.constructor === obj2.constructor))
+
+  // If either is null or not an object, do a direct equality check
+  if (
+    typeof obj1 !== 'object' || obj1 === null ||
+    typeof obj2 !== 'object' || obj2 === null
   ) {
-    const props1 = Object.keys(obj1);
-    if (props1.length !== Object.keys(obj2).length) return false;
-    for (let prop of props1) {
-      if (obj2.hasOwnProperty(prop)) {
-        if (!deepEqual(obj1[prop], obj2[prop], {checkTypes})) {
-          return false;
-        }
-      } else {
+    return false;
+  }
+  // Cache the Array checks
+  const isArr1 = Array.isArray(obj1);
+  const isArr2 = Array.isArray(obj2);
+  // Special case: both are arrays
+  if (isArr1 && isArr2) {
+    if (obj1.length !== obj2.length) return false;
+    for (let i = 0; i < obj1.length; i++) {
+      if (!deepEqual(obj1[i], obj2[i], { checkTypes })) {
         return false;
       }
     }
     return true;
-  } else {
+  } else if (isArr1 || isArr2) {
     return false;
   }
-}
 
-export function mergeDeep(target, ...sources) {
-  if (!sources.length) return target;
-  const source = sources.shift();
+  // If we’re checking types, compare constructors (e.g., plain object vs. Date)
+  if (checkTypes && obj1.constructor !== obj2.constructor) {
+    return false;
+  }
 
-  if (isPlainObject(target) && isPlainObject(source)) {
-    for (const key in source) {
-      if (isPlainObject(source[key])) {
-        if (!target[key]) Object.assign(target, { [key]: {} });
-        mergeDeep(target[key], source[key]);
-      } else if (isArray(source[key])) {
-        if (!target[key]) {
-          Object.assign(target, { [key]: [...source[key]] });
-        } else if (isArray(target[key])) {
-          source[key].forEach(obj => {
-            let addItFlag = 1;
-            for (let i = 0; i < target[key].length; i++) {
-              if (deepEqual(target[key][i], obj)) {
-                addItFlag = 0;
-                break;
-              }
-            }
-            if (addItFlag) {
-              target[key].push(obj);
-            }
-          });
-        }
-      } else {
-        Object.assign(target, { [key]: source[key] });
-      }
+  // Compare object keys. Cache keys for both to avoid repeated calls.
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) return false;
+
+  for (const key of keys1) {
+    // If `obj2` doesn't have this key or sub-values aren't equal, bail out.
+    if (!Object.prototype.hasOwnProperty.call(obj2, key)) {
+      return false;
+    }
+    if (!deepEqual(obj1[key], obj2[key], { checkTypes })) {
+      return false;
     }
   }
 
-  return mergeDeep(target, ...sources);
+  return true;
+}
+
+export function mergeDeep(target, ...sources) {
+  for (let i = 0; i < sources.length; i++) {
+    const source = sources[i];
+    if (!isPlainObject(source)) {
+      continue;
+    }
+    mergeDeepHelper(target, source);
+  }
+  return target;
+}
+
+function mergeDeepHelper(target, source) {
+  // quick check
+  if (!isPlainObject(target) || !isPlainObject(source)) {
+    return;
+  }
+
+  const keys = Object.keys(source);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (key === '__proto__' || key === 'constructor') {
+      continue;
+    }
+    const val = source[key];
+
+    if (isPlainObject(val)) {
+      if (!target[key]) {
+        target[key] = {};
+      }
+      mergeDeepHelper(target[key], val);
+    } else if (Array.isArray(val)) {
+      if (!Array.isArray(target[key])) {
+        target[key] = [...val];
+      } else {
+        // deduplicate
+        val.forEach(obj => {
+          if (!target[key].some(item => deepEqual(item, obj))) {
+            target[key].push(obj);
+          }
+        });
+      }
+    } else {
+      // direct assignment
+      target[key] = val;
+    }
+  }
 }
 
 /**
@@ -1258,7 +1352,7 @@ export function hasNonSerializableProperty(obj, checkedObjects = new Set()) {
  *
  * @param {Array} collection - Array of objects.
  * @param {String} key - Key of nested property.
- * @returns {any, undefined} - Value of nested property.
+ * @returns {any|undefined} - Value of nested property.
  */
 export function setOnAny(collection, key) {
   for (let i = 0, result; i < collection.length; i++) {
@@ -1338,4 +1432,43 @@ export async function compressDataWithGZip(data) {
   const compressedBlob = await new Response(compressedStream).blob();
   const compressedArrayBuffer = await compressedBlob.arrayBuffer();
   return new Uint8Array(compressedArrayBuffer);
+}
+
+export function collectOtherIds(existingUserIds) {
+  const logger = prefixLog('Collect Other IDs: ');
+  logger.logInfo("In collectOtherIds existingUserIds", existingUserIds);
+
+  // Get all other namespaces except the primary one
+  window._pbjsGlobals = window._pbjsGlobals || [];
+  let globalNS = (window._pbjsGlobals).filter(function(item) {
+    return item !== window.pubmaticNameSpace;
+  });
+  // Initialize merged IDs array with existing IDs
+  existingUserIds = existingUserIds || [];
+  const mergedIds = [...existingUserIds];
+
+  // Track sources that are already present
+  const usedSources = new Set();
+  // First mark all sources from existingUserIds as used
+  existingUserIds.forEach(id => {
+    if (id?.source) {
+      usedSources.add(id.source);
+    }
+  });
+
+  // Process each namespace in order
+  globalNS.forEach(namespace => {
+    const eids = window[namespace]?.getUserIdsAsEids?.();
+    if (isArray(eids)) {
+      eids.forEach(id => {
+        // Only add if this source hasn't been used yet
+        if (id?.source && !usedSources.has(id.source)) {
+          mergedIds.push(id);
+          usedSources.add(id.source);
+        }
+      });
+    }
+  });
+  logger.logInfo("In collectOtherIds mergedIds", mergedIds);
+  return mergedIds;
 }

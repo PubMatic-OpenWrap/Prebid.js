@@ -7,7 +7,7 @@ import {nativeBidIsValid} from '../native.js';
 import {isValidVideoBid} from '../video.js';
 import {EVENTS, REJECTION_REASON, STATUS, DEBUG_MODE} from '../constants.js';
 import * as events from '../events.js';
-import {includes} from '../polyfill.js';
+
 import {
   delayExecution,
   isArray,
@@ -314,7 +314,7 @@ export function newBidder(spec) {
           }
           adapterManager.callBidderError(spec.code, error, bidderRequest)
           events.emit(EVENTS.BIDDER_ERROR, { error, bidderRequest });
-          logError(`Server call for ${spec.code} failed: ${errorMessage} ${error.status}. Continuing without bids.`);
+          logError(`Server call for ${spec.code} failed: ${errorMessage} ${error.status}. Continuing without bids.`, {bidRequests: validBidRequests});
         },
         onBid: (bid) => {
           const bidRequest = bidRequestMap[bid.requestId];
@@ -386,7 +386,7 @@ const RESPONSE_PROPS = ['bids', 'paapi']
  * @param onBid {function({})} invoked once for each bid in the response - with the bid as returned by interpretResponse
  * @param onCompletion {function()} invoked once when all bid requests have been processed
  */
-export const processBidderRequests = hook('sync', function (spec, bids, bidderRequest, ajax, wrapCallback, {onRequest, onResponse, onPaapi, onError, onBid, onCompletion}) {
+export const processBidderRequests = hook('async', function (spec, bids, bidderRequest, ajax, wrapCallback, {onRequest, onResponse, onPaapi, onError, onBid, onCompletion}) {
   const metrics = adapterMetrics(bidderRequest);
   onCompletion = metrics.startTiming('total').stopBefore(onCompletion);
   const tidGuard = guardTids(bidderRequest);
@@ -473,14 +473,20 @@ export const processBidderRequests = hook('sync', function (spec, bids, bidderRe
 
     const networkDone = requestMetrics.startTiming('net');
 
+    const debugMode = getParameterByName(DEBUG_MODE).toUpperCase() === 'TRUE' || debugTurnedOn();
+
     function getOptions(defaults) {
       const ro = request.options;
       return Object.assign(defaults, ro, {
         browsingTopics: ro?.hasOwnProperty('browsingTopics') && !ro.browsingTopics
           ? false
-          : (bidderSettings.get(spec.code, 'topicsHeader') ?? true) && isActivityAllowed(ACTIVITY_TRANSMIT_UFPD, activityParams(MODULE_TYPE_BIDDER, spec.code))
+          : (bidderSettings.get(spec.code, 'topicsHeader') ?? true) && isActivityAllowed(ACTIVITY_TRANSMIT_UFPD, activityParams(MODULE_TYPE_BIDDER, spec.code)),
+        suppressTopicsEnrollmentWarning: ro?.hasOwnProperty('suppressTopicsEnrollmentWarning')
+          ? ro.suppressTopicsEnrollmentWarning
+          : !debugMode
       })
     }
+
     switch (request.method) {
       case 'GET':
         ajax(
@@ -576,6 +582,12 @@ function validBidSize(adUnitCode, bid, {index = auctionManager.index} = {}) {
     return true;
   }
 
+  if (bid.wratio != null && bid.hratio != null) {
+    bid.wratio = parseInt(bid.wratio, 10);
+    bid.hratio = parseInt(bid.hratio, 10);
+    return true;
+  }
+
   const bidRequest = index.getBidRequest(bid);
   const mediaTypes = index.getMediaTypes(bid);
 
@@ -598,7 +610,7 @@ function validBidSize(adUnitCode, bid, {index = auctionManager.index} = {}) {
 export function isValid(adUnitCode, bid, {index = auctionManager.index} = {}) {
   function hasValidKeys() {
     let bidKeys = Object.keys(bid);
-    return COMMON_BID_RESPONSE_KEYS.every(key => includes(bidKeys, key) && !includes([undefined, null], bid[key]));
+    return COMMON_BID_RESPONSE_KEYS.every(key => bidKeys.includes(key) && ![undefined, null].includes(bid[key]));
   }
 
   function errorMessage(msg) {

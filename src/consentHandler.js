@@ -1,5 +1,5 @@
 import {cyrb53Hash, isStr, timestamp} from './utils.js';
-import {defer, GreedyPromise} from './utils/promise.js';
+import {defer, PbPromise} from './utils/promise.js';
 import {config} from './config.js';
 
 /**
@@ -68,7 +68,7 @@ export class ConsentHandler {
    */
   get promise() {
     if (this.#ready) {
-      return GreedyPromise.resolve(this.#data);
+      return PbPromise.resolve(this.#data);
     }
     if (!this.#enabled) {
       this.#resolve(null);
@@ -83,12 +83,19 @@ export class ConsentHandler {
   }
 
   getConsentData() {
-    return this.#data;
+    if (this.#enabled) {
+      return this.#data;
+    }
+    return null;
   }
 
   get hash() {
     if (this.#dirty) {
-      this.#hash = cyrb53Hash(JSON.stringify(this.#data && this.hashFields ? this.hashFields.map(f => this.#data[f]) : this.#data))
+      this.#hash = cyrb53Hash(
+        JSON.stringify(
+          this.#data && this.hashFields ? this.hashFields.map((f) => this.#data[f]) : this.#data
+        )
+      );
       this.#dirty = false;
     }
     return this.#hash;
@@ -107,7 +114,7 @@ class UspConsentHandler extends ConsentHandler {
 }
 
 class GdprConsentHandler extends ConsentHandler {
-  hashFields = ['gdprApplies', 'consentString']
+  hashFields = ["gdprApplies", "consentString"];
   getConsentMeta() {
     const consentData = this.getConsentData();
     if (consentData && consentData.vendorData && this.generatedTime) {
@@ -116,7 +123,7 @@ class GdprConsentHandler extends ConsentHandler {
         consentStringSize: (isStr(consentData.vendorData.tcString)) ? consentData.vendorData.tcString.length : 0,
         generatedAt: this.generatedTime,
         apiVersion: consentData.apiVersion
-      }
+      };
     }
   }
 }
@@ -191,7 +198,7 @@ export const coppaDataHandler = (() => {
     getConsentMeta: getCoppa,
     reset() {},
     get promise() {
-      return GreedyPromise.resolve(getCoppa())
+      return PbPromise.resolve(getCoppa())
     },
     get hash() {
       return getCoppa() ? '1' : '0'
@@ -218,7 +225,7 @@ export function multiHandler(handlers = ALL_HANDLERS) {
   return Object.assign(
     {
       get promise() {
-        return GreedyPromise.all(handlers.map(([name, handler]) => handler.promise.then(val => [name, val])))
+        return PbPromise.all(handlers.map(([name, handler]) => handler.promise.then(val => [name, val])))
           .then(entries => Object.fromEntries(entries));
       },
       get hash() {

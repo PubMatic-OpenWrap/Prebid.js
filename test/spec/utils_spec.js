@@ -4,6 +4,7 @@ import {TARGETING_KEYS} from 'src/constants.js';
 import * as utils from 'src/utils.js';
 import {binarySearch, deepEqual, encodeMacroURI, memoize, sizesToSizeTuples, waitForElementToLoad} from 'src/utils.js';
 import {convertCamelToUnderscore} from '../../libraries/appnexusUtils/anUtils.js';
+import { getWinDimensions, internal } from '../../src/utils.js';
 
 var assert = require('assert');
 
@@ -24,7 +25,7 @@ describe('Utils', function () {
     let sandbox;
 
     beforeEach(function () {
-      sandbox = sinon.sandbox.create();
+      sandbox = sinon.createSandbox();
     });
 
     afterEach(function () {
@@ -881,22 +882,30 @@ describe('Utils', function () {
   });
 
   describe('insertElement', function () {
+    let doc;
+
+    beforeEach(function () {
+      doc = document.implementation.createHTMLDocument('insertElementTest');
+    });
+
     it('returns a node at the top of the target by default', function () {
-      const toInsert = document.createElement('div');
-      const target = document.getElementsByTagName('body')[0];
-      const inserted = utils.insertElement(toInsert, document, 'body');
+      const toInsert = doc.createElement('div');
+      const target = doc.getElementsByTagName('body')[0];
+      const inserted = utils.insertElement(toInsert, doc, 'body');
       expect(inserted).to.equal(target.firstChild);
     });
+
     it('returns a node at bottom of target if 4th argument is true', function () {
-      const toInsert = document.createElement('div');
-      const target = document.getElementsByTagName('html')[0];
-      const inserted = utils.insertElement(toInsert, document, 'html', true);
+      const toInsert = doc.createElement('div');
+      const target = doc.getElementsByTagName('html')[0];
+      const inserted = utils.insertElement(toInsert, doc, 'html', true);
       expect(inserted).to.equal(target.lastChild);
     });
+
     it('returns a node at top of the head if no target is given', function () {
-      const toInsert = document.createElement('div');
-      const target = document.getElementsByTagName('head')[0];
-      const inserted = utils.insertElement(toInsert);
+      const toInsert = doc.createElement('div');
+      const target = doc.getElementsByTagName('head')[0];
+      const inserted = utils.insertElement(toInsert, doc);
       expect(inserted).to.equal(target.firstChild);
     });
   });
@@ -1104,7 +1113,6 @@ describe('Utils', function () {
     });
     it('should work when adding properties to the prototype of Array', () => {
       after(function () {
-        // eslint-disable-next-line no-extend-native
         delete Array.prototype.unitTestTempProp;
       });
       // eslint-disable-next-line no-extend-native
@@ -1423,4 +1431,177 @@ describe('memoize', () => {
       });
     })
   });
+
+  describe('collectOtherIds', () => {
+    let sandbox;
+    let logInfoStub;
+
+    beforeEach(() => {
+      sandbox = sinon.sandbox.create();
+      logInfoStub = sandbox.stub(utils.prefixLog('Collect Other IDs: '), 'logInfo');
+      
+      // Reset global variables
+      window._pbjsGlobals = [];
+      window.pubmaticNameSpace = 'pubmatic';
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+      delete window.pubmaticNameSpace;
+      delete window._pbjsGlobals;
+      delete window.namespace1;
+      delete window.namespace2;
+    });
+
+    it('should return the same array when no other namespaces exist', () => {
+      const existingUserIds = [
+        { source: 'source1', id: 'id1' },
+        { source: 'source2', id: 'id2' }
+      ];
+      
+      const result = utils.collectOtherIds(existingUserIds);
+      expect(result).to.deep.equal(existingUserIds);
+      expect(result).to.not.equal(existingUserIds); // Should be a new array
+    });
+
+    it('should handle empty or undefined input', () => {
+      expect(utils.collectOtherIds()).to.deep.equal([]);
+      expect(utils.collectOtherIds([])).to.deep.equal([]);
+      expect(utils.collectOtherIds(null)).to.deep.equal([]);
+    });
+
+    it('should merge IDs from other namespaces', () => {
+      // Setup existing IDs
+      const existingUserIds = [
+        { source: 'source1', id: 'id1' },
+        { source: 'source2', id: 'id2' }
+      ];
+      
+      // Setup global namespaces
+      window._pbjsGlobals = ['pubmatic', 'namespace1', 'namespace2'];
+      
+      // Setup namespace objects with getUserIdsAsEids functions
+      window.namespace1 = {
+        getUserIdsAsEids: sandbox.stub().returns([
+          { source: 'source3', id: 'id3' },
+          { source: 'source4', id: 'id4' }
+        ])
+      };
+      
+      window.namespace2 = {
+        getUserIdsAsEids: sandbox.stub().returns([
+          { source: 'source5', id: 'id5' },
+          { source: 'source1', id: 'different-id1' } // Duplicate source, should be ignored
+        ])
+      };
+      
+      const result = utils.collectOtherIds(existingUserIds);
+      
+      // Should contain original IDs plus new ones from other namespaces
+      expect(result).to.deep.equal([
+        { source: 'source1', id: 'id1' },
+        { source: 'source2', id: 'id2' },
+        { source: 'source3', id: 'id3' },
+        { source: 'source4', id: 'id4' },
+        { source: 'source5', id: 'id5' }
+      ]);
+      
+      // Verify namespace functions were called
+      sinon.assert.calledOnce(window.namespace1.getUserIdsAsEids);
+      sinon.assert.calledOnce(window.namespace2.getUserIdsAsEids);
+    });
+
+    it('should handle namespaces without getUserIdsAsEids method', () => {
+      const existingUserIds = [{ source: 'source1', id: 'id1' }];
+      
+      window._pbjsGlobals = ['pubmatic', 'namespace1', 'namespace2'];
+      
+      window.namespace1 = {}; // No getUserIdsAsEids method
+      
+      window.namespace2 = {
+        getUserIdsAsEids: sandbox.stub().returns([
+          { source: 'source2', id: 'id2' }
+        ])
+      };
+      
+      const result = utils.collectOtherIds(existingUserIds);
+      
+      expect(result).to.deep.equal([
+        { source: 'source1', id: 'id1' },
+        { source: 'source2', id: 'id2' }
+      ]);
+    });
+
+    it('should handle non-array return values from getUserIdsAsEids', () => {
+      const existingUserIds = [{ source: 'source1', id: 'id1' }];
+      
+      window._pbjsGlobals = ['pubmatic', 'namespace1', 'namespace2'];
+      
+      window.namespace1 = {
+        getUserIdsAsEids: sandbox.stub().returns('not an array')
+      };
+      
+      window.namespace2 = {
+        getUserIdsAsEids: sandbox.stub().returns([
+          { source: 'source2', id: 'id2' }
+        ])
+      };
+      
+      const result = utils.collectOtherIds(existingUserIds);
+      
+      expect(result).to.deep.equal([
+        { source: 'source1', id: 'id1' },
+        { source: 'source2', id: 'id2' }
+      ]);
+    });
+
+    it('should handle IDs without source property', () => {
+      const existingUserIds = [{ source: 'source1', id: 'id1' }];
+      
+      window._pbjsGlobals = ['pubmatic', 'namespace1'];
+      
+      window.namespace1 = {
+        getUserIdsAsEids: sandbox.stub().returns([
+          { source: 'source2', id: 'id2' },
+          { id: 'id3' }, // No source property
+          { source: 'source4', id: 'id4' }
+        ])
+      };
+      
+      const result = utils.collectOtherIds(existingUserIds);
+      
+      expect(result).to.deep.equal([
+        { source: 'source1', id: 'id1' },
+        { source: 'source2', id: 'id2' },
+        { source: 'source4', id: 'id4' }
+      ]);
+    });
+  });
 })
+
+describe('getWinDimensions', () => {
+  let clock;
+
+  beforeEach(() => {
+    clock = sinon.useFakeTimers({ now: new Date() });
+  });
+
+  afterEach(() => {
+    clock.restore();
+  });
+
+  it('should invoke resetWinDimensions once per 20ms', () => {
+    const resetWinDimensionsSpy = sinon.spy(internal, 'resetWinDimensions');
+    getWinDimensions();
+    clock.tick(1);
+    getWinDimensions();
+    clock.tick(1);
+    getWinDimensions();
+    clock.tick(1);
+    getWinDimensions();
+    sinon.assert.calledOnce(resetWinDimensionsSpy);
+    clock.tick(18);
+    getWinDimensions();
+    sinon.assert.calledTwice(resetWinDimensionsSpy);
+  });
+});

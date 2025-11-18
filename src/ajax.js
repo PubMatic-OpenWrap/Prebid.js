@@ -55,6 +55,9 @@ export function toFetchRequest(url, data, options = {}) {
         rqOpts[opt] = true;
       }
     })
+    if (options.suppressTopicsEnrollmentWarning != null) {
+      rqOpts.suppressTopicsEnrollmentWarning = options.suppressTopicsEnrollmentWarning;
+    }
   }
   if (options.keepalive) {
     rqOpts.keepalive = true;
@@ -108,7 +111,7 @@ function toXHR({status, statusText = '', headers, url}, responseText) {
     return xml;
   }
   return {
-    // eslint-disable-next-line prebid/no-global
+    // eslint-disable-next-line no-restricted-globals
     readyState: XMLHttpRequest.DONE,
     status,
     statusText,

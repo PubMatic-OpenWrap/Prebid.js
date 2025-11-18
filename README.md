@@ -227,7 +227,24 @@ Or, if you are consuming Prebid through npm, with the `disableFeatures` option i
   }
 ```
 
-**Note**: this is still a work in progress - at the moment, `NATIVE` is the only feature that can be disabled this way, resulting in a minimal decrease in size (but you can expect that to improve over time).
+Features that can be disabled this way are:
+
+ - `VIDEO` - support for video bids;
+ - `NATIVE` - support for native bids;
+ - `UID2_CSTG` - support for UID2 client side token generation (see [Unified ID 2.0](https://docs.prebid.org/dev-docs/modules/userid-submodules/unified2.html))
+ - `GREEDY` - disables the use blocking, "greedy" promises within Prebid (see below).    
+
+#### Greedy promises
+
+By default, Prebid attempts to hold control of the main thread when possible, using a [custom implementation of `Promise`](https://github.com/prebid/Prebid.js/blob/master/libraries/greedy/greedyPromise.js) that does not submit callbacks to the scheduler once the promise is resolved (running them immediately instead).
+Disabling this behavior instructs Prebid to use the standard `window.Promise` instead; this has the effect of breaking up task execution, making them slower overall but giving the browser more chances to run other tasks in between, which can improve UX.         
+
+You may also override the `Promise` constructor used by Prebid through `pbjs.Promise`, for example:
+
+```javascript
+var pbjs = pbjs || {};
+pbjs.Promise = myCustomPromiseConstructor;
+```
 
 ## Unminified code
 
@@ -238,6 +255,21 @@ gulp build-bundle-dev --modules=bidderA,module1,...
 ```
 
 The results will be in build/dev/prebid.js.
+
+## ES5 Output Support
+
+For compatibility with older parsers or environments that require ES5 syntax, you can generate ES5-compatible output using the `--ES5` flag:
+
+```bash
+gulp build-bundle-dev --modules=bidderA,module1,... --ES5
+```
+
+This will:
+- Transpile all code to ES5 syntax using CommonJS modules
+- Target browsers: IE11+, Chrome 50+, Firefox 50+, Safari 10+
+- Ensure compatibility with older JavaScript parsers
+
+**Note:** Without the `--ES5` flag, the build will use modern ES6+ syntax by default for better performance and smaller bundle sizes.
 
 ## Test locally
 
