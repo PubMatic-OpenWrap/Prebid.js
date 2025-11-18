@@ -1,4 +1,5 @@
 import { getLowEntropySUA } from '../../src/fpd/sua.js';
+import { isStr } from '../../src/utils.js';
 
 const CONSTANTS = Object.freeze({
   TIME_OF_DAY_VALUES: {
@@ -70,7 +71,7 @@ export const getUtmValue = () => {
 export const getDeviceType = () => {
   let deviceType = CONSTANTS.DEVICE_TYPE_VALUES.UNKNOWN;
   try {
-    const ua = navigator.userAgent;
+    let ua = navigator.userAgent;
     if (ua && isStr(ua) && ua.trim() != '') {
       ua = ua.toLowerCase().trim();
       const isMobileRegExp = new RegExp('(mobi|tablet|ios).*');
