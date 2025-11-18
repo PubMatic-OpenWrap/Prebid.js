@@ -887,6 +887,9 @@ export const spec = {
         endpointCompression: getGzipSetting()
       },
     };
+    if (isFn(window.PWT?.recordExitTime)) {
+      window.PWT.recordExitTime('TRANSLATOR_CALLING_TIME');
+    }
     return data?.imp?.length ? serverRequest : null;
   },
 
