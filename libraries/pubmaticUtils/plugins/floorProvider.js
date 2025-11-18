@@ -173,7 +173,7 @@ export const prepareFloorsConfig = () => {
   (ymUiConfig.skipRate !== undefined) && (ymFloorsData.skipRate = ymUiConfig.skipRate);
 
   // merge default configs from page and configs from ui
-  const mergedConfig = mergeDeep(defaultFloorConfig, ymUiConfig);
+  const mergedConfig = mergeDeep(ymUiConfig, defaultFloorConfig);
 
   return {
     floors: {
