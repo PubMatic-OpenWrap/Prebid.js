@@ -1,6 +1,6 @@
 {
   "name": "prebid.js",
-  "version": "9.53.1",
+  "version": "9.53.3",
   "description": "Header Bidding Management Library",
   "main": "src/prebid.public.js",
   "exports": {
@@ -126,8 +126,7 @@
     "webpack": "^5.70.0",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-manifest-plugin": "^5.0.0",
-    "webpack-stream": "^7.0.0",
-    "yargs": "^1.3.1"
+    "webpack-stream": "^7.0.0"
   },
   "dependencies": {
     "@babel/core": "^7.27.4",
@@ -142,7 +141,8 @@
     "fun-hooks": "^1.1.0",
     "gulp-wrap": "^0.15.0",
     "klona": "^2.0.6",
-    "live-connect-js": "^7.2.0",
+    "live-connect-js": "^7.2.0",    
+    "yargs": "^1.3.1",
     "prebid-universal-creative": "1.13.0"
   },
   "optionalDependencies": {

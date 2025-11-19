@@ -343,11 +343,6 @@
             "module": "gppControl_usstates"
         },
         {
-            "name": "uid2IdSystem_shared",
-            "path": "/modules/uid2IdSystem_shared.js",
-            "module": "uid2IdSystem_shared"
-        },
-        {
             "name": "anPspParamsConverter",
             "path": "/modules/anPspParamsConverter.js",
             "module": "anPspParamsConverter"
@@ -508,6 +503,11 @@
             "module": "multibid"
         },
         {
+            "name": "validationFpdModule",
+            "path": "/modules/validationFpdModule/index.js",
+            "module": "validationFpdModule"
+        },
+        {
             "name": "fanAdapter",
             "path": "/modules/fanAdapter.js",
             "module": "fanAdapter"
@@ -592,6 +592,11 @@
             "module": "wurflRtdProvider"
         },
         {
+            "name": "adlaneRtdProvider",
+            "path": "/modules/adlaneRtdProvider.js",
+            "module": "adlaneRtdProvider"
+        },
+        {
             "name": "mgidRtdProvider",
             "path": "/modules/mgidRtdProvider.js",
             "module": "mgidRtdProvider"
@@ -665,6 +670,11 @@
             "name": "overtoneRtdProvider",
             "path": "/modules/overtoneRtdProvider.js",
             "module": "overtoneRtdProvider"
+        },
+        {
+            "name": "chromeAiRtdProvider",
+            "path": "/modules/chromeAiRtdProvider.js",
+            "module": "chromeAiRtdProvider"
         },
         {
             "name": "optimeraRtdProvider",
