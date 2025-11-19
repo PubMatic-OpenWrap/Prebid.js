@@ -1,5 +1,6 @@
 import { submodule } from '../src/hook.js';
-import { logError, mergeDeep, isPlainObject, isEmpty } from '../src/utils.js';
+import { logError, isPlainObject, isEmpty } from '../src/utils.js';
+import * as events from '../src/events.js';
 
 import { PluginManager } from '../libraries/pubmaticUtils/plugins/pluginManager.js';
 import { FloorProvider } from '../libraries/pubmaticUtils/plugins/floorProvider.js';
@@ -131,28 +132,45 @@ const init = (config, _userConsent) => {
 const getBidRequestData = (reqBidsConfigObj, callback) => {
   _ymConfigPromise.then(() => {
     pluginManager.executeHook('processBidRequest', reqBidsConfigObj);
-    // Apply country information if available
-    const country = configJsonManager.country;
-    if (country) {
-      const ortb2 = {
-        user: {
-          ext: {
-            ctr: country,
-          }
-        }
-      };
+    // // Apply country information if available
+    // const country = configJsonManager.country;
+    // if (country) {
+    //   const ortb2 = {
+    //     user: {
+    //       ext: {
+    //         ctr: country,
+    //       }
+    //     }
+    //   };
 
-      mergeDeep(reqBidsConfigObj.ortb2Fragments.bidder, {
-        [CONSTANTS.SUBMODULE_NAME]: ortb2
-      });
-    }
+    //   mergeDeep(reqBidsConfigObj.ortb2Fragments.bidder, {
+    //     [CONSTANTS.SUBMODULE_NAME]: ortb2
+    //   });
+    // }
 
     callback();
+    emitYOData();
   }).catch(error => {
     logError(CONSTANTS.LOG_PRE_FIX, error);
     callback();
   });
 };
+
+function emitYOData() {
+  let metaData = pluginManager.executeHook('getMetaData');
+  let modules = ["dynamicFloors", "dynamicTimeout"];
+  let skippedInfo = "";
+  modules.forEach(module => {
+    let moduleData = metaData[module];
+    if(moduleData) {
+      skippedInfo += moduleData.skipped;
+    } else {
+      skippedInfo += "0";
+    }
+  });
+
+  events.emit("YOData", { skippedInfo, country: configJsonManager.country });
+}
 
 /**
  * Returns targeting data for ad units
