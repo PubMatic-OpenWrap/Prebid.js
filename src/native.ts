@@ -799,42 +799,72 @@ export function toOrtbNativeResponse(legacyResponse: LegacyNativeResponse, ortbR
 export function toLegacyResponse(ortbResponse: NativeResponse, ortbRequest: NativeRequest) {
   const legacyResponse = {} as LegacyNativeResponse;
   const requestAssets = ortbRequest?.assets || [];
-  legacyResponse.clickUrl = ortbResponse.link?.url;
-  legacyResponse.privacyLink = ortbResponse.privacy;
+  
+  // Handle link and privacy data with proper null checking
+  if (ortbResponse.link && typeof ortbResponse.link === 'object' && ortbResponse.link.url) {
+    legacyResponse.clickUrl = ortbResponse.link.url;
+  }
+  
+  if (ortbResponse.privacy) {
+    legacyResponse.privacyLink = ortbResponse.privacy;
+  }
+  
+  // Process all assets with proper TypeScript type guards
   for (const asset of ortbResponse?.assets || []) {
-    const requestAsset = requestAssets.find(reqAsset => asset.id === reqAsset.id);
-    if (asset.title) {
+    if (!asset || typeof asset !== 'object' || asset.id === undefined) continue;
+    
+    const requestAsset = requestAssets.find(reqAsset => reqAsset && reqAsset.id === asset.id);
+    
+    if (asset.title && asset.title.text) {
       legacyResponse.title = asset.title.text;
-    } else if (asset.img) {
-      legacyResponse[requestAsset?.img?.type === NATIVE_IMAGE_TYPES.MAIN ? 'image' : 'icon'] = {
+    } else if (asset.img && asset.img.url) {
+      // Determine the correct asset key for image type
+      const imageType = requestAsset?.img?.type;
+      const assetKey = imageType === NATIVE_IMAGE_TYPES.MAIN ? 'image' : 'icon';
+      
+      // Use type assertion to avoid possible index signature errors 
+      (legacyResponse as any)[assetKey] = {
         url: asset.img.url,
         width: asset.img.w,
         height: asset.img.h
       };
-    } else if (asset.data) {
-      legacyResponse[PREBID_NATIVE_DATA_KEYS_TO_ORTB_INVERSE[NATIVE_ASSET_TYPES_INVERSE[requestAsset?.data?.type]]] = asset.data.value;
+    } else if (asset.data && asset.data.value && requestAsset?.data?.type) {
+      const assetTypeValue = NATIVE_ASSET_TYPES_INVERSE[requestAsset.data.type];
+      const keyMapping = PREBID_NATIVE_DATA_KEYS_TO_ORTB_INVERSE[assetTypeValue];
+      
+      if (keyMapping) {
+        // Use type assertion to fix index signature error
+        (legacyResponse as any)[keyMapping] = asset.data.value;
+      }
     }
   }
 
   // Handle trackers
   legacyResponse.impressionTrackers = [];
-  let jsTrackers = [];
+  let jsTrackers: string[] = [];
 
-  if (ortbResponse.imptrackers) {
+  if (ortbResponse.imptrackers && Array.isArray(ortbResponse.imptrackers)) {
     legacyResponse.impressionTrackers.push(...ortbResponse.imptrackers);
   }
   for (const eventTracker of ortbResponse?.eventtrackers || []) {
-    if (eventTracker.event === EVENT_TYPE_IMPRESSION && eventTracker.method === TRACKER_METHOD_IMG) {
-      legacyResponse.impressionTrackers.push(eventTracker.url);
-    }
-    if (eventTracker.event === EVENT_TYPE_IMPRESSION && eventTracker.method === TRACKER_METHOD_JS) {
-      jsTrackers.push(eventTracker.url);
+    if (eventTracker && typeof eventTracker === 'object') {
+      if (eventTracker.event === EVENT_TYPE_IMPRESSION && eventTracker.method === TRACKER_METHOD_IMG) {
+        eventTracker.url && legacyResponse.impressionTrackers.push(eventTracker.url);
+      }
+      if (eventTracker.event === EVENT_TYPE_IMPRESSION && eventTracker.method === TRACKER_METHOD_JS) {
+        eventTracker.url && jsTrackers.push(eventTracker.url);
+      }
     }
   }
 
   jsTrackers = jsTrackers.map(url => `<script async src="${url}"></script>`);
-  if (ortbResponse?.jstracker) { jsTrackers.push(ortbResponse.jstracker); }
-  if (jsTrackers.length) {
+  
+  // Handle jstracker if present, ensuring we don't push undefined values
+  if (ortbResponse?.jstracker && typeof ortbResponse.jstracker === 'string') { 
+    jsTrackers.push(ortbResponse.jstracker); 
+  }
+  
+  if (jsTrackers.length > 0) {
     legacyResponse.javascriptTrackers = jsTrackers.join('\n');
   }
 

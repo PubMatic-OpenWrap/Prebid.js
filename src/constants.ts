@@ -15,6 +15,15 @@ export const STATUS = {
   GOOD: 1
 };
 
+export const CB = {
+  TYPE: {
+    ALL_BIDS_BACK: 'allRequestedBidsBack',
+    AD_UNIT_BIDS_BACK: 'adUnitBidsBack',
+    BID_WON: 'bidWon',
+    REQUEST_BIDS: 'requestBids'
+  }
+};
+
 export const EVENTS = {
   AUCTION_INIT: 'auctionInit',
   AUCTION_TIMEOUT: 'auctionTimeout',
@@ -42,6 +51,7 @@ export const EVENTS = {
   STALE_RENDER: 'staleRender',
   EXPIRED_RENDER: 'expiredRender',
   BILLABLE_EVENT: 'billableEvent',
+  IH_INIT: 'initIdentityHub',
   BID_ACCEPTED: 'bidAccepted',
   RUN_PAAPI_AUCTION: 'paapiRunAuction',
   PBS_ANALYTICS: 'pbsAnalytics',
@@ -75,7 +85,9 @@ export const GRANULARITY_OPTIONS = {
   CUSTOM: 'custom'
 } as const;
 
-export const TARGETING_KEYS = {
+export const TARGETING_KEYS = '%%TG_KEYS%%' as any;
+
+export const DEFAULT_TARGETING_KEYS = {
   BIDDER: 'hb_bidder',
   AD_ID: 'hb_adid',
   PRICE_BUCKET: 'hb_pb',
@@ -93,40 +105,7 @@ export const TARGETING_KEYS = {
   VERSION: 'hb_ver'
 } as const;
 
-export const DEFAULT_TARGETING_KEYS = {
-  BIDDER: 'hb_bidder',
-  AD_ID: 'hb_adid',
-  PRICE_BUCKET: 'hb_pb',
-  SIZE: 'hb_size',
-  DEAL: 'hb_deal',
-  FORMAT: 'hb_format',
-  UUID: 'hb_uuid',
-  CACHE_HOST: 'hb_cache_host',
-  VERSION: 'hb_ver'
-};
-
-export const NATIVE_KEYS = {
-  title: 'hb_native_title',
-  body: 'hb_native_body',
-  body2: 'hb_native_body2',
-  privacyLink: 'hb_native_privacy',
-  privacyIcon: 'hb_native_privicon',
-  sponsoredBy: 'hb_native_brand',
-  image: 'hb_native_image',
-  icon: 'hb_native_icon',
-  clickUrl: 'hb_native_linkurl',
-  displayUrl: 'hb_native_displayurl',
-  cta: 'hb_native_cta',
-  rating: 'hb_native_rating',
-  address: 'hb_native_address',
-  downloads: 'hb_native_downloads',
-  likes: 'hb_native_likes',
-  phone: 'hb_native_phone',
-  price: 'hb_native_price',
-  salePrice: 'hb_native_saleprice',
-  rendererUrl: 'hb_renderer_url',
-  adTemplate: 'hb_adTemplate'
-};
+export const NATIVE_KEYS = '%%TG_NATIVE_KEYS%%' as any;
 
 export const S2S = {
   SRC: 's2s',
@@ -194,6 +173,17 @@ export const NATIVE_KEYS_THAT_ARE_NOT_ASSETS = [
   'type'
 ] as const;
 
+export const IH_LOGGER_STORAGE_KEY = 'IH_LGCL_TS';
+export const FLOOR_VALUES = {
+  NO_DATA: 'noData',
+  AD_UNIT: 'adUnit',
+  SET_CONFIG: 'setConfig',
+  FETCH: 'fetch',
+  SUCCESS: 'success',
+  ERROR: 'error',
+  TIMEOUT: 'timeout'
+};
+
 export const MESSAGES = {
   REQUEST: 'Prebid Request',
   RESPONSE: 'Prebid Response',
@@ -203,3 +193,50 @@ export const MESSAGES = {
 };
 
 export const PB_LOCATOR = '__pb_locator__';
+
+export const MODULE_PARAM_TO_UPDATE_FOR_SSO = {
+  id5Id: [
+    {
+      key: 'pd'
+    }
+  ],
+  publinkId: [
+    {
+      key: 'e',
+      hashType: 'MD5'
+    }
+  ],
+  connectId: [
+    {
+      key: 'he',
+      hashType: 'SHA256'
+    }
+  ],
+  liveIntentId: [
+    {
+      key: 'emailHash',
+      hashType: 'SHA256' // Default Hex encoding
+    }
+  ],
+  uid2: [
+    {
+      key: 'emailHash',
+      hashType: 'SHA256_BASE64' // SHA256 Base64 encoding
+    }
+  ]
+};
+
+export const REFRESH_IDMODULES_LIST = {
+  PRIMARY_MODULES: [
+    'id5Id',
+    'publinkId',
+    'connectId',
+    'liveIntentId',
+    'uid2'
+  ],
+  SCRIPT_BASED_MODULES: [
+    'zeotapIdPlus',
+    'identityLink',
+    'publinkId'
+  ]
+};

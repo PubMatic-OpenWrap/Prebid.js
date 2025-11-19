@@ -37,6 +37,7 @@ const _approvedLoadExternalJSList = [
   'nodalsAi',
   'anonymised',
   'optable',
+  'pbjs-debug-ui',
   'oftmedia',
   // UserId Submodules
   'justtag',

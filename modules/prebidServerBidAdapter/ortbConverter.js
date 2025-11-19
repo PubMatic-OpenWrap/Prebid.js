@@ -84,6 +84,15 @@ const PBS_CONVERTER = ortbConverter({
     // - overwrite context.bidRequest with the actual bid request for this seat / imp combination
 
     let bidRequest = context.actualBidRequests.get(context.seatbid.seat);
+
+    // OpenWrap code to support marketplace
+    if (bidRequest == null && context?.s2sBidRequest?.s2sConfig?.allowUnknownBidderCodes && context?.s2sBidRequest?.s2sConfig?.extPrebid?.alternatebiddercodes?.enabled) {
+      for (let originalbidder in context?.s2sBidRequest?.s2sConfig?.extPrebid?.alternatebiddercodes?.bidders) {
+        if (context.s2sBidRequest.s2sConfig.extPrebid.alternatebiddercodes.bidders[originalbidder].allowedbiddercodes.includes(context.seatbid.seat)) {
+          bidRequest = context.actualBidRequests.get(originalbidder);
+        }
+      }
+    }
     if (bidRequest == null) {
       // for stored impressions, a request was made with bidder code `null`. Pick it up here so that NO_BID, BID_WON, etc events
       // can work as expected (otherwise, the original request will always result in NO_BID).
@@ -197,11 +206,33 @@ const PBS_CONVERTER = ortbConverter({
           const bidders = context.s2sBidRequest.s2sConfig.bidders;
           const allowUnknownBidderCodes = context.s2sBidRequest.s2sConfig.allowUnknownBidderCodes;
           return allowUnknownBidderCodes || (bidders && bidders.includes(bidder));
-        }).map(([bidder, ortb2]) => ({
-          // ... but for bidder specific FPD we can use the actual bidder
-          bidders: [bidder],
-          config: {ortb2: context.getRedactor(bidder).ortb2(ortb2)}
-        }));
+        }).flatMap(([bidder, ortb2]) => {
+          let redactedOrtb2 = context.getRedactor(bidder).ortb2(ortb2);
+
+          if (bidder === 'pubmatic' && redactedOrtb2?.user?.ext?.ctr) {
+            const ortb2Copy = JSON.parse(JSON.stringify(redactedOrtb2));
+            if (ortb2Copy.user && ortb2Copy.user.ext) {
+              delete ortb2Copy.user.ext.ctr;
+              if (Object.keys(ortb2Copy.user.ext).length === 0) {
+                delete ortb2Copy.user.ext;
+              }
+            }
+
+            if (ortb2Copy.user && Object.keys(ortb2Copy.user).length === 0) {
+              delete ortb2Copy.user;
+            }
+
+            if (Object.keys(ortb2Copy).length === 0) {
+              return [];
+            }
+            redactedOrtb2 = ortb2Copy;
+          }
+
+          return [{
+            bidders: [bidder],
+            config: { ortb2: redactedOrtb2 }
+          }];
+        });
         if (fpdConfigs.length) {
           deepSetValue(ortbRequest, 'ext.prebid.bidderconfig', fpdConfigs);
         }

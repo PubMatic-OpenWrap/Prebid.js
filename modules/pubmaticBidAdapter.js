@@ -1,4 +1,4 @@
-import { logWarn, isStr, isArray, deepAccess, deepSetValue, isBoolean, isInteger, logInfo, logError, deepClone, uniques, generateUUID, isPlainObject, isFn, getWindowTop } from '../src/utils.js';
+import { logWarn, isStr, isArray, deepAccess, deepSetValue, isBoolean, isInteger, logInfo, logError, deepClone, uniques, generateUUID, isPlainObject, isFn, collectOtherIds, getWindowTop} from '../src/utils.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
 import { BANNER, VIDEO, NATIVE, ADPOD } from '../src/mediaTypes.js';
 import { config } from '../src/config.js';
@@ -18,11 +18,13 @@ import { addDealCustomTargetings, addPMPDeals } from '../libraries/dealUtils/dea
 
 const BIDDER_CODE = 'pubmatic';
 const LOG_WARN_PREFIX = 'PubMatic: ';
-const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator?source=prebid-client';
+const COLLECT_IDS_PREFIX = "Collect Other IDs: ";
+const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator?source=ow-client';
 const USER_SYNC_URL_IFRAME = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=';
 const USER_SYNC_URL_IMAGE = 'https://image8.pubmatic.com/AdServer/ImgSync?p=';
 const DEFAULT_CURRENCY = 'USD';
 const AUCTION_TYPE = 1;
+const PUBMATIC_ALIAS = 'pubmatic2';
 const UNDEFINED = undefined;
 const DEFAULT_WIDTH = 0;
 const DEFAULT_HEIGHT = 0;
@@ -159,6 +161,25 @@ const converter = ortbConverter({
     return bidResponse;
   },
   response(buildResponse, bidResponses, ortbResponse, context) {
+    // Adding a zero bid for each no-bid
+    const { imp, site } = context?.ortbRequest;
+    const impIds = imp.map(impObj => impObj.id);
+    const responseIds = bidResponses.map(response => response.requestId);
+    const noBidImps = impIds.filter(id => !responseIds.includes(id));
+    noBidImps.forEach(noBidImp => {
+      bidResponses.push({
+        requestId: noBidImp,
+        width: 0,
+        height: 0,
+        ttl: DEFAULT_TTL,
+        ad: '',
+        creativeId: 0,
+        netRevenue: true,
+        cpm: 0,
+        currency: ortbResponse.cur || DEFAULT_CURRENCY,
+        referrer: site?.ref || ''
+      })
+    })
     return buildResponse(bidResponses, ortbResponse, context);
   },
   overrides: {
@@ -433,11 +454,25 @@ const updateUserSiteDevice = (req, bidRequest) => {
 
   // start - IH eids for Prebid
   const userIdAsEids = deepAccess(bidRequest, '0.userIdAsEids');
-  if (bidRequest.length && userIdAsEids?.length && !req.user.ext?.eids) {
-    req.user.ext = req.user.ext || {};
-    req.user.ext.eids = userIdAsEids;
-  } // end - IH eids for Prebid
 
+  if (bidRequest.length) {
+    if (window.PWT.collectIdsFromWrappers) {
+      logInfo(`${COLLECT_IDS_PREFIX} In pubmaticBidAdapter existing userIdAsEids`, userIdAsEids);
+      // Apply collectOtherIds to either existing eids or userIdAsEids
+      // Ensure req.user.ext exists
+      req.user.ext = req.user.ext || {};
+      req.user.ext.eids = req.user.ext.eids
+        ? collectOtherIds(req.user.ext.eids)
+        : collectOtherIds(userIdAsEids);
+      logInfo(`${COLLECT_IDS_PREFIX} In pubmaticBidAdapter updated userIdAsEids`, req.user.ext.eids);
+    } else if (userIdAsEids?.length && !req.user.ext?.eids) {
+      // Only set if eids don't already exist
+      logInfo(`${COLLECT_IDS_PREFIX} In pubmaticBidAdapter window.PWT.collectIdsFromWrappers is false, setting default userIdAsEids`);
+      // Ensure req.user.ext exists
+      req.user.ext = req.user.ext || {};
+      req.user.ext.eids = userIdAsEids;
+    }
+  }
   if (req.site?.publisher) {
     req.site.ref = req.site.ref || refURL;
     req.site.publisher.id = pubId?.trim();
@@ -759,6 +794,7 @@ export const spec = {
   code: BIDDER_CODE,
   gvlid: 76,
   supportedMediaTypes: [BANNER, VIDEO, NATIVE],
+  aliases: [PUBMATIC_ALIAS],
   /**
    * Determines whether or not the given bid request is valid. Valid bid request must have placementId and hbid
    *
@@ -847,6 +883,9 @@ export const spec = {
         endpointCompression: getGzipSetting()
       },
     };
+    if (isFn(window.PWT?.recordExitTime)) {
+      window.PWT.recordExitTime('TRANSLATOR_CALLING_TIME');
+    }
     return data?.imp?.length ? serverRequest : null;
   },
 

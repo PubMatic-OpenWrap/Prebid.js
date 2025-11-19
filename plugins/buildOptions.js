@@ -36,7 +36,7 @@ function getNpmVersion(version) {
 }
 
 function buildOptions(options) {
-  const pbGlobal = options.globalVarName || prebid.globalVarName;
+  const pbGlobal = prebid.profile === 'IH' ? prebid.ihGlobalVarName : (options.globalVarName || prebid.globalVarName);
   const defineGlobal = typeof (options.defineGlobal) !== 'undefined' ? options.defineGlobal : prebid.defineGlobal;
   const features = featureMap(options.disableFeatures);
   const skipCalls = skipCallSet(features); // expression calls to skip entirely
