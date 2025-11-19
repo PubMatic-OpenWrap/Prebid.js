@@ -206,11 +206,33 @@ const PBS_CONVERTER = ortbConverter({
           const bidders = context.s2sBidRequest.s2sConfig.bidders;
           const allowUnknownBidderCodes = context.s2sBidRequest.s2sConfig.allowUnknownBidderCodes;
           return allowUnknownBidderCodes || (bidders && bidders.includes(bidder));
-        }).map(([bidder, ortb2]) => ({
-          // ... but for bidder specific FPD we can use the actual bidder
-          bidders: [bidder],
-          config: {ortb2: context.getRedactor(bidder).ortb2(ortb2)}
-        }));
+        }).flatMap(([bidder, ortb2]) => {
+          let redactedOrtb2 = context.getRedactor(bidder).ortb2(ortb2);
+
+          if (bidder === 'pubmatic' && redactedOrtb2?.user?.ext?.ctr) {
+            const ortb2Copy = JSON.parse(JSON.stringify(redactedOrtb2));
+            if (ortb2Copy.user && ortb2Copy.user.ext) {
+              delete ortb2Copy.user.ext.ctr;
+              if (Object.keys(ortb2Copy.user.ext).length === 0) {
+                delete ortb2Copy.user.ext;
+              }
+            }
+
+            if (ortb2Copy.user && Object.keys(ortb2Copy.user).length === 0) {
+              delete ortb2Copy.user;
+            }
+
+            if (Object.keys(ortb2Copy).length === 0) {
+              return [];
+            }
+            redactedOrtb2 = ortb2Copy;
+          }
+
+          return [{
+            bidders: [bidder],
+            config: { ortb2: redactedOrtb2 }
+          }];
+        });
         if (fpdConfigs.length) {
           deepSetValue(ortbRequest, 'ext.prebid.bidderconfig', fpdConfigs);
         }

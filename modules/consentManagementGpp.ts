@@ -105,13 +105,11 @@ export class GPPClient {
         logWarn(`Unrecognized GPP CMP version: ${pingData.apiVersion}. Continuing using GPP API version ${this.apiVersion}...`);
       }
       this.initialized = true;
-
       // Initialize CMP event manager and set CMP API
       if (!gppCmpEventManager) {
         gppCmpEventManager = createCmpEventManager('gpp');
       }
       gppCmpEventManager.setCmpApi(this.cmp);
-
       this.cmp({
         command: 'addEventListener',
         callback: (event, success) => {
