@@ -3,10 +3,12 @@ import * as commonUtil from '../common.util.js';
 import * as timeMetrics from './timeMetrics.js';
 import * as CONSTANTS from '../constants.js';
 import * as COMMON_CONFIG from '../common.config.js';
+import * as prebid from '../adapters/prebid.js';
 
 // Constants for consent management
 export const CONSENT_CONSTANTS = {
   DEFAULT_CMP_LOOK_UP_TIMEOUT: 1000,
+  CONTINUOUS_CMP_CHECK_TIMEOUT: 15000,
   CONSENT_MANAGEMENT_SOURCE: {    // 1 -> CMP, 2 -> GEO, 0 -> NONE
     CMP: 1, 
     GEO: 2,

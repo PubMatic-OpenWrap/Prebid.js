@@ -595,6 +595,8 @@ function setPrebidConfig() {
 			if(cmConfig && !util.isEmptyObject(cmConfig)) {
 				prebidConfig.consentManagement = cmConfig;
 			}
+      // Setting complete config to prebid after consent management config is set.
+			// As UserSync config required to be set with consent due to userSync modules do required the consent 
       window[pbNameSpace].setConfig(prebidConfig);
 		});
   } else {
@@ -942,7 +944,7 @@ function initPbjsConfig() {
   configureBidderAliasesIfAvailable();
   enablePrebidPubMaticAnalyticIfRequired();
   
-  // IF consent Management is enabled then do not fetch the geo info from here consentMangement.js module will do the same.
+  // IF consent Management is enabled then do not fetch the geo info from here consentConfigResolver.js module will do the same.
 	if(!COMMON_CONFIG.getConsentManagementEnabled()){
 		commonUtil.getGeoInfo();
 	}
