@@ -1,7 +1,7 @@
 import { submodule } from '../src/hook.js';
 import { logError, isPlainObject, isEmpty } from '../src/utils.js';
 import * as events from '../src/events.js';
-
+import { EVENTS } from '../src/constants.js';
 import { PluginManager } from '../libraries/pubmaticUtils/plugins/pluginManager.js';
 import { FloorProvider } from '../libraries/pubmaticUtils/plugins/floorProvider.js';
 import { UnifiedPricingRule } from '../libraries/pubmaticUtils/plugins/unifiedPricingRule.js';
@@ -132,7 +132,7 @@ const init = (config, _userConsent) => {
 const getBidRequestData = (reqBidsConfigObj, callback) => {
   _ymConfigPromise.then(() => {
     pluginManager.executeHook('processBidRequest', reqBidsConfigObj);
-    // // Apply country information if available
+    // Apply country information if available
     // const country = configJsonManager.country;
     // if (country) {
     //   const ortb2 = {
@@ -148,28 +148,30 @@ const getBidRequestData = (reqBidsConfigObj, callback) => {
     //   });
     // }
 
+    emitYieldModulesData();
     callback();
-    emitYOData();
   }).catch(error => {
     logError(CONSTANTS.LOG_PRE_FIX, error);
     callback();
   });
 };
 
-function emitYOData() {
+function emitYieldModulesData() {
   let metaData = pluginManager.executeHook('getMetaData');
   let modules = ["dynamicFloors", "dynamicTimeout"];
   let skippedInfo = "";
   modules.forEach(module => {
     let moduleData = metaData[module];
     if(moduleData) {
-      skippedInfo += moduleData.skipped;
+      skippedInfo += (moduleData.skipped || "-1");
     } else {
       skippedInfo += "0";
     }
+    skippedInfo += ",";
   });
 
-  events.emit("YOData", { skippedInfo, country: configJsonManager.country });
+  skippedInfo = skippedInfo.slice(0, -1);
+  events.emit(EVENTS.PUBMATIC_YM_DATA, { skippedInfo, country: configJsonManager.country });
 }
 
 /**

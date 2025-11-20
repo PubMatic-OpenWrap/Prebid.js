@@ -18,6 +18,10 @@ let _configJsonManager = null;
 export const getConfigJsonManager = () => _configJsonManager;
 export const setConfigJsonManager = (configJsonManager) => { _configJsonManager = configJsonManager; }
 
+let metaData = {dynamicFloors: {}};
+export const getMetaData = () => metaData;
+export const setMetaData = (data) => { metaData = { dynamicFloors: data} };
+
 export const CONSTANTS = Object.freeze({
   LOG_PRE_FIX: 'PubMatic-Floor-Provider: '
 });
@@ -102,7 +106,8 @@ export function getTargeting(adUnitCodes, config, userConsent, auction) {
 export const FloorProvider = {
   init,
   processBidRequest,
-  getTargeting
+  getTargeting,
+  getMetaData
 };
 
 // Helper Functions

@@ -9,7 +9,7 @@ export const setDynamicTimeoutConfig = (config) => { _dynamicTimeoutConfig = con
 
 let metaData = {dynamicTimeout: {}};
 export const getMetaData = () => metaData;
-export const setMetaData = (data) => { metaData = data; }
+export const setMetaData = (data) => { metaData = { dynamicTimeout: data} };
 
 export const CONSTANTS = Object.freeze({
   LOG_PRE_FIX: 'PubMatic-Dynamic-Timeout: ',
@@ -79,12 +79,12 @@ export function processBidRequest(reqBidsConfigObj) {
   const skipRate = (timeoutConfig?.config?.skipRate !== undefined && timeoutConfig?.config?.skipRate !== null) ? timeoutConfig?.config?.skipRate : CONSTANTS.DEFAULT_SKIP_RATE;
   if (shouldThrottle(skipRate)) {
     logInfo(`${CONSTANTS.LOG_PRE_FIX} Dynamic timeout is skipped (skipRate: ${skipRate}%)`);
-    setMetaData({dynamicTimeout: {skipped: 1}});
+    setMetaData({skipped: 1});
     return reqBidsConfigObj;
   }
 
   logInfo(`${CONSTANTS.LOG_PRE_FIX} Dynamic timeout is applying...`);
-  setMetaData({dynamicTimeout: {skipped: 2}});
+  setMetaData({skipped: 2});
 
   // Get ad units and bidder timeout
   const adUnits = reqBidsConfigObj.adUnits || getGlobal().adUnits;

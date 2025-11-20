@@ -41,6 +41,7 @@ let profileId = DEFAULT_PROFILE_ID; // string: optional
 let profileVersionId = DEFAULT_PROFILE_VERSION_ID; // string: optional
 let s2sBidders = [];
 let _country = '';
+let skippedInfo = '';
 
 /// /////////// HELPER FUNCTIONS //////////////
 
@@ -303,7 +304,9 @@ function executeBidsLoggerCall(event, highestCpmBids) {
   const payload = {
     sd: auctionCache.adUnitCodes,
     fd: getFeatureLevelDetails(auctionCache),
-    rd: { ctr: _country || '', ...getRootLevelDetails(auctionCache, auctionId) }
+    rd: { ctr: _country || '',
+      skippedInfo: skippedInfo || '',
+      ...getRootLevelDetails(auctionCache, auctionId) }
   };
   auctionCache.sent = true;
 
@@ -337,7 +340,9 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   const auctionCache = cache.auctions[auctionId];
   const payload = {
     fd: getFeatureLevelDetails(auctionCache),
-    rd: { ctr: _country || '', ...getRootLevelDetails(auctionCache, auctionId) },
+    rd: { ctr: _country || '',
+      skippedInfo: skippedInfo || '',
+      ...getRootLevelDetails(auctionCache, auctionId) },
     sd: {
       adapterName,
       adUnitId,
@@ -523,9 +528,10 @@ const eventHandlers = {
     });
   },
 
-  YOData: (args) => {
-    console.log("=================== eventHandlers.YOData ", args);
+  yieldModulesData: (args) => {
+    console.log("=================== eventHandlers.yieldModulesData ", args);
     _country = args.country;
+    skippedInfo = args.skippedInfo;
   }
 }
 
