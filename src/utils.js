@@ -47,6 +47,9 @@ export const internal = {
   parseQS,
   formatQS,
   deepEqual,
+  resetWinDimensions,
+  isEmpty,
+  skipUndefinedValues
 };
 
 const prebidInternal = {};
@@ -1062,6 +1065,17 @@ export function cyrb53Hash(str, seed = 0) {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString();
 }
 
+export function skipUndefinedValues (obj) {
+  var newObj = {};
+  var prop;
+  for (prop in obj) {
+    if (obj[prop]) {
+      newObj[prop] = obj[prop];
+    }
+  }
+  return newObj;
+}
+
 /**
  * returns the result of `JSON.parse(data)`, or undefined if that throws an error.
  * @param data
@@ -1290,4 +1304,43 @@ export async function compressDataWithGZip(data) {
   const compressedBlob = await new Response(compressedStream).blob();
   const compressedArrayBuffer = await compressedBlob.arrayBuffer();
   return new Uint8Array(compressedArrayBuffer);
+}
+
+export function collectOtherIds(existingUserIds) {
+  const logger = prefixLog('Collect Other IDs: ');
+  logger.logInfo("In collectOtherIds existingUserIds", existingUserIds);
+
+  // Get all other namespaces except the primary one
+  window._pbjsGlobals = window._pbjsGlobals || [];
+  let globalNS = (window._pbjsGlobals).filter(function(item) {
+    return item !== window.pubmaticNameSpace;
+  });
+  // Initialize merged IDs array with existing IDs
+  existingUserIds = existingUserIds || [];
+  const mergedIds = [...existingUserIds];
+
+  // Track sources that are already present
+  const usedSources = new Set();
+  // First mark all sources from existingUserIds as used
+  existingUserIds.forEach(id => {
+    if (id?.source) {
+      usedSources.add(id.source);
+    }
+  });
+
+  // Process each namespace in order
+  globalNS.forEach(namespace => {
+    const eids = window[namespace]?.getUserIdsAsEids?.();
+    if (isArray(eids)) {
+      eids.forEach(id => {
+        // Only add if this source hasn't been used yet
+        if (id?.source && !usedSources.has(id.source)) {
+          mergedIds.push(id);
+          usedSources.add(id.source);
+        }
+      });
+    }
+  });
+  logger.logInfo("In collectOtherIds mergedIds", mergedIds);
+  return mergedIds;
 }

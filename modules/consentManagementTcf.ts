@@ -125,7 +125,6 @@ function lookupIabConsent(setProvisionalConsent) {
       tcfCmpEventManager = createCmpEventManager('tcf', () => gdprDataHandler.getConsentData());
     }
     tcfCmpEventManager.setCmpApi(cmp);
-
     cmp({
       command: 'addEventListener',
       callback: cmpResponseCallback

@@ -1,7 +1,9 @@
 import path from 'path'
 import validate from 'schema-utils'
+import { fileURLToPath } from 'url'
 
-const boModule = path.resolve(import.meta.dirname, '../dist/src/buildOptions.mjs')
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const boModule = path.resolve(__dirname, '../dist/src/buildOptions.mjs')
 
 export function getBuildOptionsModule () {
   return boModule

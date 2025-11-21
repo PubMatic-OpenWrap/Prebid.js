@@ -2,6 +2,13 @@
 
 ```
 userIdAsEids = [
+     {
+        source: '33across.com',
+        uids: [{
+            id: 'some-random-id-value',
+            atype: 1
+        }]
+    },
     {
         source: '33across.com',
         uids: [{
@@ -58,6 +65,21 @@ userIdAsEids = [
         uids: [{
             id: 'some-random-id-value',
             atype: 1
+        },
+        ext: {
+            linkType: 2
+        }]
+    },
+
+    {
+        source: 'id5-sync.com',
+        uids: [{
+            id: 'some-random-id-value',
+            atype: 1,
+            ext: {
+                linkType: 2,
+                abTestingControlGroup: false
+            }
         }]
     },
 
@@ -219,7 +241,6 @@ userIdAsEids = [
             atype: 1
         }]
     },
-
     {
         source: 'netid.de',
         uids: [{
