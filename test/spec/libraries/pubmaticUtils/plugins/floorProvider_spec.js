@@ -27,7 +27,7 @@ describe('FloorProvider', () => {
         fields: ['mediaType', 'size', 'domain', 'adUnitCode', 'deviceType', 'timeOfDay', 'browser', 'os', 'utm', 'country', 'bidder']
       },
       values: {
-        "banner|728x90|localhost|div1|0|afternoon|9|1|0|IN|pubmatic": 9.234,
+        "banner|728x90|localhost|div1|1|afternoon|9|1|0|IN|pubmatic": 9.234,
       },
       default: 0.23,
       userIds: ['id5id']
