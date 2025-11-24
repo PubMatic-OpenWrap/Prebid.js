@@ -83,12 +83,19 @@ export class ConsentHandler {
   }
 
   getConsentData() {
-    return this.#data;
+    if (this.#enabled) {
+      return this.#data;
+    }
+    return null;
   }
 
   get hash() {
     if (this.#dirty) {
-      this.#hash = cyrb53Hash(JSON.stringify(this.#data && this.hashFields ? this.hashFields.map(f => this.#data[f]) : this.#data))
+      this.#hash = cyrb53Hash(
+        JSON.stringify(
+          this.#data && this.hashFields ? this.hashFields.map((f) => this.#data[f]) : this.#data
+        )
+      );
       this.#dirty = false;
     }
     return this.#hash;
@@ -107,7 +114,7 @@ class UspConsentHandler extends ConsentHandler {
 }
 
 class GdprConsentHandler extends ConsentHandler {
-  hashFields = ['gdprApplies', 'consentString']
+  hashFields = ["gdprApplies", "consentString"];
   getConsentMeta() {
     const consentData = this.getConsentData();
     if (consentData && consentData.vendorData && this.generatedTime) {
@@ -116,7 +123,7 @@ class GdprConsentHandler extends ConsentHandler {
         consentStringSize: (isStr(consentData.vendorData.tcString)) ? consentData.vendorData.tcString.length : 0,
         generatedAt: this.generatedTime,
         apiVersion: consentData.apiVersion
-      }
+      };
     }
   }
 }
