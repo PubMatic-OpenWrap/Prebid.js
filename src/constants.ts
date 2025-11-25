@@ -51,8 +51,9 @@ export const EVENTS = {
   BEFORE_PBS_HTTP: 'beforePBSHttp',
   BROWSI_INIT: 'browsiInit',
   BROWSI_DATA: 'browsiData',
+  BROWSER_INTERVENTION: 'browserIntervention',
   PUBMATIC_YM_DATA: 'yieldModulesData'
-};
+} as const;
 
 export const AD_RENDER_FAILED_REASON = {
   PREVENT_WRITING_ON_MAIN_DOCUMENT: 'preventWritingOnMainDocument',
