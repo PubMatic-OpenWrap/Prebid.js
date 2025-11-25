@@ -73,17 +73,18 @@ export function processBidRequest(reqBidsConfigObj) {
       const excludedBiddersByAdUnit = {};
       let hasBidders = false;
 
-      // Evaluate exclusion rules for each ad unit
-      adUnitsArr.forEach(adUnit => {
-        const context = {
+      let context = {
           auctionId: reqBidsConfigObj?.auctionId,
           browser: getBrowserType(),
           hasId: getHasId(targetHasIds),
-          adUnitCode: adUnit.code,
           domain: getHostname(),
           country: getConfigJsonManager()?.country,
           timeOfDay: getCurrentTimeOfDay()
         };
+
+      // Evaluate exclusion rules for each ad unit
+      adUnitsArr.forEach(adUnit => {
+        context.adUnitCode = adUnit.code;
 
         const excludedBidders = getExcludedBiddersFromRules(context);
         if (excludedBidders && excludedBidders.length > 0) {
