@@ -47,7 +47,6 @@ export const internal = {
   parseQS,
   formatQS,
   deepEqual,
-  resetWinDimensions,
   isEmpty,
   skipUndefinedValues
 };
