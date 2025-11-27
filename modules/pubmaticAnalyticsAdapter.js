@@ -1,5 +1,5 @@
-import { _each, isArray, logError, logWarn, pick, isFn, isEmpty } from '../src/utils.js';
-import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
+import { isArray, logError, logWarn, pick, isFn } from '../src/utils.js';
+import adapter from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import { BID_STATUS, STATUS, REJECTION_REASON } from '../src/constants.js';
 import { ajax } from '../src/ajax.js';
@@ -771,22 +771,20 @@ const eventHandlers = {
       cache.auctions[args.auctionId].bidderDonePendingCount--;
     }
     args.bids.forEach(bid => {
-      let cachedBids = cache.auctions[bid.auctionId].adUnitCodes[bid.adUnitCode].bids[bid.bidId || bid.originalRequestId || bid.requestId];
-      cachedBids.forEach(cachedBid=>{
-        if (typeof bid.serverResponseTimeMs !== 'undefined') {
-          cachedBid.serverLatencyTimeMs = bid.serverResponseTimeMs;
-        }
-        if (!cachedBid.status) {
-          cachedBid.status = NO_BID;
-        }
+      let cachedBid = cache.auctions[bid.auctionId].adUnitCodes[bid.adUnitCode].bids[bid.bidId || bid.originalRequestId || bid.requestId];
+      if (typeof bid.serverResponseTimeMs !== 'undefined') {
+        cachedBid.serverLatencyTimeMs = bid.serverResponseTimeMs;
+      }
+      if (!cachedBid.status) {
+        cachedBid.status = NO_BID;
         if (bid.floorData && isFn(bid.getFloor)) {
           const frvData = bid.getFloor();
           cache.auctions[args.auctionId].adUnitCodes[bid.adUnitCode].floorRuleValue = frvData?.floor;
         }
-        if (!cachedBid.clientLatencyTimeMs) {
-          cachedBid.clientLatencyTimeMs = Date.now() - cache.auctions[bid.auctionId].timestamp;
-        }
-      });
+      }
+      if (!cachedBid.clientLatencyTimeMs) {
+        cachedBid.clientLatencyTimeMs = Date.now() - cache.auctions[bid.auctionId].timestamp;
+      }
     });
   },
 
