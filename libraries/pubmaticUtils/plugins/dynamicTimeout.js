@@ -1,7 +1,7 @@
 import { logInfo } from '../../../src/utils.js';
 import { getGlobal } from '../../../src/prebidGlobal.js';
 import { bidderTimeoutFunctions } from '../../bidderTimeoutUtils/bidderTimeoutUtils.js';
-import { shouldThrottle, CONSTANTS } from '../pubmaticUtils.js';
+import { shouldThrottle, CONSTANTS as YMCONSTANTS } from '../pubmaticUtils.js';
 
 let _dynamicTimeoutConfig = null;
 export const getDynamicTimeoutConfig = () => _dynamicTimeoutConfig;
@@ -76,15 +76,15 @@ export function processBidRequest(reqBidsConfigObj) {
   const timeoutConfig = getDynamicTimeoutConfig();
 
   // Check if request should be throttled based on skipRate
-  const skipRate = (timeoutConfig?.config?.skipRate !== undefined && timeoutConfig?.config?.skipRate !== null) ? timeoutConfig?.config?.skipRate : CONSTANTS.DEFAULT_SKIP_RATE;
+  const skipRate = (timeoutConfig?.config?.skipRate !== undefined && timeoutConfig?.config?.skipRate !== null) ? timeoutConfig?.config?.skipRate : YMCONSTANTS.DEFAULT_SKIP_RATE;
   if (shouldThrottle(skipRate)) {
     logInfo(`${CONSTANTS.LOG_PRE_FIX} Dynamic timeout is skipped (skipRate: ${skipRate}%)`);
-    setMetaData({skipped: CONSTANTS.YM_SKIPPED_INFO.MODULE_SKIPPED});
+    setMetaData({skipped: YMCONSTANTS.YM_SKIPPED_INFO.MODULE_SKIPPED});
     return reqBidsConfigObj;
   }
 
   logInfo(`${CONSTANTS.LOG_PRE_FIX} Dynamic timeout is applying...`);
-  setMetaData({skipped: CONSTANTS.YM_SKIPPED_INFO.MODULE_APPLIED});
+  setMetaData({skipped: YMCONSTANTS.YM_SKIPPED_INFO.MODULE_APPLIED});
 
   // Get ad units and bidder timeout
   const adUnits = reqBidsConfigObj.adUnits || getGlobal().adUnits;
