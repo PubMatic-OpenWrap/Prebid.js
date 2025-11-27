@@ -1,6 +1,6 @@
 import { getLowEntropySUA } from '../../src/fpd/sua.js';
 
-const CONSTANTS = Object.freeze({
+export const CONSTANTS = Object.freeze({
   TIME_OF_DAY_VALUES: {
     MORNING: 'morning',
     AFTERNOON: 'afternoon',
@@ -12,6 +12,13 @@ const CONSTANTS = Object.freeze({
     TRUE: '1',
     FALSE: '0'
   },
+  YM_SKIPPED_INFO: {
+    UNAVAILABLE: "-1",
+    MODULE_DISABLED: "0",
+    MODULE_SKIPPED: "1",
+    MODULE_APPLIED: "2",
+  },
+  YIELD_MODULES : ['dynamicFloors', 'dynamicTimeout'],
 });
 
 const BROWSER_REGEX_MAP = [

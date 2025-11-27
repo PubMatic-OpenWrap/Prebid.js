@@ -6,6 +6,7 @@ import { PluginManager } from '../libraries/pubmaticUtils/plugins/pluginManager.
 import { FloorProvider } from '../libraries/pubmaticUtils/plugins/floorProvider.js';
 import { UnifiedPricingRule } from '../libraries/pubmaticUtils/plugins/unifiedPricingRule.js';
 import { DynamicTimeout } from '../libraries/pubmaticUtils/plugins/dynamicTimeout.js';
+import { CONSTANTS } from '../libraries/pubmaticUtils/pubmaticUtils.js';
 
 /**
  * @typedef {import('./rtdModule/index.js').RtdSubmodule} RtdSubmodule
@@ -132,21 +133,6 @@ const init = (config, _userConsent) => {
 const getBidRequestData = (reqBidsConfigObj, callback) => {
   _ymConfigPromise.then(() => {
     pluginManager.executeHook('processBidRequest', reqBidsConfigObj);
-    // Apply country information if available
-    // const country = configJsonManager.country;
-    // if (country) {
-    //   const ortb2 = {
-    //     user: {
-    //       ext: {
-    //         ctr: country,
-    //       }
-    //     }
-    //   };
-
-    //   mergeDeep(reqBidsConfigObj.ortb2Fragments.bidder, {
-    //     [CONSTANTS.SUBMODULE_NAME]: ortb2
-    //   });
-    // }
 
     emitYieldModulesData();
     callback();
@@ -158,14 +144,13 @@ const getBidRequestData = (reqBidsConfigObj, callback) => {
 
 function emitYieldModulesData() {
   let metaData = pluginManager.executeHook('getMetaData');
-  let modules = ["dynamicFloors", "dynamicTimeout"];
   let skippedInfo = "";
-  modules.forEach(module => {
+  CONSTANTS.Yield_MODULES.forEach(module => {
     let moduleData = metaData[module];
     if(moduleData) {
-      skippedInfo += (moduleData.skipped || "-1");
-    } else {
-      skippedInfo += "0";
+      skippedInfo += (moduleData.skipped || CONSTANTS.YM_SKIPPED_INFO.UNAVAILABLE);
+    } else { // metadata will not be available for disabled modules
+      skippedInfo += CONSTANTS.YM_SKIPPED_INFO.MODULE_DISABLED;
     }
     skippedInfo += ",";
   });

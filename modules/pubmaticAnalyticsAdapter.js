@@ -1,4 +1,4 @@
-import { isArray, logError, logWarn, pick } from '../src/utils.js';
+import { isArray, logError, logInfo, logWarn, pick } from '../src/utils.js';
 import adapter from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import { BID_STATUS, STATUS, REJECTION_REASON } from '../src/constants.js';
@@ -6,6 +6,7 @@ import { ajax } from '../src/ajax.js';
 import { config } from '../src/config.js';
 import { getGlobal } from '../src/prebidGlobal.js';
 import { getGptSlotInfoForAdUnitCode } from '../libraries/gptUtils/gptUtils.js';
+import { CONSTANTS } from '../libraries/pubmaticUtils/pubmaticUtils.js';
 
 /// /////////// CONSTANTS ///////////////
 const ADAPTER_CODE = 'pubmatic';
@@ -274,13 +275,41 @@ function getRootLevelDetails(auctionCache, auctionId) {
   }
 }
 
+function getSkippedInfo(auctionId) {
+  try {
+    if (typeof skippedInfo !== 'string' || skippedInfo.length === 0) {
+      return skippedInfo;
+    }
+
+    const commaIndex = skippedInfo.indexOf(',');
+    if (commaIndex === -1) {
+      return skippedInfo;
+    }
+
+    const floorsSkippedInfo = skippedInfo.slice(0, commaIndex).trim();
+    if (floorsSkippedInfo === CONSTANTS.YM_SKIPPED_INFO.MODULE_DISABLED) {
+      return skippedInfo; // floors is disabled return as it is
+    }
+
+    // find out skipped status from floorRequestData
+    const auctionCache = cache.auctions[auctionId];
+    const floorRequestData = auctionCache?.floorData?.floorRequestData;
+    const fskp = floorRequestData
+      ? (floorRequestData.skipped ? CONSTANTS.YM_SKIPPED_INFO.MODULE_SKIPPED : CONSTANTS.YM_SKIPPED_INFO.MODULE_APPLIED)
+      : CONSTANTS.YM_SKIPPED_INFO.UNAVAILABLE;
+
+    // Replace the first CSV value of skippedInfo with fskp
+    return fskp + skippedInfo.substring(commaIndex);
+  } catch (e) {
+    logError(e);
+    return "";
+  }
+}
+
 function executeBidsLoggerCall(event, highestCpmBids) {
   const { auctionId } = event;
   const auctionCache = cache.auctions[auctionId];
   if (!auctionCache || auctionCache.sent) return;
-  // const country = event.bidderRequests?.length > 0
-  //   ? event.bidderRequests.find(bidder => bidder?.bidderCode === ADAPTER_CODE)?.ortb2?.user?.ext?.ctr || ''
-  //   : '';
    // Fetching slotinfo at event level results to undefined so Running loop over the codes to get the GPT slot name.
    Object.entries(auctionCache?.adUnitCodes || {}).forEach(([adUnitCode, adUnit]) => {
     let origAdUnit = getAdUnit(cache.auctions[auctionId]?.origAdUnits, adUnitCode) || {};
@@ -305,7 +334,7 @@ function executeBidsLoggerCall(event, highestCpmBids) {
     sd: auctionCache.adUnitCodes,
     fd: getFeatureLevelDetails(auctionCache),
     rd: { ctr: _country || '',
-      skippedInfo: skippedInfo || '',
+      skippedInfo: getSkippedInfo(auctionId) || '',
       ...getRootLevelDetails(auctionCache, auctionId) }
   };
   auctionCache.sent = true;
@@ -341,7 +370,7 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
   const payload = {
     fd: getFeatureLevelDetails(auctionCache),
     rd: { ctr: _country || '',
-      skippedInfo: skippedInfo || '',
+      skippedInfo: getSkippedInfo(auctionId) || '',
       ...getRootLevelDetails(auctionCache, auctionId) },
     sd: {
       adapterName,
@@ -357,12 +386,6 @@ function executeBidWonLoggerCall(auctionId, adUnitId) {
     loggerType: 'bid won logger'
   });
 }
-
-// function readSaveCountry(e) {
-//   _country = e.bidderRequests?.length > 0
-//     ? e.bidderRequests.find(bidder => bidder?.bidderCode === ADAPTER_CODE)?.ortb2?.user?.ext?.ctr || ''
-//     : '';
-// }
 
 /// /////////// ADAPTER EVENT HANDLER FUNCTIONS //////////////
 
@@ -505,7 +528,6 @@ const eventHandlers = {
   auctionEnd: (args) => {
     // if for the given auction bidderDonePendingCount == 0 then execute logger call sooners
     let highestCpmBids = getGlobal().getHighestCpmBids() || [];
-    // readSaveCountry(args);
     setTimeout(() => {
       executeBidsLoggerCall.call(this, args, highestCpmBids);
     }, (cache.auctions[args.auctionId]?.bidderDonePendingCount === 0 ? 500 : SEND_TIMEOUT));
@@ -529,7 +551,7 @@ const eventHandlers = {
   },
 
   yieldModulesData: (args) => {
-    console.log("=================== eventHandlers.yieldModulesData ", args);
+    logInfo("eventHandlers.yieldModulesData ", args);
     _country = args.country;
     skippedInfo = args.skippedInfo;
   }
