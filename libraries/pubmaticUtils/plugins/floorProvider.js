@@ -1,7 +1,7 @@
 // plugins/floorProvider.js
 import { logInfo, logError, isFn, logMessage, isEmpty, mergeDeep } from '../../../src/utils.js';
 import { getOS } from '../../userAgentUtils/index.js';
-import { getBrowserType, getCurrentTimeOfDay, getUtmValue, getDeviceType as fetchDeviceType } from '../pubmaticUtils.js';
+import { getBrowserType, getCurrentTimeOfDay, getUtmValue, getDayOfWeek, getDeviceType as fetchDeviceType } from '../pubmaticUtils.js';
 import { config as conf } from '../../../src/config.js';
 
 /**
@@ -123,6 +123,7 @@ export const getDeviceType = () => fetchDeviceType();
 export const getCountry = () => getConfigJsonManager().country || (window.PWT?.CC?.cc ? window.PWT.CC.cc : '');
 export const getBidder = (request) => request?.bidder;
 export const getUtm = () => getUtmValue();
+export const getDOW = () => getDayOfWeek();
 
 export const prepareFloorsConfig = () => {
   // TODO: This can be removed as it is beimg used for UTR only and handled for multipliers in name: 'floor.json', for UPR it is handled in
@@ -186,6 +187,7 @@ export const prepareFloorsConfig = () => {
         os: getOs,
         utm: getUtm,
         country: getCountry,
+        dayOfWeek: getDOW,
         bidder: getBidder,
       },
     },

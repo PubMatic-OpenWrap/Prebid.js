@@ -85,6 +85,11 @@ export const getDeviceType = () => {
   return deviceType;
 } 
 
+export const getDayOfWeek = () => {
+  const dayOfWeek = new Date().getDay();
+  return dayOfWeek.toString();
+}
+
 /**
  * Determines whether an action should be throttled based on a given percentage.
  *
