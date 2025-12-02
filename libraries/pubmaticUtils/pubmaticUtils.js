@@ -1,4 +1,5 @@
 import { getLowEntropySUA } from '../../src/fpd/sua.js';
+import { isStr } from '../../src/utils.js';
 
 const CONSTANTS = Object.freeze({
   TIME_OF_DAY_VALUES: {
@@ -12,6 +13,11 @@ const CONSTANTS = Object.freeze({
     TRUE: '1',
     FALSE: '0'
   },
+  DEVICE_TYPE_VALUES: {
+    DESKTOP: '1',
+    MOBILE: '2',
+    UNKNOWN: '3'
+  }
 });
 
 const BROWSER_REGEX_MAP = [
@@ -61,6 +67,23 @@ export const getUtmValue = () => {
   const urlParams = new URLSearchParams(url?.search);
   return urlParams && urlParams.toString().includes(CONSTANTS.UTM) ? CONSTANTS.UTM_VALUES.TRUE : CONSTANTS.UTM_VALUES.FALSE;
 }
+
+export const getDeviceType = () => {
+  let deviceType = CONSTANTS.DEVICE_TYPE_VALUES.UNKNOWN;
+  try {
+    let ua = navigator.userAgent;
+    if (ua && isStr(ua) && ua.trim() != '') {
+      ua = ua.toLowerCase().trim();
+      const isMobileRegExp = new RegExp('(mobi|tablet|ios).*');
+      if (ua.match(isMobileRegExp)) {
+        deviceType = CONSTANTS.DEVICE_TYPE_VALUES.MOBILE;
+      } else {
+        deviceType = CONSTANTS.DEVICE_TYPE_VALUES.DESKTOP;
+      }
+    }
+  } catch (ex) {}
+  return deviceType;
+} 
 
 /**
  * Determines whether an action should be throttled based on a given percentage.

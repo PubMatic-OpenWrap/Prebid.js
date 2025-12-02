@@ -441,6 +441,7 @@ function checkAndModifySizeOfKGPVIfRequired(bid) {
 
 function getListOfIdentityPartners() {
   const namespace = getGlobal();
+  if (!isFn(namespace.getUserIds)) return;
   const publisherProvidedEids = namespace.getConfig("ortb2.user.eids") || [];
   const availableUserIds = namespace.adUnits[0]?.bids[0]?.userId || {};
   const identityModules = namespace.getConfig('userSync')?.userIds || [];

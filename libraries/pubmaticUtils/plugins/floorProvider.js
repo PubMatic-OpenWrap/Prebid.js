@@ -1,7 +1,7 @@
 // plugins/floorProvider.js
-import { logInfo, logError, isFn, logMessage, isEmpty } from '../../../src/utils.js';
-import { getDeviceType as fetchDeviceType, getOS } from '../../userAgentUtils/index.js';
-import { getBrowserType, getCurrentTimeOfDay, getUtmValue } from '../pubmaticUtils.js';
+import { logInfo, logError, isFn, logMessage, isEmpty, mergeDeep } from '../../../src/utils.js';
+import { getOS } from '../../userAgentUtils/index.js';
+import { getBrowserType, getCurrentTimeOfDay, getUtmValue, getDeviceType as fetchDeviceType } from '../pubmaticUtils.js';
 import { config as conf } from '../../../src/config.js';
 
 /**
@@ -119,13 +119,35 @@ export const defaultValueTemplate = {
 export const getTimeOfDay = () => getCurrentTimeOfDay();
 export const getBrowser = () => getBrowserType();
 export const getOs = () => getOS().toString();
-export const getDeviceType = () => fetchDeviceType().toString();
-export const getCountry = () => getConfigJsonManager().country;
+export const getDeviceType = () => fetchDeviceType();
+export const getCountry = () => getConfigJsonManager().country || (window.PWT?.CC?.cc ? window.PWT.CC.cc : '');
 export const getBidder = (request) => request?.bidder;
 export const getUtm = () => getUtmValue();
 
 export const prepareFloorsConfig = () => {
-  if (!getFloorConfig()?.enabled || !getFloorConfig()?.config) {
+  // TODO: This can be removed as it is beimg used for UTR only and handled for multipliers in name: 'floor.json', for UPR it is handled in
+  // Extract multipliers from floors.json if available
+  // if (floorConfig?.data?.multiplier) {
+  //   // Map of source keys to destination keys
+  //   const multiplierKeys = {
+  //     'win': 'WIN',
+  //     'floored': 'FLOORED',
+  //     'nobid': 'NOBID'
+  //   };
+
+  //   // Initialize _multipliers and only add keys that exist in data.multiplier
+  //   const _multipliers = Object.entries(multiplierKeys)
+  //     .reduce((acc, [srcKey, destKey]) => {
+  //       if (srcKey in floorConfig.data.multiplier) {
+  //         acc[destKey] = floorConfig.data.multiplier[srcKey];
+  //       }
+  //       return acc;
+  //     }, {});
+
+  //   logInfo(CONSTANTS.LOG_PRE_FIX, `Using multipliers from floors.json: ${JSON.stringify(_multipliers)}`);
+  // }
+
+  if (!getFloorConfig()?.enabled) {
     return undefined;
   }
 
@@ -136,6 +158,8 @@ export const prepareFloorsConfig = () => {
   }
 
   let ymUiConfig = { ...getFloorConfig().config };
+
+  ymUiConfig.enforcement ??= {enforceJS: false};
 
   // default values provided by publisher on YM UI
   const defaultValues = ymUiConfig.defaultValues ?? {};
@@ -148,11 +172,12 @@ export const prepareFloorsConfig = () => {
   // If skiprate is provided in configs, overwrite the value in ymFloorsData
   (ymUiConfig.skipRate !== undefined) && (ymFloorsData.skipRate = ymUiConfig.skipRate);
 
-  // merge default configs from page, configs
+  // merge default configs from page and configs from ui
+  const mergedConfig = mergeDeep(ymUiConfig, defaultFloorConfig);
+
   return {
     floors: {
-      ...defaultFloorConfig,
-      ...ymUiConfig,
+      ...mergedConfig,
       data: ymFloorsData,
       additionalSchemaFields: {
         deviceType: getDeviceType,
