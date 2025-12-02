@@ -174,6 +174,11 @@ describe('FloorProvider', () => {
       expect(floorProvider.getUtm()).to.equal('evening');
     });
 
+    it('getDOW should return result from getDayOfWeek', async () => {
+      const stub = sinon.stub(pubmaticUtils, 'getDayOfWeek').returns('2');
+      expect(floorProvider.getDOW()).to.equal('2');
+    });
+
     it('getBidder should return bidder from request', async () => {
       floorProvider.init('dynamicFloors', { getConfigByName: () => floorsobj });
       expect(floorProvider.getBidder({ bidder: 'pubmatic' })).to.equal('pubmatic');
