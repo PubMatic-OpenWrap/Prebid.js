@@ -16,11 +16,6 @@
             "module": "fintezaAnalyticsAdapter"
         },
         {
-            "name": "genericAnalyticsAdapter",
-            "path": "/modules/genericAnalyticsAdapter.js",
-            "module": "genericAnalyticsAdapter"
-        },
-        {
             "name": "greenbidsAnalyticsAdapter",
             "path": "/modules/greenbidsAnalyticsAdapter.js",
             "module": "greenbidsAnalyticsAdapter"
@@ -64,6 +59,11 @@
             "name": "adWMGAnalyticsAdapter",
             "path": "/modules/adWMGAnalyticsAdapter.js",
             "module": "adWMGAnalyticsAdapter"
+        },
+        {
+            "name": "datawrkzAnalyticsAdapter",
+            "path": "/modules/datawrkzAnalyticsAdapter.js",
+            "module": "datawrkzAnalyticsAdapter"
         },
         {
             "name": "atsAnalyticsAdapter",
@@ -216,11 +216,6 @@
             "module": "sharethroughAnalyticsAdapter"
         },
         {
-            "name": "konduitAnalyticsAdapter",
-            "path": "/modules/konduitAnalyticsAdapter.js",
-            "module": "konduitAnalyticsAdapter"
-        },
-        {
             "name": "pianoDmpAnalyticsAdapter",
             "path": "/modules/pianoDmpAnalyticsAdapter.js",
             "module": "pianoDmpAnalyticsAdapter"
@@ -239,11 +234,6 @@
             "name": "pulsepointAnalyticsAdapter",
             "path": "/modules/pulsepointAnalyticsAdapter.js",
             "module": "pulsepointAnalyticsAdapter"
-        },
-        {
-            "name": "bidwatchAnalyticsAdapter",
-            "path": "/modules/bidwatchAnalyticsAdapter.js",
-            "module": "bidwatchAnalyticsAdapter"
         },
         {
             "name": "pubmaticIHAnalyticsAdapter",
@@ -296,11 +286,6 @@
             "module": "uniquestAnalyticsAdapter"
         },
         {
-            "name": "conversantAnalyticsAdapter",
-            "path": "/modules/conversantAnalyticsAdapter.js",
-            "module": "conversantAnalyticsAdapter"
-        },
-        {
             "name": "roxotAnalyticsAdapter",
             "path": "/modules/roxotAnalyticsAdapter.js",
             "module": "roxotAnalyticsAdapter"
@@ -314,6 +299,11 @@
             "name": "rivrAnalyticsAdapter",
             "path": "/modules/rivrAnalyticsAdapter.js",
             "module": "rivrAnalyticsAdapter"
+        },
+        {
+            "name": "adplusAnalyticsAdapter",
+            "path": "/modules/adplusAnalyticsAdapter.js",
+            "module": "adplusAnalyticsAdapter"
         },
         {
             "name": "adlooxAnalyticsAdapter",
@@ -333,31 +323,6 @@
             "module": "bidViewabilityIO"
         },
         {
-            "name": "dchain",
-            "path": "/modules/dchain.js",
-            "module": "dchain"
-        },
-        {
-            "name": "gppControl_usstates",
-            "path": "/modules/gppControl_usstates.js",
-            "module": "gppControl_usstates"
-        },
-        {
-            "name": "uid2IdSystem_shared",
-            "path": "/modules/uid2IdSystem_shared.js",
-            "module": "uid2IdSystem_shared"
-        },
-        {
-            "name": "anPspParamsConverter",
-            "path": "/modules/anPspParamsConverter.js",
-            "module": "anPspParamsConverter"
-        },
-        {
-            "name": "konduitAccelerate",
-            "path": "/modules/konduitWrapper.js",
-            "module": "konduitWrapper"
-        },
-        {
             "name": "iABCategoryTranslation",
             "path": "/modules/categoryTranslation.js",
             "module": "categoryTranslation"
@@ -373,11 +338,6 @@
             "module": "idImportLibrary"
         },
         {
-            "name": "yieldmoSyntheticInventoryModule",
-            "path": "/modules/yieldmoSyntheticInventoryModule.js",
-            "module": "yieldmoSyntheticInventoryModule"
-        },
-        {
             "name": "dsaControl",
             "path": "/modules/dsaControl.js",
             "module": "dsaControl"
@@ -391,11 +351,6 @@
             "name": "paapi",
             "path": "/modules/paapi.js",
             "module": "paapi"
-        },
-        {
-            "name": "supplyChainObject",
-            "path": "/modules/schain.js",
-            "module": "schain"
         },
         {
             "name": "sizeMappingV2",
@@ -433,21 +388,6 @@
             "module": "gppControl_usnat"
         },
         {
-            "name": "Currency",
-            "path": "/modules/currency.js",
-            "module": "currency"
-        },
-        {
-            "name": "consentManagementTcf",
-            "path": "/modules/consentManagementTcf.js",
-            "module": "consentManagementTcf"
-        },
-        {
-            "name": "tcfControl",
-            "path": "/modules/tcfControl.js",
-            "module": "tcfControl"
-        },
-        {
             "name": "gAMExpress",
             "path": "/modules/express.js",
             "module": "express"
@@ -458,29 +398,9 @@
             "module": "instreamTracking"
         },
         {
-            "name": "gptPreAuction",
-            "path": "/modules/gptPreAuction.js",
-            "module": "gptPreAuction"
-        },
-        {
             "name": "Server-to-Server Testing",
             "path": "/modules/s2sTesting.js",
             "module": "s2sTesting"
-        },
-        {
-            "name": "consentManagementGpp",
-            "path": "/modules/consentManagementGpp.js",
-            "module": "consentManagementGpp"
-        },
-        {
-            "name": "CCPA",
-            "path": "/modules/consentManagementUsp.js",
-            "module": "consentManagementUsp"
-        },
-        {
-            "name": "priceFloors",
-            "path": "/modules/priceFloors.js",
-            "module": "priceFloors"
         },
         {
             "name": "topicsFpdModule",
@@ -508,14 +428,19 @@
             "module": "multibid"
         },
         {
-            "name": "fanAdapter",
-            "path": "/modules/fanAdapter.js",
-            "module": "fanAdapter"
-        },
-        {
             "name": "previousAuctionInfo",
             "path": "/modules/previousAuctionInfo/index.js",
             "module": "previousAuctionInfo"
+        },
+        {
+            "name": "gamAdpod",
+            "path": "/modules/gamAdpod.js",
+            "module": "gamAdpod"
+        },
+        {
+            "name": "_moduleMetadata",
+            "path": "/modules/_moduleMetadata.js",
+            "module": "_moduleMetadata"
         }
     ],
     "Video": [
@@ -545,6 +470,11 @@
             "name": "imRtdProvider",
             "path": "/modules/imRtdProvider.js",
             "module": "imRtdProvider"
+        },
+        {
+            "name": "humansecurityMalvDefenseRtdProvider",
+            "path": "/modules/humansecurityMalvDefenseRtdProvider.js",
+            "module": "humansecurityMalvDefenseRtdProvider"
         },
         {
             "name": "raveltechRtdProvider",
@@ -592,6 +522,11 @@
             "module": "wurflRtdProvider"
         },
         {
+            "name": "adlaneRtdProvider",
+            "path": "/modules/adlaneRtdProvider.js",
+            "module": "adlaneRtdProvider"
+        },
+        {
             "name": "mgidRtdProvider",
             "path": "/modules/mgidRtdProvider.js",
             "module": "mgidRtdProvider"
@@ -637,11 +572,6 @@
             "module": "timeoutRtdProvider"
         },
         {
-            "name": "akamaiDapRtdProvider",
-            "path": "/modules/akamaiDapRtdProvider.js",
-            "module": "akamaiDapRtdProvider"
-        },
-        {
             "name": "permutiveRtdProvider",
             "path": "/modules/permutiveRtdProvider.js",
             "module": "permutiveRtdProvider"
@@ -652,11 +582,6 @@
             "module": "gameraRtdProvider"
         },
         {
-            "name": "geolocationRtdProvider",
-            "path": "/modules/geolocationRtdProvider.js",
-            "module": "geolocationRtdProvider"
-        },
-        {
             "name": "reconciliationRtdProvider",
             "path": "/modules/reconciliationRtdProvider.js",
             "module": "reconciliationRtdProvider"
@@ -665,6 +590,11 @@
             "name": "overtoneRtdProvider",
             "path": "/modules/overtoneRtdProvider.js",
             "module": "overtoneRtdProvider"
+        },
+        {
+            "name": "chromeAiRtdProvider",
+            "path": "/modules/chromeAiRtdProvider.js",
+            "module": "chromeAiRtdProvider"
         },
         {
             "name": "optimeraRtdProvider",
@@ -750,6 +680,11 @@
             "name": "dgkeywordRtdProvider",
             "path": "/modules/dgkeywordRtdProvider.js",
             "module": "dgkeywordRtdProvider"
+        },
+        {
+            "name": "oftmediaRtdProvider",
+            "path": "/modules/oftmediaRtdProvider.js",
+            "module": "oftmediaRtdProvider"
         },
         {
             "name": "browsiRtdProvider",
@@ -852,6 +787,11 @@
             "name": "targetVideoAdServerVideo",
             "path": "/modules/targetVideoAdServerVideo.js",
             "module": "targetVideoAdServerVideo"
+        },
+        {
+            "name": "gamAdServerVideo",
+            "path": "/modules/gamAdServerVideo.js",
+            "module": "gamAdServerVideo"
         },
         {
             "name": "adlooxAdServerVideo",
