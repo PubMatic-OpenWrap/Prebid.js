@@ -364,7 +364,6 @@ describe('Pubmatic RTD Provider', () => {
             expect(result.floors.additionalSchemaFields.os).to.equal(getOs);
             expect(result.floors.additionalSchemaFields.country).to.equal(getCountry);
             expect(result.floors.additionalSchemaFields.utm).to.equal(getUtm);
-            expect(result.floors.additionalSchemaFields.country).to.equal(getCountry);
             expect(result.floors.additionalSchemaFields.hourOfDay).to.equal(getHourOfDay);
             expect(result.floors.additionalSchemaFields.bidder).to.equal(getBidder);
         });
