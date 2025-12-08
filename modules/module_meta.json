@@ -441,6 +441,16 @@
             "name": "_moduleMetadata",
             "path": "/modules/_moduleMetadata.js",
             "module": "_moduleMetadata"
+        },
+        {
+            "name": "dchain",
+            "path": "/modules/dchain.ts",
+            "module": "dchain"
+        },
+        {
+            "name": "multibid",
+            "path": "/modules/multibid/index.ts",
+            "module": "multibid"
         }
     ],
     "Video": [
