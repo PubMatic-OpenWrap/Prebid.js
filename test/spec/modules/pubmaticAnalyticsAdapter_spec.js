@@ -7,7 +7,6 @@ import { EVENTS, REJECTION_REASON } from 'src/constants.js';
 import { config } from 'src/config.js';
 import { setConfig } from 'modules/currency.js';
 import { server } from '../../mocks/xhr.js';
-import { getGlobal } from '../../../src/prebidGlobal';
 import 'src/prebid.js';
 
 // Get cache from analytics adapter
@@ -444,7 +443,7 @@ describe('pubmatic analytics adapter', function () {
     it('Pubmatic Won: No tracker fired', function () {
       this.timeout(5000)
 
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobalVarName(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 
@@ -579,7 +578,7 @@ describe('pubmatic analytics adapter', function () {
 
       this.timeout(5000)
 
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobalVarName(), 'getHighestCpmBids').callsFake((key) => {
         return [APPNEXUS_BID]
       });
 
@@ -649,7 +648,7 @@ describe('pubmatic analytics adapter', function () {
     it('Logger: best case + win tracker', function () {
       this.timeout(5000)
 
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobalVarName(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 
@@ -726,7 +725,7 @@ describe('pubmatic analytics adapter', function () {
 
       this.timeout(5000)
 
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobalVarName(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 
@@ -778,7 +777,7 @@ describe('pubmatic analytics adapter', function () {
       bidCopy.cpm = bidCopy.originalCpm * 2; //  bidCpmAdjustment => bidCpm * 2
       this.timeout(5000)
 
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobalVarName(), 'getHighestCpmBids').callsFake((key) => {
         return [bidCopy, MOCK.BID_RESPONSE[1]]
       });
 
@@ -1029,7 +1028,7 @@ describe('pubmatic analytics adapter', function () {
     it('Logger: post-timeout check with bid response', function () {
       // db = 1 and t = 1 means bidder did NOT respond with a bid but we got a timeout notification
 
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobalVarName(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[1]]
       });
 
@@ -1329,7 +1328,7 @@ describe('pubmatic analytics adapter', function () {
     it('Logger: to handle floor rejected bids', function () {
       this.timeout(5000)
 
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobalVarName(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 
@@ -1394,7 +1393,7 @@ describe('pubmatic analytics adapter', function () {
       MOCK.BID_REQUESTED['bids'][0]['bidderCode'] = 'pubmatic_alias';
       adapterManager.aliasRegistry['pubmatic_alias'] = 'pubmatic';
 
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobalVarName(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 
@@ -1523,7 +1522,7 @@ describe('pubmatic analytics adapter', function () {
     it('Logger: should use originalRequestId to find the bid', function() {
       MOCK.BID_RESPONSE[1]['originalRequestId'] = '3bd4ebb1c900e2';
       MOCK.BID_RESPONSE[1]['requestId'] = '54d4ebb1c9003e';
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobalVarName(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 
@@ -1562,7 +1561,7 @@ describe('pubmatic analytics adapter', function () {
 
     it('Logger: best case + win tracker in case of GroupM as alternate bidder', function () {
       MOCK.BID_REQUESTED['bids'][0]['bidderCode'] = 'groupm';
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobalVarName(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 
@@ -1832,7 +1831,7 @@ describe('pubmatic analytics adapter', function () {
     it('Custom dimension data', function () {
       this.timeout(5000)
 
-      sandbox.stub($$PREBID_GLOBAL$$, 'getHighestCpmBids').callsFake((key) => {
+      sandbox.stub(getGlobalVarName(), 'getHighestCpmBids').callsFake((key) => {
         return [MOCK.BID_RESPONSE[0], MOCK.BID_RESPONSE[1]]
       });
 

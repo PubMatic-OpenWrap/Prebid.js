@@ -4,8 +4,9 @@ import * as sinon from 'sinon';
 import { newBidder } from 'src/adapters/bidderFactory.js';
 import { config } from 'src/config';
 import * as utils from 'src/utils';
-import { deepSetValue } from '../../../src/utils';
-import { getImpIdMap, setIsEqtvTest } from '../../../modules/sharethroughBidAdapter';
+import { deepSetValue } from '../../../src/utils.js';
+import { getImpIdMap, setIsEqtvTest } from '../../../modules/sharethroughBidAdapter.js';
+import * as equativUtils from '../../../libraries/equativUtils/equativUtils.js'
 
 const spec = newBidder(sharethroughAdapterSpec).getSpec();
 
@@ -319,17 +320,23 @@ describe('sharethrough adapter spec', function () {
           crumbs: {
             pubcid: 'fake-pubcid-in-crumbs-obj',
           },
-          schain: {
-            ver: '1.0',
-            complete: 1,
-            nodes: [
-              {
-                asi: 'directseller.com',
-                sid: '00001',
-                rid: 'BidRequest1',
-                hp: 1,
-              },
-            ],
+          ortb2: {
+            source: {
+              ext: {
+                schain: {
+                  ver: '1.0',
+                  complete: 1,
+                  nodes: [
+                    {
+                      asi: 'directseller.com',
+                      sid: '00001',
+                      rid: 'BidRequest1',
+                      hp: 1,
+                    },
+                  ],
+                }
+              }
+            }
           },
           getFloor: () => ({ currency: 'USD', floor: 42 }),
         },
@@ -437,7 +444,7 @@ describe('sharethrough adapter spec', function () {
             },
           ];
 
-          builtRequests.map((builtRequest, rIndex) => {
+          builtRequests.forEach((builtRequest, rIndex) => {
             expect(builtRequest.method).to.equal('POST');
             expect(builtRequest.url).not.to.be.undefined;
             expect(builtRequest.options).to.be.undefined;
@@ -484,7 +491,7 @@ describe('sharethrough adapter spec', function () {
             expect(openRtbReq.source.tid).to.equal(bidderRequest.ortb2.source.tid);
             expect(openRtbReq.source.ext.version).not.to.be.undefined;
             expect(openRtbReq.source.ext.str).not.to.be.undefined;
-            expect(openRtbReq.source.ext.schain).to.deep.equal(bidRequests[0].schain);
+            expect(openRtbReq.source.ext.schain).to.deep.equal(bidRequests[0].ortb2.source.ext.schain);
 
             expect(openRtbReq.bcat).to.deep.equal(bidRequests[0].params.bcat);
             expect(openRtbReq.badv).to.deep.equal(bidRequests[0].params.badv);
@@ -668,13 +675,6 @@ describe('sharethrough adapter spec', function () {
 
           expect(requests[0].data.imp[0].ext.gpid).to.equal('universal-id');
           expect(requests[1].data.imp[0].ext).to.be.empty;
-        });
-
-        it('should include gpid when pbadslot is provided without universal id', () => {
-          delete bidRequests[0].ortb2Imp.ext.gpid;
-          const requests = spec.buildRequests(bidRequests, bidderRequest);
-
-          expect(requests[0].data.imp[0].ext.gpid).to.equal('pbadslot-id');
         });
       });
 
@@ -1441,6 +1441,76 @@ describe('sharethrough adapter spec', function () {
     describe('getUserSyncs', function () {
       const cookieSyncs = ['cookieUrl1', 'cookieUrl2', 'cookieUrl3'];
       const serverResponses = [{ body: { cookieSyncUrls: cookieSyncs } }];
+      let handleCookieSyncStub;
+
+      const SAMPLE_RESPONSE = {
+        body: {
+          id: '12h712u7-k22g-8124-ab7a-h268s22dy271',
+          seatbid: [
+            {
+              bid: [
+                {
+                  id: '1bh7jku7-ko2g-8654-ab72-h268shvwy271',
+                  impid: 'r12gwgf231',
+                  price: 0.6565,
+                  adm: '<h1>AD</h1>',
+                  adomain: ['abc.com'],
+                  cid: '1242512',
+                  crid: '535231',
+                  w: 300,
+                  h: 600,
+                  mtype: 1,
+                  cat: ['IAB19', 'IAB19-1'],
+                  cattax: 1,
+                },
+              ],
+              seat: '4212',
+            },
+          ],
+          cur: 'USD',
+          statuscode: 0,
+        },
+      };
+
+      beforeEach(() => {
+        handleCookieSyncStub = sinon.stub(equativUtils, 'handleCookieSync');
+      });
+      afterEach(() => {
+        handleCookieSyncStub.restore();
+      });
+
+      it('should call handleCookieSync with correct parameters and return its result', () => {
+        setIsEqtvTest(true);
+
+        const expectedResult = [
+          { type: 'iframe', url: 'https://sync.example.com' },
+        ];
+
+        handleCookieSyncStub.returns(expectedResult)
+
+        const result = spec.getUserSyncs({ iframeEnabled: true },
+          SAMPLE_RESPONSE,
+          { gdprApplies: true, vendorData: { vendor: { consents: {} } } });
+
+        sinon.assert.calledWithMatch(
+          handleCookieSyncStub,
+          { iframeEnabled: true },
+          SAMPLE_RESPONSE,
+          { gdprApplies: true, vendorData: { vendor: { consents: {} } } },
+          sinon.match.number,
+          sinon.match.object
+        );
+
+        expect(result).to.deep.equal(expectedResult);
+      });
+
+      it('should not call handleCookieSync and return undefined when isEqtvTest is false', () => {
+        setIsEqtvTest(false);
+
+        spec.getUserSyncs({}, {}, {});
+
+        sinon.assert.notCalled(handleCookieSyncStub);
+      });
 
       it('returns an array of correctly formatted user syncs', function () {
         const syncArray = spec.getUserSyncs({ pixelEnabled: true }, serverResponses);

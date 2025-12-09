@@ -11,9 +11,10 @@ import { hook } from './hook.js';
 import { sessionLoader } from './debugging.js';
 import { storageCallbacks } from './storageManager.js';
 import { CONSTANTS } from './constants.js';
-import * as events from './events.js'
+import * as events from './events.js';
+import { getGlobalVarName } from './buildOptions.js';
 
-const $$PREBID_GLOBAL$$ = getGlobal();
+const pbGlobal = getGlobal();
 const { triggerUserSyncs } = userSync;
 
 /* private variables */
@@ -22,20 +23,20 @@ const { REQUEST_BIDS } = CONSTANTS.EVENTS;
 sessionLoader();
 
 /* Public vars */
-$$PREBID_GLOBAL$$.bidderSettings = $$PREBID_GLOBAL$$.bidderSettings || {};
+pbGlobal.bidderSettings = pbGlobal.bidderSettings || {};
 // let the world know we are loaded
-$$PREBID_GLOBAL$$.libLoaded = true;
+pbGlobal.libLoaded = true;
 
 // version auto generated from build
-$$PREBID_GLOBAL$$.version = 'v$prebid.version$';
+pbGlobal.version = 'v$prebid.version$';
 logInfo('Prebid.js v$prebid.version$ loaded');
 
-$$PREBID_GLOBAL$$.installedModules = $$PREBID_GLOBAL$$.installedModules || [];
+pbGlobal.installedModules = pbGlobal.installedModules || [];
 // create adUnit array
-$$PREBID_GLOBAL$$.adUnits = $$PREBID_GLOBAL$$.adUnits || [];
+pbGlobal.adUnits = pbGlobal.adUnits || [];
 
 // Allow publishers who enable user sync override to trigger their sync
-$$PREBID_GLOBAL$$.triggerUserSyncs = triggerUserSyncs;
+pbGlobal.triggerUserSyncs = triggerUserSyncs;
 /// ///////////////////////////////
 //                              //
 //    Start Public APIs         //
@@ -52,7 +53,7 @@ $$PREBID_GLOBAL$$.triggerUserSyncs = triggerUserSyncs;
  * @param {String} requestOptions.auctionId
  * @alias module:pbjs.requestBids
  */
-$$PREBID_GLOBAL$$.requestBids = hook('async', function ({ bidsBackHandler, timeout, adUnits, adUnitCodes, labels, auctionId } = {}) {
+pbGlobal.requestBids = hook('async', function ({ bidsBackHandler, timeout, adUnits, adUnitCodes, labels, auctionId } = {}) {
   events.emit(REQUEST_BIDS);
 });
 
@@ -69,14 +70,14 @@ export function executeCallbacks(fn, reqBidsConfigObj) {
 }
 
 // This hook will execute all storage callbacks which were registered before gdpr enforcement hook was added. Some bidders, user id modules use storage functions when module is parsed but gdpr enforcement hook is not added at that stage as setConfig callbacks are yet to be called. Hence for such calls we execute all the stored callbacks just before requestBids. At this hook point we will know for sure that gdprEnforcement module is added or not
-$$PREBID_GLOBAL$$.requestBids.before(executeCallbacks, 49);
+pbGlobal.requestBids.before(executeCallbacks, 49);
 
 /**
  * Get Prebid config options
  * @param {Object} options
  * @alias module:pbjs.getConfig
  */
-$$PREBID_GLOBAL$$.getConfig = config.getConfig;
+pbGlobal.getConfig = config.getConfig;
 
 /**
  * Set Prebid config options.
@@ -124,8 +125,8 @@ $$PREBID_GLOBAL$$.getConfig = config.getConfig;
  * })
  * ```
  */
-$$PREBID_GLOBAL$$.setConfig = config.setConfig;
-$$PREBID_GLOBAL$$.setBidderConfig = config.setBidderConfig;
+pbGlobal.setConfig = config.setConfig;
+pbGlobal.setBidderConfig = config.setBidderConfig;
 
 /**
  * This queue lets users load Prebid asynchronously, but run functions the same way regardless of whether it gets loaded
@@ -147,7 +148,7 @@ $$PREBID_GLOBAL$$.setBidderConfig = config.setBidderConfig;
  *                            the Prebid script has been fully loaded.
  * @alias module:pbjs.cmd.push
  */
-$$PREBID_GLOBAL$$.cmd.push = function (command) {
+pbGlobal.cmd.push = function (command) {
   if (typeof command === 'function') {
     try {
       command.call();
@@ -155,11 +156,11 @@ $$PREBID_GLOBAL$$.cmd.push = function (command) {
       logError('Error processing command :', e.message, e.stack);
     }
   } else {
-    logError('Commands written into $$PREBID_GLOBAL$$.cmd.push must be wrapped in a function');
+    logError('Commands written into pbGlobal.cmd.push must be wrapped in a function');
   }
 };
 
-$$PREBID_GLOBAL$$.que.push = $$PREBID_GLOBAL$$.cmd.push;
+pbGlobal.que.push = pbGlobal.cmd.push;
 
 function processQueue(queue) {
   queue.forEach(function (cmd) {
@@ -177,10 +178,10 @@ function processQueue(queue) {
 /**
  * @alias module:pbjs.processQueue
  */
-$$PREBID_GLOBAL$$.processQueue = function () {
+pbGlobal.processQueue = function () {
   hook.ready();
-  processQueue($$PREBID_GLOBAL$$.que);
-  processQueue($$PREBID_GLOBAL$$.cmd);
+  processQueue(pbGlobal.que);
+  processQueue(pbGlobal.cmd);
 };
 
-export default $$PREBID_GLOBAL$$;
+export default pbGlobal;
