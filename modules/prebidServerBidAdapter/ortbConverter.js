@@ -227,6 +227,9 @@ const PBS_CONVERTER = ortbConverter({
             }
             redactedOrtb2 = ortb2Copy;
           }
+          else if(bidder === 'pubmatic' && isEmpty(redactedOrtb2)){
+            return [];
+          }
 
           return [{
             bidders: [bidder],

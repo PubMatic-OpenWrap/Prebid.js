@@ -1,4 +1,4 @@
-import { _each, isArray, logError, logWarn, pick, isFn, isEmpty } from '../src/utils.js';
+import { _each, isArray, logError, logWarn, pick, isFn, isEmpty, isFn } from '../src/utils.js';
 import { default as adapter, setDebounceDelay } from '../libraries/analyticsAdapter/AnalyticsAdapter.js';
 import adapterManager from '../src/adapterManager.js';
 import { BID_STATUS, STATUS, REJECTION_REASON } from '../src/constants.js';
@@ -438,6 +438,7 @@ function checkAndModifySizeOfKGPVIfRequired(bid) {
 
 function getListOfIdentityPartners() {
   const namespace = getGlobal();
+  if (!isFn(namespace.getUserIds)) return;
   const publisherProvidedEids = namespace.getConfig("ortb2.user.eids") || [];
   const availableUserIds = namespace.adUnits[0]?.bids[0]?.userId || {};
   const identityModules = namespace.getConfig('userSync')?.userIds || [];
