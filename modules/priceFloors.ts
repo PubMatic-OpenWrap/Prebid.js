@@ -529,6 +529,7 @@ export function createFloorsDataForAuction(adUnits, auctionId) {
  * @summary This is the function which will be called to exit our module and continue the auction.
  */
 export function continueAuction(hookConfig) {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< continueAuction");
   if (!hookConfig.hasExited) {
     // We need to know the auctionId at this time. So we will use the passed in one or generate and set it ourselves
     hookConfig.reqBidsConfigObj.auctionId = hookConfig.reqBidsConfigObj.auctionId || generateUUID();
@@ -659,6 +660,7 @@ export function parseFloorData(floorsData, location) {
  * @param {function} fn required; The next function in the chain, used by hook.ts
  */
 export const requestBidsHook = timedAuctionHook('priceFloors', function requestBidsHook(fn, reqBidsConfigObj) {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< requestBids hook of price floors module");
   // preserves all module related variables for the current auction instance (used primiarily for concurrent auctions)
   const hookConfig = {
     reqBidsConfigObj,
@@ -670,12 +672,14 @@ export const requestBidsHook = timedAuctionHook('priceFloors', function requestB
 
   // If auction delay > 0 AND we are fetching -> Then wait until it finishes
   if (_floorsConfig.auctionDelay > 0 && fetching) {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< fetching floors");
     _delayedAuctions.submit(_floorsConfig.auctionDelay, () => continueAuction(hookConfig), () => {
       logWarn(`${MODULE_NAME}: Fetch attempt did not return in time for auction`);
       _floorsConfig.fetchStatus = 'timeout';
       continueAuction(hookConfig);
     });
   } else {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< not fetching floors, continuing auction");
     continueAuction(hookConfig);
   }
 });
@@ -890,6 +894,7 @@ declare module '../src/config' {
  * @summary This is the function which controls what happens during a pbjs.setConfig({...floors: {}}) is called
  */
 export function handleSetFloorsConfig(config) {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< handleSetFloorsConfig");
   _floorsConfig = pick(config, [
     'floorMin',
     'enabled', enabled => enabled !== false, // defaults to true
@@ -915,10 +920,25 @@ export function handleSetFloorsConfig(config) {
     generateAndHandleFetch(_floorsConfig.endpoint);
 
     if (!addedFloorsHook) {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< handleSetFloorsConfig NOT added Floors Hook ");
       // register hooks / listening events
       // when auction finishes remove it's associated floor data after 3 seconds so we stil have it for latent responses
       events.on(EVENTS.AUCTION_END, (args) => {
         setTimeout(() => delete _floorDataForAuction[args.auctionId], 3000);
+      });
+
+      events.on(EVENTS.RECALCULATE_FLOORS, (reqBidsConfigObj: any) => {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< PRICEFLOORS module ON received RECALCULATE event");
+        const hookConfig = {
+          reqBidsConfigObj,
+          context: null, // Removed 'this' as it's not applicable in function-based implementation
+          nextFn: () => true,
+          haveExited: false,
+          timer: null
+        };
+
+        // Apply floor configuration
+        continueAuction(hookConfig);
       });
 
       // we want our hooks to run after the currency hooks
@@ -927,6 +947,8 @@ export function handleSetFloorsConfig(config) {
       // debugging is currently set at 5 priority
       getHook('addBidResponse').before(addBidResponseHook, debugTurnedOn() ? 4 : 50);
       addedFloorsHook = true;
+    }else {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< handleSetFloorsConfig hooks added for Floors ");
     }
   } else {
     logInfo(`${MODULE_NAME}: Turning off module`);

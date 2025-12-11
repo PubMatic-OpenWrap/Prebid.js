@@ -826,6 +826,7 @@ export const requestBids = (function() {
 addApiMethod('requestBids', requestBids as unknown as RequestBids, false);
 
 export const startAuction = hook('async', function ({ bidsBackHandler, timeout: cbTimeout, adUnits: adUnitDefs, ttlBuffer, adUnitCodes, labels, auctionId, ortb2Fragments, metrics, defer }: StartAuctionOptions = {} as any) {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< start auction");
   const s2sBidders = getS2SBidderSet(config.getConfig('s2sConfig') || []);
   fillAdUnitDefaults(adUnitDefs);
   const adUnits: AdUnit[] = useMetrics(metrics).measureTime('requestBids.validate', () => checkAdUnitSetup(adUnitDefs));

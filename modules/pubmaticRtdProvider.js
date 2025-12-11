@@ -19,7 +19,7 @@ export const CONSTANTS = Object.freeze({
   REAL_TIME_MODULE: 'realTimeData',
   LOG_PRE_FIX: 'PubMatic-Rtd-Provider: ',
   ENDPOINTS: {
-    BASEURL: 'https://ads.pubmatic.com/AdServer/js/pwt',
+    BASEURL: 'http://127.0.0.1:8080/js/pwt',
     CONFIGS: 'config.json'
   }
 });
@@ -106,6 +106,7 @@ pluginManager.register('dynamicTimeout', DynamicTimeout);
  * @returns {boolean}
  */
 const init = (config, _userConsent) => {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< init of RTD");
   let { publisherId, profileId } = config?.params || {};
 
   if (!publisherId || !profileId) {
@@ -132,6 +133,7 @@ const init = (config, _userConsent) => {
  * @param {function} callback
  */
 const getBidRequestData = (reqBidsConfigObj, callback) => {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< getBidRequestData of RTD");
   _ymConfigPromise.then(() => {
     pluginManager.executeHook('processBidRequest', reqBidsConfigObj);
     // Apply country information if available

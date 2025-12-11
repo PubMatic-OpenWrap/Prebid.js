@@ -3,12 +3,14 @@ import { logInfo, logError, logMessage, isEmpty } from '../../../src/utils.js';
 import { getDeviceType as fetchDeviceType, getOS } from '../../userAgentUtils/index.js';
 import { getBrowserType, getCurrentTimeOfDay, getUtmValue } from '../pubmaticUtils.js';
 import { config as conf } from '../../../src/config.js';
+import { EVENTS } from '../../../src/constants.ts';
+import * as events from '../../../src/events.ts';
 
-/**
- * This RTD module has a dependency on the priceFloors module.
- * We utilize the continueAuction function from the priceFloors module to incorporate price floors data into the current auction.
- */
-import { continueAuction } from '../../../modules/priceFloors.js'; // eslint-disable-line prebid/validate-imports
+// /**
+//  * This RTD module has a dependency on the priceFloors module.
+//  * We utilize the continueAuction function from the priceFloors module to incorporate price floors data into the current auction.
+//  */
+// import { continueAuction } from '../../../modules/priceFloors.js'; // eslint-disable-line prebid/validate-imports
 
 let _floorConfig = null;
 export const getFloorConfig = () => _floorConfig;
@@ -29,6 +31,8 @@ export const CONSTANTS = Object.freeze({
  * @returns {Promise<boolean>} - Promise resolving to initialization status
  */
 export async function init(pluginName, configJsonManager) {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< floor provider init");
+
   // Process floor-specific configuration
   const config = configJsonManager.getConfigByName(pluginName);
   if (!config) {
@@ -61,19 +65,23 @@ export async function init(pluginName, configJsonManager) {
  * @returns {Object} - Updated bid request config object
  */
 export function processBidRequest(reqBidsConfigObj) {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< floor provider process bid req");
+
   try {
-    const hookConfig = {
-      reqBidsConfigObj,
-      context: null, // Removed 'this' as it's not applicable in function-based implementation
-      nextFn: () => true,
-      haveExited: false,
-      timer: null
-    };
+    // const hookConfig = {
+    //   reqBidsConfigObj,
+    //   context: null, // Removed 'this' as it's not applicable in function-based implementation
+    //   nextFn: () => true,
+    //   haveExited: false,
+    //   timer: null
+    // };
 
-    // Apply floor configuration
-    continueAuction(hookConfig);
-    logInfo(`${CONSTANTS.LOG_PRE_FIX} Applied floor configuration to auction`);
+    // // Apply floor configuration
+    // continueAuction(hookConfig);
+    // logInfo(`${CONSTANTS.LOG_PRE_FIX} Applied floor configuration to auction`);
+console.log(">>>>>>>>> PRI <<<<<<<<<<< floor provider emitting RECALCULATE event");
 
+    events.emit(EVENTS.RECALCULATE_FLOORS, reqBidsConfigObj);
     return reqBidsConfigObj;
   } catch (error) {
     logError(`${CONSTANTS.LOG_PRE_FIX} Error applying floor configuration: ${error}`);
