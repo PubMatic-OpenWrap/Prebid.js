@@ -3,8 +3,6 @@ import { logInfo, logError, logMessage, isEmpty } from '../../../src/utils.js';
 import { getDeviceType as fetchDeviceType, getOS } from '../../userAgentUtils/index.js';
 import { getBrowserType, getCurrentTimeOfDay, getUtmValue } from '../pubmaticUtils.js';
 import { config as conf } from '../../../src/config.js';
-import { EVENTS } from '../../../src/constants.ts';
-import * as events from '../../../src/events.ts';
 
 // /**
 //  * This RTD module has a dependency on the priceFloors module.
@@ -79,9 +77,6 @@ console.log(">>>>>>>>> PRI <<<<<<<<<<< floor provider process bid req");
     // // Apply floor configuration
     // continueAuction(hookConfig);
     // logInfo(`${CONSTANTS.LOG_PRE_FIX} Applied floor configuration to auction`);
-console.log(">>>>>>>>> PRI <<<<<<<<<<< floor provider emitting RECALCULATE event");
-
-    events.emit(EVENTS.RECALCULATE_FLOORS, reqBidsConfigObj);
     return reqBidsConfigObj;
   } catch (error) {
     logError(`${CONSTANTS.LOG_PRE_FIX} Error applying floor configuration: ${error}`);

@@ -34,6 +34,7 @@ import {ALL_MEDIATYPES, BANNER, type MediaType} from '../src/mediaTypes.js';
 import type {Currency, Size, BidderCode} from "../src/types/common.d.ts";
 import type {BidRequest} from '../src/adapterManager.ts';
 import type {Bid} from "../src/bidfactory.ts";
+import { type StartAuctionOptions } from '../src/prebid.js';
 
 export const FLOOR_SKIPPED_REASON = {
   NOT_FOUND: 'not_found',
@@ -890,6 +891,20 @@ declare module '../src/config' {
   }
 }
 
+export const startAuctionHook = timedAuctionHook('priceFloors', function requestBidsHook(fn, reqBidsConfigObj: StartAuctionOptions, {} = {}) {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< startAuctionHook");
+  const hookConfig = {
+    reqBidsConfigObj,
+    context: null, // Removed 'this' as it's not applicable in function-based implementation
+    nextFn: fn,
+    haveExited: false,
+    timer: null
+  };
+
+  // Apply floor configuration
+  continueAuction(hookConfig);
+});
+
 /**
  * @summary This is the function which controls what happens during a pbjs.setConfig({...floors: {}}) is called
  */
@@ -927,19 +942,7 @@ console.log(">>>>>>>>> PRI <<<<<<<<<<< handleSetFloorsConfig NOT added Floors Ho
         setTimeout(() => delete _floorDataForAuction[args.auctionId], 3000);
       });
 
-      events.on(EVENTS.RECALCULATE_FLOORS, (reqBidsConfigObj: any) => {
-console.log(">>>>>>>>> PRI <<<<<<<<<<< PRICEFLOORS module ON received RECALCULATE event");
-        const hookConfig = {
-          reqBidsConfigObj,
-          context: null, // Removed 'this' as it's not applicable in function-based implementation
-          nextFn: () => true,
-          haveExited: false,
-          timer: null
-        };
-
-        // Apply floor configuration
-        continueAuction(hookConfig);
-      });
+      getHook('startAuction').before(startAuctionHook); // RTD should run before FPD
 
       // we want our hooks to run after the currency hooks
       getHook('requestBids').before(requestBidsHook, 50);
