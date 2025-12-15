@@ -5,6 +5,7 @@ import { PluginManager } from '../libraries/pubmaticUtils/plugins/pluginManager.
 import { FloorProvider } from '../libraries/pubmaticUtils/plugins/floorProvider.js';
 import { UnifiedPricingRule } from '../libraries/pubmaticUtils/plugins/unifiedPricingRule.js';
 import { DynamicTimeout } from '../libraries/pubmaticUtils/plugins/dynamicTimeout.js';
+import { config as conf } from '../src/config.js';
 
 /**
  * @typedef {import('./rtdModule/index.js').RtdSubmodule} RtdSubmodule
@@ -116,6 +117,15 @@ console.log(">>>>>>>>> PRI <<<<<<<<<<< init of RTD");
 
   publisherId = String(publisherId).trim();
   profileId = String(profileId).trim();
+
+console.log(">>>>>>>>> PRI <<<<<<<<<<< setting floors config for waitForRTD from pubmaticRtdProvider");
+  conf.setConfig({
+    floors: {
+      enabled: true,
+      waitForRTD: true,
+      auctionDelay: 300,
+    }
+  });
 
   // Fetch configuration and initialize plugins
   _ymConfigPromise = configJsonManager.fetchConfig(publisherId, profileId)

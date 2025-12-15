@@ -671,8 +671,15 @@ console.log(">>>>>>>>> PRI <<<<<<<<<<< requestBids hook of price floors module")
     timer: null
   };
 
+  if (_floorsConfig.auctionDelay > 0 && _floorsConfig.waitForRTD) {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< waiting for RTD");
+    _delayedAuctions.submit(_floorsConfig.auctionDelay, () => continueAuction(hookConfig), () => {
+      logWarn(`${MODULE_NAME}: Fetch attempt did not return in time for auction`);
+      continueAuction(hookConfig);
+    });
+  } 
   // If auction delay > 0 AND we are fetching -> Then wait until it finishes
-  if (_floorsConfig.auctionDelay > 0 && fetching) {
+  else if (_floorsConfig.auctionDelay > 0 && fetching) {
 console.log(">>>>>>>>> PRI <<<<<<<<<<< fetching floors");
     _delayedAuctions.submit(_floorsConfig.auctionDelay, () => continueAuction(hookConfig), () => {
       logWarn(`${MODULE_NAME}: Fetch attempt did not return in time for auction`);
@@ -891,20 +898,6 @@ declare module '../src/config' {
   }
 }
 
-export const startAuctionHook = timedAuctionHook('priceFloors', function requestBidsHook(fn, reqBidsConfigObj: StartAuctionOptions, {} = {}) {
-console.log(">>>>>>>>> PRI <<<<<<<<<<< startAuctionHook");
-  const hookConfig = {
-    reqBidsConfigObj,
-    context: null, // Removed 'this' as it's not applicable in function-based implementation
-    nextFn: fn,
-    haveExited: false,
-    timer: null
-  };
-
-  // Apply floor configuration
-  continueAuction(hookConfig);
-});
-
 /**
  * @summary This is the function which controls what happens during a pbjs.setConfig({...floors: {}}) is called
  */
@@ -926,7 +919,8 @@ console.log(">>>>>>>>> PRI <<<<<<<<<<< handleSetFloorsConfig");
       'noFloorSignalBidders', noFloorSignalBidders => noFloorSignalBidders || []
     ]),
     'additionalSchemaFields', additionalSchemaFields => typeof additionalSchemaFields === 'object' && Object.keys(additionalSchemaFields).length > 0 ? addFieldOverrides(additionalSchemaFields) : undefined,
-    'data', data => (data && parseFloorData(data, 'setConfig')) || undefined
+    'data', data => (data && parseFloorData(data, 'setConfig')) || undefined,
+    'waitForRTD', waitForRTD => waitForRTD === true,
   ]);
 
   // if enabled then do some stuff
@@ -941,8 +935,6 @@ console.log(">>>>>>>>> PRI <<<<<<<<<<< handleSetFloorsConfig NOT added Floors Ho
       events.on(EVENTS.AUCTION_END, (args) => {
         setTimeout(() => delete _floorDataForAuction[args.auctionId], 3000);
       });
-
-      getHook('startAuction').before(startAuctionHook); // RTD should run before FPD
 
       // we want our hooks to run after the currency hooks
       getHook('requestBids').before(requestBidsHook, 50);
