@@ -5,6 +5,9 @@ import { PluginManager } from '../libraries/pubmaticUtils/plugins/pluginManager.
 import { FloorProvider } from '../libraries/pubmaticUtils/plugins/floorProvider.js';
 import { UnifiedPricingRule } from '../libraries/pubmaticUtils/plugins/unifiedPricingRule.js';
 import { DynamicTimeout } from '../libraries/pubmaticUtils/plugins/dynamicTimeout.js';
+
+import { EVENTS } from '../src/constants.ts';
+import * as events from '../src/events.ts';
 import { config as conf } from '../src/config.js';
 
 /**
@@ -118,15 +121,6 @@ console.log(">>>>>>>>> PRI <<<<<<<<<<< init of RTD");
   publisherId = String(publisherId).trim();
   profileId = String(profileId).trim();
 
-console.log(">>>>>>>>> PRI <<<<<<<<<<< setting floors config for waitForRTD from pubmaticRtdProvider");
-  conf.setConfig({
-    floors: {
-      enabled: true,
-      waitForRTD: true,
-      auctionDelay: 300,
-    }
-  });
-
   // Fetch configuration and initialize plugins
   _ymConfigPromise = configJsonManager.fetchConfig(publisherId, profileId)
     .then(success => {
@@ -135,6 +129,14 @@ console.log(">>>>>>>>> PRI <<<<<<<<<<< setting floors config for waitForRTD from
       }
       return pluginManager.initialize(configJsonManager);
     });
+  
+console.log(">>>>>>>>> PRI <<<<<<<<<<< ADDING WAITLIST");
+    conf.setConfig({
+      floors: {
+        enabled: true,
+      }
+    });
+    events.emit(EVENTS.REGISTER_WAITLIST, "pubmaticRTD");
   return true;
 };
 

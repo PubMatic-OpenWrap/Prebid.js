@@ -36,6 +36,9 @@ import type {BidRequest} from '../src/adapterManager.ts';
 import type {Bid} from "../src/bidfactory.ts";
 import { type StartAuctionOptions } from '../src/prebid.js';
 
+let waitlist = new Set();
+let maxWaitTime = 300; // need to adjust
+
 export const FLOOR_SKIPPED_REASON = {
   NOT_FOUND: 'not_found',
   RANDOM: 'random'
@@ -671,15 +674,8 @@ console.log(">>>>>>>>> PRI <<<<<<<<<<< requestBids hook of price floors module")
     timer: null
   };
 
-  if (_floorsConfig.auctionDelay > 0 && _floorsConfig.waitForRTD) {
-console.log(">>>>>>>>> PRI <<<<<<<<<<< waiting for RTD");
-    _delayedAuctions.submit(_floorsConfig.auctionDelay, () => continueAuction(hookConfig), () => {
-      logWarn(`${MODULE_NAME}: Fetch attempt did not return in time for auction`);
-      continueAuction(hookConfig);
-    });
-  } 
   // If auction delay > 0 AND we are fetching -> Then wait until it finishes
-  else if (_floorsConfig.auctionDelay > 0 && fetching) {
+  if (_floorsConfig.auctionDelay > 0 && fetching) {
 console.log(">>>>>>>>> PRI <<<<<<<<<<< fetching floors");
     _delayedAuctions.submit(_floorsConfig.auctionDelay, () => continueAuction(hookConfig), () => {
       logWarn(`${MODULE_NAME}: Fetch attempt did not return in time for auction`);
@@ -688,7 +684,7 @@ console.log(">>>>>>>>> PRI <<<<<<<<<<< fetching floors");
     });
   } else {
 console.log(">>>>>>>>> PRI <<<<<<<<<<< not fetching floors, continuing auction");
-    continueAuction(hookConfig);
+    delayAuctionIfNeeded(hookConfig);
   }
 });
 
@@ -919,8 +915,7 @@ console.log(">>>>>>>>> PRI <<<<<<<<<<< handleSetFloorsConfig");
       'noFloorSignalBidders', noFloorSignalBidders => noFloorSignalBidders || []
     ]),
     'additionalSchemaFields', additionalSchemaFields => typeof additionalSchemaFields === 'object' && Object.keys(additionalSchemaFields).length > 0 ? addFieldOverrides(additionalSchemaFields) : undefined,
-    'data', data => (data && parseFloorData(data, 'setConfig')) || undefined,
-    'waitForRTD', waitForRTD => waitForRTD === true,
+    'data', data => (data && parseFloorData(data, 'setConfig')) || undefined
   ]);
 
   // if enabled then do some stuff
@@ -934,6 +929,16 @@ console.log(">>>>>>>>> PRI <<<<<<<<<<< handleSetFloorsConfig NOT added Floors Ho
       // when auction finishes remove it's associated floor data after 3 seconds so we stil have it for latent responses
       events.on(EVENTS.AUCTION_END, (args) => {
         setTimeout(() => delete _floorDataForAuction[args.auctionId], 3000);
+      });
+
+      events.on(EVENTS.REGISTER_WAITLIST, (moduleName: any) => {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< PRICEFLOORS module ON received REGISTER_WAITLIST");
+        waitlist.add(moduleName);
+      });
+
+      events.on(EVENTS.EXIT_WAITLIST, (moduleName: any) => {
+console.log(">>>>>>>>> PRI <<<<<<<<<<< PRICEFLOORS module ON received EXIT_WAITLIST");
+        waitlist.delete(moduleName);
       });
 
       // we want our hooks to run after the currency hooks
@@ -1197,4 +1202,17 @@ function validateUserIdsConfig(userIds: Record<string, unknown>): Record<string,
   }
 
   return userIds;
+}
+
+function delayAuctionIfNeeded(hookConfig) {
+  if (waitlist.size > 0) {
+    setTimeout(() => {
+      if (waitlist.size > 0) {
+        console.log('Max wait time reached, continuing auction');
+        continueAuction(hookConfig);
+      }
+    }, maxWaitTime);
+  } else {
+    continueAuction(hookConfig);
+  }
 }
