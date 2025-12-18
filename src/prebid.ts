@@ -1217,7 +1217,7 @@ function runCommand(cmd) {
 }
 function _processQueue(queue, cb?) {
   yieldAll(
-    () => getGlobal().yield ?? true,
+    () => getGlobal().yield ?? false,
     queue.map(cmd => () => runCommand(cmd)), cb
   );
 }

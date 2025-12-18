@@ -335,9 +335,9 @@ export function renderIfDeferred(bidResponse) {
   }
 }
 
-let legacyRender = false;
+let legacyRender = true;
 config.getConfig('auctionOptions', (opts) => {
-  legacyRender = opts.auctionOptions?.legacyRender ?? false
+  legacyRender = opts.auctionOptions?.legacyRender ?? true
 });
 
 export const renderAdDirect = yieldsIf(() => !legacyRender, function renderAdDirect(doc, adId, options) {
