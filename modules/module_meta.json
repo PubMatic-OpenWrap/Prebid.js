@@ -61,6 +61,11 @@
             "module": "adWMGAnalyticsAdapter"
         },
         {
+            "name": "datawrkzAnalyticsAdapter",
+            "path": "/modules/datawrkzAnalyticsAdapter.js",
+            "module": "datawrkzAnalyticsAdapter"
+        },
+        {
             "name": "atsAnalyticsAdapter",
             "path": "/modules/atsAnalyticsAdapter.js",
             "module": "atsAnalyticsAdapter"
@@ -318,26 +323,6 @@
             "module": "bidViewabilityIO"
         },
         {
-            "name": "gptPreAuction",
-            "path": "/modules/gptPreAuction.ts",
-            "module": "gptPreAuction"
-        },
-        {
-            "name": "consentManagementGpp",
-            "path": "/modules/consentManagementGpp.ts",
-            "module": "consentManagementGpp"
-        },
-        {
-            "name": "Currency",
-            "path": "/modules/currency.ts",
-            "module": "currency"
-        },
-        {
-            "name": "consentManagementTcf",
-            "path": "/modules/consentManagementTcf.ts",
-            "module": "consentManagementTcf"
-        },
-        {
             "name": "iABCategoryTranslation",
             "path": "/modules/categoryTranslation.js",
             "module": "categoryTranslation"
@@ -353,16 +338,6 @@
             "module": "idImportLibrary"
         },
         {
-            "name": "tcfControl",
-            "path": "/modules/tcfControl.ts",
-            "module": "tcfControl"
-        },
-        {
-            "name": "priceFloors",
-            "path": "/modules/priceFloors.ts",
-            "module": "priceFloors"
-        },
-        {
             "name": "dsaControl",
             "path": "/modules/dsaControl.js",
             "module": "dsaControl"
@@ -376,11 +351,6 @@
             "name": "paapi",
             "path": "/modules/paapi.js",
             "module": "paapi"
-        },
-        {
-            "name": "CCPA",
-            "path": "/modules/consentManagementUsp.ts",
-            "module": "consentManagementUsp"
         },
         {
             "name": "sizeMappingV2",
@@ -423,16 +393,6 @@
             "module": "express"
         },
         {
-            "name": "dchain",
-            "path": "/modules/dchain.ts",
-            "module": "dchain"
-        },
-        {
-            "name": "gppControl_usstates",
-            "path": "/modules/gppControl_usstates.ts",
-            "module": "gppControl_usstates"
-        },
-        {
             "name": "instreamTracking",
             "path": "/modules/instreamTracking.js",
             "module": "instreamTracking"
@@ -441,11 +401,6 @@
             "name": "Server-to-Server Testing",
             "path": "/modules/s2sTesting.js",
             "module": "s2sTesting"
-        },
-        {
-            "name": "supplyChainObject",
-            "path": "/modules/schain.ts",
-            "module": "schain"
         },
         {
             "name": "topicsFpdModule",
@@ -469,13 +424,33 @@
         },
         {
             "name": "multibid",
-            "path": "/modules/multibid/index.ts",
+            "path": "/modules/multibid/index.js",
             "module": "multibid"
         },
         {
-            "name": "validationFpdModule",
-            "path": "/modules/validationFpdModule/index.ts",
-            "module": "validationFpdModule"
+            "name": "previousAuctionInfo",
+            "path": "/modules/previousAuctionInfo/index.js",
+            "module": "previousAuctionInfo"
+        },
+        {
+            "name": "gamAdpod",
+            "path": "/modules/gamAdpod.js",
+            "module": "gamAdpod"
+        },
+        {
+            "name": "_moduleMetadata",
+            "path": "/modules/_moduleMetadata.js",
+            "module": "_moduleMetadata"
+        },
+        {
+            "name": "dchain",
+            "path": "/modules/dchain.ts",
+            "module": "dchain"
+        },
+        {
+            "name": "multibid",
+            "path": "/modules/multibid/index.ts",
+            "module": "multibid"
         }
     ],
     "Video": [
@@ -715,6 +690,11 @@
             "name": "dgkeywordRtdProvider",
             "path": "/modules/dgkeywordRtdProvider.js",
             "module": "dgkeywordRtdProvider"
+        },
+        {
+            "name": "oftmediaRtdProvider",
+            "path": "/modules/oftmediaRtdProvider.js",
+            "module": "oftmediaRtdProvider"
         },
         {
             "name": "browsiRtdProvider",

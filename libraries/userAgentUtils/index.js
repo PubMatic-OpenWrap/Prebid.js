@@ -1,21 +1,27 @@
 import { deviceTypes, browserTypes, osTypes } from './userAgentTypes.enums.js';
+import { isStr } from '../../src/utils.js';
 
 /**
  * Get the approximate device type enum from the user agent
  * @returns {number}
  */
 export const getDeviceType = () => {
-  if (
-    /ipad|android 3.0|xoom|sch-i800|playbook|tablet|kindle/i.test(
-      navigator.userAgent.toLowerCase()
-    )
-  ) return deviceTypes.TABLET;
-  if (
-    /iphone|ipod|android|blackberry|opera|mini|windows\sce|palm|smartphone|iemobile/i.test(
-      navigator.userAgent.toLowerCase()
-    )
-  ) return deviceTypes.MOBILE;
-  return deviceTypes.DESKTOP;
+  var deviceType = deviceTypes.OTHER;
+  try {
+    var ua = navigator.userAgent;
+    if (ua && isStr(ua) && ua.trim() != '') {
+      ua = ua.toLowerCase().trim();
+      var isMobileRegExp = new RegExp('(mobi|tablet|ios).*');
+      if (ua.match(isMobileRegExp)) {
+        deviceType = deviceTypes.MOBILE;
+      } else {
+        deviceType = deviceTypes.WEB;
+      }
+    }
+  } catch (ex) {
+    logError(ex);
+  }
+  return deviceType;
 };
 
 /**
@@ -48,11 +54,11 @@ export const getBrowser = () => {
  * @returns {number}
  */
 export const getOS = () => {
-  if (navigator.userAgent.indexOf('Android') != -1) return osTypes.ANDROID;
-  if (navigator.userAgent.indexOf('like Mac') != -1) return osTypes.IOS;
-  if (navigator.userAgent.indexOf('Win') != -1) return osTypes.WINDOWS;
-  if (navigator.userAgent.indexOf('Mac') != -1) return osTypes.MAC;
-  if (navigator.userAgent.indexOf('Linux') != -1) return osTypes.LINUX;
-  if (navigator.appVersion.indexOf('X11') != -1) return osTypes.UNIX;
+  if (navigator.userAgent.indexOf('Android') !== -1) return osTypes.ANDROID;
+  if (navigator.userAgent.indexOf('like Mac') !== -1) return osTypes.IOS;
+  if (navigator.userAgent.indexOf('Win') !== -1) return osTypes.WINDOWS;
+  if (navigator.userAgent.indexOf('Mac') !== -1) return osTypes.MAC;
+  if (navigator.userAgent.indexOf('Linux') !== -1) return osTypes.LINUX;
+  if (navigator.appVersion.indexOf('X11') !== -1) return osTypes.UNIX;
   return osTypes.OTHER;
 };
