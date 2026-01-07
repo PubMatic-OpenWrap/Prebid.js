@@ -2,7 +2,7 @@ import sinon from 'sinon';
 import * as floorProvider from '../../../../../libraries/pubmaticUtils/plugins/floorProvider.js';
 import * as priceFloors from '../../../../../modules/priceFloors.js';
 import * as pubmaticUtils from '../../../../../libraries/pubmaticUtils/pubmaticUtils.js';
-import {expect} from 'chai';
+import { expect } from 'chai';
 
 describe('FloorProvider', () => {
   const floorsobj = {
@@ -91,7 +91,7 @@ describe('FloorProvider', () => {
       getConfigByName: () => floorsobj
     });
 
-    const req = {err: 4};
+    const req = { err: 4 };
     const result = await floorProvider.processBidRequest(req);
 
     expect(result).to.equal(req);
@@ -144,7 +144,7 @@ describe('FloorProvider', () => {
     });
 
     it('getOs should return string from getOS', async () => {
-    // Import userAgentUtils and stub getOS there
+      // Import userAgentUtils and stub getOS there
       const userAgentUtils = require('libraries/userAgentUtils/index.js');
       const fakeOS = { toString: () => 'MacOS' };
       const stub = sinon.stub(userAgentUtils, 'getOS').returns(fakeOS);
@@ -174,7 +174,7 @@ describe('FloorProvider', () => {
       expect(floorProvider.getUtm()).to.equal('evening');
     });
 
-     it('getHOD should return result from getHourOfDay', async () => {
+    it('getHOD should return result from getHourOfDay', async () => {
       const stub = sinon.stub(pubmaticUtils, 'getHourOfDay').returns('12');
       expect(floorProvider.getHOD()).to.equal('12');
     });

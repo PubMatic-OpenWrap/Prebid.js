@@ -1,7 +1,7 @@
 // plugins/floorProvider.js
 import { logInfo, logError, isFn, logMessage, isEmpty, mergeDeep } from '../../../src/utils.js';
 import { getOS } from '../../userAgentUtils/index.js';
-import { getBrowserType, getCurrentTimeOfDay, getUtmValue, getDeviceType as fetchDeviceType, getHourOfDay } from '../pubmaticUtils.js';
+import { getBrowserType, getCurrentTimeOfDay, getUtmValue, getDeviceType as fetchDeviceType, getHourOfDay, getDayOfWeek } from '../pubmaticUtils.js';
 import { config as conf } from '../../../src/config.js';
 
 /**
@@ -124,6 +124,8 @@ export const getCountry = () => getConfigJsonManager().country || (window.PWT?.C
 export const getBidder = (request) => request?.bidder;
 export const getUtm = () => getUtmValue();
 export const getHOD = () => getHourOfDay();
+export const getDOW = () => getDayOfWeek();
+
 export const prepareFloorsConfig = () => {
   // TODO: This can be removed as it is beimg used for UTR only and handled for multipliers in name: 'floor.json', for UPR it is handled in
   // Extract multipliers from floors.json if available
@@ -159,7 +161,7 @@ export const prepareFloorsConfig = () => {
 
   let ymUiConfig = { ...getFloorConfig().config };
 
-  ymUiConfig.enforcement ??= {enforceJS: false};
+  ymUiConfig.enforcement ??= { enforceJS: false };
 
   // default values provided by publisher on YM UI
   const defaultValues = ymUiConfig.defaultValues ?? {};
@@ -185,8 +187,9 @@ export const prepareFloorsConfig = () => {
         browser: getBrowser,
         os: getOs,
         utm: getUtm,
-        hourOfDay:getHOD,
+        hourOfDay: getHOD,
         country: getCountry,
+        dayOfWeek: getDOW,
         bidder: getBidder,
       },
     },

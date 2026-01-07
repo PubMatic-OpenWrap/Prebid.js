@@ -81,14 +81,19 @@ export const getDeviceType = () => {
         deviceType = CONSTANTS.DEVICE_TYPE_VALUES.DESKTOP;
       }
     }
-  } catch (ex) {}
+  } catch (ex) { }
   return deviceType;
-} 
+}
 
 export const getHourOfDay = () => {
   const hourOfDay = new Date().getHours();
   return hourOfDay.toString();
 }
+export const getDayOfWeek = () => {
+  const dayOfWeek = new Date().getDay();
+  return dayOfWeek.toString();
+}
+
 /**
  * Determines whether an action should be throttled based on a given percentage.
  *
