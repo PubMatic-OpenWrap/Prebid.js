@@ -85,6 +85,10 @@ export const getDeviceType = () => {
   return deviceType;
 } 
 
+export const getHourOfDay = () => {
+  const hourOfDay = new Date().getHours();
+  return hourOfDay.toString();
+}
 /**
  * Determines whether an action should be throttled based on a given percentage.
  *
