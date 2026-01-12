@@ -40,9 +40,9 @@ export function ConfigJsonManager() {
    * @param {string} profileId - Profile ID
    * @returns {Promise<Object>} - Promise resolving to the config object
    */
-  async function fetchConfig(publisherId, profileId) {
+  async function fetchConfig(publisherId, profileId, versionId) {
     try {
-      const url = `${CONSTANTS.ENDPOINTS.BASEURL}/${publisherId}/${profileId}/${CONSTANTS.ENDPOINTS.CONFIGS}`;
+      const url = `${CONSTANTS.ENDPOINTS.BASEURL}/${publisherId}/${profileId}/${versionId}/${CONSTANTS.ENDPOINTS.CONFIGS}`;
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -52,7 +52,7 @@ export function ConfigJsonManager() {
 
       // Extract country code if available
       const cc = response.headers?.get('country_code');
-      country = cc ? cc.split(',')?.map(code => code.trim())[0] : "IN";
+      country = cc ? cc.split(',')?.map(code => code.trim())[0] : undefined;
 
       // Parse the JSON response
       const ymConfigs = await response.json();
@@ -106,9 +106,9 @@ pluginManager.register('dynamicTimeout', DynamicTimeout);
  * @returns {boolean}
  */
 const init = (config, _userConsent) => {
-  const { publisherId, profileId } = config?.params || {};
+  const { publisherId, profileId, versionId } = config?.params || {};
 
-  if (!publisherId || !isStr(publisherId) || !profileId || !isStr(profileId)) {
+  if (!publisherId || !isStr(publisherId) || !profileId || !isStr(profileId) || !versionId || !isStr(versionId)) {
     logError(
       `${CONSTANTS.LOG_PRE_FIX} ${!publisherId ? 'Missing publisher Id.'
         : !isStr(publisherId) ? 'Publisher Id should be a string.'
@@ -120,7 +120,7 @@ const init = (config, _userConsent) => {
   }
 
   // Fetch configuration and initialize plugins
-  _ymConfigPromise = configJsonManager.fetchConfig(publisherId, profileId)
+  _ymConfigPromise = configJsonManager.fetchConfig(publisherId, profileId, versionId)
     .then(success => {
       if (!success) {
         return Promise.reject(new Error('Failed to fetch configuration'));
