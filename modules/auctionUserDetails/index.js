@@ -1,6 +1,7 @@
 import * as events from '../../src/events.js';
 import { EVENTS } from '../../src/constants.js';
 import { getStorageManager } from '../../src/storageManager.js';
+import { isFn } from '../../src/utils.js';
 
 const BIDDER_CODE = 'pubmatic';
 const storage = getStorageManager({bidderCode: BIDDER_CODE});
@@ -20,7 +21,7 @@ let frequencyDepth = {
     date: new Date().getDate()
   },
   userAgentDetails: getUserAgentDetails(),
-  lip: []
+  lip: undefined
 };
 let codeAdUnitMap = {};
 
@@ -83,7 +84,9 @@ export function auctionBidResponseHandler(bid) {
 
 export function auctionEndHandler() {
   if (frequencyDepth) {
-    frequencyDepth.lip = window.owpbjs.adUnits[0]?.bids[0]?.userId && Object.keys(window.owpbjs.adUnits[0].bids[0].userId);
+    if(isFn(window.owpbjs.getUserIds)) {
+      frequencyDepth.lip = Object.keys(window.owpbjs.getUserIds()).length > 0 ? Object.keys(window.owpbjs.getUserIds()) : undefined;
+    }
     storage.setDataInLocalStorage(PREFIX + HOSTNAME, JSON.stringify(frequencyDepth));
   }
   return frequencyDepth;

@@ -16,13 +16,14 @@ import {expect} from 'chai';
 import {AD_RENDER_FAILED_REASON, BID_STATUS, EVENTS} from 'src/constants.js';
 import {getBidToRender} from '../../../src/adRendering.js';
 import {PUC_MIN_VERSION} from 'src/creativeRenderers.js';
+import {getGlobal} from '../../../src/prebidGlobal.js';
 
 describe('secureCreatives', () => {
   let sandbox;
 
-  function getBidToRenderHook(next, adId) {
+  function getBidToRenderHook(next, ...args) {
     // make sure that bids can be retrieved asynchronously
-    next(adId, new Promise((resolve) => setTimeout(resolve)))
+    setTimeout(() => next(...args))
   }
   before(() => {
     getBidToRender.before(getBidToRenderHook);
@@ -44,7 +45,9 @@ describe('secureCreatives', () => {
   }
 
   function receive(ev) {
-    return Promise.resolve(receiveMessage(ev));
+    return new Promise((resolve) => {
+      receiveMessage(ev, resolve);
+    })
   }
 
   describe('getReplier', () => {
@@ -101,7 +104,7 @@ describe('secureCreatives', () => {
         renderer: null
       }, obj);
       auction.getBidsReceived = function() {
-        let bidsReceived = getBidResponses();
+        const bidsReceived = getBidResponses();
         bidsReceived.push(adResponse);
         return bidsReceived;
       }
@@ -109,7 +112,7 @@ describe('secureCreatives', () => {
     }
 
     function resetAuction() {
-      $$PREBID_GLOBAL$$.setConfig({ enableSendAllBids: false });
+      getGlobal().setConfig({ enableSendAllBids: false });
       auction.getBidRequests = getBidRequests;
       auction.getBidsReceived = getBidResponses;
       auction.getAdUnits = getAdUnits;
@@ -390,7 +393,7 @@ describe('secureCreatives', () => {
       });
 
       it('Prebid native should not fire BID_WON when receiveMessage is called more than once', () => {
-        let adId = 3;
+        const adId = 3;
         pushBidResponseToAuction({ adId });
 
         const data = {
@@ -411,7 +414,7 @@ describe('secureCreatives', () => {
           sinon.assert.calledWith(stubEmit, EVENTS.BID_WON, adResponse);
           return receive(ev);
         }).then(() => {
-          stubEmit.withArgs(EVENTS.BID_WON, adResponse).calledOnce;
+          expect(stubEmit.withArgs(EVENTS.BID_WON, adResponse).calledOnce).to.be.true;
         });
       });
 
@@ -447,7 +450,7 @@ describe('secureCreatives', () => {
           });
           container = document.createElement('div');
           container.id = 'mock-au';
-          slot = document.createElement('div');
+          slot = document.createElement('iframe');
           container.appendChild(slot);
           document.body.appendChild(container)
         });
@@ -541,7 +544,7 @@ describe('secureCreatives', () => {
       window.googletag = origGpt;
     });
     function mockSlot(elementId, pathId) {
-      let targeting = {};
+      const targeting = {};
       return {
         getSlotElementId: sinon.stub().callsFake(() => elementId),
         getAdUnitPath: sinon.stub().callsFake(() => pathId),
@@ -578,6 +581,46 @@ describe('secureCreatives', () => {
       [0, 2].forEach((i) => sinon.assert.notCalled(slots[i].getSlotElementId))
       sinon.assert.called(slots[1].getSlotElementId);
       sinon.assert.calledWith(document.getElementById, 'div2');
+    });
+
+    it('should find correct apn tag based on adUnitCode', () => {
+      window.apntag = {
+        getTag: sinon.stub()
+      };
+      const apnTag = {
+        targetId: 'apnAdUnitId',
+      }
+      window.apntag.getTag.withArgs('apnAdUnit').returns(apnTag);
+
+      resizeRemoteCreative({
+        adUnitCode: 'apnAdUnit',
+        width: 300,
+        height: 250,
+      });
+      sinon.assert.calledWith(window.apntag.getTag, 'apnAdUnit');
+      sinon.assert.calledWith(document.getElementById, 'apnAdUnitId');
+    });
+
+    it('should find elements for ad units that are not GPT slots', () => {
+      resizeRemoteCreative({
+        adUnitCode: 'adUnit',
+        width: 300,
+        height: 250,
+      });
+      sinon.assert.calledWith(document.getElementById, 'adUnit');
+    });
+
+    it('should find elements for ad units that are not apn tags', () => {
+      window.apntag = {
+        getTag: sinon.stub().returns(null)
+      };
+      resizeRemoteCreative({
+        adUnitCode: 'adUnit',
+        width: 300,
+        height: 250,
+      });
+      sinon.assert.calledWith(window.apntag.getTag, 'adUnit');
+      sinon.assert.calledWith(document.getElementById, 'adUnit');
     });
 
     it('should not resize interstitials', () => {

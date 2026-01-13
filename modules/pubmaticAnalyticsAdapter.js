@@ -288,9 +288,9 @@ function copyRequiredBidDetails(bid) {
   ]);
 }
 
-function setBidStatus(bid, args) {
+function setBidStatus(bid, status) {
   if (bid?.status === ERROR && bid?.error?.code === TIMEOUT_ERROR) { return; }
-  switch (args.getStatusCode()) {
+  switch (status) {
     case STATUS.GOOD:
       bid.status = SUCCESS;
       delete bid.error; // it's possible for this to be set by a previous timeout
@@ -438,6 +438,7 @@ function checkAndModifySizeOfKGPVIfRequired(bid) {
 
 function getListOfIdentityPartners() {
   const namespace = getGlobal();
+  if (!isFn(namespace.getUserIds)) return;
   const publisherProvidedEids = namespace.getConfig("ortb2.user.eids") || [];
   const availableUserIds = namespace.adUnits[0]?.bids[0]?.userId || {};
   const identityModules = namespace.getConfig('userSync')?.userIds || [];
@@ -734,7 +735,7 @@ const eventHandlers = {
 
     bid.adId = args.adId;
     bid.source = formatSource(bid.source || args.source);
-    setBidStatus(bid, args);
+    setBidStatus(bid, 1);
     const latency = args?.timeToRespond || Date.now() - cache.auctions[args.auctionId].timestamp;
     const auctionTime = cache.auctions[args.auctionId].timeout;
     // Check if latency is greater than auctiontime+150, then log auctiontime+150 to avoid large numbers

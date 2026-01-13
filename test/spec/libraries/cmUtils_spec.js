@@ -297,7 +297,19 @@ describe('consent management utils', () => {
 
         sinon.assert.called(cmpEventCleanup);
         sinon.assert.calledWith(utils.logError, sinon.match('Error during CMP event cleanup'), cleanupError);
-      });     
+      });
+
+      it('should not call cmpEventCleanup when enabled is true', () => {
+        getConsentConfig({[namespace]: {enabled: true, cmpApi: 'iab'}});
+
+        sinon.assert.notCalled(cmpEventCleanup);
+      });
+
+      it('should not call cmpEventCleanup when enabled is not specified', () => {
+        getConsentConfig({[namespace]: {cmpApi: 'iab'}});
+
+        sinon.assert.notCalled(cmpEventCleanup);
+      });
     });
 
     describe('cmpEventCleanup parameter', () => {
